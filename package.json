@@ -42,7 +42,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://git.soma.salesforce.com/ADX/analyticsdx-vscode.git"
+    "url": "git+https://github.com/forcedotcom/analyticsdx-vscode.git"
   },
   "license": "BSD-3-Clause",
   "dependencies": {

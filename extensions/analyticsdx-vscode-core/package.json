@@ -2,12 +2,12 @@
   "name": "analyticsdx-vscode-core",
   "displayName": "Salesforce Analytics DX CLI Integration",
   "description": "Provides integration with the Salesforce Analytics CLI",
-  "qna": "https://git.soma.salesforce.com/ADX/analyticsdx-vscode/issues",
+  "qna": "https://github.com/forcedotcom/analyticsdx-vscode/issues",
   "bugs": {
-    "url": "https://git.soma.salesforce.com/ADX/analyticsdx-vscode/issues"
+    "url": "https://github.com/forcedotcom/analyticsdx-vscode/issues"
   },
   "repository": {
-    "url": "https://git.soma.salesforce.com/ADX/analyticsdx-vscode"
+    "url": "https://github.com/forcedotcom/analyticsdx-vscode"
   },
   "icon": "images/VSCodeAnalytics.png",
   "galleryBanner": {
