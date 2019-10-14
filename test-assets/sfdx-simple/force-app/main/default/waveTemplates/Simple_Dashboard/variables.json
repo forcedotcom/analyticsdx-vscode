@@ -1,0 +1,46 @@
+{
+  "Main_Dataset": {
+    "label": "Choose an account dataset from your org",
+    "description": "The dashboard uses data from the account dataset you select",
+    "required": true,
+    "excludeSelected": true,
+    "variableType": {
+      "type": "DatasetType"
+	}
+  },
+  "Main_Dataset_Dimension_Fields": {
+    "label": "Select up to 6 Account Dimensions",
+    "description": "The values from the Account dataset to display in the Account Information table",
+    "defaultValue": [
+      {
+        "datasetId": "{{Variables.Main_Dataset.datasetId}}",
+        "fieldName": ""
+      }
+	],
+    "required": true,
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DatasetDimensionType"
+      },
+      "sizeLimit": {
+        "max": 6,
+        "min": 1
+      }
+    },
+    "excludeSelected": true
+  },
+  "Main_Dataset_Dimension_Filter": {
+	"label": "Select 1 Account Dimension",
+	"description": "This value will provide the global filter for both dashboard charts.",
+	"defaultValue": {
+	  "datasetId": "{{Variables.Main_Dataset.datasetId}}",
+	  "fieldName": ""
+	},
+    "required": true,
+    "variableType": {
+      "type": "DatasetDimensionType"
+    },
+    "excludeSelected": true
+  }
+}

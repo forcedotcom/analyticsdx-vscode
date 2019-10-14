@@ -1,0 +1,24 @@
+{
+  "name": null,
+  "label": null,
+  "description": null,
+  "featuredAssets": {
+    "default": {
+      "assets": [
+        {
+          "id": "${App.Dashboards['Adventure Home'].Id}",
+          "name": null,
+          "namespace": "${Org.Namespace}",
+          "type": null
+        }
+      ]
+    }
+  },
+  "shares": [
+    {
+      "accessType": "Edit",
+      "shareType": "AllCspUsers",
+      "sharedWithId": null
+    }
+  ]
+}

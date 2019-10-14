@@ -1,0 +1,13 @@
+{
+  "pages" : [
+    {
+      "title": "Choose an Account Dataset for your Dashboard",
+      "variables": [
+	    {"name": "Main_Dataset"},
+	    {"name": "Main_Dataset_Dimension_Filter"},
+	    {"name": "Main_Dataset_Dimension_Fields"}
+      ]
+	}
+  ],
+  "displayMessages" : [ ]
+}

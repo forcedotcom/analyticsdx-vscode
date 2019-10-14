@@ -1,0 +1,15 @@
+{
+  "country": "US",
+  "edition": "Developer",
+  "features": [
+    "DevelopmentWave"
+  ],
+  "orgPreferences": {
+    "enabled": [
+      "S1DesktopEnabled"
+    ],
+    "disabled": []
+  },
+  "orgName": "Your Company",
+  "adminEmail": "yourname@example.com"
+}

@@ -1,0 +1,96 @@
+{
+  "version": "2.0.0",
+  "problemMatcher": "$tsc-watch",
+  "tasks": [
+    {
+      "label": "Bootstrap",
+      "command": "npm",
+      "type": "shell",
+      "presentation": { "focus": false, "panel": "shared" },
+      "args": ["run", "bootstrap"],
+      "isBackground": false
+    },
+    {
+      "label": "Clean",
+      "command": "npm",
+      "type": "shell",
+      "presentation": {
+        "focus": false,
+        "panel": "shared"
+      },
+      "args": ["run", "clean"],
+      "isBackground": false
+    },
+    {
+      "label": "Compile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "command": "npm",
+      "type": "shell",
+      "presentation": {
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "args": ["run", "compile"],
+      "isBackground": false,
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Lint",
+      "command": "npm",
+      "type": "shell",
+      "presentation": {
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "args": ["run", "lint"],
+      "isBackground": false
+    },
+    {
+      "label": "Watch",
+      "command": "npm",
+      "type": "shell",
+      "presentation": {
+        "reveal": "silent",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "args": ["run", "watch"],
+      "isBackground": true,
+      "problemMatcher": "$tsc-watch"
+    },
+    // these are used by the vscode-integration launches in launch.json
+    {
+      "label": "analyticsdx-vscode-core-setup-vscode-integration",
+      "command": "npm",
+      "type": "shell",
+      "presentation": {
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/analyticsdx-vscode-core"
+      },
+      "args": ["run", "setup-vscode-integration"],
+      "isBackground": false,
+      "dependsOn": ["Compile"]
+    },
+    {
+      "label": "analyticsdx-vscode-templates-setup-vscode-integration",
+      "command": "npm",
+      "type": "shell",
+      "presentation": {
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/analyticsdx-vscode-templates"
+      },
+      "args": ["run", "setup-vscode-integration"],
+      "isBackground": false,
+      "dependsOn": ["Compile"]
+    }
+  ]
+}

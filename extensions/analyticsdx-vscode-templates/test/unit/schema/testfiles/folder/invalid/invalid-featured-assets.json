@@ -1,0 +1,14 @@
+{
+  "featuredAssets": {
+    "default": {
+      "assets": [
+        {
+          "name": "missing id"
+        }
+      ]
+    },
+    "unsupported": {
+      "assets": []
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "constants" : [ ],
+  "macros" : [ ],
+  "rules" : [
+    {
+  		"name": "UpdateSimpleDashboardWithUserPicks",
+		"appliesTo": [{
+			"type": "dashboard",
+			"name": "*"
+		}],
+		"actions": [
+			{
+				"action": "set",
+				"description": "put selected values for all dimensions that are selected for Account",
+				"path": "$..Account_Information_1.query.query.values",
+				"value": "${array:concat(Rules.CurrentNode, array:forEach(Variables.Main_Dataset_Dimension_Fields,'${var.fieldName}'))}"
+			},
+			{
+				"action": "replace",
+				"key": "Industry",
+				"value": "${Variables.Main_Dataset_Dimension_Filter.fieldName}"
+			}
+		]
+	}
+  ]
+}

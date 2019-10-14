@@ -1,0 +1,11 @@
+{
+  "shares": [
+    {
+      "accessType": "Edit"
+    },
+    {
+      "shareType": "AllCspUsers"
+    },
+    {}
+  ]
+}

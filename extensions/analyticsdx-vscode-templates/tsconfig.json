@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "lib": ["dom", "es2016"],
+    "sourceMap": true,
+    "declarationMap": true,
+    "declaration": true,
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "rootDir": ".",
+    "outDir": "out",
+    "preserveConstEnums": true,
+    "strict": true,
+    // readdirp's index.d.ts references the AsyncIterable type (from node newer than vscode1.36's 10.11) -- it all
+    // works fine at runtime, so just don't have it compile the node_module/**/**/.d.ts'
+    "skipLibCheck": true,
+    // allow tests to import json files (for reading json schema files)
+    "resolveJsonModule": true
+  },
+  "exclude": ["node_modules", ".vscode-test", "out"]
+}

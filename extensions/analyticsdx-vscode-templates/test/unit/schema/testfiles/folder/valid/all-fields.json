@@ -1,0 +1,72 @@
+{
+  "name": "AllFields",
+  "label": "AllFields",
+  "description": "Test all the available fields and values for folder.json",
+  "featuredAssets": {
+    "default": {
+      "assets": [
+        {
+          "id": "assetId",
+          "name": "assetName",
+          "namespace": "assetNamespace",
+          "type": "assetType"
+        }
+      ]
+    }
+  },
+  "shares": [
+    {
+      "accessType": "View",
+      "shareType": "Organization",
+      "sharedWithId": "someId"
+    },
+    {
+      "accessType": "Edit",
+      "shareType": "Organization"
+    },
+    {
+      "accessType": "Manage",
+      "shareType": "Organization"
+    },
+    {
+      "accessType": "View",
+      "shareType": "AllCspUsers"
+    },
+    {
+      "accessType": "View",
+      "shareType": "AllPrmUsers"
+    },
+    {
+      "accessType": "View",
+      "shareType": "CustomerPortalUser"
+    },
+    {
+      "accessType": "View",
+      "shareType": "Group"
+    },
+    {
+      "accessType": "View",
+      "shareType": "PartnerUser"
+    },
+    {
+      "accessType": "View",
+      "shareType": "PortalRole"
+    },
+    {
+      "accessType": "View",
+      "shareType": "PortalRoleAndSubordinates"
+    },
+    {
+      "accessType": "View",
+      "shareType": "Role"
+    },
+    {
+      "accessType": "View",
+      "shareType": "RoleAndSubordinates"
+    },
+    {
+      "accessType": "View",
+      "shareType": "User"
+    }
+  ]
+}

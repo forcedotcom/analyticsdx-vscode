@@ -1,0 +1,122 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "protocol": "legacy",
+      "name": "Attach to Process (Legacy Protocol)",
+      "port": 5858,
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js", "${workspaceFolder}/packages/*/out/**/*.js"]
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "protocol": "inspector",
+      "name": "Attach to Process (Inspector Protocol)",
+      "port": 9229,
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js", "${workspaceFolder}/packages/*/out/**/*.js"]
+    },
+    {
+      "name": "Launch Extensions",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/extensions"],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "smartStep": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js"],
+      "sourceMapPathOverrides": {
+        "webpack:///*": "*"
+      },
+      "preLaunchTask": "Compile"
+    },
+    {
+      "name": "Launch Extensions without compile",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/extensions"],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "smartStep": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js"],
+      "sourceMapPathOverrides": {
+        "webpack:///*": "*"
+      }
+    },
+    {
+      "name": "Launch analyticsdx-vscode-core VSCode-Integration Tests",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "${workspaceFolder}/test-assets/sfdx-simple",
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/analyticsdx-vscode-core/.vscode-test/extensions",
+        "--extensionTestsPath=${workspaceFolder}/extensions/analyticsdx-vscode-core/out/test/vscode-integration"
+      ],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "smartStep": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js"],
+      "sourceMapPathOverrides": {
+        "../../../../test/vscode-integration": "${workspaceFolder}/extensions/analyticsdx-vscode-core/out/test/vscode-integration/*",
+        "webpack:///*": "*"
+      },
+      "preLaunchTask": "analyticsdx-vscode-core-setup-vscode-integration",
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "name": "Launch analyticsdx-vscode-templates VSCode-Integration Tests",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "${workspaceFolder}/test-assets/sfdx-simple",
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/analyticsdx-vscode-templates/.vscode-test/extensions",
+        "--extensionTestsPath=${workspaceFolder}/extensions/analyticsdx-vscode-templates/out/test/vscode-integration"
+      ],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "smartStep": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js"],
+      "sourceMapPathOverrides": {
+        "../../../../test/vscode-integration": "${workspaceFolder}/extensions/analyticsdx-vscode-templates/out/test/vscode-integration/*",
+        "webpack:///*": "*"
+      },
+      "preLaunchTask": "analyticsdx-vscode-templates-setup-vscode-integration",
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch analyticsdx-vscode-templates Unit Tests",
+      "program": "${workspaceFolder}/extensions/analyticsdx-vscode-templates/node_modules/.bin/nyc",
+      "cwd": "${workspaceFolder}/extensions/analyticsdx-vscode-templates",
+      "args": [
+        "./node_modules/.bin/_mocha",
+        "--recursive",
+        "out/test/unit",
+        "--delay",
+        "--reporter",
+        "mocha-multi-reporters",
+        "--timeout",
+        "20000",
+        "--reporter",
+        "mocha-multi-reporters",
+        "--reporter-options",
+        "configFile=../../config/mochaUnitTestsConfig.json"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js"],
+      "preLaunchTask": "Compile",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ],
+  "compounds": []
+}

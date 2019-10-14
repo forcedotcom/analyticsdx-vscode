@@ -1,0 +1,13 @@
+{
+  "templateType": "dashboard",
+  "label": "Missing_dashboards_Dashboard",
+  "name": "Missing dashboads Dashboard",
+  "description": "For linter.test.ts, a dashboard template missing 'dashboards' field",
+  "assetVersion": 46.0,
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://schemas.salesforce.com/analytics/templates/folder.json",
+  "title": "Salesforce Analytics Template Folder Definition",
+  "description": "",
+  "type": "object",
+  "additionalProperties": false,
+  "allowComments": true,
+  "required": [],
+  "properties": {
+    "name": {
+      "$comment": "A lot of these fields are valid to be literal null, and there are existing files that do that already",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "label": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "featuredAssets": {
+      "type": "object",
+      "description": "Lists of featured assets in an application created from this template",
+      "required": [],
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "object",
+          "description": "Default featured assets in an application created from this template",
+          "required": [],
+          "additionalProperties": true,
+          "properties": {
+            "assets": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": true,
+                "$comment": "Most just include id, but Learning Adventure also has these",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Asset id"
+                  },
+                  "name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "namespace": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "defaultSnippets": [
+                  {
+                    "label": "New featuredAsset",
+                    "body": {
+                      "id": "${1:id}"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "defaultSnippets": [
+            {
+              "label": "New featuresAssets",
+              "body": {
+                "assets": []
+              }
+            }
+          ]
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New featuredAssets",
+          "body": {
+            "default": {
+              "assets": []
+            }
+          }
+        }
+      ]
+    },
+    "shares": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "accessType",
+          "shareType"
+        ],
+        "properties": {
+          "accessType": {
+            "type": "string",
+            "enum": [
+              "View",
+              "Edit",
+              "Manage"
+            ],
+            "default": "View"
+          },
+          "shareType": {
+            "type": "string",
+            "enum": [
+              "Group",
+              "Organization",
+              "Role",
+              "RoleAndSubordinates",
+              "User",
+              "PortalRole",
+              "PortalRoleAndSubordinates",
+              "AllCspUsers",
+              "AllPrmUsers",
+              "PartnerUser",
+              "CustomerPortalUser"
+            ],
+            "default": "Organization"
+          },
+          "sharedWithId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New share",
+            "body": {
+              "accessType": "${1:View}",
+              "shareType": "${2:Organization}"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

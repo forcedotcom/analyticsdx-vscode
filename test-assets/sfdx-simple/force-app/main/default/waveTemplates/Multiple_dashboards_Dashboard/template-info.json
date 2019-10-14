@@ -1,0 +1,25 @@
+{
+  "templateType": "dashboard",
+  "label": "Empty_dashboards_Dashboard",
+  "name": "Empty dashboads Dashboard",
+  "description": "For linter.test.ts, a dashboard template with multiple 'dashboards'",
+  "assetVersion": 46.0,
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ],
+  "dashboards": [
+    {
+      "label": "Simple Account Dashboard",
+      "name": "Simple_Account_Dashboard_tp",
+      "file": "dashboards/Simple_Account_Dashboard.json"
+    },
+    {
+      "label": "Simple Account Dashboard2",
+      "name": "Simple_Account_Dashboard_tp2",
+      "file": "dashboards/Simple_Account_Dashboard2.json"
+    }
+  ]
+}

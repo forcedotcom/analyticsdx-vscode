@@ -1,0 +1,179 @@
+{
+  "templateType": "app",
+  "label": "AppForTemplate",
+  "name": "AppForTemplate",
+  "description": "Now with a description!!",
+  "assetVersion": 47.0,
+  "variableDefinition": "variables.json",
+  "uiDefinition": "ui.json",
+  "rules": [
+    {
+      "type": "appToTemplate",
+      "file": "app-to-template-rules.json"
+    },
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ],
+  "ruleDefinition": "oldey-time.json",
+  "assetIcon": "foo.png",
+  "releaseInfo": {
+    "templateVersion": "1.1",
+    "notesFile": "releaseNotes.html"
+  },
+  "folderDefinition": "folder.json",
+  "externalFiles": [
+    {
+      "file": "dashboards/New_dashboard.json",
+      "name": "foo",
+      "type": "CSV",
+      "overwriteOnUpgrade": "IfDifferent"
+    }
+  ],
+  "lenses": [
+    {
+      "file": "app-to-template-rules.json",
+      "label": "blah",
+      "overwriteOnUpgrade": "Always"
+    }
+  ],
+  "dashboards": [
+    {
+      "label": "New dashboard",
+      "name": "New_dashboard_tp",
+      "condition": "${Variables.Overrides.createAllDashboards}",
+      "file": "dashboards/New_dashboard.json",
+      "overwriteOnUpgrade": "Never"
+    },
+    {
+      "label": "foo",
+      "name": "foo",
+      "file": "dashboards/foo_dashboard.json"
+    }
+  ],
+  "eltDataflows": [
+    {
+      "file": "app-to-template-rules.json",
+      "overwriteOnUpgrade": "${Variables.Has_Product == 'Yes'}"
+    }
+  ],
+  "datasetFiles": [
+    {
+      "label": "bar",
+      "name": "bar",
+      "overwriteOnUpgrade": "IfDifferent"
+    }
+  ],
+  "storedQueries": [
+    {
+      "file": "queries/query.json",
+      "label": "query",
+      "overwriteOnUpgrade": "IfDifferent"
+    }
+  ],
+  "imageFiles": [
+    {
+      "file": "images/image.png",
+      "name": "image.png",
+      "overwriteOnUpgrade": "IfDifferent"
+    }
+  ],
+  "extendedTypes": {
+    "visualforcePages": [
+      {
+        "label": "Test Something",
+        "name": "DBVisualforcePage",
+        "file": "visualforce/vf.apexp"
+      }
+    ]
+  },
+  "icons": {
+    "appBadge": {
+      "name": "16.png"
+    },
+    "templateBadge": {
+      "name": "default.png"
+    },
+    "templateDetail": {
+      "name": "template details"
+    },
+    "templatePreviews": [
+      {
+        "name": "foo",
+        "label": "Some preview label",
+        "description": "A big description of what the preview is showing"
+      }
+    ]
+  },
+  "customAttributes": [
+    {
+      "label": "Features",
+      "values": [
+        "Embeddable Dashboards",
+        "Prebuilt Dashboards",
+        "Dataflow",
+        "KPI Rich Datasets"
+      ]
+    },
+    {
+      "label": "Salesforce Objects",
+      "values": [
+        "Account",
+        "Case",
+        "Contact",
+        "Task",
+        "User",
+        "User Role"
+      ]
+    },
+    {
+      "label": "Publisher",
+      "values": [
+        "Einstein Analytics"
+      ]
+    },
+    {
+      "label": "Industry",
+      "values": [
+        "Public Sector"
+      ]
+    },
+    {
+      "label": "foo"
+    }
+  ],
+  "videos": [
+    {
+      "purpose": "walkthrough",
+      "id": "walkthrough-video-id",
+      "linkType": "youtube",
+      "label": "Walkthrough Video",
+      "showPlaylist": true
+    },
+    {
+      "purpose": "onboarding",
+      "id": "onboarding-video-id",
+      "linkType": "vidyard",
+      "label": "Onboarding Video",
+      "showPlaylist": false
+    }
+  ],
+  "tags": [
+    "one",
+    "two",
+    "3"
+  ],
+  "templateDependencies": [
+    {
+      "name": "election_2012_template",
+      "namespace": "sfdc_internal",
+      "templateVersion": "1.1"
+    },
+    {
+      "name": "featured_assets_template",
+      "namespace": "sfdc_internal",
+      "templateVersion": "1.0"
+    }
+  ]
+}

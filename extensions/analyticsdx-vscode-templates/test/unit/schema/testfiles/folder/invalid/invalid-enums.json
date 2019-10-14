@@ -1,0 +1,8 @@
+{
+  "shares": [
+    {
+      "accessType": "Foo",
+      "shareType": "Bar"
+    }
+  ]
+}

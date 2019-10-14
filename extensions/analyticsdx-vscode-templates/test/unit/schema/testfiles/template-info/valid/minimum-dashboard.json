@@ -1,0 +1,19 @@
+{
+  "templateType": "dashboard",
+  "label": "AppForTemplate",
+  "name": "AppForTemplate",
+  "assetVersion": 47.0,
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ],
+  "dashboards": [
+    {
+      "label": "New dashboard",
+      "name": "New_dashboard_tp",
+      "file": "dashboards/New_dashboard.json"
+    }
+  ]
+}

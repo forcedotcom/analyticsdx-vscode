@@ -1,0 +1,110 @@
+{
+  "name": "analyticsdx-vscode-core",
+  "displayName": "Salesforce Analytics DX CLI Integration",
+  "description": "Provides integration with the Salesforce Analytics CLI",
+  "qna": "https://git.soma.salesforce.com/ADX/analyticsdx-vscode/issues",
+  "bugs": {
+    "url": "https://git.soma.salesforce.com/ADX/analyticsdx-vscode/issues"
+  },
+  "repository": {
+    "url": "https://git.soma.salesforce.com/ADX/analyticsdx-vscode"
+  },
+  "icon": "images/VSCodeAnalytics.png",
+  "galleryBanner": {
+    "color": "#ECECEC",
+    "theme": "light"
+  },
+  "version": "1.0.0",
+  "publisher": "salesforce",
+  "license": "BSD-3-Clause",
+  "engines": {
+    "vscode": "^1.38.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "dependencies": {
+    "@salesforce/salesforcedx-utils-vscode": "46.3.0",
+    "tmp": "0.1.0",
+    "vscode-extension-telemetry": "0.0.17"
+  },
+  "devDependencies": {
+    "@salesforce/analyticsdx-test-utils-vscode": "1.0.0",
+    "@types/chai": "^4.0.0",
+    "@types/mocha": "2.2.38",
+    "@types/node": "10.11.0",
+    "@types/open": "6.0.0",
+    "@types/sinon": "^2.3.2",
+    "@types/tmp": "0.1.0",
+    "@types/vscode": "1.38.0",
+    "@types/which": "^1.3.1",
+    "chai": "^4.0.2",
+    "cross-env": "5.2.0",
+    "mocha": "3.2.0",
+    "shx": "0.2.2",
+    "sinon": "^2.3.6",
+    "typescript": "3.5.2"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm prune --production",
+    "vscode:package": "vsce package",
+    "vscode:sha256": "node ../../scripts/generate-sha256.js >> ../../SHA256",
+    "vscode:publish": "node ../../scripts/publish-vsix.js",
+    "compile": "tsc -p ./",
+    "lint": "tslint --project .",
+    "watch": "tsc -watch -p .",
+    "clean": "shx rm -rf .vscode-test && shx rm -rf node_modules && shx rm -rf out && shx rm -rf coverage && shx rm -rf .nyc_output && shx rm -f analyticsdx-vscode-core-*.vsix && shx rm -f junit-custom-vscodeIntegrationTests.xml xunit-vscodeIntegrationTests.xml",
+    "pretest": "npm run compile",
+    "test": "npm run test:vscode-integration",
+    "test:unit": "echo No tests to run.",
+    "setup-vscode-integration": "node ../../scripts/link-vscode-integration-dependency analyticsdx-vscode-core && node ../../scripts/download-vscode-for-tests && node ../../scripts/install-vsix-dependency salesforce.salesforcedx-vscode-core",
+    "test:vscode-integration": "npm run setup-vscode-integration && node ../../scripts/run-vscode-integration-tests",
+    "test:vscode-insiders-integration": "cross-env CODE_VERSION=insiders npm run test:vscode-integration"
+  },
+  "extensionDependencies": [
+    "salesforce.salesforcedx-vscode-core"
+  ],
+  "activationEvents": [
+    "workspaceContains:sfdx-project.json",
+    "onCommand:analyticsdx.app.create.blank",
+    "onCommand:analyticsdx.app.delete",
+    "onCommand:analyticsdx.studio.open",
+    "onCommand:analyticsdx.studio.open.app",
+    "onCommand:analyticsdx.template.create",
+    "onCommand:analyticsdx.template.delete",
+    "onCommand:analyticsdx.template.udpate"
+  ],
+  "main": "./out/src",
+  "contributes": {
+    "commands": [
+      {
+        "command": "analyticsdx.app.create.blank",
+        "title": "%analyticsdx_app_create_blank_label%"
+      },
+      {
+        "command": "analyticsdx.app.delete",
+        "title": "%analyticsdx_app_delete_label%"
+      },
+      {
+        "command": "analyticsdx.studio.open",
+        "title": "%analyticsdx_studio_open_label%"
+      },
+      {
+        "command": "analyticsdx.studio.open.app",
+        "title": "%analyticsdx_studio_open_app_label%"
+      },
+      {
+        "command": "analyticsdx.template.create",
+        "title": "%analyticsdx_template_create_label%"
+      },
+      {
+        "command": "analyticsdx.template.delete",
+        "title": "%analyticsdx_template_delete_label%"
+      },
+      {
+        "command": "analyticsdx.template.update",
+        "title": "%analyticsdx_template_update_label%"
+      }
+    ]
+  }
+}

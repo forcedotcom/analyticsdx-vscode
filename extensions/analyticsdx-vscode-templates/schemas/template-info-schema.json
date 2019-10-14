@@ -1,0 +1,871 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://schemas.salesforce.com/analytics/template-info.json",
+  "title": "Salesforce Analytics Template Info",
+  "description": "",
+  "type": "object",
+  "additionalProperties": false,
+  "$comment": "vscode supports some extra fields (e.g. allowComments, enumDescriptions, deprecationMessage, patternErrorMessage, defaultSnippets), see https://github.com/microsoft/vscode/blob/master/src/vs/base/common/jsonSchema.ts",
+  "allowComments": true,
+  "if": {
+    "properties": {
+      "templateType": {
+        "const": "dashboard"
+      }
+    },
+    "required": [
+      "templateType"
+    ]
+  },
+  "then": {
+    "$comment": "dashboard templates only need these",
+    "required": [
+      "templateType",
+      "name",
+      "label",
+      "assetVersion",
+      "rules",
+      "dashboards"
+    ]
+  },
+  "else": {
+    "$comment": "app templates need these",
+    "required": [
+      "templateType",
+      "name",
+      "label",
+      "assetVersion",
+      "releaseInfo",
+      "rules",
+      "dashboards",
+      "lenses",
+      "eltDataflows",
+      "externalFiles"
+    ]
+  },
+  "properties": {
+    "templateType": {
+      "description": "The type of asset for which this is a template.",
+      "default": "app",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "app",
+            "dashboard",
+            "embeddedapp"
+          ],
+          "enumDescriptions": [
+            "Specify that this is an application template.",
+            "Specify that this is a dashboard template.",
+            "Specify that this is an embedded application template."
+          ]
+        },
+        {
+          "type": "string",
+          "$comment": "These are also valid in the server, but we shouldn't prompt users for them. Also, json-schema doesn't support sending in a case-sensitive flag nor doing a (?i) group.",
+          "pattern": "^(lens|Lens|TemporaryApp|temporaryApp|temporaryapp)$"
+        }
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "The unique developer name of the template. If this is changed, it creates a new template; if it is changed to an existing template devName, it overwrites the existing template."
+    },
+    "label": {
+      "type": "string",
+      "description": "The template name that is visible to users."
+    },
+    "description": {
+      "type": "string",
+      "description": "The template description to tell users about the asset they will be creating using the template."
+    },
+    "assetIcon": {
+      "type": "string",
+      "deprecationMessage": "Deprecated - use 'icons.appBadge' instead.",
+      "description": "(Deprecated - use 'icons.appBadge' instead) Sets the app icon at creation. There are 20 app icons stored as .png files in Analytics, which are numbered 1-20. If not specified, system will use default icon 1.png for the app."
+    },
+    "templateIcon": {
+      "type": "string",
+      "default": "default.png",
+      "deprecationMessage": "Deprecated - use 'icons.templateBadge' instead.",
+      "description": "(Deprecated - use icons.templateBadge instead) Sets the template icon to display in the UI. If not specified, system will use default icon for the template (default.png). Currently, default.png is the only icon ISVs can use."
+    },
+    "icons": {
+      "type": "object",
+      "description": "Specifies icons to display in the UI for the template.",
+      "properties": {
+        "appBadge": {
+          "$ref": "#/definitions/icon",
+          "description": "The icon for the created asset."
+        },
+        "templateBadge": {
+          "$ref": "#/definitions/icon",
+          "description": "The icon for the template."
+        },
+        "templateDetail": {
+          "$ref": "#/definitions/icon",
+          "deprecationMessage": "Deprecated - no longer used."
+        },
+        "templatePreviews": {
+          "type": "array",
+          "minItems": 0,
+          "description": "Preview icons for the template.",
+          "items": {
+            "$ref": "#/definitions/previewIcon",
+            "description": "Preview icon for the template."
+          }
+        }
+      }
+    },
+    "assetVersion": {
+      "type": "number",
+      "defaults": 46.0,
+      "minimum": 1.0,
+      "description": "This refers to the API version to use in processing Analytics assets (dashboards, datasets, XMDs, dataflows)."
+    },
+    "releaseInfo": {
+      "type": "object",
+      "description": "Release information for the template.",
+      "required": [
+        "templateVersion"
+      ],
+      "properties": {
+        "templateVersion": {
+          "type": "string",
+          "description": "The version of the template, tracked for the upgrade process. Calling wave/templates PUT will automatically increment this number, but it can be changed manually as well. The format is ##.##, as a string.",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        },
+        "notesFile": {
+          "type": "string",
+          "description": "A template dev defined HTML file to describe new release details. Basic HTML formatting is supported, but not links or javascript. Defaults to using the template description as release notes if file is not specified."
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New releaseInfo",
+          "body": {
+            "templateVersion": "${1:1.0}",
+            "notesFile": "${2:releaseNotes.html}"
+          }
+        }
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "description": "Defines the rules files for converting to and from the template, loaded 1st to last and order matters for dependencies.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "file"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "templateToApp",
+              "appToTemplate"
+            ],
+            "enumDescriptions": [
+              "Rules to apply when creating a new app from a template.",
+              "Rules to apply when updating the template from the master app ."
+            ],
+            "default": "templateToApp",
+            "description": "The type of the rules file."
+          },
+          "file": {
+            "type": "string",
+            "description": "Path to the rules file."
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New rule",
+            "body": {
+              "type": "${1|templateToApp,appToTemplate|}",
+              "file": "${2:filename}-rules.json"
+            }
+          }
+        ]
+      },
+      "defaultSnippets": [
+        {
+          "label": "New rules",
+          "body": [
+            {
+              "type": "appToTemplate",
+              "file": "${1:app-to-template-rules.json}"
+            },
+            {
+              "type": "templateToApp",
+              "file": "${2:template-to-app-rules.json}"
+            }
+          ]
+        }
+      ]
+    },
+    "ruleDefinition": {
+      "type": "string",
+      "deprecationMessage": "Deprecated - use a templateToApp rule instead.",
+      "description": "(Deprecated - use a templateToApp rule instead) Define a single templateToApp rules file for the template."
+    },
+    "uiDefinition": {
+      "type": "string",
+      "description": "Path to the UI information file."
+    },
+    "variableDefinition": {
+      "type": "string",
+      "description": "Path to the variables definition file."
+    },
+    "folderDefinition": {
+      "type": "string",
+      "description": "Path to the folder definition file."
+    },
+    "apexCallback": {
+      "type": "object",
+      "description": "Registers an Apex class that runs on wizard load, app create, and app upgrade. The Apex class examines the org and sets variable values.",
+      "required": [
+        "namespace",
+        "name"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "description": "The SFDC namespace for the org."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the Apex class to be used."
+        }
+      },
+      "$comment": "TODO: dynamically get the available classes from either the metadata or org browser",
+      "defaultSnippets": [
+        {
+          "label": "New apexCallback",
+          "body": {
+            "namespace": "${1:namespace}",
+            "name": "${2:name}"
+          }
+        }
+      ]
+    },
+    "dashboards": {
+      "type": "array",
+      "description": "List of dashboards to include in the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "label"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the dashboard json file."
+          },
+          "label": {
+            "type": "string",
+            "description": "The dashboard label which MUST match the 'label' attribute in the dashboard file."
+          },
+          "name": {
+            "type": "string",
+            "description": "The dashboard name which MUST match the 'name' attribute in the dashboard file."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the dashboard will be created in the app; otherwise, it will not be created."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New dashboard",
+            "body": {
+              "file": "dashboards/${1:name}.json",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
+    "lenses": {
+      "type": "array",
+      "description": "List of lenses to include in the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "label"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the lens json file."
+          },
+          "label": {
+            "type": "string",
+            "description": "The lens label which MUST match the 'label' attribute in the lens file."
+          },
+          "name": {
+            "type": "string",
+            "description": "The lens name which MUST match the 'name' attribute in the lens file."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the lens will be created in the app; otherwise, it will not be created."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New lens",
+            "body": {
+              "file": "lenses/${1:name}.json",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
+    "eltDataflows": {
+      "type": "array",
+      "description": "List of dataflows to include in the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the dataflow json file."
+          },
+          "label": {
+            "type": "string",
+            "description": "The dataflow label which MUST match the 'MasterLabel' attribute in the dataflow file."
+          },
+          "name": {
+            "type": "string",
+            "description": "The dataflow name which MUST match the 'name' attribute in the dataflow file."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the dataflow will be created in the app; otherwise, it will not be created."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New dataflow",
+            "body": {
+              "file": "dataflows/${1:name}.json",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
+    "externalFiles": {
+      "type": "array",
+      "description": "List of external files, CSV and descriptive files to be used in the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the file."
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the data in the extenral file. Currently, only 'CSV' is supported.",
+            "enum": [
+              "CSV"
+            ],
+            "default": "CSV"
+          },
+          "name": {
+            "type": "string",
+            "description": "The externalFile name, which ,iust match the 'name' attribute in the schema file."
+          },
+          "schema": {
+            "type": "string",
+            "description": "Path to the schema file (describes the format of the data)."
+          },
+          "userXmd": {
+            "type": "string",
+            "description": "Path to the XMD file (describes the display format of the data)."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the external file will be created in the app; otherwise, it will not be created."
+          },
+          "rows": {
+            "type": "number",
+            "default": 5,
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Number of rows in the files to read (1-1000)."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New externalFile",
+            "body": {
+              "name": "${1:name}",
+              "file": "external_files/${1}.csv",
+              "type": "CSV",
+              "schema": "external_files/${1}.json",
+              "userXmd": "external_files/${1}_Xmd.json"
+            }
+          }
+        ]
+      }
+    },
+    "datasetFiles": {
+      "type": "array",
+      "description": "List of datasets to be used in the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "name"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "The dataset label."
+          },
+          "name": {
+            "type": "string",
+            "description": "The dataset name."
+          },
+          "userXmd": {
+            "type": "string",
+            "description": "Path to the XMD file for the dataset."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the dataset will be created in the app; otherwise, it will not be created."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New dataset",
+            "body": {
+              "label": "${1}",
+              "name": "${1:name}",
+              "userXmd": "datasets/${1}_Xmd.json"
+            }
+          }
+        ]
+      }
+    },
+    "imageFiles": {
+      "type": "array",
+      "description": "List of app images to be used in the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "file"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the image file."
+          },
+          "name": {
+            "type": "string",
+            "description": "The image name."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the dataset will be created in the app; otherwise, it will not be created."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New imageFile",
+            "body": {
+              "file": "images/${1:name}.${2|png,jpg,gif,svg|}",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
+    "storedQueries": {
+      "type": "array",
+      "description": "List of storied queries to use in the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "label"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the stored query json file."
+          },
+          "label": {
+            "type": "string",
+            "description": "The stored query label."
+          },
+          "name": {
+            "type": "string",
+            "description": "The stored query name."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the stored query will be created in the app; otherwise, it will not be created."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New storedQuery",
+            "body": {
+              "file": "queries/${1:name}.json",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
+    "extendedTypes": {
+      "type": "object",
+      "description": "",
+      "$comment": "this how you do a Map<String, SomeObject[]> in json-schema",
+      "additionalProperties": {
+        "type": "array",
+        "description": "The list of named extended types",
+        "minItems": 0,
+        "items": {
+          "type": "object",
+          "required": [
+            "file",
+            "label"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "description": "Path to the extended type file."
+            },
+            "label": {
+              "type": "string",
+              "description": "The extended type label."
+            },
+            "name": {
+              "type": "string",
+              "description": "The extended type name."
+            },
+            "condition": {
+              "type": "string",
+              "description": "If this is met, then the extended type will be created in the app; otherwise, it will not be created."
+            }
+          },
+          "defaultSnippets": [
+            {
+              "label": "New extendedType",
+              "body": {
+                "file": "${1:name}.json",
+                "label": "${1}",
+                "name": "${1}"
+              }
+            }
+          ]
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New extendedTypes",
+          "body": {
+            "${1:type}": [
+              {
+                "file": "${2:name}.json",
+                "label": "${2}",
+                "name": "${2}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "customAttributes": {
+      "type": "array",
+      "description": "Define custom meta data attributes for the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "description": "A custom meta data attribute for the template.",
+        "required": [
+          "label"
+        ],
+        "properties": {
+          "label": {
+            "description": "Custom attribute display label",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Features",
+                  "Salesforce Objects",
+                  "Publisher",
+                  "Industry"
+                ],
+                "enumDescriptions": [
+                  "List of features provided by this template",
+                  "List of salesforce objects this template uses.",
+                  "The publisher(s) of this template.",
+                  "The industries this template is for."
+                ]
+              }
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New customAttribute",
+            "body": {
+              "label": "${1:label}",
+              "values": [
+                "${2:value}"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "videos": {
+      "type": "array",
+      "description": "Associate online videos to the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "purpose",
+          "id",
+          "linkType",
+          "label"
+        ],
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "walkthrough",
+              "onboarding"
+            ],
+            "default": "onboarding",
+            "description": "The purpose of the video."
+          },
+          "id": {
+            "type": "string",
+            "description": "Id of the video in the video provider (specified in linkType)"
+          },
+          "linkType": {
+            "description": "The video provider.",
+            "type": "string",
+            "enum": [
+              "youtube",
+              "vidyard"
+            ],
+            "enumDescriptions": [
+              "Youtube.com is the video provider.",
+              "vidyard.com is the video provider"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label for the video in the UI."
+          },
+          "showPlaylist": {
+            "type": "boolean",
+            "description": "Set to true to include playlist in the video UI.",
+            "default": false
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "description": "Keywords to tag on this template.",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      },
+      "defaultSnippets": [
+        {
+          "label": "New tags",
+          "body": [
+            "${1:tag}"
+          ]
+        }
+      ]
+    },
+    "templateDependencies": {
+      "type": "array",
+      "description": "Other templates that this template depends upon. For each, an application will need to exist that was created from the dependent template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "description": "The dependent template namespace."
+          },
+          "name": {
+            "type": "string",
+            "description": "The dependent template name."
+          },
+          "templateVersion": {
+            "type": "string",
+            "description": "The version matcher of the dependent template this template requires. You can optionally use =, >, >=, <, and <= at beginning.",
+            "pattern": "^(=|>|>=|<|<=)?[0-9]+(\\.[0-9]+)?$"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New templateDependency",
+            "body": {
+              "name": "${1:name}",
+              "templateVersion": "${2|>=,>,=,<,<=|}${3:1.0}"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "icon": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "description": "The icon namespace."
+        },
+        "name": {
+          "type": "string",
+          "description": "The icon name."
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New icon",
+          "body": {
+            "name": "${1:name}"
+          }
+        }
+      ]
+    },
+    "previewIcon": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/icon"
+        },
+        {
+          "required": [
+            "label"
+          ],
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "The display label of the template preview."
+            },
+            "description": {
+              "type": "string",
+              "description": "The desription of the template preview."
+            }
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "New icon",
+          "body": {
+            "label": "${1:label}",
+            "name": "${1}",
+            "description": "${2}"
+          }
+        }
+      ]
+    },
+    "elExpression": {
+      "type": "string",
+      "pattern": "^\\$\\{.*\\}$"
+    },
+    "overwriteOnUpgrade": {
+      "description": "Controls how to handle this object when the template is upgraded.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/elExpression",
+          "patternErrorMessage": "Value must be either a valid ${...} expression, or one of 'Always', 'IfDifferent', or 'Never'"
+        },
+        {
+          "type": "string",
+          "default": "IfDifferent",
+          "enum": [
+            "Always",
+            "IfDifferent",
+            "Never"
+          ],
+          "enumDescriptions": [
+            "Always overwrite this object on upgrade.",
+            "Overwrite this object on upgrade if it differs from the template's version.",
+            "Never overwrite this object on upgrade."
+          ]
+        }
+      ]
+    }
+  }
+}

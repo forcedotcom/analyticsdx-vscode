@@ -1,0 +1,32 @@
+{
+  "templateType": "app",
+  "label": "InvalidOverwriteOnUpgrade",
+  "name": "InvalidOverwriteOnUpgrade",
+  "assetVersion": 47.0,
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ],
+  "releaseInfo": {
+    "templateVersion": "1.1"
+  },
+  "externalFiles": [],
+  "lenses": [],
+  "dashboards": [
+    {
+      "label": "New dashboard",
+      "name": "New_dashboard_tp",
+      "file": "dashboards/New_dashboard.json",
+      "overwriteOnUpgrade": "foo"
+    },
+    {
+      "label": "New dashboard2",
+      "name": "New_dashboard2_tp",
+      "file": "dashboards/New_dashboard2.json",
+      "overwriteOnUpgrade": ""
+    }
+  ],
+  "eltDataflows": []
+}

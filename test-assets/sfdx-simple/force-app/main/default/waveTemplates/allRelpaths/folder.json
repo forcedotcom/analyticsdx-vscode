@@ -1,0 +1,10 @@
+{
+  "error": "intentional error for tests to look for",
+  "featuredAssets": {},
+  "shares": [
+    {
+      "accessType": "View",
+      "shareType": "Organization"
+    }
+  ]
+}

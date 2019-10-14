@@ -1,0 +1,11 @@
+{
+  "analyticsdx_app_create_blank_label": "SFDX: Create Blank Analytics App",
+  "analyticsdx_app_delete_label": "SFDX: Delete Analytics App",
+
+  "analyticsdx_studio_open_label": "SFDX: Open Analytics Studio",
+  "analyticsdx_studio_open_app_label": "SFDX: Open App in Analytics Studio",
+
+  "analyticsdx_template_create_label": "SFDX: Create Analytics Template",
+  "analyticsdx_template_delete_label": "SFDX: Delete Analytics Template",
+  "analyticsdx_template_update_label": "SFDX: Update Analytics Template"
+}

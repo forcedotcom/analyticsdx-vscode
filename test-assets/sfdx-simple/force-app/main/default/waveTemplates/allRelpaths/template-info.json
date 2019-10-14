@@ -1,0 +1,82 @@
+{
+  "templateType": "app",
+  "label": "FullAppTemplate",
+  "name": "FullAppTemplate",
+  "assetVersion": 46.0,
+  "releaseInfo": {
+    "templateVersion": "1.1",
+    "notesFile": "releaseNotes.html"
+  },
+  "variableDefinition": "variables.json",
+  "uiDefinition": "ui.json",
+  "folderDefinition": "folder.json",
+  "ruleDefinition": "rule-definition.json",
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    },
+    {
+      "type": "appToTemplate",
+      "file": "app-to-template-rules.json"
+    }
+  ],
+  "externalFiles": [
+    {
+      "name": "externalFile",
+      "file": "externalFiles/externalFile.csv",
+      "type": "CSV",
+      "schema": "externalFiles/schema.json",
+      "userXmd": "externalFiles/userXmd.json"
+    }
+  ],
+  "lenses": [
+    {
+      "label": "lens",
+      "name": "lens",
+      "file": "lenses/lens.json"
+    }
+  ],
+  "dashboards": [
+    {
+      "label": "dashboard",
+      "name": "dashboard",
+      "file": "dashboards/dashboard.json"
+    }
+  ],
+  "eltDataflows": [
+    {
+      "label": "dataflow",
+      "name": "dataflow",
+      "file": "dataflows/dataflow.json"
+    }
+  ],
+  "storedQueries": [
+    {
+      "file": "queries/query.json",
+      "label": "stored-query"
+    }
+  ],
+  "datasetFiles": [
+    {
+      "label": "dataset",
+      "name": "dataset",
+      "userXmd": "datasets/userXmd.json"
+    }
+  ],
+  "extendedTypes": {
+    "visualforcePages": [
+      {
+        "label": "vfpage",
+        "name": "vfpage",
+        "file": "visualforce/vf.apexp"
+      }
+    ]
+  },
+  "imageFiles": [
+    {
+      "name": "image",
+      "file": "images/image.png"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "templateType": "dashboard",
+  "label": "Empty_dashboards_Dashboard",
+  "name": "Empty dashboads Dashboard",
+  "description": "For linter.test.ts, a dashboard template with empty 'dashboards'",
+  "assetVersion": 46.0,
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ],
+  "dashboards": []
+}

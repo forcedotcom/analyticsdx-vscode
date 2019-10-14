@@ -1,0 +1,82 @@
+{
+  "templateType": "app",
+  "label": "BadFilePaths",
+  "name": "BadFilePaths",
+  "assetVersion": 46.0,
+  "releaseInfo": {
+    "templateVersion": "1.1",
+    "notesFile": ""
+  },
+  "variableDefinition": "missing-variables.json",
+  "uiDefinition": "missing-ui.json",
+  "folderDefinition": "missing-folder.json",
+  "ruleDefinition": "missing-rules-definition.json",
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "missing-template-to-app-rules.json"
+    },
+    {
+      "type": "appToTemplate",
+      "file": "missing-app-to-template-rules.json"
+    }
+  ],
+  "externalFiles": [
+    {
+      "name": "missing-externalFile",
+      "file": "missing-externalFile.csv",
+      "type": "CSV",
+      "schema": "missing-schema.json",
+      "userXmd": "missing-userXmd.json"
+    }
+  ],
+  "lenses": [
+    {
+      "label": "missing-lens",
+      "name": "missing-lens",
+      "file": "lenses/missing-lens.json"
+    }
+  ],
+  "dashboards": [
+    {
+      "label": "missing-dashboard",
+      "name": "missing-dashboard",
+      "file": "dashboards/missing-dashboard.json"
+    }
+  ],
+  "eltDataflows": [
+    {
+      "label": "missing-dataflow",
+      "name": "missing-dataflow",
+      "file": "dashboards/missing-dataflow.json"
+    }
+  ],
+  "storedQueries": [
+    {
+      "file": "queries",
+      "label": "points-to-directory-stored-query"
+    }
+  ],
+  "datasetFiles": [
+    {
+      "label": "dot-dot-dataset",
+      "name": "dot-dot-dataset",
+      "userXmd": "datasets/foo/../dot-dot-dataset.json"
+    }
+  ],
+  "extendedTypes": {
+    "visualforcePages": [
+      {
+        "label": "dot-dot-vfpage",
+        "name": "dot-dot-vfpage",
+        "file": "../visualforce/dot-dot.apexp"
+      }
+    ]
+  },
+  "imageFiles": [
+    {
+      "name": "absolute-path",
+      "file": "/absolute-path.png"
+    }
+  ]
+}

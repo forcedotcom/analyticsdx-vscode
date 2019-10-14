@@ -1,0 +1,39 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/.vscode-test": true
+  },
+  "search.exclude": {
+    "**/out": true
+  },
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.rulers": [120],
+  "prettier.singleQuote": true,
+  "prettier.printWidth": 120,
+  "files.insertFinalNewline": true,
+  "json.schemas": [
+    // hookup our json-schemas to local test files
+    {
+      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/folder/**/*.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/folder-schema.json"
+    },
+    {
+      "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/folder.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/folder-schema.json"
+    },
+    {
+      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/template-info/**/*.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/template-info-schema.json"
+    },
+    {
+      "fileMatch": ["/**/template-info.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/template-info-schema.json"
+    }
+  ]
+}

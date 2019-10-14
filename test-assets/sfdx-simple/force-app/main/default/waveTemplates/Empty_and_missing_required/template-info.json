@@ -1,0 +1,20 @@
+{
+  "templateType": "app",
+  "label": "Missing required App",
+  "name": "Missing_required",
+  "description": "For linter.test.ts, an app template missing eltDataflows, and has empty dashboards and datasetFiles",
+  "assetVersion": 46.0,
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ],
+  "releaseInfo": {
+    "templateVersion": "1.1"
+  },
+  "externalFiles": [],
+  "lenses": [],
+  "dashboards": [],
+  "datasetFiles": []
+}

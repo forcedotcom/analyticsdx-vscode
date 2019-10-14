@@ -1,0 +1,27 @@
+{
+  "templateType" : "dashboard",
+  "label" : "Simple Dashboard",
+  "name" : "Simple_Dashboard",
+  "description" : "This is a simple dashboard for Account data",
+  "assetVersion" : 46.0,
+  "variableDefinition" : "variables.json",
+  "uiDefinition" : "ui.json",
+  "rules" : [
+    {
+      "type" : "templateToApp",
+      "file" : "template-to-app-rules.json"
+    }
+  ],
+  "dashboards" : [
+    {
+      "label" : "Simple Account Dashboard",
+      "name" : "Simple_Account_Dashboard_tp",
+      "file" : "dashboards/Simple_Account_Dashboard.json"
+    },
+    {
+      "label": "Shouldn't have 2 dashboards in dashboard templates",
+      "file": "dashboards/foo_dashboard.json" 
+    }
+  ],
+  "templateIcon" : "default.png"
+}

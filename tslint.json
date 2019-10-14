@@ -1,0 +1,27 @@
+{
+  "extends": "@salesforce/dev-config/tslint",
+  "rulesDirectory": [
+    "tslint-no-focused-test"
+  ],
+  "rules": {
+    "no-focused-test": true,
+    "no-reserved-keywords": false,
+    "no-any": false,
+    "quotemark": [
+      true,
+      "single",
+      "avoid-escape"
+    ],
+    "member-ordering": false,
+    "no-string-based-set-timeout": false,
+    "semicolon": [
+      true,
+      "always",
+      "ignore-bound-class-methods"
+    ],
+    "no-shadowed-variable": false,
+    "comment-format": [
+      true
+    ]
+  }
+}
