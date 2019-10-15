@@ -12,8 +12,8 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    # run on macOS so it can do ui stuff
+    runs-on: macOS-latest
 
     strategy:
       matrix:
