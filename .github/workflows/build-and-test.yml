@@ -31,20 +31,22 @@ jobs:
         run: |
           npm install
           npm run compile
+          npm run lint
           npm test
-        env:
-          NODE_ENV: production
-      - name: Package
+      - name: Clean and prep for packaging
         run: |
           npm run clean
           npm install
-          npm run compile
+      - name: Compile for packaging
+        run: npm run compile
+        env:
+          NODE_ENV: production
+      - name: Package extensions
+        run: |
           npm run vscode:package
           # upload-artifact doesn't support globs, so put them in a single folder
           mkdir dist-extensions
-          find . -name '*.vsix' -exec mv {} dist-extensions \;
-        env:
-          NODE_ENV: production
+          find . -name '*.vsix' -type f -exec mv {} dist-extensions \;
       - name: Upload extensions
         uses: actions/upload-artifact@v1
         with:
