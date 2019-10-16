@@ -1,6 +1,9 @@
 # Salesforce Analytics Extensions for VS Code
 
-**TBD**: build and coverage status
+<a href="https://github.com/forcedotcom/analyticsdx-vscode/actions?workflow=Build+and+test">
+   <img alt="Build status" src="https://github.com/forcedotcom/analyticsdx-vscode/workflows/Build%20and%20test/badge.svg">
+</a>
+<!-- TODO: badges for security and code coverage when we hook those up -->
 
 ## Introduction
 
