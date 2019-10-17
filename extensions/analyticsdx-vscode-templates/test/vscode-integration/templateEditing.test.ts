@@ -171,6 +171,30 @@ describe('TemplateEditorManager', () => {
     beforeEach(closeAllEditors);
     afterEach(closeAllEditors);
 
+    it('related file schemas', async () => {
+      const [, doc] = await openTemplateInfoAndWaitForDiagnostics('allRelpaths');
+      const templateDir = doc.uri.with({ path: path.dirname(doc.uri.path) });
+      const templateEditingManager = await getTemplateEditorManager();
+      await waitForTemplateEditorManagerHas(templateEditingManager, templateDir, true);
+      // make sure that the schema associations method has the schema for the various related files
+      const associations = templateEditingManager.getSchemaAssociations();
+      expect(associations[path.join(templateDir.path, 'folder.json')], 'folder.json schema').to.have.members([
+        templateEditingManager.folderSchemaPath.toString()
+      ]);
+      expect(associations[path.join(templateDir.path, 'variables.json')], 'variables.json schema').to.have.members([
+        templateEditingManager.variablesSchemaPath.toString()
+      ]);
+      expect(associations[path.join(templateDir.path, 'ui.json')], 'ui.json schema').to.have.members([
+        templateEditingManager.uiSchemaPath.toString()
+      ]);
+      ['rule-definition.json', 'template-to-app-rules.json', 'app-to-template-rules.json'].forEach(file => {
+        expect(associations[path.join(templateDir.path, file)], `${file} schema`).to.have.members([
+          templateEditingManager.rulesSchemaPath.toString()
+        ]);
+      });
+      // the tests in the other describe()s for each related file will verify that the schems are actually all hooked up
+    });
+
     async function testCompletions(path: JSONPath, ...expectedPaths: string[]) {
       const [, doc] = await openTemplateInfoAndWaitForDiagnostics('allRelpaths');
       const position = findPositionByJsonPath(doc, path);
@@ -287,7 +311,7 @@ describe('TemplateEditorManager', () => {
       // that should give a snippet to fill out the whole featuresAssets
       await verifyCompletionsContain(doc, position, 'New featuredAssets');
 
-      // go right the [ in "shares"
+      // go right to the [ in "shares"
       node = findNodeAtLocation(tree, ['shares']);
       expect(node, 'shares').to.not.be.undefined;
       scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));

@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://schemas.salesforce.com/analytics/templates/variables.json",
+  "title": "Salesforce Analytics Template Variables Definition",
+  "description": "",
+  "type": "object",
+  "additionalProperties": true,
+  "allowComments": true,
+  "required": []
+}
