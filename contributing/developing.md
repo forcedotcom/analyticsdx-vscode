@@ -24,7 +24,7 @@ The packages/ directory contains the different utility npm modules. These can be
 be referenced in extensions' package.json dependencies to bring them into vscode, but
 should not themselves be extensions.
 
-### test-assets
+### Test Assets
 
 The test-assets/ directory should contain files that can be shared across multiple
 [tests](tests.md), such as sfdx projects.
@@ -39,7 +39,7 @@ You would only do this once after you cloned the repository.
 
 1.  We develop on the `develop` branch and release from the `master` branch. At
     this point, unless you are working on releasing, you should do a `git checkout develop` and `git pull` to get the
-    latest code, and create your working branch (`git checkout -b your-name/)
+    latest code, and create your working branch (`git checkout -b your-name`)
 1.  `npm install` to bring in all the top-level dependencies. Because of the
     `postinstall` script, this also runs `npm run bootstrap` for you
     automatically the first time.
@@ -57,9 +57,9 @@ You would usually do the following each time you close/reopen VS Code:
     Extensions" from the debug menu. From the debug link on the left panel, select
     "Launch Extensions" or one of the options that launches and runs tests, etc.
     Once the new VS Code session opens you can point this at any workspace.
-1.  In VS Code, you can invoke Command Palette. Then type in "debug " (there is
-    space after) and from the launch configuration dropdown, pick any of "Launch
-    - Tests".
+1.  To debug tests from VS Code, you can invoke Command Palette. Then type in "debug " (there is
+    space after) and from the launch configuration dropdown, pick any of "Launch ... Tests" and hit the
+    Run button.
 
 For more information, consult the VS Code
 [doc](https://code.visualstudio.com/docs/extensions/debugging-extensions) on how
