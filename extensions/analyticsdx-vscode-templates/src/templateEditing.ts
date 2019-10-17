@@ -6,7 +6,9 @@
  */
 
 import * as fs from 'fs';
-import { findNodeAtLocation, Node as JsonNode } from 'jsonc-parser';
+import { findNodeAtLocation, JSONPath, Node as JsonNode } from 'jsonc-parser';
+// have to import this way w/o doing esModuleInterop=true, since that breaks on other stuff
+import isEqual = require('lodash.isequal');
 import { posix as path } from 'path';
 import * as fspath from 'path';
 import { getErrorStatusDescription, xhr, XHRResponse } from 'request-light';
@@ -27,6 +29,7 @@ import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
+import { matchJsonNodesAtPattern } from './util/jsoncUtils';
 import { isSameUriPath } from './util/utils';
 import { isSameUri, isUriUnder, uriStat } from './util/vscodeUtils';
 
@@ -57,6 +60,9 @@ class TemplateDirEditing extends Disposable {
   public readonly key: string;
 
   private _folderDefinitionPath: string | undefined;
+  private _uiDefinitionPath: string | undefined;
+  private _variablesDefinitionPath: string | undefined;
+  private _rulesDefinitionPaths: Set<string> | undefined;
 
   constructor(public readonly dir: vscode.Uri) {
     super();
@@ -64,23 +70,73 @@ class TemplateDirEditing extends Disposable {
     this.key = TemplateDirEditing.key(dir);
   }
 
+  private getRelFilePathFromAttr(tree: JsonNode | undefined, ...attrPath: JSONPath) {
+    const node = tree ? findNodeAtLocation(tree, attrPath) : undefined;
+    return node && node.type === 'string' ? (node.value as string) : undefined;
+  }
+
+  private getRelFilePathsFromPattern(tree: JsonNode | undefined, ...pattern: JSONPath) {
+    if (tree) {
+      return matchJsonNodesAtPattern(tree, pattern)
+        .filter(node => node.type === 'string' && node.value)
+        .map(node => node.value as string);
+    }
+    return undefined;
+  }
+
   /** Set the json tree for the template-info.json in this directory.
    * This will typically come from the linter.
    * @return true if the tree changed any values used for configuring editing.
    */
   public setParsedTemplateInfo(tree: JsonNode | undefined): boolean {
-    const node = tree ? findNodeAtLocation(tree, ['folderDefinition']) : undefined;
-    const path = node && node.type === 'string' ? (node.value as string) : undefined;
+    let updated = false;
+    // pull out the various fields that point to other files so we can use them to configure json-schemas later
+    let path = this.getRelFilePathFromAttr(tree, 'folderDefinition');
     if (path !== this._folderDefinitionPath) {
       this._folderDefinitionPath = path;
-      return true;
+      updated = true;
     }
-    // TODO: pull out the other related-file values from the template-info.json
-    return false;
+
+    path = this.getRelFilePathFromAttr(tree, 'uiDefinition');
+    if (path !== this._uiDefinitionPath) {
+      this._uiDefinitionPath = path;
+      updated = true;
+    }
+
+    path = this.getRelFilePathFromAttr(tree, 'variableDefinition');
+    if (path !== this._variablesDefinitionPath) {
+      this._variablesDefinitionPath = path;
+      updated = true;
+    }
+
+    const paths = new Set(this.getRelFilePathsFromPattern(tree, 'rules', '*', 'file'));
+    path = this.getRelFilePathFromAttr(tree, 'ruleDefinition');
+    if (path) {
+      paths.add(path);
+    }
+    if (!isEqual(paths, this._rulesDefinitionPaths)) {
+      this._rulesDefinitionPaths = paths;
+      updated = true;
+    }
+
+    // TODO: pull out other rel-paths from template-info
+    return updated;
   }
 
   get folderDefinitionPath() {
     return this._folderDefinitionPath;
+  }
+
+  get uiDefinitionPath() {
+    return this._uiDefinitionPath;
+  }
+
+  get variablesDefinitionPath() {
+    return this._variablesDefinitionPath;
+  }
+
+  get rulesDefinitionPaths() {
+    return this._rulesDefinitionPaths;
   }
 
   public static key(dir: vscode.Uri) {
@@ -164,11 +220,17 @@ function isValidRelPath(relPath: string): boolean {
 export class TemplateEditingManager extends Disposable {
   private templateDirs = new Map<string, TemplateDirEditing>();
   private languageClient: TemplateJsonLanguageClient | undefined;
-  private readonly folderSchemaPath: vscode.Uri;
+  public readonly folderSchemaPath: vscode.Uri;
+  public readonly uiSchemaPath: vscode.Uri;
+  public readonly variablesSchemaPath: vscode.Uri;
+  public readonly rulesSchemaPath: vscode.Uri;
 
   constructor(context: vscode.ExtensionContext) {
     super();
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
+    this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/ui-schema.json'));
+    this.variablesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/variables-schema.json'));
+    this.rulesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/rules-schema.json'));
   }
 
   public dispose() {
@@ -257,17 +319,36 @@ export class TemplateEditingManager extends Disposable {
     }
   }
 
-  private getSchemaAssociations(): ISchemaAssociations {
+  public getSchemaAssociations(): ISchemaAssociations {
     const associations: ISchemaAssociations = {};
     this.templateDirs.forEach(editing => {
       if (editing.dir.scheme === 'file') {
-        const folderDefinitionPath = editing.folderDefinitionPath;
-        if (folderDefinitionPath && isValidRelPath(folderDefinitionPath)) {
-          const fileMatch = path.join(editing.dir.path, folderDefinitionPath);
+        // for each template, find the related file paths and configure them with the right json-schema
+        let filePath = editing.folderDefinitionPath;
+        if (filePath && isValidRelPath(filePath)) {
           // REVIEWME: what they if put in the same file path in 2 different relPath fields?
           // right now, this will do last-one-wins. should be we both? that's probably weird.
           //
-          associations[fileMatch] = [this.folderSchemaPath.toString()];
+          associations[path.join(editing.dir.path, filePath)] = [this.folderSchemaPath.toString()];
+        }
+
+        filePath = editing.uiDefinitionPath;
+        if (filePath && isValidRelPath(filePath)) {
+          associations[path.join(editing.dir.path, filePath)] = [this.uiSchemaPath.toString()];
+        }
+
+        filePath = editing.variablesDefinitionPath;
+        if (filePath && isValidRelPath(filePath)) {
+          associations[path.join(editing.dir.path, filePath)] = [this.variablesSchemaPath.toString()];
+        }
+
+        const filePaths = editing.rulesDefinitionPaths;
+        if (filePaths) {
+          filePaths.forEach(filePath => {
+            if (filePath && isValidRelPath(filePath)) {
+              associations[path.join(editing.dir.path, filePath)] = [this.rulesSchemaPath.toString()];
+            }
+          });
         }
         // TODO: get other associated files from the template-info.json
       }
@@ -277,6 +358,9 @@ export class TemplateEditingManager extends Disposable {
 
   private updateSchemaAssociations() {
     if (this.languageClient) {
+      // REVIEWME: should we debounce this call?
+      // this is called on every file open and edit, including for every initial open file, which could queue up
+      // a bunch of these in a row, when we only care about the last one.
       this.languageClient.updateSchemaAssociations();
     }
   }
