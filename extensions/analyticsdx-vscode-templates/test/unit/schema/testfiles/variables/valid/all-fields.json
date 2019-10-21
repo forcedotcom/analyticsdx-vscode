@@ -1,0 +1,311 @@
+{
+  "boolean": {
+    "label": "Boolean Variable",
+    "description": "Boolean Variable",
+    "excludes": ["Foo", "/^Billing.+/"],
+    "excludeSelected": true,
+    "required": true,
+    "variableType": {
+      "type": "BooleanType",
+      "enums": ["One", "Two", "Three", "default value"]
+    },
+    "defaultValue": "default value"
+  },
+  "string": {
+    "label": "String Variable",
+    "description": "String Variable",
+    "excludes": ["Bar", "/\\s*[\\w\\.]+\\s*/gs"],
+    "excludeSelected": false,
+    "required": false,
+    "variableType": {
+      "type": "StringType",
+      "enums": ["One", "Two", "Three", "default value"]
+    },
+    "defaultValue": "default value"
+  },
+  "number": {
+    "label": "Number Variable",
+    "description": "Number Variable",
+    "variableType": {
+      "type": "NumberType",
+      "enums": [1, 2, 3],
+      "min": 1,
+      "max": 3
+    }
+  },
+  "sobject": {
+    "label": "Sobject Variable",
+    "variableType": {
+      "type": "SobjectType"
+    },
+    "defaultValue": {
+      "defaultValue": {
+        "sobjectName": "Case"
+      }
+    }
+  },
+  "sobjectbase64field": {
+    "label": "Sojbect Field Variable",
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:base64"
+    },
+    "defaultValue": {
+      "sobjectName": "Account",
+      "fieldName": "CompnayName"
+    }
+  },
+  "sobjectbooleanfield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:boolean"
+    }
+  },
+  "sobjectbytefield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:byte"
+    }
+  },
+  "sobjectdatefield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:date"
+    }
+  },
+  "sobjectdatetimefield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:dateTime"
+    }
+  },
+  "sobjectdoublefield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:double"
+    }
+  },
+  "sobjectintfield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:int"
+    }
+  },
+  "sobjectstringfield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:string"
+    }
+  },
+  "sobjecttimefield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:time"
+    }
+  },
+  "datetime": {
+    "label": "DateTime Variable",
+    "variableType": {
+      "type": "DateTimeType"
+    },
+    "defaultValue": "2019-10-30T12:58:14-07:00"
+  },
+  "dataset": {
+    "label": "Dataset variable",
+    "variableType": {
+      "type": "DatasetType"
+    },
+    "defaultValue": {
+      "datasetId": "{{Variables.datasetExample.datasetId}}"
+    }
+  },
+  "datasetdimension": {
+    "label": "Dataset Dimension variable",
+    "variableType": {
+      "type": "DatasetDimensionType"
+    },
+    "defaultValue": {
+      "datasetId": "{{Variables.datasetExample.datasetId}}",
+      "fieldName": "TheField"
+    }
+  },
+  "datasetmeasure": {
+    "label": "Dataset Measure variable",
+    "variableType": {
+      "type": "DatasetMeasureType"
+    },
+    "defaultValue": {
+      "datasetId": "{{Variables.datasetExample.datasetId}}",
+      "fieldName": "TheField"
+    }
+  },
+  "datasetdate": {
+    "label": "Dataset Date variable",
+    "variableType": {
+      "type": "DatasetDateType"
+    },
+    "defaultValue": {
+      "datasetId": "{{Variables.datasetExample.datasetId}}",
+      "dateAlias": "optional"
+    }
+  },
+  "datasetanyfield": {
+    "label": "Dataset Any Field variable",
+    "variableType": {
+      "type": "DatasetAnyFieldType"
+    },
+    "defaultValue": {
+      "datasetId": "{{Variables.datasetExample.datasetId}}",
+      "fieldName": "TheField"
+    }
+  },
+  "stringarray": {
+    "label": "String Array Field",
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "StringType",
+        "enums": ["Leads", "Campaigns", "Campaign Members"]
+      },
+      "sizeLimit": {
+        "max": 10,
+        "min": 1
+      }
+    }
+  },
+  "booleanarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "BooleanType"
+      },
+      "sizeLimit": {
+        "max": 2
+      }
+    }
+  },
+  "datasetanyfieldarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DatasetAnyFieldType"
+      }
+    }
+  },
+  "datasetdatearray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DatasetDateType"
+      }
+    }
+  },
+  "datasetdimensionarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DatasetDimensionType"
+      }
+    }
+  },
+  "datasetmeasurearray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DatasetMeasureType"
+      }
+    }
+  },
+  "datasetarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DatasetType"
+      }
+    }
+  },
+  "datetimearray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DateTimeType"
+      }
+    }
+  },
+  "numberarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "NumberType",
+        "max": 1000000
+      }
+    }
+  },
+  "objectarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "ObjectType",
+        "properties": {
+          "foo": {
+            "type": "StringType"
+          }
+        }
+      }
+    }
+  },
+  "sobjectfieldarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "SobjectFieldType",
+        "dataType": "xsd:double"
+      }
+    }
+  },
+  "sobjectarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "SobjectType"
+      }
+    }
+  },
+  "object": {
+    "label": "Object Field",
+    "variableType": {
+      "type": "ObjectType",
+      "properties": {
+        "foo": {
+          "type": "StringType",
+          "enums": ["A", "B", "C"]
+        },
+        "bar": {
+          "type": "BooleanType"
+        },
+        "baz": {
+          "type": "NumberType",
+          "min": 5.0,
+          "max": 10,
+          "enums": [5, 6, 8, 9, 10]
+        },
+        "array": {
+          "type": "ArrayType",
+          "itemsType": {
+            "type": "StringType"
+          }
+        },
+        "datetime": {
+          "type": "DateTimeType"
+        }
+      },
+      "required": ["foo", "bar", "baz"],
+      "strictValidation": true
+    },
+    "defaultValue": {
+      "foo": "B",
+      "bar": true,
+      "baz": 9
+    }
+  }
+}

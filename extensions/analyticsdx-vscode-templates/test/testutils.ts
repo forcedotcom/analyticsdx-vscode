@@ -147,7 +147,8 @@ export class SchemaErrors {
       errors.forEach(error => {
         if (error.keyword === 'required') {
           // this means a required field is missing
-          let name = (error.dataPath || '') + '.' + (error.params as Ajv.RequiredParams).missingProperty;
+          let name =
+            this.cleanDataPath(error.dataPath || '') + '.' + (error.params as Ajv.RequiredParams).missingProperty;
           // if it's nested, dataPath will be the parent field
           if (name.startsWith('.')) {
             name = name.substring(1);
@@ -166,7 +167,7 @@ export class SchemaErrors {
         ) {
           // this means an invalid value in a field or wrong # of items in an array,
           // we'll usually get a bunch of these (with the same dataPath) per bad field
-          let name = error.dataPath;
+          let name = this.cleanDataPath(error.dataPath);
           if (name.startsWith('.')) {
             name = name.substring(1);
           }
@@ -191,6 +192,12 @@ export class SchemaErrors {
         }
       });
     }
+  }
+
+  private cleanDataPath(name: string): string {
+    // for some errors, Ajv will give us dataPaths like "['foo'].bar.properties['baz'].type"; this will try to convert
+    // that to foo.bar.properties.baz.type (assuming 'foo' and 'baz' are valid unqouted javascript ids)
+    return name.replace(/\['([a-zA-Z_][a-zA-Z0-9_]*)'\]/g, '.$1');
   }
 
   public expectMissingProps(exact: boolean, ...names: string[]) {

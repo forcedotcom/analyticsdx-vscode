@@ -1,0 +1,36 @@
+{
+  "emptyType": {
+    "variableType": {
+      "type": ""
+    }
+  },
+  "invalidType": {
+    "variableType": {
+      "type": "InvalidType"
+    }
+  },
+  "invalidArrayType": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "InvalidType"
+      }
+    }
+  },
+  "invalidObjectType": {
+    "variableType": {
+      "type": "ObjectType",
+      "properties": {
+        "foo": {
+          "type": "InvalidType"
+        }
+      }
+    }
+  },
+  "invalidSobjectFieldType": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:invalid"
+    }
+  }
+}

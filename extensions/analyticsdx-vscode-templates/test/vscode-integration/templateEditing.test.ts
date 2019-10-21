@@ -545,6 +545,172 @@ describe('TemplateEditorManager', () => {
     });
   }); // describe('configures uiDefinition')
 
+  describe('configures variablesDefinition', () => {
+    let tmpdir: vscode.Uri | undefined;
+    beforeEach(async () => {
+      await closeAllEditors();
+      tmpdir = undefined;
+    });
+
+    afterEach(async () => {
+      await closeAllEditors();
+      // delete the temp folder if it got created
+      if (tmpdir && (await uriStat(tmpdir))) {
+        await vscode.workspace.fs.delete(tmpdir, { recursive: true, useTrash: false });
+      }
+      tmpdir = undefined;
+    });
+
+    it('json-schema diagnostics on open', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'variables.json');
+      const [diagnostics] = await openFileAndWaitForDiagnostics(uri);
+      expect(diagnostics, 'diagnostics').to.not.be.undefined;
+      if (diagnostics.length !== 1) {
+        expect.fail('Expect 1 diagnostic on ' + uri.toString() + ' got\n:' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we got the error about the invalid field name
+      const diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic.message').to.matches(/Incorrect type/);
+    });
+
+    it('json-schema code completions', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'variables.json');
+      const [, doc] = await openFileAndWaitForDiagnostics(uri);
+      const tree = parseTree(doc.getText());
+      expect(tree, 'json text').to.not.be.undefined;
+      // find the type in the first variable
+      let node = findNodeAtLocation(tree, ['string', 'variableType', 'type']);
+      expect(node, 'string.variableType.type').to.not.be.undefined;
+      let position = doc.positionAt(node!.offset);
+      await verifyCompletionsContain(
+        doc,
+        position,
+        '"ArrayType"',
+        '"BooleanType"',
+        '"DatasetAnyFieldType"',
+        '"DatasetDateType"',
+        '"DatasetDimensionType"',
+        '"DatasetMeasureType"',
+        '"DatasetType"',
+        '"DateTimeType"',
+        '"NumberType"',
+        '"ObjectType"',
+        '"SobjectFieldType"',
+        '"SobjectType"',
+        '"StringType"'
+      );
+
+      // find the start of the first "dataType" field in the 2nd variable
+      node = findNodeAtLocation(tree, ['sobjectfield', 'variableType', 'dataType']);
+      expect(node, 'sobjectfield.variableType.dataType').to.not.be.undefined;
+      position = doc.positionAt(node!.offset);
+      await verifyCompletionsContain(
+        doc,
+        position,
+        '"xsd:base64"',
+        '"xsd:boolean"',
+        '"xsd:byte"',
+        '"xsd:date"',
+        '"xsd:dateTime"',
+        '"xsd:double"',
+        '"xsd:int"',
+        '"xsd:string"',
+        '"xsd:time"'
+      );
+
+      // check for the unused fields in the sobjectfield var
+      node = findNodeAtLocation(tree, ['sobjectfield']);
+      expect(node, 'sobjectfield').to.not.be.undefined;
+      // this should be right at the opening '{'
+      position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
+      // make sure it has the fields from the schema that aren't in the document
+      await verifyCompletionsContain(
+        doc,
+        position,
+        'defaultValue',
+        'description',
+        'excludes',
+        'excludeSelected',
+        'label',
+        'required'
+      );
+    });
+
+    it('json-schema defaultSnippets', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'variables.json');
+      const [, doc] = await openFileAndWaitForDiagnostics(uri);
+      const tree = parseTree(doc.getText());
+      expect(tree, 'json text').to.not.be.undefined;
+      // go to just before the { in "variableType" in the string var
+      const node = findNodeAtLocation(tree, ['string', 'variableType']);
+      expect(node, 'string.variableType').to.not.be.undefined;
+      const scan = scanLinesUntil(doc, ch => ch === '{', doc.positionAt(node!.offset));
+      if (scan.ch !== '{') {
+        expect.fail("Expected to find '{' after '\"string.variableType\":'");
+      }
+      const position = scan.end.translate({ characterDelta: -1 });
+      // that should give a snippet for a new variableType
+      await verifyCompletionsContain(doc, position, 'New variableType');
+    });
+
+    it('on change of path value', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      // and variables.json with some content that would have schema errors
+      const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
+      await writeEmptyJsonFile(variablesUri);
+      const [variablesDoc, variablesEditor] = await openFile(variablesUri);
+      await setDocumentText(
+        variablesEditor,
+        JSON.stringify(
+          {
+            error: 'intentionally unknown error field for test to look for'
+          },
+          undefined,
+          2
+        )
+      );
+      // but since it's not referenced by the template-info.json, it should have no errors
+      await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0);
+
+      // now, write "variableDefinition": "variables.json" to the template-info.json
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            variableDefinition: 'variables.json'
+          },
+          undefined,
+          2
+        )
+      );
+
+      // the variables.json should eventually end up with a diagnostic about the bad field
+      const diagnostics = await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 1);
+      expect(diagnostics, 'diagnostics').to.not.be.undefined;
+      if (diagnostics.length !== 1) {
+        expect.fail(
+          'Expect 1 diagnostic on ' +
+            variablesDoc.uri.toString() +
+            ' got\n:' +
+            JSON.stringify(diagnostics, undefined, 2)
+        );
+      }
+      // make sure we got the error about the invalid type
+      const diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic.message').to.matches(/Incorrect type/);
+
+      // now, set variableDefinition to an empty value
+      await setDocumentText(templateEditor, JSON.stringify({}, undefined, 2));
+      // which should clear the warnings on variables.json since it's not a variables file anymore
+      await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0);
+    });
+  }); // describe('configures variablesDefinition')
+
   describe('configures rulesDefinitions', () => {
     let tmpdir: vscode.Uri | undefined;
     beforeEach(async () => {
