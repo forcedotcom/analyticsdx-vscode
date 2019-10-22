@@ -143,10 +143,12 @@ export class SchemaErrors {
           (error.keyword === 'const' ||
             error.keyword === 'pattern' ||
             error.keyword === 'oneOf' ||
-            error.keyword === 'enum') &&
+            error.keyword === 'enum' ||
+            error.keyword === 'minItems' ||
+            error.keyword === 'maxItems') &&
           error.dataPath
         ) {
-          // this means an invalid value in a field (including in our oneOf+const enum specifications),
+          // this means an invalid value in a field or wrong # of items in an array,
           // we'll usually get a bunch of these (with the same dataPath) per bad field
           let name = error.dataPath;
           if (name.startsWith('.')) {

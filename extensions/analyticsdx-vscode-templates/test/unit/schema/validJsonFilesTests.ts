@@ -22,9 +22,16 @@ suites.push(
     )
   )
 );
+
 suites.push(
   import('../../../schemas/folder-schema.json').then(schema =>
     generateJsonSchemaValidFilesTestSuite(schema, 'folder-schema.json', __dirname, 'testfiles', 'folder', 'valid')
+  )
+);
+
+suites.push(
+  import('../../../schemas/ui-schema.json').then(schema =>
+    generateJsonSchemaValidFilesTestSuite(schema, 'ui-schema.json', __dirname, 'testfiles', 'ui', 'valid')
   )
 );
 

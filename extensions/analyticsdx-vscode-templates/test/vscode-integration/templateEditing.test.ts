@@ -53,6 +53,16 @@ describe('TemplateEditorManager', () => {
     }
   }
 
+  async function verifyCompletionsContain(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    ...expectedLabels: string[]
+  ) {
+    const list = await getCompletionItems(document.uri, position);
+    const labels = list.items.map(item => item.label);
+    expect(labels, 'completion items').to.include.members(expectedLabels);
+  }
+
   describe('starts on', () => {
     let tmpdir: vscode.Uri | undefined;
     beforeEach(async () => {
@@ -92,7 +102,7 @@ describe('TemplateEditorManager', () => {
       // make sure the template dir gets setup for editing
       await waitForTemplateEditorManagerHas(templateEditingManager, tmpdir!, true);
     });
-  });
+  }); // describe('starts on')
 
   describe('stops on delete', () => {
     let tmpdir: vscode.Uri | undefined;
@@ -165,7 +175,7 @@ describe('TemplateEditorManager', () => {
       // make sure the template dir gets editing removed
       await waitForTemplateEditorManagerHas(templateEditingManager, templateDir, false);
     });
-  });
+  }); // describe('stops on delete')
 
   describe('configures template-info.json', () => {
     beforeEach(closeAllEditors);
@@ -232,34 +242,23 @@ describe('TemplateEditorManager', () => {
     });
 
     // TODO: tests for definitionProvider, actionProvider, etc.
-  });
+  }); // describe('configures template-info.json')
 
   describe('configures folderDefinition', () => {
     let tmpdir: vscode.Uri | undefined;
     beforeEach(async () => {
       await closeAllEditors();
-      // create a temp template folder with an empty template-info.json
       tmpdir = undefined;
     });
 
     afterEach(async () => {
       await closeAllEditors();
-      // delete the temp folder
+      // delete the temp folder if it got created
       if (tmpdir && (await uriStat(tmpdir))) {
         await vscode.workspace.fs.delete(tmpdir, { recursive: true, useTrash: false });
       }
       tmpdir = undefined;
     });
-
-    async function verifyCompletionsContain(
-      document: vscode.TextDocument,
-      position: vscode.Position,
-      ...expectedLabels: string[]
-    ) {
-      const list = await getCompletionItems(document.uri, position);
-      const labels = list.items.map(item => item.label);
-      expect(labels, 'completion items').to.include.members(expectedLabels);
-    }
 
     it('json-schema diagnostics on open', async () => {
       const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'folder.json');
@@ -311,7 +310,7 @@ describe('TemplateEditorManager', () => {
       // that should give a snippet to fill out the whole featuresAssets
       await verifyCompletionsContain(doc, position, 'New featuredAssets');
 
-      // go right to the [ in "shares"
+      // go right after the [ in "shares"
       node = findNodeAtLocation(tree, ['shares']);
       expect(node, 'shares').to.not.be.undefined;
       scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
@@ -386,7 +385,165 @@ describe('TemplateEditorManager', () => {
       // which should clear the warnings on folder.json since it's not a folder file anymore
       await waitForDiagnostics(folderDoc.uri, d => d && d.length === 0);
     });
-  });
+  }); // describe('configures folderDefinition')
+
+  describe('configures uiDefinition', () => {
+    let tmpdir: vscode.Uri | undefined;
+    beforeEach(async () => {
+      await closeAllEditors();
+      tmpdir = undefined;
+    });
+
+    afterEach(async () => {
+      await closeAllEditors();
+      // delete the temp folder if it got created
+      if (tmpdir && (await uriStat(tmpdir))) {
+        await vscode.workspace.fs.delete(tmpdir, { recursive: true, useTrash: false });
+      }
+      tmpdir = undefined;
+    });
+
+    it('json-schema diagnostics on open', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'ui.json');
+      const [diagnostics] = await openFileAndWaitForDiagnostics(uri);
+      expect(diagnostics, 'diagnostics').to.not.be.undefined;
+      if (diagnostics.length !== 1) {
+        expect.fail('Expect 1 diagnostic on ' + uri.toString() + ' got\n:' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we got the error about the invalid field name
+      const diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic.message').to.matches(/Property (.+) is not allowed/);
+    });
+
+    it('json-schema code completions', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'ui.json');
+      const [, doc] = await openFileAndWaitForDiagnostics(uri);
+      const tree = parseTree(doc.getText());
+      expect(tree, 'json text').to.not.be.undefined;
+      // find the visibility in the first page variable to see if the enum works
+      let node = findNodeAtLocation(tree, ['pages', 0, 'variables', 0, 'visibility']);
+      expect(node, 'pages[0].variables').to.not.be.undefined;
+      let position = doc.positionAt(node!.offset);
+      await verifyCompletionsContain(
+        doc,
+        position,
+        '"Disabled"',
+        '"Hidden"',
+        '"Visible"',
+        '"{{Variables.booleanVariable}}"'
+      );
+
+      // find the start of the first "page" item
+      node = findNodeAtLocation(tree, ['pages', 0]);
+      expect(node, 'pages').to.not.be.undefined;
+      // this should be right the opening '{'
+      position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
+      // make sure it has the fields from the schema that aren't in the document
+      await verifyCompletionsContain(doc, position, 'condition', 'helpUrl', 'vfPage');
+    });
+
+    it('json-schema defaultSnippets', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'ui.json');
+      const [, doc] = await openFileAndWaitForDiagnostics(uri);
+      const tree = parseTree(doc.getText());
+      expect(tree, 'json text').to.not.be.undefined;
+      // go to just before the [ in "pages"
+      let node = findNodeAtLocation(tree, ['pages']);
+      expect(node, 'pages').to.not.be.undefined;
+      let scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
+      if (scan.ch !== '[') {
+        expect.fail("Expected to find '[' after '\"pages\":'");
+      }
+      let position = scan.end.translate({ characterDelta: -1 });
+      // that should give a snippet to fill out the whole pages
+      await verifyCompletionsContain(doc, position, 'New pages');
+
+      // go to just after the [ in "variables"
+      node = findNodeAtLocation(tree, ['pages', 0, 'variables']);
+      expect(node, 'pages[0].variables').to.not.be.undefined;
+      scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
+      if (scan.ch !== '[') {
+        expect.fail("Expected to find '[' after '\"variables\":'");
+      }
+      position = scan.end.translate({ characterDelta: 1 });
+      // that should give a snippet for a new variable
+      await verifyCompletionsContain(doc, position, 'New variable');
+
+      // go right after the [ in "displayMessages"
+      node = findNodeAtLocation(tree, ['displayMessages']);
+      expect(node, 'displayMessages').to.not.be.undefined;
+      scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
+      if (scan.ch !== '[') {
+        expect.fail("Expected to find '[' after '\"displayMessages\":'");
+      }
+      position = scan.end.translate({ characterDelta: 1 });
+      // that should give a snippet for default
+      await verifyCompletionsContain(doc, position, 'New displayMessage');
+    });
+
+    it('on change of path value', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      // and ui.json with some content that would have schema errors
+      const uiUri = tmpdir.with({ path: path.join(tmpdir.path, 'ui.json') });
+      await writeEmptyJsonFile(uiUri);
+      const [uiDoc, uiEditor] = await openFile(uiUri);
+      await setDocumentText(
+        uiEditor,
+        JSON.stringify(
+          {
+            error: 'intentionally unknown error field for test to look for'
+          },
+          undefined,
+          2
+        )
+      );
+      // but since it's not reference by the template-info.json, it should have no errors
+      await waitForDiagnostics(uiDoc.uri, d => d && d.length === 0);
+
+      // now, write "uiDefinition": "ui.json" to the template-info.json
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            uiDefinition: 'ui.json'
+          },
+          undefined,
+          2
+        )
+      );
+
+      // the ui.json should eventually end up with a diagnostic about the bad field
+      const diagnostics = await waitForDiagnostics(uiDoc.uri, d => d && d.length === 1);
+      expect(diagnostics, 'diagnostics').to.not.be.undefined;
+      if (diagnostics.length !== 1) {
+        expect.fail(
+          'Expect 1 diagnostic on ' + uiDoc.uri.toString() + ' got\n:' + JSON.stringify(diagnostics, undefined, 2)
+        );
+      }
+      // make sure we got the error about the invalid field name
+      const diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic.message').to.matches(/Property (.+) is not allowed/);
+
+      // now, set uiDefinition to a filename that doesn't exist
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            uiDefinition: 'doesnotexist.json'
+          },
+          undefined,
+          2
+        )
+      );
+      // which should clear the warnings on ui.json since it's not a folder file anymore
+      await waitForDiagnostics(uiDoc.uri, d => d && d.length === 0);
+    });
+  }); // describe('configures uiDefinition')
 
   // TODO: tests for the other template files, once they're implemented
 });

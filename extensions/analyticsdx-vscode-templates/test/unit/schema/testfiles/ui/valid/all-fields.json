@@ -1,0 +1,73 @@
+{
+  "pages": [
+    {
+      "title": "Static Values",
+      "helpUrl": "https://salesforce.com",
+      "vfPage": {
+        "name": "vfpage",
+        "namespace": "vfpagenamespace"
+      },
+      "variables": [
+        {
+          "name": "simple"
+        },
+        {
+          "name": "Visible",
+          "visibility": "Visible"
+        },
+        {
+          "name": "visbile",
+          "visibility": "visible"
+        },
+        {
+          "name": "vISIBLE",
+          "visibility": "vISIBLE"
+        },
+        {
+          "name": "Hidden",
+          "visibility": "Hidden"
+        },
+        {
+          "name": "hidden",
+          "visibility": "hidden"
+        },
+        {
+          "name": "hIDDEN",
+          "visibility": "hIDDEN"
+        },
+        {
+          "name": "Disabled",
+          "visibility": "Disabled"
+        },
+        {
+          "name": "disabled",
+          "visibility": "disabled"
+        },
+        {
+          "name": "dISABLED",
+          "visibility": "dISABLED"
+        }
+      ]
+    },
+    {
+      "title": "Expressions",
+      "condition": "{{Variables.x == true && Variables.y >=5 && Variables.a contains 'foo'}}",
+      "variables": [
+        {
+          "name": "simple",
+          "visibility": "{{Variables.booleanValue}}"
+        },
+        {
+          "name": "ternary",
+          "visibility": "{{Variables.stringVariable == 'Yes' ? 'Visiible' : 'Hidden'}}"
+        }
+      ]
+    }
+  ],
+  "displayMessages": [
+    {
+      "text": "Message Here",
+      "location": "AppLandingPage"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "pages": [
+    {
+      "title": "Page title",
+      "variables": [
+        {
+          "name": "bad",
+          "visibility": "badvalue"
+        },
+        {
+          "name": "empty",
+          "visibility": ""
+        }
+      ]
+    }
+  ],
+  "displayMessages": [
+    {
+      "text": "",
+      "location": "badvalue"
+    }
+  ]
+}

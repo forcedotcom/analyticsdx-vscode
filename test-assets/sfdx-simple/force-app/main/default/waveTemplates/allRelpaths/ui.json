@@ -1,1 +1,15 @@
-{}
+{
+  "error": "intentional error for tests to look for",
+  "pages": [
+    {
+      "title": "Page1",
+      "variables": [
+        {
+          "name": "var1",
+          "visibility": "Disabled"
+        }
+      ]
+    }
+  ],
+  "displayMessages": []
+}
