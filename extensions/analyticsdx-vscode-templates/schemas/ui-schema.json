@@ -4,7 +4,203 @@
   "title": "Salesforce Analytics Template User Interface Definition",
   "description": "",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
   "allowComments": true,
-  "required": []
+  "required": [],
+  "properties": {
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["title", "variables"],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title to be displayed at the top of the page."
+          },
+          "condition": {
+            "type": "string",
+            "description": "A {{...}} condition against Variables. The condition can use && and || to join expressions. If the condition evaluates to true, then the page will display; if the condition evaluates to false, the page will not display.",
+            "pattern": "^{{.+}}$",
+            "patternErrorMessage": "Must be a valid {{...}} expression.",
+            "examples": [
+              "{{Variables.stringVariable == 'Yes'}}",
+              "{{Variables.booleanVariable == true}}",
+              "{{Variables.numberVariable == 5}}",
+              "{{Variables.objectVariable.sobjectName == 'X'}}",
+              "{{Variables.fieldVariable.fieldName == 'X'}}",
+              "{{Variables.stringArray contains 'X'}}",
+              "{{Variables.numberArray contains 5}}"
+            ]
+          },
+          "helpUrl": {
+            "type": "string",
+            "description": "URL provided by template dev to additional content to help user with creating app."
+          },
+          "vfPage": {
+            "type": "object",
+            "required": ["name", "namespace"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of VisualForce class to use."
+              },
+              "namespace": {
+                "type": "string",
+                "description": "The namespace for the VisualForce class."
+              }
+            },
+            "defaultSnippets": [
+              {
+                "label": "New vfPage",
+                "body": {
+                  "name": "${1:name}",
+                  "namespace": "${2:namespace}"
+                }
+              }
+            ]
+          },
+          "variables": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Variable name, must match name of variable defined in variableDefinition file."
+                },
+                "visibility": {
+                  "description": "Controls whether the variable should be visible. The value must one of 'Disabled', 'Hidden', or 'Visible', or a {{...}} expression against Variables that evaluates to one of those or true (Visible) or false (Hidden)",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^{{.+}}$",
+                      "patternErrorMessage": "Value must one of 'Disabled', 'Hidden', or 'Visible', or a {{...}} expression.",
+                      "examples": [
+                        "{{Variables.booleanVariable}}",
+                        "{{Variables.booleanVariable ? 'Visiible' : 'Disabled'}}",
+                        "{{Variables.stringVariable == 'Yes' ? 'Visiible' : 'Hidden'}}",
+                        "{{Variables.numberVariable == 5 ? 'Visiible' : 'Hidden'}}",
+                        "{{Variables.stringArray contains 'X' ? 'Visiible' : 'Hidden'}}",
+                        "{{Variables.numberArray contains 5 ? 'Visiible' : 'Hidden'}}"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "default": "Visible",
+                      "enum": ["Disabled", "Hidden", "Visible"],
+                      "enumDescriptions": [
+                        "The variable will show as disabled",
+                        "The variable will be hidden.",
+                        "The variable will be visible."
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "$comment": "json-schema does not support case-insensitive enums, so this simulates it, using a lower-case 1st char to avoid a double schema match.",
+                      "pattern": "^(d[Ii][Ss][Aa][Bb][Ll][Ee][Dd]|h[Ii][Dd][Dd][Ee][Nn]|v[Ii][Ss][Ii][Bb][Ll][Ee])$"
+                    }
+                  ]
+                }
+              },
+              "defaultSnippets": [
+                {
+                  "label": "New variable",
+                  "body": {
+                    "name": "${1:name}",
+                    "visibility": "${2:Visible}"
+                  }
+                }
+              ]
+            },
+            "defaultSnippets": [
+              {
+                "label": "New variables",
+                "body": [
+                  {
+                    "name": "${1:name}",
+                    "visibility": "${2:Visible}"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New page",
+            "body": {
+              "title": "${1:Page title}",
+              "variables": [
+                {
+                  "name": "${2:name}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "defaultSnippets": [
+        {
+          "label": "New pages",
+          "body": [
+            {
+              "title": "${1:Page title}",
+              "variables": [
+                {
+                  "name": "${2:name}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "displayMessages": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["text", "location"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Text to display on the app creation landing page"
+          },
+          "location": {
+            "type": "string",
+            "enum": ["AppLandingPage"],
+            "description": "Location to display the text, currently only 'AppLandingPage' is supported."
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New displayMessage",
+            "body": {
+              "text": "$0",
+              "location": "AppLandingPage"
+            }
+          }
+        ]
+      },
+      "defaultSnippets": [
+        {
+          "label": "New displayMessages",
+          "body": [
+            {
+              "text": "$0",
+              "location": "AppLandingPage"
+            }
+          ]
+        }
+      ]
+    }
+  }
 }

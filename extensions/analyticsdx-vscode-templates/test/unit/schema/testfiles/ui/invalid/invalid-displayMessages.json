@@ -1,0 +1,9 @@
+{
+  "displayMessages": [
+    {},
+    {
+      "text": "Can't have 2",
+      "location": "AppLandingPage"
+    }
+  ]
+}

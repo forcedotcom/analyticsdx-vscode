@@ -1,0 +1,14 @@
+{
+  "pages": [
+    {},
+    {
+      "title": "empty variables and page vfpage",
+      "variables": [],
+      "vfPage": {}
+    },
+    {
+      "title": "empty variable",
+      "variables": [{}]
+    }
+  ]
+}
