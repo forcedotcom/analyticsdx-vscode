@@ -11,6 +11,8 @@ jobs:
     # run on macOS so it can do ui stuff
     runs-on: macOS-latest
 
+    timeout-minutes: 20
+
     # for now, we just want to run on what VSCode uses (which is also in .nvmrc),
     # but we may support move versions later
     strategy:
