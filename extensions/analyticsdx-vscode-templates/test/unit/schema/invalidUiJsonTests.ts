@@ -66,7 +66,7 @@ describe('ui-schema.json finds errors in', () => {
   it('invalid-displayMessages.json', async () => {
     const errors = await validate('invalid-displayMessages.json');
     errors.expectMissingProps(true, 'displayMessages[0].text', 'displayMessages[0].location');
-    errors.expectInvalidProps(true, 'displayMessages!');
+    errors.expectInvalidProps(true, 'displayMessages');
     errors.expectNoUnrecognizedErrors();
   });
 });

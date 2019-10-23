@@ -60,7 +60,7 @@ describe('template-info-schema.json hookup', () => {
       );
     }
     expect(diagnostics[0].message, 'diagnostic message').to.be.equals(
-      "Deprecated - use 'icons.templateBadge' instead."
+      "!Deprecated - use 'icons.templateBadge' instead."
     );
     // this is also testing the positive case for linter.js's file-path checks since there are no warnings about them,
     // and that the allowComments: true in the schema works in VSCode
