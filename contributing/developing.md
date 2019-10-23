@@ -44,6 +44,9 @@ You would only do this once after you cloned the repository.
     `postinstall` script, this also runs `npm run bootstrap` for you
     automatically the first time.
 1.  Open the project in VS Code.
+1.  The first time after running `npm install` and opening VS Code against the folder, open any `.ts` file, run
+    the `TypeScript: Select TypeScript Version...` command via the Command Palette (CMD+SHIFT+P), and select
+    `Use Workspace Version`.
 
 You would usually do the following each time you close/reopen VS Code:
 
