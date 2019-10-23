@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { isSameUriPath, isUriPathUnder, isWhitespaceChar } from '../../../src/util/utils';
 
 // tslint:disable: no-unused-expression
-describe.only('utils', () => {
+describe('utils', () => {
   describe('isWhitespaceChar()', () => {
     [[' ', 'space'], ['\t', 'tab'], ['\r', 'CR'], ['\n', 'LF']].forEach(([ch, name]) => {
       it(`matches ${name}`, () => {
