@@ -1,0 +1,86 @@
+{
+  "constants": [],
+  "rules": [
+    {
+      "name": "Recursively delete node3 and dependencies",
+      "appliesTo": [
+        {
+          "type": "*"
+        }
+      ],
+      "actions": [
+        {
+          "action": "eval",
+          "value": "${macroRecursion:deleteNodeAndDependencies('node3')}"
+        }
+      ]
+    }
+  ],
+  "macros": [
+    {
+      "namespace": "macroRecursion",
+      "definitions": [
+        {
+          "name": "deleteNodeAndDependencies",
+          "description": "Delete a node and its dependencies.  Returns an array of json paths of all the nodes that were deleted.",
+          "parameters": ["nodeName"],
+          "actions": [
+            {
+              "action": "eval",
+              "key": "fullNodePath",
+              "value": "$.${p.nodeName}"
+            },
+            {
+              "action": "eval",
+              "key": "dependencies",
+              "value": "${macroRecursion:getDependents(p.nodeName)}"
+            },
+            {
+              "action": "eval",
+              "value": "${array:forEach(Rules.Eval.dependencies, '${macroRecursion:deleteNodeAndDependencies(macroRecursion:deleteSingleNodeByFullJsonPath(var))}')}"
+            },
+            {
+              "action": "eval",
+              "value": "${macroRecursion:deleteSingleNodeByFullJsonPath(Rules.Eval.fullNodePath)}"
+            }
+          ]
+        },
+        {
+          "name": "deleteSingleNodeByFullJsonPath",
+          "description": "Deletes a node by full json path.",
+          "parameters": ["fullJsonPath"],
+          "actions": [
+            {
+              "action": "eval",
+              "key": "pathSegments",
+              "value": "${string:match(p.fullJsonPath,'\\\\[\\'(.*?)\\'\\\\]')}"
+            },
+            {
+              "action": "delete",
+              "path": "${p.fullJsonPath}"
+            }
+          ],
+          "returns": "${array:last(Rules.Eval.pathSegments)}"
+        },
+        {
+          "name": "getDependents",
+          "description": "Returns the full json path to search results",
+          "parameters": ["nodeName"],
+          "actions": [
+            {
+              "action": "eval",
+              "key": "searchString",
+              "value": "$.*[?(@.dependsOn=='${p.nodeName}')]"
+            },
+            {
+              "action": "eval",
+              "key": "paths",
+              "value": "${json:searchPaths(Rules.Eval.searchString)}"
+            }
+          ],
+          "returns": "${Rules.Eval.paths}"
+        }
+      ]
+    }
+  ]
+}

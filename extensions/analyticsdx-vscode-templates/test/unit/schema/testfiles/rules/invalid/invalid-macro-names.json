@@ -1,0 +1,40 @@
+{
+  "constants": [],
+  "rules": [],
+  "macros": [
+    {
+      "namespace": "bad id",
+      "definitions": []
+    },
+    {
+      "namespace": ".bad",
+      "definitions": []
+    },
+    {
+      "namespace": "$bad",
+      "definitions": []
+    },
+    {
+      "namespace": "string",
+      "definitions": []
+    },
+    {
+      "namespace": "wave",
+      "definitions": [
+        {
+          "description": "The 'string and 'wave' namespaces are bad because they're reserved ids. These here are testing that names have to valid ids.",
+          "name": "bad id"
+        },
+        {
+          "name": ".bad"
+        },
+        {
+          "name": "$bad"
+        },
+        {
+          "name": ":bad"
+        }
+      ]
+    }
+  ]
+}

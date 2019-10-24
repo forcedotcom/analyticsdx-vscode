@@ -1,0 +1,38 @@
+{
+  "constants": [
+    {
+      "name": "ChartType",
+      "value": "pie"
+    }
+  ],
+  "rules": [
+    {
+      "name": "rule1",
+      "appliesTo": [
+        {
+          "type": "dashboard",
+          "name": "dashboardOne"
+        }
+      ],
+      "actions": [
+        {
+          "action": "put",
+          "description": "Put a section back in, but with different attributes",
+          "path": "$.state.widgets.chart_1",
+          "key": "pos",
+          "value": {
+            "w": "501",
+            "y": "41",
+            "h": "121",
+            "x": "51"
+          }
+        },
+        {
+          "action": "delete",
+          "description": "Delete a section",
+          "path": "$.state.widgets.chart_2"
+        }
+      ]
+    }
+  ]
+}

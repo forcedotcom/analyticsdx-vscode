@@ -1,0 +1,17 @@
+{
+  "constants": [],
+  "rules": [],
+  "macros": [
+    {
+      "namespace": "foo",
+      "definitions": [
+        {
+          "name": "bar",
+          "description": "Technically valid if not useful",
+          "parameters": [],
+          "actions": []
+        }
+      ]
+    }
+  ]
+}

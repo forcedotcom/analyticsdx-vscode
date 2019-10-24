@@ -1,0 +1,46 @@
+{
+  "constants": [],
+  "rules": [
+    {
+      "name": "foo",
+      "appliesTo": [
+        {
+          "type": "*"
+        }
+      ],
+      "actions": [
+        {
+          "action": "eval",
+          "description": "put selected values for sfdcDigest in dataflow",
+          "value": "${_macros:addToExtractCaseWorkflow(Variables.CaseMoreDims)}"
+        }
+      ]
+    }
+  ],
+  "macros": [
+    {
+      "namespace": "_macros",
+      "definitions": [
+        {
+          "name": "concatArrayFieldName",
+          "description": "Concatenates field names from an sobject array node",
+          "parameters": ["variable"],
+          "returns": "${array:concat(Rules.CurrentNode, array:forEach(p.variable,'{\"name\":\"${var.fieldName}\"}'))}"
+        },
+        {
+          "name": "addToExtractCaseWorkflow",
+          "description": "Adds array fields to Extract Case node",
+          "parameters": ["variable"],
+          "actions": [
+            {
+              "action": "set",
+              "description": "put selected values for sfdcDigest in dataflow",
+              "path": "$.workflowDefinition.Extract_Case.parameters.fields",
+              "value": "${macros:concatArrayFieldName(p.variable)}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

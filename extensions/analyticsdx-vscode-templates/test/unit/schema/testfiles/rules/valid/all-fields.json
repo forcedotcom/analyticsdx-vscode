@@ -1,0 +1,174 @@
+{
+  "constants": [
+    {
+      "name": "str",
+      "value": "somevalue"
+    },
+    {
+      "name": "expr",
+      "value": "${Variables.foo}"
+    },
+    {
+      "name": "bool",
+      "value": true
+    },
+    {
+      "name": "number",
+      "value": 46.0
+    },
+    {
+      "name": "int",
+      "value": 46
+    },
+    {
+      "name": "null",
+      "value": null
+    },
+    {
+      "name": "array",
+      "value": [false, "one", 2, 3.14, [], {}, null]
+    },
+    {
+      "name": "obj",
+      "value": {
+        "zero": false,
+        "one": "one",
+        "two": 2,
+        "three": 3.14,
+        "four": [],
+        "five": {},
+        "null": null
+      }
+    }
+  ],
+  "rules": [
+    {
+      "name": "name",
+      "condition": "${Constants.str == 'somevalue}",
+      "appliesTo": [
+        {},
+        {
+          "type": "*",
+          "name": "*",
+          "label": "*"
+        },
+        {
+          "type": null,
+          "name": null,
+          "label": null
+        },
+        {
+          "type": "dashboard"
+        },
+        {
+          "type": "lens"
+        },
+        {
+          "type": "schema"
+        },
+        {
+          "type": "workflow"
+        },
+        {
+          "type": "xmd"
+        }
+      ],
+      "actions": [
+        {
+          "action": "add",
+          "description": "description",
+          "condition": "${Constants.bool}",
+          "path": "$.name",
+          "value": "value",
+          "index": 0
+        },
+        {
+          "action": "delete",
+          "path": "$.name",
+          "condition": "true"
+        },
+        {
+          "action": "eval",
+          "path": "$.name",
+          "key": "key",
+          "value": "value",
+          "condition": "false"
+        },
+        {
+          "action": "put",
+          "path": "$.name",
+          "key": "key",
+          "value": ["A", "two", 3.14],
+          "condition": "TRUE"
+        },
+        {
+          "action": "replace",
+          "key": "key",
+          "value": "value",
+          "condition": "FALSE"
+        },
+        {
+          "action": "set",
+          "path": "$.name",
+          "value": {
+            "a": true,
+            "b": "two",
+            "c": 42.0
+          }
+        }
+      ]
+    }
+  ],
+  "macros": [
+    {
+      "namespace": "foo",
+      "definitions": [
+        {
+          "name": "bar",
+          "parameters": ["baz"],
+          "actions": [
+            {
+              "action": "add",
+              "description": "description",
+              "condition": "${p.baz == 'foo'}",
+              "path": "$.name",
+              "value": "value",
+              "index": 0
+            },
+            {
+              "action": "delete",
+              "path": "$.name"
+            },
+            {
+              "action": "eval",
+              "path": "$.name",
+              "key": "key",
+              "value": "value"
+            },
+            {
+              "action": "put",
+              "path": "$.name",
+              "key": "key",
+              "value": ["A", "two", 3.14]
+            },
+            {
+              "action": "replace",
+              "key": "key",
+              "value": "value"
+            },
+            {
+              "action": "set",
+              "path": "$.name",
+              "value": {
+                "a": true,
+                "b": "two",
+                "c": 42.0
+              }
+            }
+          ],
+          "returns": "${key}"
+        }
+      ]
+    }
+  ]
+}

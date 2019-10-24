@@ -1,0 +1,38 @@
+{
+  "macros": [
+    {
+      "namespace": "myMacroNamespace",
+      "definitions": [
+        {
+          "name": "multiplyTwoNumbers",
+          "parameters": ["firstNumber", "secondNumber"],
+          "returns": "${p.firstNumber * p.secondNumber}"
+        },
+        {
+          "name": "deleteWidget",
+          "description": "Deletes a widget and any references to the widget.",
+          "parameters": ["widgetName"],
+          "actions": [
+            {
+              "action": "eval",
+              "key": "results",
+              "value": "${json:searchPaths(\"$.state.widget['p.widgetName']\")}"
+            },
+            {
+              "condition": "${!empty results}",
+              "action": "delete",
+              "path": "$.state.widgets['${p.widgetName}']"
+            },
+            {
+              "condition": "${!empty results}",
+              "action": "delete",
+              "path": "$.state.gridLayouts..pages..widgets[?(@.name=='${p.widgetName}')]"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "constants": [],
+  "rules": []
+}

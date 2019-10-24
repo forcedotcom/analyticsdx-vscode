@@ -1,0 +1,65 @@
+{
+  "constants": [],
+  "rules": [
+    {
+      "name": "missing required action fields",
+      "appliesTo": [],
+      "actions": [
+        {},
+        {
+          "action": "add"
+        },
+        {
+          "action": "delete"
+        },
+        {
+          "action": "eval"
+        },
+        {
+          "action": "put"
+        },
+        {
+          "action": "replace"
+        },
+        {
+          "action": "set"
+        }
+      ]
+    }
+  ],
+  "macros": [
+    {
+      "namespace": "ns",
+      "definitions": [
+        {
+          "name": "bad_action_fields",
+          "actions": [
+            {
+              "action": "add",
+              "path": "$.name",
+              "index": "needs to be a number",
+              "value": "value"
+            },
+            {
+              "action": "eval",
+              "key": ["needs", 2, "be", "a", "string"],
+              "value": "value"
+            },
+            {
+              "action": "put",
+              "description": "key needs to be a string",
+              "key": false,
+              "value": "value",
+              "path": "$.name"
+            },
+            {
+              "action": "replace",
+              "key": -42.0,
+              "value": { "not": "a string" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

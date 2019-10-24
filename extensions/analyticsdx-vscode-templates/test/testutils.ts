@@ -122,6 +122,20 @@ export function generateJsonSchemaValidFilesTestSuite(
   );
 }
 
+export function createRelPathValidateFn(schema: object, basedir: string): (relpath: string) => Promise<SchemaErrors> {
+  const ajv = new Ajv({ allErrors: true });
+  const validator = ajv.compile(schema);
+  const readFile = promisify(fs.readFile);
+
+  return async function validate(relpath: string) {
+    const json = await readFile(path.join(basedir, relpath), { encoding: 'utf-8' }).then(JSON.parse);
+    const result = await validator(json);
+    if (result || !validator.errors || validator.errors.length <= 0) {
+      expect.fail('Expected validation errors on ' + relpath);
+    }
+    return new SchemaErrors(validator.errors);
+  };
+}
 /** Helper class for processing Ajv errors from doing schema validation. */
 export class SchemaErrors {
   private readonly missingProps = new Set<string>();
@@ -143,7 +157,9 @@ export class SchemaErrors {
           (error.keyword === 'const' ||
             error.keyword === 'pattern' ||
             error.keyword === 'oneOf' ||
+            error.keyword === 'type' ||
             error.keyword === 'enum' ||
+            error.keyword === 'not' ||
             error.keyword === 'minItems' ||
             error.keyword === 'maxItems') &&
           error.dataPath

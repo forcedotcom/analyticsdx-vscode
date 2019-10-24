@@ -28,6 +28,14 @@
       "url": "/extensions/analyticsdx-vscode-templates/schemas/folder-schema.json"
     },
     {
+      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/rules/**/*.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/rules-schema.json"
+    },
+    {
+      "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/*-rules.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/rules-schema.json"
+    },
+    {
       "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/ui/**/*.json"],
       "url": "/extensions/analyticsdx-vscode-templates/schemas/ui-schema.json"
     },
