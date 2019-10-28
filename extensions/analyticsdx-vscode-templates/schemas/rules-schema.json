@@ -59,7 +59,7 @@
             "minLength": 1
           },
           "condition": {
-            "description": "Controls whether this rules will run. Should be a ${...} expression against Variables and/or Constants that returns a boolean value, or 'true' or 'false'.",
+            "description": "Controls whether this rule will run. Should be a ${...} expression against Variables and/or Constants that returns a boolean value, or 'true' or 'false'.",
             "$ref": "#/definitions/condition"
           },
           "appliesTo": {
@@ -154,7 +154,7 @@
         "properties": {
           "namespace": {
             "type": "string",
-            "description": "A unique string identifier used to scope the collection of macro definitions. This should used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
+            "description": "A unique string identifier used to scope the collection of macro definitions. This is used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
             "allOf": [
               {
                 "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
@@ -221,7 +221,7 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "A unique string identifier for this macro definition. This should be used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
+                  "description": "A unique string identifier for this macro definition. This is used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
                   "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
                 },
                 "description": {
@@ -288,7 +288,8 @@
           "enum": ["true", "false"]
         },
         {
-          "pattern": "^(T[Rr][Uu][Ee]|F[Aa][Ll][Ss][Ee])$"
+          "pattern": "^(T[Rr][Uu][Ee]|F[Aa][Ll][Ss][Ee])$",
+          "$comment": "case-insensitive enum workaround"
         }
       ]
     },
@@ -314,7 +315,7 @@
           "type": "string"
         },
         "condition": {
-          "description": "Controls whether this action will run. Must be a ${...} expression against Variables and/or Constants that returns a boolean value or 'true' or 'false'.",
+          "description": "Controls whether this action will run. Must be a ${...} expression against Variables and/or Constants that returns a boolean value, or 'true' or 'false'.",
           "$ref": "#/definitions/condition"
         },
         "path": {
@@ -353,7 +354,7 @@
             "action": { "const": "eval" },
             "key": {
               "type": "string",
-              "description": "The name of a variable with the ${Rules.Eval} context to set to the return value of the exrepssion."
+              "description": "The name of a variable within the ${Rules.Eval} context to set to the return value of the exrepssion."
             },
             "value": {
               "description": "The ${...} expression to evaluate."
