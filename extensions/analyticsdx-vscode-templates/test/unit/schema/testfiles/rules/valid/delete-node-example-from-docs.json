@@ -1,0 +1,54 @@
+{
+  "constants": [],
+  "rules": [
+    {
+      "name": "foo",
+      "appliesTo": [
+        {
+          "type": "workflow"
+        }
+      ],
+      "actions": [
+        {
+          "action": "eval",
+          "key": "myArray",
+          "value": ["Extract_Queue", "Add_Fields_To_Queue", "Append_Queue_User"]
+        },
+        {
+          "action": "eval",
+          "description": "remove multiple nodes in dataflow",
+          "value": "${_macros:deleteArrayOfWorkflowNodes(Rules.Eval.myArray)}"
+        }
+      ]
+    }
+  ],
+  "macros": [
+    {
+      "namespace": "_macros",
+      "definitions": [
+        {
+          "name": "deleteWorkflowNode",
+          "description": "Deletes a workflow node.",
+          "parameters": ["nodeName"],
+          "actions": [
+            {
+              "action": "delete",
+              "path": "$.workflowDefinition.${p.nodeName}"
+            }
+          ]
+        },
+        {
+          "name": "deleteArrayOfWorkflowNodes",
+          "description": "Deletes a set of workflow nodes.",
+          "parameters": ["nodeNameArray"],
+          "actions": [
+            {
+              "action": "eval",
+              "value": "${array:forEach(p.nodeNameArray, '${macros:_deleteWorkflowNode(var)}')}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

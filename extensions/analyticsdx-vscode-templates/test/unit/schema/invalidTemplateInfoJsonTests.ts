@@ -5,33 +5,16 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as Ajv from 'ajv';
-import { expect } from 'chai';
-import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
 import * as schema from '../../../schemas/template-info-schema.json';
-import { SchemaErrors } from '../../testutils';
-
-const basedir = path.join(__dirname, 'testfiles', 'template-info', 'invalid');
+import { createRelPathValidateFn } from '../../testutils';
 
 // Note: VSCode doesn't use Ajv for it's json schema, so the errors we get here won't exactly line up with
 // what shows in VSCode; we'll test that in a vscode-integration test.
 // Also, the deprecationMessage's in the schema is only supported in VSCode, so we won't see those errors here
 // either
 describe('template-info-schema.json finds errors in', () => {
-  const ajv = new Ajv({ allErrors: true });
-  const validator = ajv.compile(schema);
-  const readFile = promisify(fs.readFile);
-
-  async function validate(relpath: string) {
-    const json = await readFile(path.join(basedir, relpath), { encoding: 'utf-8' }).then(JSON.parse);
-    const result = await validator(json);
-    if (result || !validator.errors || validator.errors.length <= 0) {
-      expect.fail('Expected validation errors on ' + relpath);
-    }
-    return new SchemaErrors(validator.errors);
-  }
+  const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'template-info', 'invalid'));
 
   it('empty.json', async () => {
     const errors = await validate('empty.json');

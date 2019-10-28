@@ -5,29 +5,12 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as Ajv from 'ajv';
-import { expect } from 'chai';
-import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
 import * as schema from '../../../schemas/folder-schema.json';
-import { SchemaErrors } from '../../testutils';
-
-const basedir = path.join(__dirname, 'testfiles', 'folder', 'invalid');
+import { createRelPathValidateFn } from '../../testutils';
 
 describe('folder-schema.json finds errors in', () => {
-  const ajv = new Ajv({ allErrors: true });
-  const validator = ajv.compile(schema);
-  const readFile = promisify(fs.readFile);
-
-  async function validate(relpath: string) {
-    const json = await readFile(path.join(basedir, relpath), { encoding: 'utf-8' }).then(JSON.parse);
-    const result = await validator(json);
-    if (result || !validator.errors || validator.errors.length <= 0) {
-      expect.fail('Expected validation errors on ' + relpath);
-    }
-    return new SchemaErrors(validator.errors);
-  }
+  const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'folder', 'invalid'));
 
   it('invalid-enums.json', async () => {
     const errors = await validate('invalid-enums.json');

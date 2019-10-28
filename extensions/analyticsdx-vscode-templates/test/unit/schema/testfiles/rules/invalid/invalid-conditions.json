@@ -1,0 +1,33 @@
+{
+  "constants": [],
+  "rules": [
+    {
+      "name": "empty condition",
+      "condition": "",
+      "appliesTo": [],
+      "actions": [
+        {
+          "action": "delete",
+          "path": "$.name"
+        }
+      ]
+    }
+  ],
+  "macros": [
+    {
+      "namespace": "ns",
+      "definitions": [
+        {
+          "name": "fn",
+          "actions": [
+            {
+              "action": "delete",
+              "path": "$.name",
+              "condition": "not an expression nor true nor false"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

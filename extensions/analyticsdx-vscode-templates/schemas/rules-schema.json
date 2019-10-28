@@ -4,7 +4,415 @@
   "title": "Salesforce Analytics Template Rules Definition",
   "description": "",
   "type": "object",
-  "additionalProperties": true,
   "allowComments": true,
-  "required": []
+  "additionalProperties": false,
+  "required": ["constants", "rules"],
+  "properties": {
+    "constants": {
+      "type": "array",
+      "description": "Set of constants to be defined, can be empty if no constants are needed",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique name for the constant, can be referenced in rules as ${Constants.<name>}."
+          },
+          "value": {
+            "description": "The value for the constant. This can be any primitive value or null, or can be or contain ${...} expressions"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New constant",
+            "body": {
+              "name": "${1:name}",
+              "value": "${2:value}"
+            }
+          },
+          {
+            "label": "New constant from expression",
+            "body": {
+              "name": "${1:name}",
+              "value": "${Variables.${2}}"
+            }
+          }
+        ]
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Set of rules for modifying json file structures, can be empty.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["name", "appliesTo", "actions"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique name for the rule.",
+            "minLength": 1
+          },
+          "condition": {
+            "description": "Controls whether this rule will run. Should be a ${...} expression against Variables and/or Constants that returns a boolean value, or 'true' or 'false'.",
+            "$ref": "#/definitions/condition"
+          },
+          "appliesTo": {
+            "type": "array",
+            "description": "Specifies what files this rule will apply to.",
+            "minItems": 0,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "description": "The type of file to match on.",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "default": "*",
+                      "enum": ["*", "dashboard", "lens", "schema", "workflow", "xmd"],
+                      "enumDescriptions": [
+                        "Match all types of files.",
+                        "Match dashboard files.",
+                        "Match lens files.",
+                        "Match externalFile schema files.",
+                        "Match dataflow files.",
+                        "Match dataset or externalFile xmd files."
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "name": {
+                  "type": ["string", "null"],
+                  "description": "The name of the file to match, from the name in template-info.json. Can be * to match all names",
+                  "default": "*"
+                },
+                "label": {
+                  "type": ["string", "null"],
+                  "description": "The label of the file to match, from the label in template-info.json. Can be * to match all labels",
+                  "default": "*"
+                }
+              },
+              "defaultSnippets": [
+                {
+                  "label": "New appliesTo",
+                  "body": {
+                    "type": "${1:*}",
+                    "name": "${2:*}"
+                  }
+                }
+              ]
+            }
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/action"
+            }
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New rule",
+            "body": {
+              "name": "${1:name}",
+              "appliesTo": [
+                {
+                  "type": "${2:*}",
+                  "name": "${3:*}"
+                }
+              ],
+              "actions": [
+                {
+                  "action": "${4}",
+                  "path": "${5:$.name}"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "macros": {
+      "type": "array",
+      "description": "Specifies macros that can be used as functions in ${...} expressions",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["namespace", "definitions"],
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "description": "A unique string identifier used to scope the collection of macro definitions. This is used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
+            "allOf": [
+              {
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+              },
+              {
+                "$comment": "These namespaces are defined internally in salesforce and cannot be used in custom macros",
+                "not": {
+                  "$comment": "TODO: figure out how to get a good error message in vscode if this matches, instead of 'Matches a schema that is not allowed'.",
+                  "enum": [
+                    "wave",
+                    "dashboard",
+                    "dashboards",
+                    "lens",
+                    "lenses",
+                    "dataset",
+                    "datasets",
+                    "dataflow",
+                    "dataflows",
+                    "debug",
+                    "tools",
+                    "string",
+                    "number",
+                    "boolean",
+                    "array",
+                    "util",
+                    "utils",
+                    "utility",
+                    "utilities",
+                    "labs",
+                    "json",
+                    "sfdc",
+                    "salesforce",
+                    "object",
+                    "rules",
+                    "macros",
+                    "template",
+                    "templates",
+                    "folder",
+                    "folders",
+                    "map",
+                    "maps",
+                    "LC",
+                    "xmd",
+                    "xmds",
+                    "storedquery",
+                    "storedqueries",
+                    "einstein",
+                    "analytics",
+                    "soql",
+                    "math"
+                  ]
+                }
+              }
+            ]
+          },
+          "definitions": {
+            "type": "array",
+            "description": "The set of macro definitions.",
+            "minItems": 0,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "A unique string identifier for this macro definition. This is used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "description": {
+                  "type": ["string", "null"]
+                },
+                "parameters": {
+                  "type": "array",
+                  "description": "Parameter names for the macro. These can be referenced as ${p.param_name} in expressions in the actions and return",
+                  "minItems": 0,
+                  "maxItems": 10,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                  }
+                },
+                "actions": {
+                  "type": "array",
+                  "description": "Rule actions to execute in this macro",
+                  "minItems": 0,
+                  "items": {
+                    "$ref": "#/definitions/action"
+                  }
+                },
+                "returns": {
+                  "type": "string",
+                  "description": "Optional value to return from the macro definition, can use ${...} expressions."
+                }
+              },
+              "defaultSnippets": [
+                {
+                  "label": "New definition",
+                  "body": {
+                    "name": "${1}",
+                    "parameters": [],
+                    "actions": [],
+                    "returns": "${2}"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New macro",
+            "body": {
+              "namespace": "${1}",
+              "definitions": []
+            }
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "condition": {
+      "type": ["string", "null"],
+      "oneOf": [
+        {
+          "pattern": "^\\${.+}$",
+          "patternErrorMessage": "Not a valid ${...} expression."
+        },
+        {
+          "enum": ["true", "false"]
+        },
+        {
+          "pattern": "^(T[Rr][Uu][Ee]|F[Aa][Ll][Ss][Ee])$",
+          "$comment": "case-insensitive enum workaround"
+        }
+      ]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "The type of action to take.",
+          "enum": ["add", "delete", "eval", "put", "replace", "set"],
+          "enumDescriptions": [
+            "Add an item to an array in the document.",
+            "Delete a node in the document.",
+            "Evaluate an expression and assign the results to a variable.",
+            "Add a node to an object in the document.",
+            "Search and replace text in the document.",
+            "Set the value of an existing node in the document."
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "condition": {
+          "description": "Controls whether this action will run. Must be a ${...} expression against Variables and/or Constants that returns a boolean value, or 'true' or 'false'.",
+          "$ref": "#/definitions/condition"
+        },
+        "path": {
+          "type": "string",
+          "description": "JsonPath of the node to perform this action upon.",
+          "minLength": 1,
+          "examples": ["$.name"]
+        },
+        "value": {},
+        "index": {},
+        "key": {}
+      },
+      "$comment": "This is how to make certain fields required when action has a specific value, and to get custom hovertext.",
+      "anyOf": [
+        {
+          "properties": {
+            "action": { "const": "add" },
+            "value": {
+              "description": "The value to add. This can be any valid json type, including arrays and objects, and can contain ${...} expressions."
+            },
+            "index": {
+              "type": ["number", "integer"],
+              "description": "The index into the array."
+            }
+          },
+          "required": ["value", "index", "path"]
+        },
+        {
+          "properties": {
+            "action": { "const": "delete" }
+          },
+          "required": ["path"]
+        },
+        {
+          "properties": {
+            "action": { "const": "eval" },
+            "key": {
+              "type": "string",
+              "description": "The name of a variable within the ${Rules.Eval} context to set to the return value of the exrepssion."
+            },
+            "value": {
+              "description": "The ${...} expression to evaluate."
+            }
+          },
+          "required": ["value"]
+        },
+        {
+          "properties": {
+            "action": { "const": "put" },
+            "key": {
+              "type": "string",
+              "description": "The key name to put into the object node."
+            },
+            "value": {
+              "description": "The value to put. This can be any valid json type, including arrays and objects, and can contain ${...} expressions."
+            }
+          },
+          "required": ["key", "value", "path"]
+        },
+        {
+          "properties": {
+            "action": { "const": "replace" },
+            "key": {
+              "type": "string",
+              "description": "The text to replace, can be a ${...} expression."
+            },
+            "value": {
+              "type": "string",
+              "description": "The text to insert, can be a ${...} expression."
+            }
+          },
+          "required": ["key", "value"]
+        },
+        {
+          "properties": {
+            "action": { "const": "set" },
+            "value": {
+              "description": "The value to set. This can be any valid json type, including arrays and objects, and can contain ${...} expressions."
+            }
+          },
+          "required": ["value", "path"]
+        },
+        {
+          "properties": {
+            "action": { "not": { "enum": ["add", "delete", "eval", "put", "replace", "set"] } }
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "New action",
+          "body": {
+            "action": "${1}",
+            "path": "${2:$.name}"
+          }
+        }
+      ]
+    }
+  }
 }

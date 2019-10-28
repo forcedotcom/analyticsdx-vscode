@@ -1,0 +1,30 @@
+{
+  "constants": [],
+  "rules": [
+    {
+      "name": "name",
+      "appliesTo": [
+        {
+          "type": "",
+          "name": "empty"
+        },
+        {
+          "type": "invalid",
+          "name": "invalid"
+        }
+      ],
+      "actions": [
+        {
+          "action": "",
+          "description": "empty action",
+          "path": "$.name"
+        },
+        {
+          "action": "invalid",
+          "description": "invalid action",
+          "path": "$.name"
+        }
+      ]
+    }
+  ]
+}

@@ -1,14 +1,9 @@
 {
-  "error": "intentional error for tests to look for",
   "constants": [],
   "rules": [
     {
-      "name": "name",
-      "appliesTo": [
-        {
-          "type": "*"
-        }
-      ],
+      "name": "empty-appliesTo, technically valid if not useful",
+      "appliesTo": [],
       "actions": [
         {
           "action": "delete",

@@ -30,6 +30,12 @@ suites.push(
 );
 
 suites.push(
+  import('../../../schemas/rules-schema.json').then(schema =>
+    generateJsonSchemaValidFilesTestSuite(schema, 'rules-schema.json', __dirname, 'testfiles', 'rules', 'valid')
+  )
+);
+
+suites.push(
   import('../../../schemas/ui-schema.json').then(schema =>
     generateJsonSchemaValidFilesTestSuite(schema, 'ui-schema.json', __dirname, 'testfiles', 'ui', 'valid')
   )

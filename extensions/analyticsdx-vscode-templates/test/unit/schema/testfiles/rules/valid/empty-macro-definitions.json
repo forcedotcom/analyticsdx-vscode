@@ -1,0 +1,10 @@
+{
+  "constants": [],
+  "rules": [],
+  "macros": [
+    {
+      "namespace": "empty_technically_valid_if_not_useful",
+      "definitions": []
+    }
+  ]
+}
