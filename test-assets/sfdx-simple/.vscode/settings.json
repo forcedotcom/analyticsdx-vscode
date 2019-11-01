@@ -1,4 +1,6 @@
 {
   "extensions.autoUpdate": false,
-  "update.mode": "none"
+  "update.mode": "none",
+  "salesforcedx-vscode-core.telemetry.enabled": false,
+  "telemetry.enableTelemetry": false
 }

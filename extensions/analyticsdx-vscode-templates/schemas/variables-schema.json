@@ -4,7 +4,222 @@
   "title": "Salesforce Analytics Template Variables Definition",
   "description": "",
   "type": "object",
-  "additionalProperties": true,
   "allowComments": true,
-  "required": []
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[a-zA-Z_][a-zA-Z0-9_]+$": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Visible label for this variable in UI wizard."
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional text that appears under the label for more information."
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Specifies whether the variable value is required in the UI. If not specified, defaults to false.",
+          "default": false
+        },
+        "excludeSelected": {
+          "type": "boolean",
+          "description": "For a picker like SObjectType or SObjectFieldType, this will remove already selected values from appearing in the picker. If not specified, defaults to false.",
+          "default": false
+        },
+        "excludes": {
+          "type": "array",
+          "description": "Define values to exclude from selections in response to wizard questions. The values can be either string literals, or string regular expressions of the form \"/<pattern>/<flags>\", where <flags> can be empty or a combination of the standard JavaScript RegExp flags (i.e. g, i, m, s, u, or y), e.g. \"/^(Billing).+/\", \"/\\\\s*[\\\\w\\\\.]+\\\\s*/gs\".",
+          "minItems": 0,
+          "items": {
+            "type": "string"
+          }
+        },
+        "variableType": {
+          "$ref": "#/definitions/variableType",
+          "description": "Specifies the type of this variable, plus any optional constraints. If left off, defaults to a string variable."
+        },
+        "defaultValue": {
+          "description": "The default value for the variable, if the user does not change the value in the wizard. Can be the most likely value a user would use.",
+          "$comment": "The type of defaultValue depends upon variablesType.type"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "variableType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the variable.",
+          "enum": [
+            "BooleanType",
+            "StringType",
+            "NumberType",
+            "SobjectType",
+            "SobjectFieldType",
+            "DateTimeType",
+            "DatasetType",
+            "DatasetDimensionType",
+            "DatasetMeasureType",
+            "DatasetDateType",
+            "DatasetAnyFieldType",
+            "ArrayType",
+            "ObjectType"
+          ]
+        },
+        "enums": {},
+        "min": {},
+        "max": {},
+        "dataType": {},
+        "itemsType": {},
+        "sizeLimit": {},
+        "properties": {},
+        "required": {},
+        "strictValidation": {}
+      },
+      "defaultSnippets": [
+        {
+          "label": "New variableType",
+          "body": {
+            "type": "${1}"
+          }
+        }
+      ],
+      "$comment": "Customize some of the optional fields depending on the type.",
+      "anyOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "StringType"
+            },
+            "enums": {
+              "type": "array",
+              "minItems": 0,
+              "description": "The possible string values.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "NumberType"
+            },
+            "min": {
+              "type": ["number", "integer"],
+              "description": "The minimum numeric value."
+            },
+            "max": {
+              "type": ["number", "integer"],
+              "description": "The maximum numeric value."
+            },
+            "enums": {
+              "type": "array",
+              "minItems": 0,
+              "description": "The possible numeric values.",
+              "items": {
+                "type": ["number", "integer"]
+              }
+            }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "SobjectFieldType"
+            },
+            "dataType": {
+              "type": "string",
+              "description": "Required data type of underying Sobject field.",
+              "enum": [
+                "xsd:base64",
+                "xsd:boolean",
+                "xsd:byte",
+                "xsd:date",
+                "xsd:dateTime",
+                "xsd:double",
+                "xsd:int",
+                "xsd:string",
+                "xsd:time"
+              ]
+            }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "ArrayType"
+            },
+            "itemsType": {
+              "$ref": "#/definitions/variableType",
+              "description": "The type of each element of this array."
+            },
+            "sizeLimit": {
+              "type": "object",
+              "description": "Specifies optional minimum and maximum size of this array.",
+              "additionalProperties": false,
+              "properties": {
+                "max": {
+                  "type": ["number", "integer"],
+                  "description": "The maximum size of the array."
+                },
+                "min": {
+                  "type": ["number", "integer"],
+                  "description": "The maximum size of the array."
+                }
+              }
+            }
+          },
+          "required": ["type", "itemsType"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "ObjectType"
+            },
+            "properties": {
+              "type": "object",
+              "description": "A map of field name to variable type definition for the fields of this object.",
+              "additionalProperties": {
+                "$ref": "#/definitions/variableType"
+              }
+            },
+            "required": {
+              "type": "array",
+              "description": "The name(s) of properties that are required to have a value.",
+              "minItems": 0,
+              "items": {
+                "type": "string"
+              }
+            },
+            "strictValidation": {
+              "type": "boolean",
+              "description": "Specifies if this perform strict validation of the fields values against the property definitions. Defaults to false.",
+              "default": false
+            }
+          },
+          "required": ["type", "properties"]
+        },
+        {
+          "properties": {
+            "type": {
+              "not": {
+                "enum": ["StringType", "NumberType", "SobjectFieldType", "ArrayType", "ObjectType"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
 }

@@ -40,6 +40,11 @@ suites.push(
     generateJsonSchemaValidFilesTestSuite(schema, 'ui-schema.json', __dirname, 'testfiles', 'ui', 'valid')
   )
 );
+suites.push(
+  import('../../../schemas/variables-schema.json').then(schema =>
+    generateJsonSchemaValidFilesTestSuite(schema, 'variables-schema.json', __dirname, 'testfiles', 'variables', 'valid')
+  )
+);
 
 // Run them when everything's loaded
 // tslint:disable-next-line: no-floating-promises

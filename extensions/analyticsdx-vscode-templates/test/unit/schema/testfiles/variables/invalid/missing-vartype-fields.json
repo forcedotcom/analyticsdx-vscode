@@ -1,0 +1,14 @@
+{
+  "array": {
+    "description": "Missng variableType.itemsType",
+    "variableType": {
+      "type": "ArrayType"
+    }
+  },
+  "object": {
+    "description": "Missing variableType.properties",
+    "variableType": {
+      "type": "ObjectType"
+    }
+  }
+}

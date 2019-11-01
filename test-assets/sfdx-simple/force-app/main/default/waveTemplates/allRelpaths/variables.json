@@ -1,1 +1,14 @@
-{}
+{
+  "error": "intentional error for tests to look for",
+  "string": {
+    "variableType": {
+      "type": "StringType"
+    }
+  },
+  "sobjectfield": {
+    "variableType": {
+      "type": "SobjectFieldType",
+      "dataType": "xsd:string"
+    }
+  }
+}
