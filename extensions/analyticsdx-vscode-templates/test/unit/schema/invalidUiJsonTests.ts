@@ -24,13 +24,6 @@ describe('ui-schema.json finds errors in', () => {
     errors.expectNoUnrecognizedErrors();
   });
 
-  it('empty-pages.json', async () => {
-    const errors = await validate('empty-pages.json');
-    errors.expectInvalidProps(true, 'pages');
-    errors.expectNoMissingProps();
-    errors.expectNoUnrecognizedErrors();
-  });
-
   it('invalid-pages.json', async () => {
     const errors = await validate('invalid-pages.json');
     errors.expectMissingProps(
