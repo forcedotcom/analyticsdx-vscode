@@ -10,7 +10,8 @@
   "properties": {
     "pages": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 0,
+      "description": "Configures the set of pages to show in the template wizrard for gathering the values for variables. The order in this list is the order they will be displayed.",
       "items": {
         "type": "object",
         "required": ["title", "variables"],
@@ -41,6 +42,7 @@
           },
           "vfPage": {
             "type": "object",
+            "description": "Specifies that a custom VisualForce page should be used for this set of variables. Make sure the Visualforce page can be accessed by users in the organization with the Manage Analytics Templated Apps user permission.",
             "required": ["name", "namespace"],
             "additionalProperties": false,
             "properties": {
@@ -65,6 +67,7 @@
           },
           "variables": {
             "type": "array",
+            "description": "The variables this page covers. If not using a custom vfPage, the order here is the order the variables' UIs will be presented in the template wizard.",
             "minItems": 1,
             "items": {
               "type": "object",
@@ -164,6 +167,7 @@
     },
     "displayMessages": {
       "type": "array",
+      "description": "A custom display message to show on the application landing page. Currently only supports 1 display message.",
       "minItems": 0,
       "maxItems": 1,
       "items": {
