@@ -1,4 +1,7 @@
 {
+  "version": "0.0.1",
+  "preview": true,
+  "publisher": "salesforce",
   "name": "analyticsdx-vscode-core",
   "displayName": "Salesforce Analytics DX CLI Integration",
   "description": "Provides integration with the Salesforce Analytics CLI",
@@ -14,8 +17,6 @@
     "color": "#ECECEC",
     "theme": "light"
   },
-  "version": "1.0.0",
-  "publisher": "salesforce",
   "license": "BSD-3-Clause",
   "engines": {
     "vscode": "^1.38.0"
@@ -29,7 +30,7 @@
     "vscode-extension-telemetry": "0.0.17"
   },
   "devDependencies": {
-    "@salesforce/analyticsdx-test-utils-vscode": "1.0.0",
+    "@salesforce/analyticsdx-test-utils-vscode": "0.0.1",
     "@types/chai": "^4.0.0",
     "@types/mocha": "2.2.38",
     "@types/node": "10.11.0",
