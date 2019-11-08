@@ -8,6 +8,8 @@ Make your purchase decisions only on the basis of generally available products a
 This extension enables Visual Studio Code to use the Analytics Plugin for the Salesforce CLI to interact with your
 orgs.
 
+**Do not install this extension directly. Install the complete [Salesforce Analytics Extension Pack](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode) instead.**
+
 <!--
 
 ## Documentation

@@ -1,0 +1,37 @@
+{
+  "version": "0.0.1",
+  "preview": true,
+  "publisher": "salesforce",
+  "name": "analyticsdx-vscode",
+  "displayName": "Salesforce Analytics Extension Pack",
+  "description": "Extensions for developing for Salesforce Analytics",
+  "qna": "https://github.com/forcedotcom/analyticsdx-vscode/issues",
+  "bugs": {
+    "url": "https://github.com/forcedotcom/analyticsdx-vscode/issues"
+  },
+  "repository": {
+    "url": "https://github.com/forcedotcom/analyticsdx-vscode"
+  },
+  "icon": "images/VSCodeAnalyticsBundle.png",
+  "galleryBanner": {
+    "color": "#ECECEC",
+    "theme": "light"
+  },
+  "license": "BSD-3-Clause",
+  "engines": {
+    "vscode": "^1.38.0"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm prune --production",
+    "vscode:package": "vsce package",
+    "vscode:sha256": "node ../../scripts/generate-sha256.js >> ../../SHA256",
+    "vscode:publish": "node ../../scripts/publish-vsix.js"
+  },
+  "categories": [
+    "Extension Packs"
+  ],
+  "extensionPack": [
+    "salesforce.analyticsdx-vscode-core",
+    "salesforce.analyticsdx-vscode-templates"
+  ]
+}

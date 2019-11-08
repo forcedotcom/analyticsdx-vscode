@@ -7,5 +7,5 @@ src/**
 **/*.map
 .gitignore
 tsconfig.json
-junit-custom-vscodeIntegrationTests.xml
-xunit-vscodeIntegrationTests.xml
+junit-custom-*.xml
+xunit-*.xml
