@@ -1,9 +1,9 @@
 {
+  "version": "0.0.1",
+  "publisher": "salesforce",
   "name": "@salesforce/analyticsdx-test-utils-vscode",
   "displayName": "ADX Test Utilities for VS Code",
   "description": "Provides test utilities to run mocha tests",
-  "version": "1.0.0",
-  "publisher": "salesforce",
   "license": "BSD-3-Clause",
   "dependencies": {
     "shelljs": "0.8.3"
