@@ -21,7 +21,11 @@
   "engines": {
     "vscode": "^1.38.0"
   },
+  "devDependencies": {
+    "shx": "0.2.2"
+  },
   "scripts": {
+    "clean": "shx rm -f analyticsdx-vscode-*.vsix",
     "vscode:prepublish": "npm prune --production",
     "vscode:package": "vsce package",
     "vscode:sha256": "node ../../scripts/generate-sha256.js >> ../../SHA256",
