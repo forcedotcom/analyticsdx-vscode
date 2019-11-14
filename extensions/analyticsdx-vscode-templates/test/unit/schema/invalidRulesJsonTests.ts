@@ -57,7 +57,6 @@ describe('rules-schema.json finds errors in', () => {
       false,
       'rules[0].actions[0].action',
       'rules[0].actions[1].value',
-      'rules[0].actions[1].index',
       'rules[0].actions[1].path',
       'rules[0].actions[2].path',
       'rules[0].actions[3].value',
