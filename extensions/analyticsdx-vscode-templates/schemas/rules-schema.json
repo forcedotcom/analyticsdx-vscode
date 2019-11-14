@@ -6,7 +6,6 @@
   "type": "object",
   "allowComments": true,
   "additionalProperties": false,
-  "required": ["constants", "rules"],
   "properties": {
     "constants": {
       "type": "array",

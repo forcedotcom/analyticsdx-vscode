@@ -12,13 +12,6 @@ import { createRelPathValidateFn } from '../../testutils';
 describe('rules-schema.json finds errors in', () => {
   const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'rules', 'invalid'));
 
-  it('empty.json', async () => {
-    const errors = await validate('empty.json');
-    errors.expectMissingProps(true, 'constants', 'rules');
-    errors.expectNoInvalidProps();
-    errors.expectNoUnrecognizedErrors();
-  });
-
   it('invalid-enums.json', async () => {
     const errors = await validate('invalid-enums.json');
     errors.expectInvalidProps(
