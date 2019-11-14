@@ -12,13 +12,6 @@ import { createRelPathValidateFn } from '../../testutils';
 describe('rules-schema.json finds errors in', () => {
   const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'rules', 'invalid'));
 
-  it('empty.json', async () => {
-    const errors = await validate('empty.json');
-    errors.expectMissingProps(true, 'constants', 'rules');
-    errors.expectNoInvalidProps();
-    errors.expectNoUnrecognizedErrors();
-  });
-
   it('invalid-enums.json', async () => {
     const errors = await validate('invalid-enums.json');
     errors.expectInvalidProps(
@@ -27,6 +20,22 @@ describe('rules-schema.json finds errors in', () => {
       'rules[0].appliesTo[1].type',
       'rules[0].actions[0].action',
       'rules[0].actions[1].action'
+    );
+    errors.expectNoMissingProps();
+    errors.expectNoUnrecognizedErrors();
+  });
+
+  it('invalid-fields.json', async () => {
+    const errors = await validate('invalid-fields.json');
+    errors.expectInvalidProps(
+      true,
+      'error',
+      'constants[0].error',
+      'rules[0].error',
+      'rules[0].appliesTo[0].error',
+      'rules[0].actions[0].error',
+      'macros[0].error',
+      'macros[0].definitions[0].error'
     );
     errors.expectNoMissingProps();
     errors.expectNoUnrecognizedErrors();
@@ -48,7 +57,6 @@ describe('rules-schema.json finds errors in', () => {
       false,
       'rules[0].actions[0].action',
       'rules[0].actions[1].value',
-      'rules[0].actions[1].index',
       'rules[0].actions[1].path',
       'rules[0].actions[2].path',
       'rules[0].actions[3].value',

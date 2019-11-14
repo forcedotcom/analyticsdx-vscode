@@ -67,6 +67,34 @@ describe('template-info-schema.json finds errors in', () => {
     errors.expectNoUnrecognizedErrors();
   });
 
+  it('invalid-fields.json', async () => {
+    const errors = await validate('invalid-fields.json');
+    errors.expectInvalidProps(
+      true,
+      'error',
+      'releaseInfo.error',
+      'rules[0].error',
+      'externalFiles[0].error',
+      'lenses[0].error',
+      'dashboards[0].error',
+      'eltDataflows[0].error',
+      'datasetFiles[0].error',
+      'storedQueries[0].error',
+      'imageFiles[0].error',
+      'extendedTypes.type[0].error',
+      'icons.error',
+      'icons.appBadge.error',
+      'icons.templateBadge.error',
+      'icons.templatePreviews[0].error',
+      'customAttributes[0].error',
+      'videos[0].error',
+      'templateDependencies[0].error',
+      'apexCallback.error'
+    );
+    errors.expectNoMissingProps();
+    errors.expectNoUnrecognizedErrors();
+  });
+
   it('releaseInfo/missing-templateVersion.json', async () => {
     const errors = await validate('releaseInfo/missing-templateVersion.json');
     errors.expectMissingProps(true, 'releaseInfo.templateVersion');

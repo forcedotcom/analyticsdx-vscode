@@ -10,22 +10,13 @@
   "properties": {
     "name": {
       "$comment": "A lot of these fields are valid to be literal null, and there are existing files that do that already",
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "label": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "description": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "featuredAssets": {
       "type": "object",
@@ -37,17 +28,15 @@
           "type": "object",
           "description": "Default featured assets in an application created from this template",
           "required": [],
-          "additionalProperties": true,
+          "additionalProperties": false,
           "properties": {
             "assets": {
               "type": "array",
               "minItems": 0,
               "items": {
                 "type": "object",
-                "required": [
-                  "id"
-                ],
-                "additionalProperties": true,
+                "required": ["id"],
+                "additionalProperties": false,
                 "$comment": "Most just include id, but Learning Adventure also has these",
                 "properties": {
                   "id": {
@@ -55,22 +44,13 @@
                     "description": "Asset id"
                   },
                   "name": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   },
                   "namespace": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   },
                   "type": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   }
                 },
                 "defaultSnippets": [
@@ -110,18 +90,12 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "accessType",
-          "shareType"
-        ],
+        "required": ["accessType", "shareType"],
+        "additionalProperties": false,
         "properties": {
           "accessType": {
             "type": "string",
-            "enum": [
-              "View",
-              "Edit",
-              "Manage"
-            ],
+            "enum": ["View", "Edit", "Manage"],
             "default": "View"
           },
           "shareType": {
@@ -142,10 +116,7 @@
             "default": "Organization"
           },
           "sharedWithId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "defaultSnippets": [

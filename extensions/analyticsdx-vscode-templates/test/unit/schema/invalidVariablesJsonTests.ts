@@ -28,6 +28,18 @@ describe('variables-schema.json finds errors in', () => {
     // we're not going to check those
   });
 
+  it('invalid-fields.json', async () => {
+    const errors = await validate('invalid-fields.json');
+    errors.expectInvalidProps(
+      false,
+      'stringvar.error',
+      'stringvar.variableType.error',
+      'objvar.variableType.properties.foo.error',
+      'arrayvar.variableType.itemsType.error',
+      'arrayvar.variableType.sizeLimit.error'
+    );
+  });
+
   it('missing-vartype-fields.json', async () => {
     const errors = await validate('missing-vartype-fields.json');
     errors.expectMissingProps(false, 'array.variableType.itemsType', 'object.variableType.properties');

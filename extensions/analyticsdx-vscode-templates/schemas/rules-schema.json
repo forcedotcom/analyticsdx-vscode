@@ -6,7 +6,6 @@
   "type": "object",
   "allowComments": true,
   "additionalProperties": false,
-  "required": ["constants", "rules"],
   "properties": {
     "constants": {
       "type": "array",
@@ -338,10 +337,10 @@
             },
             "index": {
               "type": ["number", "integer"],
-              "description": "The index into the array."
+              "description": "The 0-based index at which to add into the array. Use 0 to add to the start, leave unspecified to add to the end."
             }
           },
-          "required": ["value", "index", "path"]
+          "required": ["value", "path"]
         },
         {
           "properties": {

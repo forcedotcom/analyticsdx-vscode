@@ -19,6 +19,19 @@ describe('folder-schema.json finds errors in', () => {
     errors.expectNoUnrecognizedErrors();
   });
 
+  it('invalid-fields.json', async () => {
+    const errors = await validate('invalid-fields.json');
+    errors.expectInvalidProps(
+      true,
+      'error',
+      'featuredAssets.default.assets[0].error',
+      'featuredAssets.error',
+      'shares[0].error'
+    );
+    errors.expectNoMissingProps();
+    errors.expectNoUnrecognizedErrors();
+  });
+
   it('invalid-featured-assets.json', async () => {
     const errors = await validate('invalid-featured-assets.json');
     errors.expectInvalidProps(true, 'featuredAssets.unsupported');

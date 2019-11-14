@@ -13,20 +13,11 @@
         "const": "dashboard"
       }
     },
-    "required": [
-      "templateType"
-    ]
+    "required": ["templateType"]
   },
   "then": {
     "$comment": "dashboard templates only need these",
-    "required": [
-      "templateType",
-      "name",
-      "label",
-      "assetVersion",
-      "rules",
-      "dashboards"
-    ]
+    "required": ["templateType", "name", "label", "assetVersion", "rules", "dashboards"]
   },
   "else": {
     "$comment": "app templates need these",
@@ -50,11 +41,7 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": [
-            "app",
-            "dashboard",
-            "embeddedapp"
-          ],
+          "enum": ["app", "dashboard", "embeddedapp"],
           "enumDescriptions": [
             "Specify that this is an application template.",
             "Specify that this is a dashboard template.",
@@ -94,6 +81,7 @@
     "icons": {
       "type": "object",
       "description": "Specifies icons to display in the UI for the template.",
+      "additionalProperties": false,
       "properties": {
         "appBadge": {
           "$ref": "#/definitions/icon",
@@ -127,9 +115,8 @@
     "releaseInfo": {
       "type": "object",
       "description": "Release information for the template.",
-      "required": [
-        "templateVersion"
-      ],
+      "additionalProperties": false,
+      "required": ["templateVersion"],
       "properties": {
         "templateVersion": {
           "type": "string",
@@ -157,17 +144,12 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "type",
-          "file"
-        ],
+        "additionalProperties": false,
+        "required": ["type", "file"],
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "templateToApp",
-              "appToTemplate"
-            ],
+            "enum": ["templateToApp", "appToTemplate"],
             "enumDescriptions": [
               "Rules to apply when creating a new app from a template.",
               "Rules to apply when updating the template from the master app ."
@@ -226,10 +208,8 @@
     "apexCallback": {
       "type": "object",
       "description": "Registers an Apex class that runs on wizard load, app create, and app upgrade. The Apex class examines the org and sets variable values.",
-      "required": [
-        "namespace",
-        "name"
-      ],
+      "additionalProperties": false,
+      "required": ["namespace", "name"],
       "properties": {
         "namespace": {
           "type": "string",
@@ -257,10 +237,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "file",
-          "label"
-        ],
+        "additionalProperties": false,
+        "required": ["file", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -300,10 +278,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "file",
-          "label"
-        ],
+        "additionalProperties": false,
+        "required": ["file", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -343,9 +319,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "file"
-        ],
+        "additionalProperties": false,
+        "required": ["file"],
         "properties": {
           "file": {
             "type": "string",
@@ -385,10 +360,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "name",
-          "type"
-        ],
+        "additionalProperties": false,
+        "required": ["name", "type"],
         "properties": {
           "file": {
             "type": "string",
@@ -397,9 +370,7 @@
           "type": {
             "type": "string",
             "description": "The type of the data in the extenral file. Currently, only 'CSV' is supported.",
-            "enum": [
-              "CSV"
-            ],
+            "enum": ["CSV"],
             "default": "CSV"
           },
           "name": {
@@ -449,10 +420,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "label",
-          "name"
-        ],
+        "additionalProperties": false,
+        "required": ["label", "name"],
         "properties": {
           "label": {
             "type": "string",
@@ -492,10 +461,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "name",
-          "file"
-        ],
+        "additionalProperties": false,
+        "required": ["name", "file"],
         "properties": {
           "file": {
             "type": "string",
@@ -531,10 +498,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "file",
-          "label"
-        ],
+        "additionalProperties": false,
+        "required": ["file", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -578,10 +543,8 @@
         "minItems": 0,
         "items": {
           "type": "object",
-          "required": [
-            "file",
-            "label"
-          ],
+          "additionalProperties": false,
+          "required": ["file", "label"],
           "properties": {
             "file": {
               "type": "string",
@@ -633,10 +596,9 @@
       "minItems": 0,
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "description": "A custom meta data attribute for the template.",
-        "required": [
-          "label"
-        ],
+        "required": ["label"],
         "properties": {
           "label": {
             "description": "Custom attribute display label",
@@ -646,12 +608,7 @@
               },
               {
                 "type": "string",
-                "enum": [
-                  "Features",
-                  "Salesforce Objects",
-                  "Publisher",
-                  "Industry"
-                ],
+                "enum": ["Features", "Salesforce Objects", "Publisher", "Industry"],
                 "enumDescriptions": [
                   "List of features provided by this template",
                   "List of salesforce objects this template uses.",
@@ -673,9 +630,7 @@
             "label": "New customAttribute",
             "body": {
               "label": "${1:label}",
-              "values": [
-                "${2:value}"
-              ]
+              "values": ["${2:value}"]
             }
           }
         ]
@@ -687,19 +642,12 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "purpose",
-          "id",
-          "linkType",
-          "label"
-        ],
+        "additionalProperties": false,
+        "required": ["purpose", "id", "linkType", "label"],
         "properties": {
           "purpose": {
             "type": "string",
-            "enum": [
-              "walkthrough",
-              "onboarding"
-            ],
+            "enum": ["walkthrough", "onboarding"],
             "default": "onboarding",
             "description": "The purpose of the video."
           },
@@ -710,14 +658,8 @@
           "linkType": {
             "description": "The video provider.",
             "type": "string",
-            "enum": [
-              "youtube",
-              "vidyard"
-            ],
-            "enumDescriptions": [
-              "Youtube.com is the video provider.",
-              "vidyard.com is the video provider"
-            ]
+            "enum": ["youtube", "vidyard"],
+            "enumDescriptions": ["Youtube.com is the video provider.", "vidyard.com is the video provider"]
           },
           "label": {
             "type": "string",
@@ -741,9 +683,7 @@
       "defaultSnippets": [
         {
           "label": "New tags",
-          "body": [
-            "${1:tag}"
-          ]
+          "body": ["${1:tag}"]
         }
       ]
     },
@@ -753,9 +693,8 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "additionalProperties": false,
+        "required": ["name"],
         "properties": {
           "namespace": {
             "type": "string",
@@ -786,9 +725,8 @@
   "definitions": {
     "icon": {
       "type": "object",
-      "required": [
-        "name"
-      ],
+      "additionalProperties": false,
+      "required": ["name"],
       "properties": {
         "namespace": {
           "type": "string",
@@ -809,26 +747,27 @@
       ]
     },
     "previewIcon": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/icon"
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "label"],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "description": "The icon namespace."
         },
-        {
-          "required": [
-            "label"
-          ],
-          "properties": {
-            "label": {
-              "type": "string",
-              "description": "The display label of the template preview."
-            },
-            "description": {
-              "type": "string",
-              "description": "The desription of the template preview."
-            }
-          }
+        "name": {
+          "type": "string",
+          "description": "The icon name."
+        },
+        "label": {
+          "type": "string",
+          "description": "The display label of the template preview."
+        },
+        "description": {
+          "type": "string",
+          "description": "The description of the template preview."
         }
-      ],
+      },
       "defaultSnippets": [
         {
           "label": "New icon",
@@ -854,11 +793,7 @@
         {
           "type": "string",
           "default": "IfDifferent",
-          "enum": [
-            "Always",
-            "IfDifferent",
-            "Never"
-          ],
+          "enum": ["Always", "IfDifferent", "Never"],
           "enumDescriptions": [
             "Always overwrite this object on upgrade.",
             "Overwrite this object on upgrade if it differs from the template's version.",

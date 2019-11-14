@@ -25,9 +25,13 @@
   "folderDefinition": "folder.json",
   "externalFiles": [
     {
-      "file": "dashboards/New_dashboard.json",
+      "file": "externalfiles/file.csv",
       "name": "foo",
       "type": "CSV",
+      "condition": "${Variables.Overrides.createAllFiles}",
+      "rows": 10,
+      "schema": "externalFiles/file_schema.json",
+      "userXmd": "externalfiles/file_xmd.json",
       "overwriteOnUpgrade": "IfDifferent"
     }
   ],
@@ -90,7 +94,8 @@
   },
   "icons": {
     "appBadge": {
-      "name": "16.png"
+      "name": "16.png",
+      "namespace": "foo"
     },
     "templateBadge": {
       "name": "default.png"
@@ -101,6 +106,7 @@
     "templatePreviews": [
       {
         "name": "foo",
+        "namespace": "foo",
         "label": "Some preview label",
         "description": "A big description of what the preview is showing"
       }
@@ -109,35 +115,19 @@
   "customAttributes": [
     {
       "label": "Features",
-      "values": [
-        "Embeddable Dashboards",
-        "Prebuilt Dashboards",
-        "Dataflow",
-        "KPI Rich Datasets"
-      ]
+      "values": ["Embeddable Dashboards", "Prebuilt Dashboards", "Dataflow", "KPI Rich Datasets"]
     },
     {
       "label": "Salesforce Objects",
-      "values": [
-        "Account",
-        "Case",
-        "Contact",
-        "Task",
-        "User",
-        "User Role"
-      ]
+      "values": ["Account", "Case", "Contact", "Task", "User", "User Role"]
     },
     {
       "label": "Publisher",
-      "values": [
-        "Einstein Analytics"
-      ]
+      "values": ["Einstein Analytics"]
     },
     {
       "label": "Industry",
-      "values": [
-        "Public Sector"
-      ]
+      "values": ["Public Sector"]
     },
     {
       "label": "foo"
@@ -159,11 +149,7 @@
       "showPlaylist": false
     }
   ],
-  "tags": [
-    "one",
-    "two",
-    "3"
-  ],
+  "tags": ["one", "two", "3"],
   "templateDependencies": [
     {
       "name": "election_2012_template",
@@ -175,5 +161,9 @@
       "namespace": "sfdc_internal",
       "templateVersion": "1.0"
     }
-  ]
+  ],
+  "apexCallback": {
+    "namespace": "namespace",
+    "name": "name"
+  }
 }
