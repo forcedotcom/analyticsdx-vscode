@@ -1,0 +1,27 @@
+{
+  "error": "This should trigger a warning",
+  "pages": [
+    {
+      "title": "Page title",
+      "error": "This should trigger a warning",
+      "vfPage": {
+        "name": "name",
+        "namespace": "namespace",
+        "error": "This should trigger a warning"
+      },
+      "variables": [
+        {
+          "name": "name",
+          "error": "This should trigger a warning"
+        }
+      ]
+    }
+  ],
+  "displayMessages": [
+    {
+      "text": "text",
+      "location": "AppLandingPage",
+      "error": "This should trigger a warning"
+    }
+  ]
+}

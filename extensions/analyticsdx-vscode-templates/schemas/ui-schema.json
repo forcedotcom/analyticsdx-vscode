@@ -173,6 +173,7 @@
       "items": {
         "type": "object",
         "required": ["text", "location"],
+        "additionalProperties": false,
         "properties": {
           "text": {
             "type": "string",

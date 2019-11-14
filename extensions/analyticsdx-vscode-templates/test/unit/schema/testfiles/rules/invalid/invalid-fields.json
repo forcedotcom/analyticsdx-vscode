@@ -1,0 +1,41 @@
+{
+  "error": "This should trigger a warning",
+  "constants": [
+    {
+      "name": "name",
+      "value": "value",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "rules": [
+    {
+      "name": "name",
+      "error": "This should trigger a warning",
+      "appliesTo": [
+        {
+          "error": "This should trigger a warning"
+        }
+      ],
+      "actions": [
+        {
+          "action": "delete",
+          "path": "$.name",
+          "error": "This should trigger a warning"
+        }
+      ]
+    }
+  ],
+  "macros": [
+    {
+      "namespace": "foo",
+      "error": "This should trigger a warning",
+      "definitions": [
+        {
+          "name": "bar",
+          "returns": "",
+          "error": "This should trigger a warning"
+        }
+      ]
+    }
+  ]
+}

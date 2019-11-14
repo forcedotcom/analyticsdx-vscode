@@ -1,0 +1,32 @@
+{
+  "stringvar": {
+    "error": "This should trigger a warning",
+    "variableType": {
+      "type": "StringType",
+      "error": "This should trigger a warning"
+    }
+  },
+  "objvar": {
+    "variableType": {
+      "type": "ObjectType",
+      "properties": {
+        "foo": {
+          "type": "StringType",
+          "error": "This should trigger a warning"
+        }
+      }
+    }
+  },
+  "arrayvar": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "StringType",
+        "error": "This should trigger a warning"
+      },
+      "sizeLimit": {
+        "error": "This should trigger a warning"
+      }
+    }
+  }
+}

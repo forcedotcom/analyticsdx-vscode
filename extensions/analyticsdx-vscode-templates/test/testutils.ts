@@ -174,7 +174,7 @@ export class SchemaErrors {
           this.invalidProps.add(name);
         } else if (error.keyword === 'additionalProperties') {
           // this means an object has a property that doesn't exist in the schema -- report this as invalid for now
-          let name = error.dataPath;
+          let name = this.cleanDataPath(error.dataPath);
           if (name.startsWith('.')) {
             name = name.substring(1);
           }

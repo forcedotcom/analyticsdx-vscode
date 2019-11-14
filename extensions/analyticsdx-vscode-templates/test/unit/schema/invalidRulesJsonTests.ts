@@ -32,6 +32,22 @@ describe('rules-schema.json finds errors in', () => {
     errors.expectNoUnrecognizedErrors();
   });
 
+  it('invalid-fields.json', async () => {
+    const errors = await validate('invalid-fields.json');
+    errors.expectInvalidProps(
+      true,
+      'error',
+      'constants[0].error',
+      'rules[0].error',
+      'rules[0].appliesTo[0].error',
+      'rules[0].actions[0].error',
+      'macros[0].error',
+      'macros[0].definitions[0].error'
+    );
+    errors.expectNoMissingProps();
+    errors.expectNoUnrecognizedErrors();
+  });
+
   it('invalid-actions.json', async () => {
     const errors = await validate('invalid-actions.json');
     // with the way Ajv works against rules-schema.json, we're going to get a bunch of 'anyOf' and 'not' errors that we

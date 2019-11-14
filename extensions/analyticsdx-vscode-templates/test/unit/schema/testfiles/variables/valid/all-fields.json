@@ -39,9 +39,7 @@
       "type": "SobjectType"
     },
     "defaultValue": {
-      "defaultValue": {
-        "sobjectName": "Case"
-      }
+      "sobjectName": "Case"
     }
   },
   "sobjectbase64field": {

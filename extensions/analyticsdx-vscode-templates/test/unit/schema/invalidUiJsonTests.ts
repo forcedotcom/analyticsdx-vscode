@@ -24,6 +24,20 @@ describe('ui-schema.json finds errors in', () => {
     errors.expectNoUnrecognizedErrors();
   });
 
+  it('invalid-fields.json', async () => {
+    const errors = await validate('invalid-fields.json');
+    errors.expectInvalidProps(
+      true,
+      'error',
+      'pages[0].error',
+      'pages[0].vfPage.error',
+      'pages[0].variables[0].error',
+      'displayMessages[0].error'
+    );
+    errors.expectNoMissingProps();
+    errors.expectNoUnrecognizedErrors();
+  });
+
   it('invalid-pages.json', async () => {
     const errors = await validate('invalid-pages.json');
     errors.expectMissingProps(

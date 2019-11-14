@@ -1,0 +1,131 @@
+{
+  "templateType": "dashboard",
+  "error": "This should trigger a warning",
+  "name": "name",
+  "label": "label",
+  "assetVersion": 47.0,
+  "releaseInfo": {
+    "templateVersion": "1.0",
+    "notesFile": "releaseNotes.html",
+    "error": "This should trigger a warning"
+  },
+  "rules": [
+    {
+      "type": "appToTemplate",
+      "file": "app-to-template-rules.json",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "externalFiles": [
+    {
+      "name": "name",
+      "file": "external_files/name.csv",
+      "type": "CSV",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "lenses": [
+    {
+      "file": "lenses/name.json",
+      "label": "name",
+      "name": "name",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "dashboards": [
+    {
+      "file": "dashboards/name.json",
+      "label": "name",
+      "name": "name",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "eltDataflows": [
+    {
+      "file": "dataflows/name.json",
+      "label": "name",
+      "name": "name",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "datasetFiles": [
+    {
+      "label": "name",
+      "name": "name",
+      "userXmd": "datasets/name_Xmd.json",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "storedQueries": [
+    {
+      "file": "queries/name.json",
+      "label": "name",
+      "name": "name",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "imageFiles": [
+    {
+      "file": "images/name.png",
+      "name": "name",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "extendedTypes": {
+    "type": [
+      {
+        "file": "name.json",
+        "label": "name",
+        "name": "name",
+        "error": "This should trigger a warning"
+      }
+    ]
+  },
+  "icons": {
+    "error": "This should trigger a warning",
+    "appBadge": {
+      "name": "name",
+      "error": "This should trigger a warning"
+    },
+    "templateBadge": {
+      "name": "name",
+      "error": "This should trigger a warning"
+    },
+    "templatePreviews": [
+      {
+        "label": "label",
+        "name": "name",
+        "error": "This should trigger a warning"
+      }
+    ]
+  },
+  "customAttributes": [
+    {
+      "label": "label",
+      "error": "This should trigger a warning",
+      "values": ["value"]
+    }
+  ],
+  "videos": [
+    {
+      "purpose": "walkthrough",
+      "id": "walkthrough-video-id",
+      "linkType": "youtube",
+      "label": "Walkthrough Video",
+      "showPlaylist": true,
+      "error": "This should trigger a warning"
+    }
+  ],
+  "templateDependencies": [
+    {
+      "name": "name",
+      "templateVersion": ">=1.0",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "apexCallback": {
+    "namespace": "namespace",
+    "name": "name",
+    "error": "This should trigger a warning"
+  }
+}

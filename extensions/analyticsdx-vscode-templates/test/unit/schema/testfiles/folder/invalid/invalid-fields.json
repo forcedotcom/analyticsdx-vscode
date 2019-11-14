@@ -1,0 +1,21 @@
+{
+  "error": "This should trigger a warning",
+  "featuredAssets": {
+    "default": {
+      "assets": [
+        {
+          "id": "id",
+          "error": "This should trigger a warning"
+        }
+      ]
+    },
+    "error": "This should trigger a warning"
+  },
+  "shares": [
+    {
+      "accessType": "View",
+      "shareType": "Organization",
+      "error": "This should trigger a warning"
+    }
+  ]
+}
