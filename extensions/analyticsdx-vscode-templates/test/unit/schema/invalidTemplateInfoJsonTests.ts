@@ -95,15 +95,49 @@ describe('template-info-schema.json finds errors in', () => {
     errors.expectNoUnrecognizedErrors();
   });
 
-  it('releaseInfo/missing-templateVersion.json', async () => {
-    const errors = await validate('releaseInfo/missing-templateVersion.json');
-    errors.expectMissingProps(true, 'releaseInfo.templateVersion');
+  it('missing-required-fields.json', async () => {
+    const errors = await validate('missing-required-fields.json');
+    errors.expectMissingProps(
+      true,
+      'releaseInfo.templateVersion',
+      'rules[0].type',
+      'rules[0].file',
+      'dashboards[0].file',
+      'dashboards[0].label',
+      'lenses[0].file',
+      'lenses[0].label',
+      'eltDataflows[0].file',
+      'eltDataflows[0].name',
+      'eltDataflows[0].label',
+      'externalFiles[0].name',
+      'externalFiles[0].type',
+      'datasetFiles[0].label',
+      'datasetFiles[0].name',
+      'extendedTypes.type[0].file',
+      'extendedTypes.type[0].label',
+      'imageFiles[0].name',
+      'imageFiles[0].file',
+      'storedQueries[0].file',
+      'storedQueries[0].label',
+      'icons.appBadge.name',
+      'icons.templateBadge.name',
+      'icons.templatePreviews[0].name',
+      'icons.templatePreviews[0].label',
+      'customAttributes[0].label',
+      'templateDependencies[0].name',
+      'apexCallback.name',
+      'apexCallback.namespace',
+      'videos[0].purpose',
+      'videos[0].id',
+      'videos[0].linkType',
+      'videos[0].label'
+    );
     errors.expectNoInvalidProps();
     errors.expectNoUnrecognizedErrors();
   });
 
-  it('releaseInfo/invalid-templateVersion.json', async () => {
-    const errors = await validate('releaseInfo/invalid-templateVersion.json');
+  it('invalid-templateVersion.json', async () => {
+    const errors = await validate('invalid-templateVersion.json');
     errors.expectInvalidProps(true, 'releaseInfo.templateVersion');
     errors.expectNoMissingProps();
     errors.expectNoUnrecognizedErrors();
