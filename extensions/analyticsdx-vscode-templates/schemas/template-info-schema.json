@@ -320,7 +320,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["file"],
+        "required": ["file", "name", "label"],
         "properties": {
           "file": {
             "type": "string",

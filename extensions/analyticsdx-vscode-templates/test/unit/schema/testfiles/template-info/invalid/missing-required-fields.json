@@ -1,0 +1,27 @@
+{
+  "templateType": "app",
+  "name": "missing_fields",
+  "label": "Check for missing fields in values",
+  "assetVersion": 48.0,
+  "releaseInfo": {},
+  "rules": [{}],
+  "dashboards": [{}],
+  "lenses": [{}],
+  "eltDataflows": [{}],
+  "externalFiles": [{}],
+  "datasetFiles": [{}],
+  "extendedTypes": {
+    "type": [{}]
+  },
+  "imageFiles": [{}],
+  "storedQueries": [{}],
+  "icons": {
+    "appBadge": {},
+    "templateBadge": {},
+    "templatePreviews": [{}]
+  },
+  "customAttributes": [{}],
+  "templateDependencies": [{}],
+  "apexCallback": {},
+  "videos": [{}]
+}

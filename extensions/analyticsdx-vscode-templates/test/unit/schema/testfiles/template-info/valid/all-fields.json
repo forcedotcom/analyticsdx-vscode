@@ -58,7 +58,9 @@
   ],
   "eltDataflows": [
     {
-      "file": "app-to-template-rules.json",
+      "file": "dataflow.json",
+      "name": "dataflow",
+      "label": "dataflow",
       "overwriteOnUpgrade": "${Variables.Has_Product == 'Yes'}"
     }
   ],
