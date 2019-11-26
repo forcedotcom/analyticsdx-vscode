@@ -13,6 +13,9 @@ export const EXTENSION_PUBLISHER = 'salesforce';
 export const EXTENSION_NAME = 'analyticsdx-vscode-templates';
 export const EXTENSION_ID = EXTENSION_PUBLISHER + '.' + EXTENSION_NAME;
 
+// Note: keep this is sync with the language id in package.json
+export const TEMPLATE_JSON_LANG_ID = 'adx-template-json';
+
 // REVIEWME: just do these w/ s.toLocalLowerCase().endsWith() instead?
 export const jsonGlobFilter = newGlobFilter('**.json');
 export const htmGlobFilter = newGlobFilter('**.html', '**.htm');

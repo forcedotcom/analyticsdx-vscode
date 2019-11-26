@@ -1,4 +1,8 @@
 {
+  // single-line comments
+  /*
+   * multi-line commaent
+   */
   "error": "intentional error for tests to look for",
   "constants": [],
   "rules": [

@@ -77,7 +77,9 @@
     "salesforce.analyticsdx-vscode-core"
   ],
   "activationEvents": [
-    "onLanguage:json"
+    "onLanguage:json",
+    "onLanguage:jsonc",
+    "onLanguage:adx-template-json"
   ],
   "main": "./out/src",
   "contributes": {
@@ -85,6 +87,23 @@
       {
         "fileMatch": "template-info.json",
         "url": "./schemas/template-info-schema.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "adx-template-json",
+        "aliases": [
+          "ADX Template Json",
+          "adxtemplatejson"
+        ],
+        "configuration": "./syntaxes/adx-json-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "adx-template-json",
+        "scopeName": "source.json.comments",
+        "path": "./syntaxes/adx-json.tmLanguage.json"
       }
     ]
   }
