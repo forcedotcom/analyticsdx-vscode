@@ -15,7 +15,6 @@ import { getErrorStatusDescription, xhr, XHRResponse } from 'request-light';
 import * as vscode from 'vscode';
 import {
   DidChangeConfigurationNotification,
-  DocumentSelector,
   LanguageClient,
   LanguageClientOptions,
   NotificationType,
@@ -24,16 +23,22 @@ import {
   ServerOptions,
   TransportKind
 } from 'vscode-languageclient';
-import { csvGlobFilter, htmGlobFilter, imageGlobFilter, jsonGlobFilter, TEMPLATE_INFO } from './constants';
+import {
+  csvGlobFilter,
+  htmGlobFilter,
+  imageGlobFilter,
+  jsonGlobFilter,
+  TEMPLATE_INFO,
+  TEMPLATE_JSON_LANG_ID
+} from './constants';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
 import { matchJsonNodesAtPattern } from './util/jsoncUtils';
-import { isSameUriPath } from './util/utils';
 import { isSameUri, isUriUnder, uriStat } from './util/vscodeUtils';
 
-/** Traverse up from the file until you find the the template-info.json, without leaving the vscode workspace folders.
+/** Traverse up from the file until you find the template-info.json, without leaving the vscode workspace folders.
  * @return the file uri, or undefined if not found (i.e. file is not part of a template)
  */
 export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.Uri | undefined> {
@@ -287,6 +292,7 @@ export class TemplateEditingManager extends Disposable {
       this.templateDirs.delete(key);
       editing.dispose();
       this.updateSchemaAssociations();
+      // FIXME!!: reset documentLangId on any adxjson open documents
       return true;
     }
     return false;
@@ -294,10 +300,20 @@ export class TemplateEditingManager extends Disposable {
 
   private async opened(doc: vscode.TextDocument) {
     // if they open a file under a template's directory
-    const file = await findTemplateInfoFileFor(doc.uri);
-    if (file) {
-      const dir = file.with({ path: path.dirname(file.path) });
+    const templateInfoFile = await findTemplateInfoFileFor(doc.uri);
+    if (templateInfoFile) {
+      const dir = templateInfoFile.with({ path: path.dirname(templateInfoFile.path) });
       this.startEditing(dir);
+      // set documentLangId here on non template-info .json files so it uses our
+      // language server
+      const filename = path.basename(doc.uri.path);
+      if (
+        filename !== 'template-info.json' &&
+        filename.endsWith('.json') &&
+        (doc.languageId === 'json' || doc.languageId === 'jsonc')
+      ) {
+        vscode.languages.setTextDocumentLanguage(doc, TEMPLATE_JSON_LANG_ID);
+      }
     }
   }
 
@@ -308,7 +324,7 @@ export class TemplateEditingManager extends Disposable {
       this.stopEditing(dir);
       // TODO: retrigger linting on template if a template-related file was deleted
     } else {
-      // if the uri is a folder and it's a template folder, or a the ancestor of any started template folders
+      // if the uri is a folder and it's a template folder, or the ancestor of any started template folders
       // Note: we can't stat the uri since it doesn't exist anymore, so we need to just use the uri path to see if any
       // of our registered template uri paths start with that path, which should be safe enough
       this.templateDirs.forEach(editing => {
@@ -326,7 +342,7 @@ export class TemplateEditingManager extends Disposable {
         // for each template, find the related file paths and configure them with the right json-schema
         let filePath = editing.folderDefinitionPath;
         if (filePath && isValidRelPath(filePath)) {
-          // REVIEWME: what they if put in the same file path in 2 different relPath fields?
+          // REVIEWME: what if they put in the same file path in 2 different relPath fields?
           // right now, this will do last-one-wins. should be we both? that's probably weird.
           //
           associations[path.join(editing.dir.path, filePath)] = [this.folderSchemaPath.toString()];
@@ -373,7 +389,7 @@ export class TemplateEditingManager extends Disposable {
  * This will start a json-language-server (using the json-language-features extension already included in the
  * VSCode installation), but will configure a custom language client, where we can dynamically send up
  * file -> json-schema associations for the various file paths specified in a template-info.json.
- * Note: this is a little weird since there will be 2 language clients setup on json file
+ * This is bound to the adx-template-json languageId, so it shouldn't interfer with regular json files.
  */
 namespace VSCodeContentRequest {
   export const type: RequestType<string, string, any, any> = new RequestType('vscode/content');
@@ -427,18 +443,13 @@ class TemplateJsonLanguageClient extends Disposable {
       }
     };
 
-    // TODO: figure out some way so this will only look at known template files, instead of filtering everything
-    // after the fact in the middleware callbacks
-    const documentSelector: DocumentSelector = ['json', 'jsonc'];
     // Options to control the language client
     const clientOptions: LanguageClientOptions = {
       // Register the server for json documents
-      documentSelector,
+      documentSelector: [TEMPLATE_JSON_LANG_ID],
       initializationOptions: {
         // language server only loads file-URI. Fetching schemas with other protocols ('http'...) are made on the client.
-        handledSchemaProtocols: ['file'],
-        // tell the server to not provide formatting capability and ignore the `json.format.enable` setting.
-        provideFormatter: false
+        handledSchemaProtocols: ['file']
       },
       synchronize: {
         configurationSection: ['http'],
@@ -457,54 +468,16 @@ class TemplateJsonLanguageClient extends Disposable {
             };
             this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, { settings });
           }
-        },
-        // these callbacks allow us to skip non-template json files, since we have to register the language client
-        // against all .json files for now
-        handleDiagnostics: (uri, diagnostics, next) => {
-          if (diagnostics.length <= 0) {
-            next(uri, diagnostics);
-          } else if (!this.isKnownTemplateFile(uri)) {
-            // if it's not a template file, don't send anything along from us -- the regular json lang client will do it
-            next(uri, []);
-          } else {
-            // filter out the non-schema-related errors (schema errors don't currently have a source, but the
-            // syntax-related ones have a source of 'json' and typically have a code as well, but, if ms changes
-            // vscode-json-languageservice, this could change and hopefully tests will fail)
-            next(uri, diagnostics.filter(d => d.source !== 'json'));
-          }
-        },
-        provideCompletionItem: (doc, position, context, token, next) => {
-          if (!this.isKnownTemplateFile(doc.uri)) {
-            return undefined;
-          }
-          return next(doc, position, context, token);
-        },
-        provideHover: (doc, position, token, next) => {
-          if (!this.isKnownTemplateFile(doc.uri)) {
-            return undefined;
-          }
-          return next(doc, position, token);
-        },
-        // for these one, don't return anything so that the values from the regular json language client will be used
-        provideDocumentSymbols: () => undefined,
-        provideWorkspaceSymbols: () => undefined,
-        provideCodeActions: () => undefined,
-        provideCodeLenses: () => undefined,
-        provideDocumentRangeFormattingEdits: () => undefined,
-        provideDocumentColors: () => undefined,
-        provideColorPresentations: () => undefined,
-        provideFoldingRanges: () => undefined,
-        provideSelectionRanges: () => undefined
-        // and json-language-features doesn't seem to send along the data for the other callbacks so we can skip them
-        // for now, but we need to watch
-        // https://github.com/microsoft/vscode/blob/master/extensions/json-language-features/server/src/jsonServerMain.ts
-        // in case they add more language features we need to filter or skip
+        }
       }
     };
 
     this.clientReady = false;
     const client = new LanguageClient('adxjson', 'ADX Templates JSON Language Server', serverOptions, clientOptions);
-    client.registerProposedFeatures();
+    // for now, turn off proposed features from the vscode proposed api -- this fails with our version of the
+    // vscode-languageclient and the current version of vscode, and we're not relying on this right now
+    // REVIEWME: figureturn on json proposed language features?
+    //client.registerProposedFeatures();
 
     this.disposables.push(client.start());
 
@@ -521,24 +494,19 @@ class TemplateJsonLanguageClient extends Disposable {
               schemaDocuments[uri.toString()] = true;
               return doc.getText();
             },
-            error => {
-              return Promise.reject(error);
-            }
+            error => Promise.reject(error)
           );
         } else {
           const headers = { 'Accept-Encoding': 'gzip, deflate' };
           return xhr({ url: uriPath, followRedirects: 5, headers }).then(
-            response => {
-              return response.responseText;
-            },
-            (error: XHRResponse) => {
-              return Promise.reject(
+            response => response.responseText,
+            (error: XHRResponse) =>
+              Promise.reject(
                 new ResponseError(
                   error.status,
                   error.responseText || getErrorStatusDescription(error.status) || error.toString()
                 )
-              );
-            }
+              )
           );
         }
       });
@@ -570,18 +538,6 @@ class TemplateJsonLanguageClient extends Disposable {
 
     this.languageClient = client;
     return this;
-  }
-
-  private isKnownTemplateFile(docOrUri: vscode.TextDocument | vscode.Uri): boolean {
-    const docUri = docOrUri instanceof vscode.Uri ? docOrUri : docOrUri.uri;
-    if (docUri.scheme === 'file') {
-      for (const path in this.getSchemaAssociations()) {
-        if (isSameUriPath(path, docUri.path)) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 
   public updateSchemaAssociations() {

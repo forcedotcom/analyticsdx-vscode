@@ -61,6 +61,19 @@ describe('TemplateEditorManager', () => {
     const list = await getCompletionItems(document.uri, position);
     const labels = list.items.map(item => item.label);
     expect(labels, 'completion items').to.include.members(expectedLabels);
+    // also we shouldn't get any duplicate code completion items (which can come if something else, like the default
+    // json language service, is injecting extra stuff into our document type).
+    const dups: string[] = [];
+    list.items
+      .reduce((m, val) => m.set(val.label, (m.get(val.label) || 0) + 1), new Map<string, number>())
+      .forEach((num, label) => {
+        if (num >= 2) {
+          dups.push(label);
+        }
+      });
+    if (dups.length > 0) {
+      expect.fail('Found duplicate completion items: ' + dups.join(', '));
+    }
   }
 
   describe('starts on', () => {
@@ -385,6 +398,47 @@ describe('TemplateEditorManager', () => {
       // which should clear the warnings on folder.json since it's not a folder file anymore
       await waitForDiagnostics(folderDoc.uri, d => d && d.length === 0);
     });
+
+    it('without default json language services', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            folderDefinition: 'folder.json'
+          },
+          undefined,
+          2
+        )
+      );
+      // that should give us a warning about folder.json not existing
+      await waitForDiagnostics(
+        templateUri,
+        diagnostics => diagnostics && diagnostics.some(d => d.code === 'folderDefinition')
+      );
+      // create a folder.json that has a comment and some bad json
+      const folderUri = tmpdir.with({ path: path.join(tmpdir.path, 'folder.json') });
+      await writeEmptyJsonFile(folderUri);
+      const [, folderEditor] = await openFile(folderUri);
+      await setDocumentText(
+        folderEditor,
+        `{
+           // a comment here, with missing double-quotes below
+           featuredAssets: {}
+         }`
+      );
+      // we should only get an error on the missing double quotes (and not on the json comment)
+      const diagnostics = await waitForDiagnostics(folderUri);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected one diagnostic on folder.json, got: ' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
+      expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
+      expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
+    });
   }); // describe('configures folderDefinition')
 
   describe('configures uiDefinition', () => {
@@ -542,6 +596,47 @@ describe('TemplateEditorManager', () => {
       );
       // which should clear the warnings on ui.json since it's not a folder file anymore
       await waitForDiagnostics(uiDoc.uri, d => d && d.length === 0);
+    });
+
+    it('without default json language services', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            uiDefinition: 'ui.json'
+          },
+          undefined,
+          2
+        )
+      );
+      // that should give us a warning about ui.json not existing
+      await waitForDiagnostics(
+        templateUri,
+        diagnostics => diagnostics && diagnostics.some(d => d.code === 'uiDefinition')
+      );
+      // create a ui.json that has a comment and some bad json
+      const uiUri = tmpdir.with({ path: path.join(tmpdir.path, 'ui.json') });
+      await writeEmptyJsonFile(uiUri);
+      const [, uiEditor] = await openFile(uiUri);
+      await setDocumentText(
+        uiEditor,
+        `{
+           // a comment here, with missing double-quotes below
+           pages: []
+         }`
+      );
+      // we should only get an error on the missing double quotes (and not on the json comment)
+      const diagnostics = await waitForDiagnostics(uiUri);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected one diagnostic on ui.json, got: ' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
+      expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
+      expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
     });
   }); // describe('configures uiDefinition')
 
@@ -708,6 +803,47 @@ describe('TemplateEditorManager', () => {
       await setDocumentText(templateEditor, JSON.stringify({}, undefined, 2));
       // which should clear the warnings on variables.json since it's not a variables file anymore
       await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0);
+    });
+
+    it('without default json language services', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            variableDefinition: 'variables.json'
+          },
+          undefined,
+          2
+        )
+      );
+      // that should give us a warning about variables.json not existing
+      await waitForDiagnostics(
+        templateUri,
+        diagnostics => diagnostics && diagnostics.some(d => d.code === 'variableDefinition')
+      );
+      // create a variables.json that has a comment and some bad json
+      const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
+      await writeEmptyJsonFile(variablesUri);
+      const [, variablesEditor] = await openFile(variablesUri);
+      await setDocumentText(
+        variablesEditor,
+        `{
+           // a comment here, with missing double-quotes below
+           varname: {}
+         }`
+      );
+      // we should only get an error on the missing double quotes (and not on the json comment)
+      const diagnostics = await waitForDiagnostics(variablesUri);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected one diagnostic on variables.json, got: ' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
+      expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
+      expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
     });
   }); // describe('configures variablesDefinition')
 
@@ -879,6 +1015,52 @@ describe('TemplateEditorManager', () => {
       );
       // which should clear the warnings on ui.json since it's not a folder file anymore
       await waitForDiagnostics(rulesDoc.uri, d => d && d.length === 0);
+    });
+
+    it('without default json language services', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            rules: [
+              {
+                type: 'templateToApp',
+                file: 'rules.json'
+              }
+            ]
+          },
+          undefined,
+          2
+        )
+      );
+      // that should give us a warning about rules.json not existing
+      await waitForDiagnostics(
+        templateUri,
+        diagnostics => diagnostics && diagnostics.some(d => d.code === 'rules[0].file')
+      );
+      // create a rules.json that has a comment and some bad json
+      const rulesUri = tmpdir.with({ path: path.join(tmpdir.path, 'rules.json') });
+      await writeEmptyJsonFile(rulesUri);
+      const [, rulesEditor] = await openFile(rulesUri);
+      await setDocumentText(
+        rulesEditor,
+        `{
+           // a comment here, with missing double-quotes below
+           rules: []
+         }`
+      );
+      // we should only get an error on the missing double quotes (and not on the json comment)
+      const diagnostics = await waitForDiagnostics(rulesUri);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected one diagnostic on rules.json, got: ' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
+      expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
+      expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
     });
   }); // describe('configures rulesDefinitions')
 
