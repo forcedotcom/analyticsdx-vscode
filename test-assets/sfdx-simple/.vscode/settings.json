@@ -2,5 +2,15 @@
   "extensions.autoUpdate": false,
   "update.mode": "none",
   "salesforcedx-vscode-core.telemetry.enabled": false,
-  "telemetry.enableTelemetry": false
+  "telemetry.enableTelemetry": false,
+  // set some things in the json language settings, some in adx-template-json, to make sure the defaulting logic
+  // in templateEditing works
+  "[json]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[adx-template-json]": {
+    // we need this off so we can test that templateEditing's formatting logic works right
+    "editor.detectIndentation": false
+  }
 }

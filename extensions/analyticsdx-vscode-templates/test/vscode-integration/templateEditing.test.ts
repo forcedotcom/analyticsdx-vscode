@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { findNodeAtLocation, JSONPath, parseTree } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
-import { TEMPLATE_INFO } from '../../src/constants';
+import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { TemplateEditingManager } from '../../src/templateEditing';
 import { scanLinesUntil, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
@@ -438,6 +438,80 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
       expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
+    });
+
+    it('formatting', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            folderDefinition: 'folder.json'
+          },
+          undefined,
+          2
+        )
+      );
+      // create a folder.json
+      const folderUri = tmpdir.with({ path: path.join(tmpdir.path, 'folder.json') });
+      await writeEmptyJsonFile(folderUri);
+      const [, folderEditor] = await openFile(folderUri);
+      // wait for the doc to get mapped to adx-template-json
+      await waitFor(() => folderEditor.document.languageId, id => id === TEMPLATE_JSON_LANG_ID);
+      // put in some badly-formatted json
+      await setDocumentText(
+        folderEditor,
+        `
+        {
+        "name":"AllFields",
+        "label" :"AllFields",
+        "description": "Test all the available fields and values for folder.json",
+        "featuredAssets": {
+        "default": {
+        "assets": [
+        {"id": "assetId","name": "assetName","namespace": "assetNamespace", "type": "assetType"}
+              ]
+        }
+        },
+                  "shares" : [
+            {
+              "accessType": "View",
+              "shareType": "Organization",
+              "sharedWithId": "someId"
+            }
+          ]
+        }
+        `
+      );
+
+      // format it
+      await vscode.commands.executeCommand('editor.action.formatDocument');
+      const expectedJson = JSON.stringify(
+        {
+          name: 'AllFields',
+          label: 'AllFields',
+          description: 'Test all the available fields and values for folder.json',
+          featuredAssets: {
+            default: {
+              assets: [{ id: 'assetId', name: 'assetName', namespace: 'assetNamespace', type: 'assetType' }]
+            }
+          },
+          shares: [
+            {
+              accessType: 'View',
+              shareType: 'Organization',
+              sharedWithId: 'someId'
+            }
+          ]
+        },
+        undefined,
+        // the .vscode/settigs.json in the test-assets/sfdx-simple workspace has tabSize: 2, so this should match
+        2
+      ).replace('\r\n', '\n');
+      expect(folderEditor.document.getText().replace('\r\n', '\n'), 'folder.json text').to.equal(expectedJson);
     });
   }); // describe('configures folderDefinition')
 
