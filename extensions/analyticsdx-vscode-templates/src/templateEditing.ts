@@ -15,6 +15,8 @@ import { getErrorStatusDescription, xhr, XHRResponse } from 'request-light';
 import * as vscode from 'vscode';
 import {
   DidChangeConfigurationNotification,
+  DocumentRangeFormattingParams,
+  DocumentRangeFormattingRequest,
   LanguageClient,
   LanguageClientOptions,
   NotificationType,
@@ -292,7 +294,7 @@ export class TemplateEditingManager extends Disposable {
       this.templateDirs.delete(key);
       editing.dispose();
       this.updateSchemaAssociations();
-      // FIXME!!: reset documentLangId on any adxjson open documents
+      // REVIEWME: reset documentLangId on any adxjson open documents
       return true;
     }
     return false;
@@ -401,6 +403,47 @@ namespace SchemaAssociationNotification {
   export const type: NotificationType<ISchemaAssociations, any> = new NotificationType('json/schemaAssociations');
 }
 
+function getFormattingOptions(orig: vscode.FormattingOptions): vscode.FormattingOptions {
+  const editor = vscode.workspace.getConfiguration('editor');
+  const json = vscode.workspace.getConfiguration('[json]');
+  const adx = vscode.workspace.getConfiguration('[adx-template-json]');
+
+  // look for values first in [adx-template-json], then optionally in [json], and finally in the default editor values;
+  // the first value actually set is used
+  function getEditorOption<T>(basename: string, def: T, includeJson?: boolean): T;
+  function getEditorOption<T>(basename: string, def: undefined, includeJson?: boolean): T | undefined;
+  function getEditorOption<T>(basename: string, def: T | undefined, includeJson = true): T | undefined {
+    // have to do direct access for [json] and [adx-template-json], since .get() splits up .-seperated names
+    let val: T | undefined = adx[`editor.${basename}`];
+    if (val === undefined) {
+      if (includeJson) {
+        val = json[`editor.${basename}`];
+      }
+      if (val === undefined) {
+        val = editor.get<T>(basename);
+      }
+    }
+    return val !== undefined ? val : def;
+  }
+
+  // if they have detectIndentation set to true, then just use whatever was passed in, which should be the
+  // detected information.
+  // only look for it in the [adx-template-json] and default editor sections, since that's where vscode will only
+  // look  when calculating the default formatting options.
+  const detect = getEditorOption<boolean>('detectIndentation', undefined, false);
+  if (detect === true) {
+    return orig;
+  }
+
+  return {
+    // vscode-languageclient's asFormattingOptions() currently only looks at these values,
+    // and vscode-json-languageservice will only look for those (to eventually pass into jsonc-parser's format()
+    // function)
+    insertSpaces: getEditorOption<boolean>('insertSpaces', orig.insertSpaces),
+    tabSize: getEditorOption<number>('tabSize', orig.tabSize)
+  };
+}
+
 class TemplateJsonLanguageClient extends Disposable {
   private languageClient: LanguageClient | undefined;
   private clientReady = false;
@@ -449,7 +492,9 @@ class TemplateJsonLanguageClient extends Disposable {
       documentSelector: [TEMPLATE_JSON_LANG_ID],
       initializationOptions: {
         // language server only loads file-URI. Fetching schemas with other protocols ('http'...) are made on the client.
-        handledSchemaProtocols: ['file']
+        handledSchemaProtocols: ['file'],
+        // don't provide a default formatter, we'll wire it up ourselves so we can configure the options
+        provideFormatter: false
       },
       synchronize: {
         configurationSection: ['http'],
@@ -473,10 +518,15 @@ class TemplateJsonLanguageClient extends Disposable {
     };
 
     this.clientReady = false;
-    const client = new LanguageClient('adxjson', 'ADX Templates JSON Language Server', serverOptions, clientOptions);
+    const client = new LanguageClient(
+      TEMPLATE_JSON_LANG_ID,
+      'ADX Templates JSON Language Server',
+      serverOptions,
+      clientOptions
+    );
     // for now, turn off proposed features from the vscode proposed api -- this fails with our version of the
     // vscode-languageclient and the current version of vscode, and we're not relying on this right now
-    // REVIEWME: figureturn on json proposed language features?
+    // REVIEWME: figure out if/how to turn on json proposed language features?
     //client.registerProposedFeatures();
 
     this.disposables.push(client.start());
@@ -533,7 +583,57 @@ class TemplateJsonLanguageClient extends Disposable {
       // initialize the schema associations (normally will be empty)
       client.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations());
 
+      // manually register / deregister format provider based on the json.format.enable config, and the
+      // json and adx-template-json language specific settings
+      let rangeFormatting: vscode.Disposable | undefined;
+      function updateFormatterRegistration() {
+        const formatEnabled = vscode.workspace.getConfiguration().get('json.format.enable');
+        if (!formatEnabled && rangeFormatting) {
+          rangeFormatting.dispose();
+          rangeFormatting = undefined;
+        } else if (formatEnabled && !rangeFormatting) {
+          rangeFormatting = vscode.languages.registerDocumentRangeFormattingEditProvider([TEMPLATE_JSON_LANG_ID], {
+            provideDocumentRangeFormattingEdits(
+              document: vscode.TextDocument,
+              range: vscode.Range,
+              options: vscode.FormattingOptions,
+              token: vscode.CancellationToken
+            ): vscode.ProviderResult<vscode.TextEdit[]> {
+              const params: DocumentRangeFormattingParams = {
+                textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
+                range: client.code2ProtocolConverter.asRange(range),
+                options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options))
+              };
+              return client
+                .sendRequest(DocumentRangeFormattingRequest.type, params, token)
+                .then(client.protocol2CodeConverter.asTextEdits, error => {
+                  client.logFailedRequest(DocumentRangeFormattingRequest.type, error);
+                  return Promise.resolve([]);
+                });
+            }
+          });
+        }
+      }
+
+      updateFormatterRegistration();
+      this.disposables.push({ dispose: () => rangeFormatting && rangeFormatting.dispose() });
+      this.disposables.push(
+        vscode.workspace.onDidChangeConfiguration(
+          e => e.affectsConfiguration('json.format.enable') && updateFormatterRegistration()
+        )
+      );
+
       this.clientReady = true;
+    });
+
+    // add these lang config rules programmatically, to match what
+    // https://github.com/microsoft/vscode/blob/master/extensions/json-language-features/client/src/jsonMain.ts does
+    vscode.languages.setLanguageConfiguration(TEMPLATE_JSON_LANG_ID, {
+      wordPattern: /("(?:[^\\\"]*(?:\\.)?)*"?)|[^\s{}\[\],:]+/,
+      indentationRules: {
+        increaseIndentPattern: /({+(?=([^"]*"[^"]*")*[^"}]*$))|(\[+(?=([^"]*"[^"]*")*[^"\]]*$))/,
+        decreaseIndentPattern: /^\s*[}\]],?\s*$/
+      }
     });
 
     this.languageClient = client;
