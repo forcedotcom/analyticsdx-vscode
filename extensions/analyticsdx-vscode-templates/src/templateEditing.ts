@@ -405,8 +405,10 @@ namespace SchemaAssociationNotification {
 
 function getFormattingOptions(orig: vscode.FormattingOptions): vscode.FormattingOptions {
   const editor = vscode.workspace.getConfiguration('editor');
-  const json = vscode.workspace.getConfiguration('[json]');
-  const adx = vscode.workspace.getConfiguration(`[${TEMPLATE_JSON_LANG_ID}]`);
+  // pass in null for the resource to get the languageId section as-is, since we're going to do the computing
+  // of the values here, and you get a runtime warning if you leave it off
+  const json = vscode.workspace.getConfiguration('[json]', null);
+  const adx = vscode.workspace.getConfiguration(`[${TEMPLATE_JSON_LANG_ID}]`, null);
 
   // look for values first in [adx-template-json], then optionally in [json], and finally in the default editor values;
   // the first value actually set is used
