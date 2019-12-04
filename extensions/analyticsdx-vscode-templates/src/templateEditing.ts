@@ -406,7 +406,7 @@ namespace SchemaAssociationNotification {
 function getFormattingOptions(orig: vscode.FormattingOptions): vscode.FormattingOptions {
   const editor = vscode.workspace.getConfiguration('editor');
   const json = vscode.workspace.getConfiguration('[json]');
-  const adx = vscode.workspace.getConfiguration('[adx-template-json]');
+  const adx = vscode.workspace.getConfiguration(`[${TEMPLATE_JSON_LANG_ID}]`);
 
   // look for values first in [adx-template-json], then optionally in [json], and finally in the default editor values;
   // the first value actually set is used
@@ -486,10 +486,11 @@ class TemplateJsonLanguageClient extends Disposable {
       }
     };
 
+    // Register for our language id
+    const documentSelector = [TEMPLATE_JSON_LANG_ID];
     // Options to control the language client
     const clientOptions: LanguageClientOptions = {
-      // Register the server for json documents
-      documentSelector: [TEMPLATE_JSON_LANG_ID],
+      documentSelector,
       initializationOptions: {
         // language server only loads file-URI. Fetching schemas with other protocols ('http'...) are made on the client.
         handledSchemaProtocols: ['file'],
@@ -592,7 +593,7 @@ class TemplateJsonLanguageClient extends Disposable {
           rangeFormatting.dispose();
           rangeFormatting = undefined;
         } else if (formatEnabled && !rangeFormatting) {
-          rangeFormatting = vscode.languages.registerDocumentRangeFormattingEditProvider([TEMPLATE_JSON_LANG_ID], {
+          rangeFormatting = vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, {
             provideDocumentRangeFormattingEdits(
               document: vscode.TextDocument,
               range: vscode.Range,
