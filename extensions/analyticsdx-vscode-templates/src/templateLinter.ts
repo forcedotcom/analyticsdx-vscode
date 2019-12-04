@@ -12,7 +12,7 @@ import { TEMPLATE_INFO } from './constants';
 import { findTemplateInfoFileFor } from './templateEditing';
 import { Disposable } from './util/disposable';
 import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } from './util/jsoncUtils';
-import { rangeForNode, uriStat } from './util/vscodeUtils';
+import { isUriUnder, rangeForNode, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
 
 /** Find the value for the first attribute found at the pattern.
  * @returns the value (string, boolean, number, or null), or undefined if not found or found node's value is not
@@ -44,138 +44,58 @@ function lengthJsonArrayAttributeValue(tree: JsonNode, ...pattern: JSONPath): [n
   return [nodes ? nodes.length : -1, node];
 }
 
-export class TemplateLinter extends Disposable {
-  // https://www.humanbenchmark.com/tests/reactiontime/statistics,
-  // plus the linting on vscode extension package.json's is using 300ms
-  // (https://github.com/microsoft/vscode/blob/master/extensions/extension-editing/src/extensionLinter.ts)
-  private static readonly LINT_DEBOUNCE_MS = 300;
+/** An object that can lint a template folder.
+ * This currently does full lint only (no incremental) -- a second call to lint() will clear out any saved state
+ * and rerun a lint.
+ */
+export class TemplateLinter {
+  /** This will be called after each json parse of a template-info.json file, but before any linting takes place. */
+  public onParsedTemplateInfo: ((doc: vscode.TextDocument, tree: JsonNode | undefined) => any) | undefined;
 
-  private diagnosticsCollection = vscode.languages.createDiagnosticCollection('analyticsdx-templates');
+  /** The set of diagnostics found from the last call to lint() */
+  public readonly diagnostics = new Map<vscode.TextDocument, vscode.Diagnostic[]>();
 
-  private timer: NodeJS.Timer | undefined;
-  private templateInfoQueue = new Set<vscode.TextDocument>();
+  constructor(
+    public readonly templateInfoDoc: vscode.TextDocument,
+    public readonly dir: vscode.Uri = uriDirname(templateInfoDoc.uri)
+  ) {}
 
-  /** Constructor.
-   * @param onParsedTemplateInfo callback for when we just parsed a template-info.js and are about to lint it.
-   */
-  constructor(private readonly onParsedTemplateInfo?: (doc: vscode.TextDocument, tree: JsonNode | undefined) => any) {
-    super();
-    this.disposables.push(this.diagnosticsCollection);
-  }
+  // TODO: figure out how to do incremental linting (or if we even should)
+  // Currently, this and #opened() always starts with the template-info.json at-or-above the modified file, and then
+  // does a full lint of the whole template folder, which ends up parsing the template-info and every related file to
+  // run the validations against.
+  // We could probably look at the file(s) actually modified and calculate what other files are potentially affected
+  // by that file, and then only parse those and validate those things.
+  /** Run a lint, saving the results in this object. */
+  public async lint(): Promise<this> {
+    this.diagnostics.clear();
+    const tree = parseTree(this.templateInfoDoc.getText());
+    if (this.onParsedTemplateInfo) {
+      try {
+        this.onParsedTemplateInfo(this.templateInfoDoc, tree);
+      } catch (e) {
+        console.error('TemplateLinter.onParsedTemplateInfo() callback failed', e);
+      }
+    }
 
-  public start(): TemplateLinter {
-    this.disposables.push(
-      vscode.workspace.onDidOpenTextDocument(doc => this.opened(doc)),
-      vscode.workspace.onDidChangeTextDocument(event => this.queue(event.document)),
-      vscode.workspace.onDidCloseTextDocument(doc => this.closed(doc))
-    );
-    vscode.workspace.textDocuments.forEach(doc => this.opened(doc));
+    if (tree) {
+      await this.lintTemplateInfo(this.templateInfoDoc, tree);
+    }
     return this;
   }
 
-  public dispose() {
-    super.dispose();
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-    this.timer = undefined;
-    this.templateInfoQueue.forEach(doc => this.clearDoc(doc));
-  }
-
-  private async opened(doc: vscode.TextDocument) {
-    const basename = path.basename(doc.uri.path);
-    if (basename === 'template-info.json') {
-      this.queue(doc);
-    } else {
-      const templateInfoUri = await findTemplateInfoFileFor(doc.uri);
-      if (templateInfoUri) {
-        // this should trigger our listener above to call opened() to queue up the template-info.json
-        await vscode.workspace.openTextDocument(templateInfoUri);
-        // TODO: hookup linting for the file actually passed in
-      }
-    }
-  }
-
-  private queue(doc: vscode.TextDocument) {
-    if (path.basename(doc.uri.path) === 'template-info.json') {
-      this.templateInfoQueue.add(doc);
-      this.startTimer();
-    }
-  }
-
-  private closed(doc: vscode.TextDocument) {
-    this.clearDoc(doc);
-  }
-
-  private clearDoc(doc: vscode.TextDocument) {
-    this.diagnosticsCollection.delete(doc.uri);
-    this.templateInfoQueue.delete(doc);
-  }
-
-  private startTimer() {
-    // debounce -- this will make it so linting runs after the user stops typing
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-    this.timer = setTimeout(() => {
-      // TODO: need to queue up another startTimer() until this.lint()'s return promise is finished, toa avoid
-      // starting another lint while this line is running.
-      this.timer = undefined;
-      this.lint().catch(console.error);
-    }, TemplateLinter.LINT_DEBOUNCE_MS);
-  }
-
-  /** Run against the current queue of documents awaiting linting. */
-  private async lint() {
-    await this.lintTemplateInfoQueue();
-  }
-
-  private lintTemplateInfoQueue() {
-    let all = Promise.resolve();
-    this.templateInfoQueue.forEach(doc => {
-      this.templateInfoQueue.delete(doc);
-      try {
-        const result = this.lintTemplateInfo(doc);
-        if (!result) {
-          this.diagnosticsCollection.delete(doc.uri);
-        } else {
-          const p = result
-            .then(diagnostics => this.diagnosticsCollection.set(doc.uri, diagnostics))
-            .catch(console.error);
-          all = all.then(v => p);
-        }
-      } catch (e) {
-        console.debug('Failed to lint ' + doc.uri.toString(), e);
-        this.diagnosticsCollection.delete(doc.uri);
-      }
-    });
-    return all;
-  }
-
-  private lintTemplateInfo(doc: vscode.TextDocument): undefined | Promise<vscode.Diagnostic[] | undefined> {
-    if (doc.isClosed) {
-      if (this.onParsedTemplateInfo) {
-        this.onParsedTemplateInfo(doc, undefined);
-      }
-      return undefined;
-    }
-
-    const tree = parseTree(doc.getText());
-    if (this.onParsedTemplateInfo) {
-      this.onParsedTemplateInfo(doc, tree);
-    }
-    if (!tree) {
-      // empty or completely bad file, json-schema will report errors
-      return undefined;
-    }
+  private async lintTemplateInfo(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
     const diagnostics: vscode.Diagnostic[] = [];
+    this.diagnostics.set(this.templateInfoDoc, diagnostics);
     // TODO: consider doing this via a visit down the tree, rather than searching mulitple times
-    return Promise.all([
-      this.lintTemplateInfoMinimumObjects(doc, diagnostics, tree),
+    await Promise.all([
+      this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, diagnostics, tree),
       // make sure each place that can have a relative path to a file has a valid one
       // TODO: warn if they put the same relPath in twice in 2 different fields?
-      ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path => this.lintRelFilePath(doc, diagnostics, tree, path))
-    ]).then(v => diagnostics);
+      ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path =>
+        this.lintRelFilePath(this.templateInfoDoc, diagnostics, tree, path)
+      )
+    ]);
   }
 
   private lintTemplateInfoMinimumObjects(doc: vscode.TextDocument, diagnostics: vscode.Diagnostic[], tree: JsonNode) {
@@ -313,5 +233,140 @@ export class TemplateLinter extends Disposable {
       diagnostics.push(diagnostic);
     }
     return diagnostic;
+  }
+}
+export class TemplateLinterManager extends Disposable {
+  // https://www.humanbenchmark.com/tests/reactiontime/statistics,
+  // plus the linting on vscode extension package.json's is using 300ms
+  // (https://github.com/microsoft/vscode/blob/master/extensions/extension-editing/src/extensionLinter.ts)
+  private static readonly LINT_DEBOUNCE_MS = 300;
+
+  private diagnosticsCollection = vscode.languages.createDiagnosticCollection('analyticsdx-templates');
+
+  private timer: NodeJS.Timer | undefined;
+  private templateInfoQueue = new Set<vscode.TextDocument>();
+
+  /** Constructor.
+   * @param onParsedTemplateInfo callback for when we just parsed a template-info.js and are about to lint it.
+   */
+  constructor(private readonly onParsedTemplateInfo?: (doc: vscode.TextDocument, tree: JsonNode | undefined) => any) {
+    super();
+    this.disposables.push(this.diagnosticsCollection);
+  }
+
+  public start(): TemplateLinterManager {
+    this.disposables.push(
+      vscode.workspace.onDidOpenTextDocument(doc => this.opened(doc)),
+      vscode.workspace.onDidChangeTextDocument(event => this.queue(event.document)),
+      vscode.workspace.onDidCloseTextDocument(doc => this.closed(doc))
+    );
+    // TODO: if a file in a template folder is added/deleted, relint the template
+    vscode.workspace.textDocuments.forEach(doc => this.opened(doc));
+    return this;
+  }
+
+  public dispose() {
+    super.dispose();
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    this.timer = undefined;
+    this.templateInfoQueue.forEach(doc => this.clearDoc(doc));
+  }
+
+  private async opened(doc: vscode.TextDocument) {
+    const basename = uriBasename(doc.uri);
+    if (basename === 'template-info.json') {
+      this.queue(doc);
+    } else {
+      const templateInfoUri = await findTemplateInfoFileFor(doc.uri);
+      if (templateInfoUri) {
+        // this should trigger our listener above to call opened() to queue up the template-info.json
+        await vscode.workspace.openTextDocument(templateInfoUri);
+      }
+    }
+  }
+
+  private queue(doc: vscode.TextDocument) {
+    if (uriBasename(doc.uri) === 'template-info.json') {
+      this.templateInfoQueue.add(doc);
+      this.startTimer();
+    }
+  }
+
+  private closed(doc: vscode.TextDocument) {
+    this.clearDoc(doc);
+  }
+
+  private clearDoc(doc: vscode.TextDocument) {
+    // TODO: we need to figure a better way to show/add diagnostics, tied to when the editor is shown/closed
+    this.diagnosticsCollection.delete(doc.uri);
+    this.templateInfoQueue.delete(doc);
+  }
+
+  /** Update (or clear) all diagnostics for all files in a template directory.
+   */
+  private setAllTemplateDiagnostics(dir: vscode.Uri, diagnostics?: Map<vscode.TextDocument, vscode.Diagnostic[]>) {
+    // REVIEWME: do an immediate set here instead if we have diagnostics for that file in the map?
+    // go through the current diagnostics and clear any diagnostics under that dir
+    this.diagnosticsCollection.forEach(file => {
+      if (isUriUnder(dir, file)) {
+        this.diagnosticsCollection.delete(file);
+      }
+    });
+    if (diagnostics) {
+      diagnostics.forEach((diagnostics, file) => {
+        this.diagnosticsCollection.set(file.uri, diagnostics);
+      });
+    }
+  }
+
+  private startTimer() {
+    // debounce -- this will make it so linting runs after the user stops typing
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    this.timer = setTimeout(() => {
+      // TODO: need to queue up another startTimer() until this.lint()'s return promise is finished, toa avoid
+      // starting another lint while this line is running.
+      this.timer = undefined;
+      this.lint().catch(console.error);
+    }, TemplateLinterManager.LINT_DEBOUNCE_MS);
+  }
+
+  /** Run against the current queue of template-info documents awaiting linting. */
+  private async lint() {
+    let all = Promise.resolve();
+    this.templateInfoQueue.forEach(doc => {
+      this.templateInfoQueue.delete(doc);
+      try {
+        const result = this.lintTemplateInfo(doc);
+        if (!result) {
+          // delete any diagnostics for any files under that templateInfo dir
+          this.setAllTemplateDiagnostics(uriDirname(doc.uri));
+        } else {
+          const p = result
+            .then(linter => this.setAllTemplateDiagnostics(linter.dir, linter.diagnostics))
+            .catch(console.error);
+          all = all.then(v => p);
+        }
+      } catch (e) {
+        console.debug('Failed to lint ' + doc.uri.toString(), e);
+        this.diagnosticsCollection.delete(doc.uri);
+      }
+    });
+    return all;
+  }
+
+  private lintTemplateInfo(doc: vscode.TextDocument): undefined | Promise<TemplateLinter> {
+    if (doc.isClosed) {
+      if (this.onParsedTemplateInfo) {
+        this.onParsedTemplateInfo(doc, undefined);
+      }
+      return undefined;
+    }
+    const linter = new TemplateLinter(doc);
+    linter.onParsedTemplateInfo = this.onParsedTemplateInfo;
+    return linter.lint();
   }
 }

@@ -5,10 +5,9 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { getLocation, Location } from 'jsonc-parser';
-import { posix as path } from 'path';
 import * as picomatch from 'picomatch';
 import * as vscode from 'vscode';
-import { uriReaddir } from './vscodeUtils';
+import { uriDirname, uriReaddir } from './vscodeUtils';
 
 export function newCompletionItem(
   text: string,
@@ -107,7 +106,7 @@ export function newRelativeFilepathDelegate(delegate: {
       document: vscode.TextDocument,
       token: vscode.CancellationToken
     ) => {
-      const dir = document.uri.with({ path: path.dirname(document.uri.path) });
+      const dir = uriDirname(document.uri);
       // search for files under the same directory as the document
       const entries = await uriReaddir(
         dir,

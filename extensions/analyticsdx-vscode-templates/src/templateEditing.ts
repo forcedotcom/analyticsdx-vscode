@@ -38,13 +38,13 @@ import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
 import { matchJsonNodesAtPattern } from './util/jsoncUtils';
-import { isSameUri, isUriUnder, uriStat } from './util/vscodeUtils';
+import { isSameUri, isUriUnder, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
 
 /** Traverse up from the file until you find the template-info.json, without leaving the vscode workspace folders.
  * @return the file uri, or undefined if not found (i.e. file is not part of a template)
  */
 export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.Uri | undefined> {
-  let dir = file.with({ path: path.dirname(file.path) });
+  let dir = uriDirname(file);
   // don't go out of the workspace
   while (vscode.workspace.getWorkspaceFolder(dir)) {
     file = dir.with({ path: path.join(dir.path, 'template-info.json') });
@@ -55,7 +55,7 @@ export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.
       return (stat.type & vscode.FileType.File) !== 0 ? file : undefined;
     } else {
       // otherwise, continue up the directory tree
-      dir = file.with({ path: path.dirname(dir.path) });
+      dir = uriDirname(dir);
     }
   }
   return undefined;
@@ -304,11 +304,11 @@ export class TemplateEditingManager extends Disposable {
     // if they open a file under a template's directory
     const templateInfoFile = await findTemplateInfoFileFor(doc.uri);
     if (templateInfoFile) {
-      const dir = templateInfoFile.with({ path: path.dirname(templateInfoFile.path) });
+      const dir = uriDirname(templateInfoFile);
       this.startEditing(dir);
       // set documentLangId here on non template-info .json files so it uses our
       // language server
-      const filename = path.basename(doc.uri.path);
+      const filename = uriBasename(doc.uri);
       if (
         filename !== 'template-info.json' &&
         filename.endsWith('.json') &&
@@ -320,9 +320,9 @@ export class TemplateEditingManager extends Disposable {
   }
 
   private deleted(uri: vscode.Uri) {
-    const basename = path.basename(uri.path);
+    const basename = uriBasename(uri);
     if (basename === 'template-info.json') {
-      const dir = uri.with({ path: path.dirname(uri.path) });
+      const dir = uriDirname(uri);
       this.stopEditing(dir);
       // TODO: retrigger linting on template if a template-related file was deleted
     } else {
