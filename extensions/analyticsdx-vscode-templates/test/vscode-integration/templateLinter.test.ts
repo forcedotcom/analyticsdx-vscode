@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { closeAllEditors, openTemplateInfoAndWaitForDiagnostics } from './vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
-describe('TemplateLinter', () => {
+describe('TemplateLinterManager', () => {
   beforeEach(closeAllEditors);
   afterEach(closeAllEditors);
 

@@ -11,7 +11,7 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { TemplateEditingManager } from '../../src/templateEditing';
-import { scanLinesUntil, uriStat } from '../../src/util/vscodeUtils';
+import { scanLinesUntil, uriDirname, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 import {
   closeAllEditors,
@@ -196,7 +196,7 @@ describe('TemplateEditorManager', () => {
 
     it('related file schemas', async () => {
       const [, doc] = await openTemplateInfoAndWaitForDiagnostics('allRelpaths');
-      const templateDir = doc.uri.with({ path: path.dirname(doc.uri.path) });
+      const templateDir = uriDirname(doc.uri);
       const templateEditingManager = await getTemplateEditorManager();
       await waitForTemplateEditorManagerHas(templateEditingManager, templateDir, true);
       // make sure that the schema associations method has the schema for the various related files

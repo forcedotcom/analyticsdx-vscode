@@ -5,16 +5,16 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { telemetryService } from './telemetry';
 import { TemplateEditingManager } from './templateEditing';
-import { TemplateLinter } from './templateLinter';
+import { TemplateLinterManager } from './templateLinter';
+import { uriDirname } from './util/vscodeUtils';
 
 export type ExtensionType =
   | {
       templateEditingManager: TemplateEditingManager;
-      templateLinter: TemplateLinter;
+      templateLinterManager: TemplateLinterManager;
     }
   | undefined;
 
@@ -28,13 +28,13 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
   }
 
   const templateEditingManager = new TemplateEditingManager(context);
-  const templateLinter = new TemplateLinter((doc, tree) => {
-    const dir = doc.uri.with({ path: path.dirname(doc.uri.path) });
+  const templateLinterManager = new TemplateLinterManager((doc, tree) => {
+    const dir = uriDirname(doc.uri);
     templateEditingManager.setParsedTemplateInfo(dir, tree);
   });
 
   context.subscriptions.push(templateEditingManager.start());
-  context.subscriptions.push(templateLinter.start());
+  context.subscriptions.push(templateLinterManager.start());
 
   console.log('Analytics DX Templates Extension Activated');
   // Notify telemetry that our extension is now active
@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
 
   return {
     templateEditingManager,
-    templateLinter
+    templateLinterManager
   };
 }
 

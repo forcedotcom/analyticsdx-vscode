@@ -9,7 +9,15 @@ import { expect } from 'chai';
 import { Node as JsonNode, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { findPropertyNodeFor, matchJsonNodesAtPattern } from '../../../src/util/jsoncUtils';
-import { isSameUri, isUriUnder, rangeForNode, scanLinesUntil, uriReaddir } from '../../../src/util/vscodeUtils';
+import {
+  isSameUri,
+  isUriUnder,
+  rangeForNode,
+  scanLinesUntil,
+  uriBasename,
+  uriDirname,
+  uriReaddir
+} from '../../../src/util/vscodeUtils';
 import { closeAllEditors, uriFromTestRoot } from '../vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
@@ -217,6 +225,32 @@ describe('vscodeUtils', () => {
       const uri1 = vscode.Uri.parse('http://localhost:6109/foo');
       const uri2 = vscode.Uri.parse('http://www.salesforce.com/foo');
       expect(isSameUri(uri1, uri2)).to.be.false;
+    });
+  });
+
+  describe('uriDirname()', () => {
+    ['file://', 'http://www.salesforce.com'].forEach(base => {
+      [['/', '/'], ['/foo', '/'], ['/foo/', '/'], ['/foo/bar', '/foo'], ['/foo/bar/', '/foo']].forEach(
+        ([relpath, expectedDirname]) => {
+          const uri = vscode.Uri.parse(base + relpath);
+          it(`${uri} dirname -> ${expectedDirname}`, () => {
+            expect(uriDirname(uri).path).to.be.equals(expectedDirname);
+          });
+        }
+      );
+    });
+  });
+
+  describe('uriBasename()', () => {
+    ['file://', 'http://www.salesforce.com'].forEach(base => {
+      [['/', ''], ['/foo', 'foo'], ['/foo/', 'foo'], ['/foo/bar', 'bar'], ['/foo/bar/', 'bar']].forEach(
+        ([relpath, expectedBasename]) => {
+          const uri = vscode.Uri.parse(base + relpath);
+          it(`${uri} basename -> ${expectedBasename}`, () => {
+            expect(uriBasename(uri)).to.be.equals(expectedBasename);
+          });
+        }
+      );
     });
   });
 

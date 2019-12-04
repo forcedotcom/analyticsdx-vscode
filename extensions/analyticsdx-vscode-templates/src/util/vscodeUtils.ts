@@ -79,6 +79,16 @@ export function isSameUri(uri1: vscode.Uri, uri2: vscode.Uri): boolean {
   return uri1.scheme === uri2.scheme && uri1.authority === uri2.authority && isSameUriPath(uri1.path, uri2.path);
 }
 
+/** Get the the basename of the path of a uri. */
+export function uriBasename(uri: vscode.Uri): string {
+  return path.basename(uri.path);
+}
+
+/** Create a new uri with a path that is the dirname of the uri. */
+export function uriDirname(uri: vscode.Uri): vscode.Uri {
+  return uri.with({ path: path.dirname(uri.path) });
+}
+
 /** Stat a uri, return undefined if it doesn't exist in the vscode filesystem. */
 export async function uriStat(uri: vscode.Uri): Promise<vscode.FileStat | undefined> {
   try {
