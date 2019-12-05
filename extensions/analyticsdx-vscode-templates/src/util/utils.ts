@@ -21,3 +21,15 @@ export function isUriPathUnder(parent: string, file: string): boolean {
 export function isSameUriPath(path1: string, path2: string): boolean {
   return path.relative(path1, path2) === '';
 }
+
+/** Tell if the specified string is a valid relative-path (for templates) */
+export function isValidRelpath(relpath: string): boolean {
+  return (
+    !!relpath &&
+    relpath.trim().length > 0 &&
+    !relpath.startsWith('/') &&
+    !relpath.startsWith('../') &&
+    !relpath.includes('/../') &&
+    !relpath.endsWith('/..')
+  );
+}

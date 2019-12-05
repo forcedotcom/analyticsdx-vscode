@@ -31,7 +31,7 @@
         },
         "excludes": {
           "type": "array",
-          "description": "Define values to exclude from selections in response to wizard questions. The values can be either string literals, or string regular expressions of the form \"/<pattern>/<flags>\", where <flags> can be empty or a combination of the standard JavaScript RegExp flags (i.e. g, i, m, s, u, or y), e.g. \"/^(Billing).+/\", \"/\\\\s*[\\\\w\\\\.]+\\\\s*/gs\".",
+          "description": "Define values to exclude from selections in response to wizard questions. The values can be string literals and/or string regular expressions of the form \"/<pattern>/<flags>\", where <flags> can be empty or a combination of the standard JavaScript RegExp flags (i.e. g, i, m, s, u, or y), e.g. \"/^(Billing).+/\", \"/\\\\s*[\\\\w\\\\.]+\\\\s*/gs\". At most 1 regular expression exclude can be specified.",
           "minItems": 0,
           "items": {
             "type": "string"

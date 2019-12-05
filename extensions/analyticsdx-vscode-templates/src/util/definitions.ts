@@ -8,6 +8,7 @@
 import { getLocation, JSONPath, Location } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
+import { isValidRelpath } from './utils';
 
 export abstract class JsonAttributeDefinitionProvider implements vscode.DefinitionProvider {
   public provideDefinition(
@@ -53,19 +54,19 @@ export class JsonAttributeRelFilePathDefinitionProvider extends JsonAttributeDef
   ): vscode.Location | undefined {
     // isSupportedLocation checks that location.previousNode is set and has a string value
     const relpath: string = location.previousNode!.value;
-    if (
-      !relpath.startsWith('/') &&
-      !relpath.startsWith('../') &&
-      !relpath.includes('/../') &&
-      !relpath.endsWith('/..')
-    ) {
+    if (isValidRelpath(relpath)) {
       return new vscode.Location(
         document.uri.with({ path: path.join(path.dirname(document.uri.path), relpath) }),
         new vscode.Position(0, 0)
       );
     }
   }
-  public isSupportedLocation(location: Location, document: vscode.TextDocument, token: vscode.CancellationToken): boolean {
+
+  public isSupportedLocation(
+    location: Location,
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken
+  ): boolean {
     return (
       location.previousNode &&
       location.previousNode.type === 'string' &&
