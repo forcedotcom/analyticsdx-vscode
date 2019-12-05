@@ -121,7 +121,6 @@ describe('TemplateEditorManager', () => {
     let tmpdir: vscode.Uri | undefined;
     beforeEach(async () => {
       await closeAllEditors();
-      // create a temp template folder with an empty template-info.json
       tmpdir = undefined;
     });
 

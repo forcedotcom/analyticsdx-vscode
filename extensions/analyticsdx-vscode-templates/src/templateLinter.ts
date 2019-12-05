@@ -5,13 +5,14 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { getNodePath, JSONPath, Node as JsonNode, parseTree, Segment } from 'jsonc-parser';
+import { findNodeAtLocation, getNodePath, JSONPath, Node as JsonNode, parseTree, Segment } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO } from './constants';
 import { findTemplateInfoFileFor } from './templateEditing';
 import { Disposable } from './util/disposable';
 import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } from './util/jsoncUtils';
+import { isValidRelpath } from './util/utils';
 import { isUriUnder, rangeForNode, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
 
 /** Find the value for the first attribute found at the pattern.
@@ -60,6 +61,58 @@ export class TemplateLinter {
     public readonly dir: vscode.Uri = uriDirname(templateInfoDoc.uri)
   ) {}
 
+  /** Open the text document for  */
+  private async openTemplateRelPathDocument(
+    dir: vscode.Uri,
+    templateInfo: JsonNode,
+    jsonpath: JSONPath
+  ): Promise<vscode.TextDocument | undefined> {
+    const n = findNodeAtLocation(templateInfo, jsonpath);
+    if (n && n.type === 'string') {
+      const relpath = n.value as string;
+      if (isValidRelpath(relpath)) {
+        const uri = dir.with({ path: path.join(dir.path, relpath) });
+        try {
+          return await vscode.workspace.openTextDocument(uri);
+        } catch (error) {
+          // should mean file doesn't exist or can't be opened, which lintRelFilePath() should have caught already,
+          // so we can just ignore it
+        }
+      }
+    }
+    return undefined;
+  }
+
+  private createDiagnostic(
+    doc: vscode.TextDocument,
+    mesg: string,
+    location?: JsonNode,
+    diagnostics?: vscode.Diagnostic[],
+    severity = vscode.DiagnosticSeverity.Warning
+  ) {
+    // for nodes for string values, the node offset & length will include the outer double-quotes, so take those
+    // off
+    const rangeMod = location && location.type === 'string' ? 1 : 0;
+    const range = location
+      ? new vscode.Range(
+          doc.positionAt(location.offset + rangeMod),
+          doc.positionAt(location.offset + location.length - rangeMod)
+        )
+      : new vscode.Range(0, 0, 0, 0);
+    const diagnostic = new vscode.Diagnostic(range, mesg, severity);
+    // if a property node is sent in, we need to use its first child (the property name) to calculate the
+    // json-path for the diagnostics
+    if (location && location.type === 'property' && location.children && location.children[0].type === 'string') {
+      diagnostic.code = jsonPathToString(getNodePath(location.children[0]));
+    } else {
+      diagnostic.code = location ? jsonPathToString(getNodePath(location)) : '';
+    }
+    if (diagnostics) {
+      diagnostics.push(diagnostic);
+    }
+    return diagnostic;
+  }
+
   // TODO: figure out how to do incremental linting (or if we even should)
   // Currently, this and #opened() always starts with the template-info.json at-or-above the modified file, and then
   // does a full lint of the whole template folder, which ends up parsing the template-info and every related file to
@@ -79,7 +132,10 @@ export class TemplateLinter {
     }
 
     if (tree) {
-      await this.lintTemplateInfo(this.templateInfoDoc, tree);
+      await Promise.all([
+        this.lintTemplateInfo(this.templateInfoDoc, tree),
+        this.lintVariables(this.templateInfoDoc, tree)
+      ]);
     }
     return this;
   }
@@ -167,7 +223,7 @@ export class TemplateLinter {
     }
   }
 
-  private async lintRelFilePath(
+  private lintRelFilePath(
     doc: vscode.TextDocument,
     diagnostics: vscode.Diagnostic[],
     tree: JsonNode,
@@ -205,34 +261,53 @@ export class TemplateLinter {
     return all;
   }
 
-  private createDiagnostic(
-    doc: vscode.TextDocument,
-    mesg: string,
-    location?: JsonNode,
-    diagnostics?: vscode.Diagnostic[],
-    severity = vscode.DiagnosticSeverity.Warning
-  ) {
-    // for nodes for string values, the node offset & length will include the outer double-quotes, so take those
-    // off
-    const rangeMod = location && location.type === 'string' ? 1 : 0;
-    const range = location
-      ? new vscode.Range(
-          doc.positionAt(location.offset + rangeMod),
-          doc.positionAt(location.offset + location.length - rangeMod)
-        )
-      : new vscode.Range(0, 0, 0, 0);
-    const diagnostic = new vscode.Diagnostic(range, mesg, severity);
-    // if a property node is sent in, we need to use its first child (the property name) to calculate the
-    // json-path for the diagnostics
-    if (location && location.type === 'property' && location.children && location.children[0].type === 'string') {
-      diagnostic.code = jsonPathToString(getNodePath(location.children[0]));
-    } else {
-      diagnostic.code = location ? jsonPathToString(getNodePath(location)) : '';
+  private async lintVariables(templateInfoDoc: vscode.TextDocument, templateInfo: JsonNode): Promise<void> {
+    const doc = await this.openTemplateRelPathDocument(this.dir, templateInfo, ['variableDefinition']);
+    if (doc) {
+      const diagnostics: vscode.Diagnostic[] = [];
+      this.diagnostics.set(doc, diagnostics);
+
+      const variables = parseTree(doc.getText());
+      this.lintVariablesExcludes(doc, variables, diagnostics);
+      // TODO: other lints on variables
     }
-    if (diagnostics) {
-      diagnostics.push(diagnostic);
-    }
-    return diagnostic;
+  }
+
+  private lintVariablesExcludes(variablesDoc: vscode.TextDocument, tree: JsonNode, diagnostics: vscode.Diagnostic[]) {
+    // In a variable.excludes, you can have any number of string literals and/or a max of one '/regex[/][options]'
+    // string. At runtime in the Studio UI, the regex string is extracted directly (no way to quote forward-slash) and
+    // passed into `new RegExp(regex, options)`. The trailing / and the options are optional.
+    // this can ignore any fields in the json that aren't the right type -- the schema validation should report that
+    matchJsonNodesAtPattern(tree, ['*', 'excludes']).forEach(excludesNode => {
+      if (excludesNode.type === 'array' && excludesNode.children && excludesNode.children.length > 0) {
+        // keep track of how many regex excludes we find in this variable
+        let count = 0;
+        excludesNode.children.forEach(excludeNode => {
+          if (excludeNode.type === 'string') {
+            const str = excludeNode.value as string;
+            // it's a regex, so verify it
+            if (str && str.length > 0 && str.startsWith('/')) {
+              count++;
+            }
+          }
+        });
+        if (count > 1) {
+          this.createDiagnostic(
+            variablesDoc,
+            'Multiple regular expression excludes found, only the first will be used',
+            // try to put the warning on the "excludes" part of the whole exclude property, otherwise just put it on
+            // the excludes array
+            (excludesNode.parent &&
+              excludesNode.parent.type === 'property' &&
+              excludesNode.parent.children &&
+              excludesNode.parent.children[0]) ||
+              excludesNode,
+            diagnostics
+          );
+          // TODO: add DiagnosticRelatedInformation's for the excludeNode's that have regex's
+        }
+      }
+    });
   }
 }
 export class TemplateLinterManager extends Disposable {
@@ -352,7 +427,7 @@ export class TemplateLinterManager extends Disposable {
         }
       } catch (e) {
         console.debug('Failed to lint ' + doc.uri.toString(), e);
-        this.diagnosticsCollection.delete(doc.uri);
+        this.setAllTemplateDiagnostics(doc.uri);
       }
     });
     return all;
