@@ -324,7 +324,6 @@ export class TemplateEditingManager extends Disposable {
     if (basename === 'template-info.json') {
       const dir = uriDirname(uri);
       this.stopEditing(dir);
-      // TODO: retrigger linting on template if a template-related file was deleted
     } else {
       // if the uri is a folder and it's a template folder, or the ancestor of any started template folders
       // Note: we can't stat the uri since it doesn't exist anymore, so we need to just use the uri path to see if any

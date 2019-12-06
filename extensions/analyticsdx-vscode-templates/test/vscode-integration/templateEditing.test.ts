@@ -44,7 +44,10 @@ describe('TemplateEditorManager', () => {
     expected: boolean
   ) {
     try {
-      return await waitFor(() => templateEditingManager.has(dir), has => has === expected, 500, 15000);
+      return await waitFor(() => templateEditingManager.has(dir), has => has === expected, {
+        pauseMs: 500,
+        timeoutMs: 15000
+      });
     } catch (e) {
       if (e && e.name === 'timeout') {
         expect.fail(`Timeout waiting for TemplateEditingManager.has(${dir})===${expected}`);
@@ -459,7 +462,9 @@ describe('TemplateEditorManager', () => {
       await writeEmptyJsonFile(folderUri);
       const [, folderEditor] = await openFile(folderUri);
       // wait for the doc to get mapped to adx-template-json
-      await waitFor(() => folderEditor.document.languageId, id => id === TEMPLATE_JSON_LANG_ID);
+      await waitFor(() => folderEditor.document.languageId, id => id === TEMPLATE_JSON_LANG_ID, {
+        timeoutMessage: 'Timeout waiting for lanaugeId'
+      });
       // put in some badly-formatted json
       await setDocumentText(
         folderEditor,

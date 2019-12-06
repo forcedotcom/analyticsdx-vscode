@@ -25,9 +25,17 @@ import { promisify } from 'util';
 export function waitFor<T>(
   func: () => T,
   predicate: (val: T) => boolean | undefined,
-  pauseMs = 300,
-  timeoutMs = 5000,
-  rejectOnError = true
+  {
+    pauseMs = 300,
+    timeoutMs = 5000,
+    rejectOnError = true,
+    timeoutMessage = 'timeout'
+  }: {
+    pauseMs?: number;
+    timeoutMs?: number;
+    rejectOnError?: boolean;
+    timeoutMessage?: string;
+  } = {}
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const start = new Date().getTime();
@@ -47,7 +55,7 @@ export function waitFor<T>(
       }
       // check for timeout
       if (new Date().getTime() - start >= timeoutMs) {
-        const e = new Error('timeout');
+        const e = new Error(timeoutMessage || 'timeout');
         e.name = 'timeout';
         reject(e);
         return;

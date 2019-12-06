@@ -331,12 +331,19 @@ export class TemplateLinterManager extends Disposable {
 
   public start(): TemplateLinterManager {
     this.disposables.push(
-      vscode.workspace.onDidOpenTextDocument(doc => this.opened(doc)),
-      vscode.workspace.onDidChangeTextDocument(event => this.queue(event.document)),
+      vscode.workspace.onDidOpenTextDocument(doc => this.checkDocForQueuing(doc)),
+      vscode.workspace.onDidChangeTextDocument(event => this.checkDocForQueuing(event.document)),
       vscode.workspace.onDidCloseTextDocument(doc => this.closed(doc))
     );
-    // TODO: if a file in a template folder is added/deleted, relint the template
-    vscode.workspace.textDocuments.forEach(doc => this.opened(doc));
+    // if a file in a template folder is added/deleted, relint the template
+    const watcher = vscode.workspace.createFileSystemWatcher('**', false, true, false);
+    watcher.onDidCreate(uri => this.uriCreated(uri));
+    watcher.onDidDelete(uri => this.uriDeleted(uri));
+    // TODO: do we need to listen to behind-the-scenes file edits, too?
+    // Probably, since that would presumably be how we would catch if, say, a git pull brought in fixes to open templates
+    this.disposables.push(watcher);
+
+    vscode.workspace.textDocuments.forEach(doc => this.checkDocForQueuing(doc));
     return this;
   }
 
@@ -349,24 +356,53 @@ export class TemplateLinterManager extends Disposable {
     this.templateInfoQueue.forEach(doc => this.clearDoc(doc));
   }
 
-  private async opened(doc: vscode.TextDocument) {
+  private async checkDocForQueuing(doc: vscode.TextDocument) {
     const basename = uriBasename(doc.uri);
+    // if it's a template-info.json, add to the lint queue
     if (basename === 'template-info.json') {
-      this.queue(doc);
+      this.queueTemplateInfo(doc);
     } else {
+      // if it's in or under a template folder, open that template-info.json and queue it up
       const templateInfoUri = await findTemplateInfoFileFor(doc.uri);
       if (templateInfoUri) {
-        // this should trigger our listener above to call opened() to queue up the template-info.json
-        await vscode.workspace.openTextDocument(templateInfoUri);
+        this.queueTemplateInfo(await vscode.workspace.openTextDocument(templateInfoUri));
       }
     }
   }
 
-  private queue(doc: vscode.TextDocument) {
-    if (uriBasename(doc.uri) === 'template-info.json') {
-      this.templateInfoQueue.add(doc);
-      this.startTimer();
+  private async uriCreated(uri: vscode.Uri) {
+    const templateInfoUri = uriBasename(uri) === 'template-info.json' ? uri : await findTemplateInfoFileFor(uri);
+    if (templateInfoUri) {
+      // REVIEWME: only relint if the template is already open?
+      this.queueTemplateInfo(await vscode.workspace.openTextDocument(templateInfoUri));
     }
+  }
+
+  private async uriDeleted(uri: vscode.Uri) {
+    // if a template-info.json was deleted, clear all of the diagnostics for it and all related files
+    if (uriBasename(uri) === 'template-info.json') {
+      this.setAllTemplateDiagnostics(uri);
+    } else {
+      // if a file under a template folder was deleted, relint the template
+      const templateInfoUri = await findTemplateInfoFileFor(uri);
+      if (templateInfoUri) {
+        // REVIEWME: only relint if the template is already open?
+        this.queueTemplateInfo(await vscode.workspace.openTextDocument(templateInfoUri));
+      } else {
+        // otherwise, it could be that the parent of a template folder (or higher) was deleted, so clear all the
+        // diagnostics of any file under the delete uri
+        this.diagnosticsCollection.forEach(fileUri => {
+          if (isUriUnder(uri, fileUri)) {
+            this.diagnosticsCollection.delete(uri);
+          }
+        });
+      }
+    }
+  }
+
+  private queueTemplateInfo(doc: vscode.TextDocument) {
+    this.templateInfoQueue.add(doc);
+    this.startTimer();
   }
 
   private closed(doc: vscode.TextDocument) {
