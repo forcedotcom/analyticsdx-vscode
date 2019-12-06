@@ -398,6 +398,11 @@
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
+          },
+          "label": {
+            "type": "string",
+            "$comment": "Technnically supported but not used in runtime",
+            "doNotSuggest": true
           }
         },
         "defaultSnippets": [
@@ -441,6 +446,11 @@
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
+          },
+          "file": {
+            "type": "string",
+            "$comment": "Technnically supported but not used in runtime",
+            "doNotSuggest": true
           }
         },
         "defaultSnippets": [
@@ -478,6 +488,11 @@
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
+          },
+          "label": {
+            "type": "string",
+            "$comment": "Technnically supported but not used in runtime",
+            "doNotSuggest": true
           }
         },
         "defaultSnippets": [
@@ -561,6 +576,9 @@
             "condition": {
               "type": "string",
               "description": "If this is met, then the extended type will be created in the app; otherwise, it will not be created."
+            },
+            "overwriteOnUpgrade": {
+              "$ref": "#/definitions/overwriteOnUpgrade"
             }
           },
           "defaultSnippets": [

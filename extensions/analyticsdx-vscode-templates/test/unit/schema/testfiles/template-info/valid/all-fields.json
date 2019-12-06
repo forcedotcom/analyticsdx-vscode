@@ -32,14 +32,17 @@
       "rows": 10,
       "schema": "externalFiles/file_schema.json",
       "userXmd": "externalfiles/file_xmd.json",
-      "overwriteOnUpgrade": "IfDifferent"
+      "overwriteOnUpgrade": "IfDifferent",
+      "label": "not used"
     }
   ],
   "lenses": [
     {
       "file": "app-to-template-rules.json",
       "label": "blah",
-      "overwriteOnUpgrade": "Always"
+      "overwriteOnUpgrade": "Always",
+      "condition": "${Variables.Has_Product == 'Yes'}",
+      "name": "foo"
     }
   ],
   "dashboards": [
@@ -61,6 +64,7 @@
       "file": "dataflow.json",
       "name": "dataflow",
       "label": "dataflow",
+      "condition": "${Variables.Has_Product == 'Yes'}",
       "overwriteOnUpgrade": "${Variables.Has_Product == 'Yes'}"
     }
   ],
@@ -68,21 +72,28 @@
     {
       "label": "bar",
       "name": "bar",
-      "overwriteOnUpgrade": "IfDifferent"
+      "overwriteOnUpgrade": "IfDifferent",
+      "file": "not_used",
+      "condition": "${Variables.Has_Product == 'Yes'}",
+      "userXmd": "foo.json"
     }
   ],
   "storedQueries": [
     {
       "file": "queries/query.json",
       "label": "query",
-      "overwriteOnUpgrade": "IfDifferent"
+      "overwriteOnUpgrade": "IfDifferent",
+      "condition": "${Variables.Has_Product == 'Yes'}",
+      "name": "query"
     }
   ],
   "imageFiles": [
     {
       "file": "images/image.png",
       "name": "image.png",
-      "overwriteOnUpgrade": "IfDifferent"
+      "overwriteOnUpgrade": "IfDifferent",
+      "condition": "${Variables.Has_Product == 'No'}",
+      "label": "not used"
     }
   ],
   "extendedTypes": {
@@ -90,7 +101,9 @@
       {
         "label": "Test Something",
         "name": "DBVisualforcePage",
-        "file": "visualforce/vf.apexp"
+        "file": "visualforce/vf.apexp",
+        "condition": "${Variables.Has_Product == 'Yes'}",
+        "overwriteOnUpgrade": "Never"
       }
     ]
   },
