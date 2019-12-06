@@ -6,12 +6,17 @@
  */
 
 import { expect } from 'chai';
-import { isSameUriPath, isUriPathUnder, isWhitespaceChar } from '../../../src/util/utils';
+import { isSameUriPath, isUriPathUnder, isValidRelpath, isWhitespaceChar } from '../../../src/util/utils';
 
 // tslint:disable: no-unused-expression
 describe('utils', () => {
   describe('isWhitespaceChar()', () => {
-    [[' ', 'space'], ['\t', 'tab'], ['\r', 'CR'], ['\n', 'LF']].forEach(([ch, name]) => {
+    [
+      [' ', 'space'],
+      ['\t', 'tab'],
+      ['\r', 'CR'],
+      ['\n', 'LF']
+    ].forEach(([ch, name]) => {
       it(`matches ${name}`, () => {
         expect(isWhitespaceChar(ch)).to.be.true;
       });
@@ -52,7 +57,12 @@ describe('utils', () => {
   });
 
   describe('isSameUriPath()', () => {
-    [['/foo', '/foo'], ['/foo/', '/foo'], ['/foo', '/foo/'], ['/foo/bar', '/foo/bar']].forEach(([path1, path2]) => {
+    [
+      ['/foo', '/foo'],
+      ['/foo/', '/foo'],
+      ['/foo', '/foo/'],
+      ['/foo/bar', '/foo/bar']
+    ].forEach(([path1, path2]) => {
       it(`matches ${path1} -> ${path2}`, () => {
         expect(isSameUriPath(path1, path2)).to.be.true;
       });
@@ -72,5 +82,21 @@ describe('utils', () => {
         expect(isSameUriPath(path1, path2)).to.be.false;
       });
     });
+  });
+
+  describe('isValidRelPath()', () => {
+    ['relpath.html', 'dir/file.html', 'dir1/dir2/', './dir/foo'].forEach(path => {
+      it(`matches '${path}'`, () => {
+        expect(isValidRelpath(path)).to.be.true;
+      });
+    });
+
+    ['/path.html', '../file.html', 'dir/../file', 'dir/../../../../../../../../../etc/passwd', 'dir/..'].forEach(
+      path => {
+        it(`doesn't match '${path}'`, () => {
+          expect(isValidRelpath(path)).to.be.false;
+        });
+      }
+    );
   });
 });
