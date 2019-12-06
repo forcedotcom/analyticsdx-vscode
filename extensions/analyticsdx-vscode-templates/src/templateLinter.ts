@@ -237,7 +237,7 @@ export class TemplateLinter {
       // the json schema should handle if the node is not a string value
       if (n && n.type === 'string') {
         const relPath = (n.value as string) || '';
-        if (!relPath || (relPath.startsWith('/') || relPath.startsWith('../'))) {
+        if (!relPath || relPath.startsWith('/') || relPath.startsWith('../')) {
           this.createDiagnostic(doc, 'Value should be a path relative to this file', n, diagnostics);
         } else if (relPath.includes('/../') || relPath.endsWith('/..')) {
           this.createDiagnostic(doc, "Path should not contain '..' parts", n, diagnostics);
@@ -288,11 +288,16 @@ export class TemplateLinter {
           if (excludeNode.type === 'string') {
             const str = excludeNode.value as string;
             // it's a regex, so verify it
-            if (str && str.length > 1 && str.startsWith('/')) {
+            if (str && str.startsWith('/')) {
               regexes.push(excludeNode);
-              if (str.length < 2) {
+              if (str.length === 1) {
                 // if it's just a /, then it's missing a closing / and it's an empty regex
-                this.createDiagnostic(variablesDoc, 'Empty regular expression', excludeNode, diagnostics);
+                this.createDiagnostic(
+                  variablesDoc,
+                  'Missing closing / for regular expression',
+                  excludeNode,
+                  diagnostics
+                );
               } else {
                 const lastIndex = str.lastIndexOf('/');
                 let pattern: string | undefined;

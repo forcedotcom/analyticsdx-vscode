@@ -123,8 +123,10 @@ describe('TemplateLinterManager', () => {
         expect.fail('Expected 3 relatedInformation, got ' + JSON.stringify(d!.relatedInformation, undefined, 2));
       }
       ['dashboards', 'datasets', 'dataflows'].forEach(name => {
-        expect(d!.relatedInformation!.some(ri => ri.message === `Empty ${name} array`), name + ' related information')
-          .to.be.true;
+        expect(
+          d!.relatedInformation!.some(ri => ri.message === `Empty ${name} array`),
+          name + ' related information'
+        ).to.be.true;
       });
       map.delete('templateType');
 
@@ -227,16 +229,18 @@ describe('TemplateLinterManager', () => {
           2
         )
       );
-      const origNumDiagnostics = (await waitForDiagnostics(
-        templateUri,
-        diagnostics =>
-          diagnostics &&
-          diagnostics.length >= 1 &&
-          diagnostics.some(
-            d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
-          ),
-        'Inital diagnostic on bad variableDefinition file'
-      )).length;
+      const origNumDiagnostics = (
+        await waitForDiagnostics(
+          templateUri,
+          diagnostics =>
+            diagnostics &&
+            diagnostics.length >= 1 &&
+            diagnostics.some(
+              d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
+            ),
+          'Inital diagnostic on bad variableDefinition file'
+        )
+      ).length;
 
       // create variables.json
       const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
@@ -335,14 +339,16 @@ describe('TemplateLinterManager', () => {
       );
     });
 
-    it('shows problem on invalid regex variable excludes', async () => {
+    it('shows problems on invalid regex variable excludes', async () => {
       const [variablesDoc, variablesEditor] = await createTemplateWithVariables({
         foovar: {
-          description: 'invalid regex excludes -- missing close paren, and bad options',
+          description: 'invalid regex excludes -- missing close paren, missing end /s, and bad options',
           excludes: [
             '/^good$/',
             '/^good$/i',
             '/(?!^bad$|^Account$|^Contact$)(^.*$/',
+            '/',
+            '/missing-close-slash',
             '/foo/badoptions',
             '/double options/ii'
           ],
@@ -351,13 +357,11 @@ describe('TemplateLinterManager', () => {
           }
         }
       });
-      const diagnostics = (await waitForDiagnostics(
-        variablesDoc.uri,
-        undefined,
-        'Initial invalid regex excludes warning'
-      )).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
-      if (diagnostics.length !== 4) {
-        expect.fail('Expected 4 diagnostic, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      const diagnostics = (
+        await waitForDiagnostics(variablesDoc.uri, undefined, 'Initial invalid regex excludes warning')
+      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      if (diagnostics.length !== 6) {
+        expect.fail('Expected 6 diagnostic, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
       // the 1st diagnostic should be about having mulitple regexes, so skip that and check the others
       let diagnostic = diagnostics[1];
@@ -367,14 +371,26 @@ describe('TemplateLinterManager', () => {
         .to.match(/^Invalid regular expression:/)
         .and.match(/Unterminated group$/);
       expect(diagnostic.code, 'diagnostic[1].code').to.equal('foovar.excludes[2]');
+
       diagnostic = diagnostics[2];
       expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
-      expect(diagnostic.message, 'diagnostic[2].message').to.equal('Invalid regular expression options');
+      expect(diagnostic.message, 'diagnostic[2].message').to.equal('Missing closing / for regular expression');
       expect(diagnostic.code, 'diagnostic[2].code').to.equal('foovar.excludes[3]');
+
       diagnostic = diagnostics[3];
       expect(diagnostic, 'diagnostic[3]').to.not.be.undefined;
-      expect(diagnostic.message, 'diagnostic[3].message').to.equal('Duplicate option in regular expression options');
+      expect(diagnostic.message, 'diagnostic[3].message').to.equal('Missing closing / for regular expression');
       expect(diagnostic.code, 'diagnostic[3].code').to.equal('foovar.excludes[4]');
+
+      diagnostic = diagnostics[4];
+      expect(diagnostic, 'diagnostic[4]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[4].message').to.equal('Invalid regular expression options');
+      expect(diagnostic.code, 'diagnostic[4].code').to.equal('foovar.excludes[5]');
+
+      diagnostic = diagnostics[5];
+      expect(diagnostic, 'diagnostic[5]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[5].message').to.equal('Duplicate option in regular expression options');
+      expect(diagnostic.code, 'diagnostic[5].code').to.equal('foovar.excludes[6]');
 
       // fix variables.json, make sure diagnostic goes away
       await setDocumentText(variablesEditor, {
