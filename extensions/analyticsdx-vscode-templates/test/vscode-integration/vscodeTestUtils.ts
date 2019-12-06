@@ -45,8 +45,11 @@ export function waitForExtensionActive<T>(
       return ext;
     },
     ext => ext && ext.isActive,
-    pauseMs,
-    timeoutMs
+    {
+      pauseMs,
+      timeoutMs,
+      timeoutMessage: `waitForExtensionActive(): timeout on ${id}`
+    }
   );
 }
 
@@ -159,10 +162,13 @@ export async function openTemplateInfoAndWaitForDiagnostics(
 const defDiagnosticFilter = (d: vscode.Diagnostic[] | undefined) => d && d.length > 0;
 export async function waitForDiagnostics(
   uri: vscode.Uri,
-  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined
+  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined,
+  filterDescription = `diagnostics on ${uri.toString()}`
 ): Promise<vscode.Diagnostic[]> {
   await vscode.commands.executeCommand('workbench.action.problems.focus');
-  return waitFor(() => vscode.languages.getDiagnostics(uri), filter || defDiagnosticFilter);
+  return waitFor(() => vscode.languages.getDiagnostics(uri), filter || defDiagnosticFilter, {
+    timeoutMessage: `Timeout waiting for: ${filterDescription}`
+  });
 }
 
 /** Create a temporary directory in waveTemplates/ and an empty template-info.json.

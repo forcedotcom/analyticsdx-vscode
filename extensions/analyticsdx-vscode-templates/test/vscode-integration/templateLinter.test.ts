@@ -210,6 +210,62 @@ describe('TemplateLinterManager', () => {
 
       failOnUnexpected(map);
     });
+
+    it("updates problems on missing related file when it's created and deleted", async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      // now, set the variableDefinition to a file that doesn't exist
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            variableDefinition: 'variables.json'
+          },
+          undefined,
+          2
+        )
+      );
+      const origNumDiagnostics = (await waitForDiagnostics(
+        templateUri,
+        diagnostics =>
+          diagnostics &&
+          diagnostics.length >= 1 &&
+          diagnostics.some(
+            d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
+          ),
+        'Inital diagnostic on bad variableDefinition file'
+      )).length;
+
+      // create variables.json
+      const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
+      await writeEmptyJsonFile(variablesUri);
+      // and the diagnostic should go away
+      await waitForDiagnostics(
+        templateUri,
+        diagnostics =>
+          diagnostics &&
+          diagnostics.length < origNumDiagnostics &&
+          !diagnostics.some(
+            d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
+          ),
+        'No more variableDefinition diagnostic after creating variables.json'
+      );
+
+      // delete variables.json
+      await vscode.workspace.fs.delete(variablesUri, { useTrash: false });
+      // and the diagnostic should come back
+      await waitForDiagnostics(
+        templateUri,
+        diagnostics =>
+          diagnostics &&
+          diagnostics.some(
+            d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
+          ),
+        'Diagnostic on variableDefinition should exist after deleting variables.json'
+      );
+    });
   }); // describe('lints template-info.json')
 
   describe('lints variables.json', () => {
@@ -239,7 +295,7 @@ describe('TemplateLinterManager', () => {
         )
       );
       // but since it's not reference by the template-info.json, it should have no errors
-      await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0, 'No initial diagnostics on variables.json');
 
       // now, hookup the variables.json to the template-info.json
       await setDocumentText(
@@ -262,7 +318,29 @@ describe('TemplateLinterManager', () => {
         'Multiple regular expression excludes found, only the first will be used'
       );
 
-      // TODO: fix variables.json, make sure diagnostic goes away
+      // fix variables.json, make sure diagnostic goes away
+      await setDocumentText(
+        variablesEditor,
+        JSON.stringify(
+          {
+            foovar: {
+              description: 'mulitple regex excludes',
+              excludes: ['/^(?:(?!__c).)*$/', 'Event'],
+              variableType: {
+                type: 'SobjectFieldType'
+              }
+            }
+          },
+          undefined,
+          2
+        )
+      );
+      // and it should end up no warnings
+      await waitForDiagnostics(
+        variablesDoc.uri,
+        d => d && d.length === 0,
+        'No diagnostics on variables.json after fix'
+      );
     });
   }); // describe('lints variables.json')
 });
