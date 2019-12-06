@@ -269,7 +269,9 @@ describe('TemplateLinterManager', () => {
   }); // describe('lints template-info.json')
 
   describe('lints variables.json', () => {
-    it('shows problem on mulitple regex variable excludes', async () => {
+    async function createTemplateWithVariables(
+      initialJson: string | object
+    ): Promise<[vscode.TextDocument, vscode.TextEditor]> {
       [tmpdir] = await createTempTemplate(false);
       // make an empty template
       const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
@@ -278,37 +280,32 @@ describe('TemplateLinterManager', () => {
       const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
       await writeEmptyJsonFile(variablesUri);
       const [variablesDoc, variablesEditor] = await openFile(variablesUri);
-      await setDocumentText(
-        variablesEditor,
-        JSON.stringify(
-          {
-            foovar: {
-              description: 'mulitple regex excludes',
-              excludes: ['/^(?:(?!__c).)*$/', 'Event', '/(?!^Case$|^Account$|^Contact$)(^.*$)/'],
-              variableType: {
-                type: 'SobjectFieldType'
-              }
-            }
-          },
-          undefined,
-          2
-        )
-      );
+      await setDocumentText(variablesEditor, initialJson);
       // but since it's not reference by the template-info.json, it should have no errors
       await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0, 'No initial diagnostics on variables.json');
 
       // now, hookup the variables.json to the template-info.json
-      await setDocumentText(
-        templateEditor,
-        JSON.stringify(
-          {
-            variableDefinition: 'variables.json'
-          },
-          undefined,
-          2
-        )
+      await setDocumentText(templateEditor, {
+        variableDefinition: 'variables.json'
+      });
+      return [variablesDoc, variablesEditor];
+    }
+
+    it('shows problem on mulitple regex variable excludes', async () => {
+      const [variablesDoc, variablesEditor] = await createTemplateWithVariables({
+        foovar: {
+          description: 'mulitple regex excludes',
+          excludes: ['/^(?:(?!__c).)*$/', 'Event', '/(?!^Case$|^Account$|^Contact$)(^.*$)/'],
+          variableType: {
+            type: 'SobjectFieldType'
+          }
+        }
+      });
+      const diagnostics = await waitForDiagnostics(
+        variablesDoc.uri,
+        undefined,
+        'Initial multiple regex excludes warning'
       );
-      const diagnostics = await waitForDiagnostics(variablesDoc.uri);
       if (diagnostics.length !== 1) {
         expect.fail('Expected 1 diagnostic, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
@@ -317,29 +314,82 @@ describe('TemplateLinterManager', () => {
       expect(diagnostic.message, 'diagnostic.message').to.equal(
         'Multiple regular expression excludes found, only the first will be used'
       );
+      // there should be a relatedInfo for each regex exclude value
+      expect(diagnostic.relatedInformation, 'diagnostic.relatedInformation').to.be.not.undefined;
+      expect(diagnostic.relatedInformation!.length, 'diagnostic.relatedInformation.length').to.equal(2);
 
       // fix variables.json, make sure diagnostic goes away
-      await setDocumentText(
-        variablesEditor,
-        JSON.stringify(
-          {
-            foovar: {
-              description: 'mulitple regex excludes',
-              excludes: ['/^(?:(?!__c).)*$/', 'Event'],
-              variableType: {
-                type: 'SobjectFieldType'
-              }
-            }
-          },
-          undefined,
-          2
-        )
-      );
+      await setDocumentText(variablesEditor, {
+        foovar: {
+          excludes: ['/^(?:(?!__c).)*$/', 'Event'],
+          variableType: {
+            type: 'SobjectFieldType'
+          }
+        }
+      });
       // and it should end up no warnings
       await waitForDiagnostics(
         variablesDoc.uri,
         d => d && d.length === 0,
         'No diagnostics on variables.json after fix'
+      );
+    });
+
+    it('shows problem on invalid regex variable excludes', async () => {
+      const [variablesDoc, variablesEditor] = await createTemplateWithVariables({
+        foovar: {
+          description: 'invalid regex excludes -- missing close paren, and bad options',
+          excludes: [
+            '/^good$/',
+            '/^good$/i',
+            '/(?!^bad$|^Account$|^Contact$)(^.*$/',
+            '/foo/badoptions',
+            '/double options/ii'
+          ],
+          variableType: {
+            type: 'SobjectFieldType'
+          }
+        }
+      });
+      const diagnostics = (await waitForDiagnostics(
+        variablesDoc.uri,
+        undefined,
+        'Initial invalid regex excludes warning'
+      )).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      if (diagnostics.length !== 4) {
+        expect.fail('Expected 4 diagnostic, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // the 1st diagnostic should be about having mulitple regexes, so skip that and check the others
+      let diagnostic = diagnostics[1];
+      expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
+      // Note: the diagnostic message here will really be coming from Electron/node so it might change in newer versions
+      expect(diagnostic.message, 'diagnostic[1].message')
+        .to.match(/^Invalid regular expression:/)
+        .and.match(/Unterminated group$/);
+      expect(diagnostic.code, 'diagnostic[1].code').to.equal('foovar.excludes[2]');
+      diagnostic = diagnostics[2];
+      expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[2].message').to.equal('Invalid regular expression options');
+      expect(diagnostic.code, 'diagnostic[2].code').to.equal('foovar.excludes[3]');
+      diagnostic = diagnostics[3];
+      expect(diagnostic, 'diagnostic[3]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[3].message').to.equal('Duplicate option in regular expression options');
+      expect(diagnostic.code, 'diagnostic[3].code').to.equal('foovar.excludes[4]');
+
+      // fix variables.json, make sure diagnostic goes away
+      await setDocumentText(variablesEditor, {
+        foovar: {
+          excludes: ['/^good$/', '/^good$/im', '/(?!^bad$|^Account$|^Contact$)(^.*)$/', '/foo/gimsuy'],
+          variableType: {
+            type: 'SobjectFieldType'
+          }
+        }
+      });
+      // and it should end up w/ just the mulitple regex warning
+      await waitForDiagnostics(
+        variablesDoc.uri,
+        d => d && d.length === 1 && d[0].code === 'foovar.excludes',
+        'No invalid regex diagnostics on variables.json after fix'
       );
     });
   }); // describe('lints variables.json')

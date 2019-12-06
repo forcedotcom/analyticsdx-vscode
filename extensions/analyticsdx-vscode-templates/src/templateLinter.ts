@@ -56,6 +56,8 @@ export class TemplateLinter {
   /** The set of diagnostics found from the last call to lint() */
   public readonly diagnostics = new Map<vscode.TextDocument, vscode.Diagnostic[]>();
 
+  private static readonly VALID_REGEX_OPTIONS = /^[gimsuy]+$/;
+
   constructor(
     public readonly templateInfoDoc: vscode.TextDocument,
     public readonly dir: vscode.Uri = uriDirname(templateInfoDoc.uri)
@@ -274,25 +276,88 @@ export class TemplateLinter {
   }
 
   private lintVariablesExcludes(variablesDoc: vscode.TextDocument, tree: JsonNode, diagnostics: vscode.Diagnostic[]) {
-    // In a variable.excludes, you can have any number of string literals and/or a max of one '/regex[/][options]'
+    // In a variable.excludes, you can have any number of string literals and/or a max of one '/regex/[options]'
     // string. At runtime in the Studio UI, the regex string is extracted directly (no way to quote forward-slash) and
-    // passed into `new RegExp(regex, options)`. The trailing / and the options are optional.
+    // passed into `new RegExp(regex, options)`. The options are optional.
     // this can ignore any fields in the json that aren't the right type -- the schema validation should report that
     matchJsonNodesAtPattern(tree, ['*', 'excludes']).forEach(excludesNode => {
       if (excludesNode.type === 'array' && excludesNode.children && excludesNode.children.length > 0) {
         // keep track of how many regex excludes we find in this variable
-        let count = 0;
+        const regexes = [] as JsonNode[];
         excludesNode.children.forEach(excludeNode => {
           if (excludeNode.type === 'string') {
             const str = excludeNode.value as string;
             // it's a regex, so verify it
-            if (str && str.length > 0 && str.startsWith('/')) {
-              count++;
+            if (str && str.length > 1 && str.startsWith('/')) {
+              regexes.push(excludeNode);
+              if (str.length < 2) {
+                // if it's just a /, then it's missing a closing / and it's an empty regex
+                this.createDiagnostic(variablesDoc, 'Empty regular expression', excludeNode, diagnostics);
+              } else {
+                const lastIndex = str.lastIndexOf('/');
+                let pattern: string | undefined;
+                let options: string | undefined;
+                // this means there's no closing /
+                if (lastIndex < 1) {
+                  this.createDiagnostic(
+                    variablesDoc,
+                    'Missing closing / for regular expression',
+                    excludeNode,
+                    diagnostics
+                  );
+                  // still try to parse the regex text that's there
+                  pattern = str.substring(1);
+                } else {
+                  // otherwise, it's a valid /pattern/[options] string
+                  pattern = str.substring(1, lastIndex);
+                  options = lastIndex + 1 < str.length ? str.substring(lastIndex + 1) : undefined;
+                }
+
+                // check the options
+                if (options && options.length) {
+                  if (!TemplateLinter.VALID_REGEX_OPTIONS.test(options)) {
+                    this.createDiagnostic(variablesDoc, 'Invalid regular expression options', excludeNode, diagnostics);
+                    // clear it out to still test the regex text
+                    options = undefined;
+                  } else if (/(.).*\1/.test(options)) {
+                    this.createDiagnostic(
+                      variablesDoc,
+                      'Duplicate option in regular expression options',
+                      excludeNode,
+                      diagnostics
+                    );
+                    // clear it out to still test the regex text
+                    options = undefined;
+                  }
+                }
+
+                // check the regex pattern text
+                try {
+                  // tslint:disable-next-line: no-unused-expression
+                  new RegExp(pattern, options);
+                } catch (e) {
+                  // Electron tends to throw SyntaxErrors w/ a message of 'Invalid regular expresion:...', so be sure
+                  // to nicely handle that to avoid double-text in the diagnostic
+                  let mesg: string = 'Invalid regular expression';
+                  // pull an error message from the error
+                  const errorMesg = e instanceof Error ? e.message : typeof e === 'string' ? e : undefined;
+                  if (errorMesg && errorMesg.length > 0) {
+                    // if the error message already starts with our default message, just use the error message
+                    if (errorMesg.toLocaleLowerCase().startsWith(mesg.toLocaleLowerCase())) {
+                      mesg = errorMesg;
+                    } else {
+                      // otherwise, append the error message
+                      mesg += ': ' + errorMesg;
+                    }
+                  }
+                  this.createDiagnostic(variablesDoc, mesg, excludeNode, diagnostics);
+                }
+              }
             }
           }
         });
-        if (count > 1) {
-          this.createDiagnostic(
+        if (regexes.length > 1) {
+          const diagnostic = this.createDiagnostic(
             variablesDoc,
             'Multiple regular expression excludes found, only the first will be used',
             // try to put the warning on the "excludes" part of the whole exclude property, otherwise just put it on
@@ -304,7 +369,16 @@ export class TemplateLinter {
               excludesNode,
             diagnostics
           );
-          // TODO: add DiagnosticRelatedInformation's for the excludeNode's that have regex's
+          // add DiagnosticRelatedInformation's for the excludeNode's that have regex's
+          diagnostic.relatedInformation = regexes
+            .map(
+              node =>
+                new vscode.DiagnosticRelatedInformation(
+                  new vscode.Location(variablesDoc.uri, rangeForNode(node, variablesDoc, false)),
+                  'Regular expression exclude'
+                )
+            )
+            .sort((d1, d2) => d1.location.range.start.line - d2.location.range.start.line);
         }
       }
     });

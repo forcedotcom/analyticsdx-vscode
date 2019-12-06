@@ -231,7 +231,8 @@ export function getWholeDocumentRange(document: vscode.TextDocument): vscode.Ran
   return new vscode.Range(new vscode.Position(0, 0), end);
 }
 
-export async function setDocumentText(editor: vscode.TextEditor, text: string): Promise<void> {
+export async function setDocumentText(editor: vscode.TextEditor, textOrObj: string | object): Promise<void> {
+  const text = typeof textOrObj === 'string' ? textOrObj : JSON.stringify(textOrObj, undefined, 2);
   const result = await editor.edit(edit => {
     const range = getWholeDocumentRange(editor.document);
     edit.replace(range, text);
