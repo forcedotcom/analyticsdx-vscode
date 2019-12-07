@@ -23,7 +23,7 @@
   "scripts": {
     "postinstall": "lerna bootstrap -- --no-package-lock && node scripts/reformat-with-prettier",
     "bootstrap": "lerna bootstrap -- --no-package-lock && node scripts/reformat-with-prettier",
-    "clean": "lerna run clean",
+    "clean": "shx rm -rf test-assets/sfdx-simple/force-app/main/default/waveTemplates/test-template-* && lerna run clean",
     "compile": "lerna run --stream compile",
     "lint": "lerna run lint",
     "test": "lerna exec --concurrency 1 --stream --bail=false -- npm run test",
