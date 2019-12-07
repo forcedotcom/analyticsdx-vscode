@@ -136,7 +136,8 @@ export class TemplateLinter {
     if (tree) {
       await Promise.all([
         this.lintTemplateInfo(this.templateInfoDoc, tree),
-        this.lintVariables(this.templateInfoDoc, tree)
+        this.lintVariables(tree),
+        this.lintUi(tree)
       ]);
     }
     return this;
@@ -263,7 +264,7 @@ export class TemplateLinter {
     return all;
   }
 
-  private async lintVariables(templateInfoDoc: vscode.TextDocument, templateInfo: JsonNode): Promise<void> {
+  private async lintVariables(templateInfo: JsonNode): Promise<void> {
     const doc = await this.openTemplateRelPathDocument(this.dir, templateInfo, ['variableDefinition']);
     if (doc) {
       const diagnostics: vscode.Diagnostic[] = [];
@@ -387,6 +388,64 @@ export class TemplateLinter {
         }
       }
     });
+  }
+
+  private async lintUi(templateInfo: JsonNode) {
+    const doc = await this.openTemplateRelPathDocument(this.dir, templateInfo, ['uiDefinition']);
+    if (doc) {
+      const diagnostics: vscode.Diagnostic[] = [];
+      this.diagnostics.set(doc, diagnostics);
+
+      const ui = parseTree(doc.getText());
+      this.lintUiVariablesUniqueAcrossPages(doc, ui, diagnostics);
+      // TODO: other lints on uiDefinition
+    }
+  }
+
+  private lintUiVariablesUniqueAcrossPages(doc: vscode.TextDocument, ui: JsonNode, diagnostics: vscode.Diagnostic[]) {
+    const pages = findNodeAtLocation(ui, ['pages']);
+    if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
+      // find all the variable objects
+      matchJsonNodesAtPattern(pages.children, ['variables', '*'])
+        // convert them to a map of name -> list of variable.name nodes with that name
+        .reduce((map, variable) => {
+          const [name, nameNode] = findJsonPrimitiveAttributeValue(variable, 'name');
+          if (nameNode && typeof name === 'string') {
+            const nodes = map.get(name) || [];
+            nodes.push(nameNode);
+            map.set(name, nodes);
+          }
+          return map;
+        }, new Map<string, JsonNode[]>())
+        // report a warning for each name w/ more than 1 variable object found
+        .forEach((nameNodes, name) => {
+          // REVIEWME: should we check if any of the variables have different visibilities? Does that make it ok to put
+          // the same variable on multiple pages?
+          if (nameNodes.length >= 2) {
+            // create a related info for each variable usage
+            const relateds = nameNodes.map(
+              variable =>
+                new vscode.DiagnosticRelatedInformation(
+                  new vscode.Location(doc.uri, rangeForNode(variable, doc, false)),
+                  `Other reference to variable '${name}'`
+                )
+            );
+            // create a warning for each variable usage
+            nameNodes.forEach((variable, i) => {
+              const diagnostic = this.createDiagnostic(
+                doc,
+                `Variable '${name}' referenced ${nameNodes.length} times`,
+                variable,
+                diagnostics
+              );
+              // add related infos for the other usages
+              diagnostic.relatedInformation = relateds
+                .filter((v, j) => i !== j)
+                .sort((r1, r2) => r1.location.range.start.line - r2.location.range.start.line);
+            });
+          }
+        });
+    }
   }
 }
 export class TemplateLinterManager extends Disposable {
