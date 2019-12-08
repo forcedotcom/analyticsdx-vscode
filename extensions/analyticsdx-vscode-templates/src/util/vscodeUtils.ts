@@ -133,7 +133,7 @@ async function _uriReaddir(
   const found = await vscode.workspace.fs.readDirectory(dir);
   let results = Promise.resolve([] as Array<[string, vscode.FileType]>);
   found.forEach(([name, fileType]) => {
-    if (!filter || _filterReaddirEntry([name, fileType], dir, reldir, filter)) {
+    if (!filter || _filterReaddirEntry([name, fileType], reldir, filter)) {
       results = results.then(all => {
         all.push([reldir ? path.join(reldir, name) : name, fileType]);
         return all;
@@ -158,7 +158,6 @@ async function _uriReaddir(
 
 function _filterReaddirEntry(
   [name, fileType]: [string, vscode.FileType],
-  dir: vscode.Uri,
   reldir: string,
   filter: ReaddirFilter
 ): boolean {
