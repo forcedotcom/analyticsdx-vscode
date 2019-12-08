@@ -272,103 +272,146 @@ describe('TemplateLinterManager', () => {
     });
   }); // describe('lints template-info.json')
 
+  type PathFieldAndJson = {
+    field: string;
+    path: string;
+    initialJson: string | object;
+  };
   /** Create a template with a related file configured.
    * @param relatedFileField the template-info.json field name
    * @param filename the name of the related file
    * @param initialJson the initial json for the related file
    * @returns the related file editor
    */
-  async function createTemplateWithRelatedFile(
-    relatedFileField: string,
-    filename: string,
-    initialJson: string | object
-  ): Promise<vscode.TextEditor> {
+  function createTemplateWithRelatedFiles(file: PathFieldAndJson): Promise<[vscode.TextEditor]>;
+  function createTemplateWithRelatedFiles(
+    file1: PathFieldAndJson,
+    file2: PathFieldAndJson
+  ): Promise<[vscode.TextEditor, vscode.TextEditor]>;
+  async function createTemplateWithRelatedFiles(...files: PathFieldAndJson[]): Promise<vscode.TextEditor[]> {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
     const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
-    // create a the related file
-    const uri = tmpdir.with({ path: path.join(tmpdir.path, filename) });
-    await writeEmptyJsonFile(uri);
-    const [, editor] = await openFile(uri);
-    await setDocumentText(editor, initialJson);
-    // but since it's not reference by the template-info.json, it should have no errors
-    await waitForDiagnostics(editor.document.uri, d => d && d.length === 0, `No initial diagnostics on ${filename}`);
+    const templateJson: { [key: string]: any } = {};
+    // create the related file(s)
+    const editors = await Promise.all(
+      files.map(async file => {
+        const uri = tmpdir!.with({ path: path.join(tmpdir!.path, file.path) });
+        await writeEmptyJsonFile(uri);
+        const [, editor] = await openFile(uri);
+        await setDocumentText(editor, file.initialJson);
+        // but since it's not reference by the template-info.json, it should have no errors
+        await waitForDiagnostics(
+          editor.document.uri,
+          d => d && d.length === 0,
+          `No initial diagnostics on ${file.path}`
+        );
+        templateJson[file.field] = file.path;
+        return editor;
+      })
+    );
 
-    // now, hookup the related file
-    const json: { [key: string]: any } = {};
-    json[relatedFileField] = filename;
-    await setDocumentText(templateEditor, json);
-    return editor;
+    // now, hookup the related file(s)
+    await setDocumentText(templateEditor, templateJson);
+    return editors;
   }
 
   describe('lints ui.json', () => {
-    function createTemplateWithUi(initialJson: string | object): Promise<vscode.TextEditor> {
-      return createTemplateWithRelatedFile('uiDefinition', 'ui.json', initialJson);
-    }
-
-    it('shows problems on variable used multiple times', async () => {
-      // create a ui.json with a foo.variable used multiple times
+    it('shows problems on unrecognized variables', async () => {
+      // create a ui.json pointing to var that aren't in variables.json
       const uiJson = {
         pages: [
           {
             title: 'Page1',
             variables: [
               {
-                name: 'foo'
+                name: 'badvar'
               },
               {
-                name: 'foo'
-              }
-            ]
-          },
-          {
-            title: 'Page2',
-            variables: [
-              {
-                name: 'foo'
+                name: 'var2'
               }
             ]
           }
         ]
       };
-      const uiEditor = await createTemplateWithUi(uiJson);
-      // check the initial diagnostics
-      // TODO: filter the warnings here once we start checking if variables exist in variables.json
-      const diagnostics = (
-        await waitForDiagnostics(uiEditor.document.uri, undefined, 'Initial variable warnings')
-      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
-      if (diagnostics.length !== 3) {
-        expect.fail('Expected 3 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      const variablesJson: { [key: string]: { variableType: { type: string } } } = {
+        var1: {
+          variableType: {
+            type: 'StringType'
+          }
+        }
+      };
+      const [uiEditor, variablesEditor] = await createTemplateWithRelatedFiles(
+        {
+          field: 'uiDefinition',
+          path: 'ui.json',
+          initialJson: uiJson
+        },
+        {
+          field: 'variableDefinition',
+          path: 'variables.json',
+          initialJson: variablesJson
+        }
+      );
+      // we should get a warning on each var in ui.json
+      let diagnostics = (await waitForDiagnostics(uiEditor.document.uri, undefined, 'Initial variable warnings')).sort(
+        (d1, d2) => d1.range.start.line - d2.range.start.line
+      );
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
-      diagnostics.forEach((diagnostic, i) => {
-        expect(diagnostic, `diagnostic[${i}]`).to.not.be.undefined;
-        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal("Variable 'foo' referenced 3 times");
-        // there should be a 2 related infos pointing to the other variables
-        expect(diagnostic.relatedInformation, `diagnostic[${i}].relatedInformation`).to.be.not.undefined;
-        expect(diagnostic.relatedInformation!.length, `diagnostic[${i}].relatedInformation.length`).to.equal(2);
-        diagnostic.relatedInformation!.forEach((r, j) => {
-          expect(r.message, `diagnostic[${i}],relatedInformation[${j}].message`).to.equals(
-            "Other reference to variable 'foo'"
-          );
-          // the related info line shouldn't be the same as this diagnostic's line
-          expect(r.location.range.start.line, `diagnostic[${i}],relatedInformation[${j}].line`).to.not.equal(
-            diagnostic.range.start.line
-          );
-        });
-      });
-      // fix variables.json, make sure diagnostic goes away
-      uiJson.pages[0].variables[1].name = 'bar';
-      uiJson.pages[1].variables[0].name = 'baz';
+      expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal("Cannot find variable 'badvar'");
+      expect(diagnostics[1], 'diagnostic[1]').to.be.not.undefined;
+      expect(diagnostics[1].message, 'diagnostic[1].message').to.equal("Cannot find variable 'var2'");
+
+      // now, change the 'badvar' ref to 'var1' in ui.json
+      uiJson.pages[0].variables[0].name = 'var1';
       await setDocumentText(uiEditor, uiJson);
-      // and it should end up no warnings
-      await waitForDiagnostics(uiEditor.document.uri, d => d && d.length === 0, 'No diagnostics on ui.json after fix');
+      // wait for the number of diagnostics to change
+      diagnostics = (
+        await waitForDiagnostics(
+          uiEditor.document.uri,
+          d => d && d.length !== diagnostics.length,
+          'Variable warnings after editing ui.json'
+        )
+      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      // we should still have the warning about var2
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal("Cannot find variable 'var2'");
+
+      // now, add the 'var2' variable to variables.json
+      variablesJson.var2 = {
+        variableType: {
+          type: 'NumberType'
+        }
+      };
+      await setDocumentText(variablesEditor, variablesJson);
+      // wait for the number of diagnostics to change
+      diagnostics = await waitForDiagnostics(
+        uiEditor.document.uri,
+        d => d && d.length !== diagnostics.length,
+        'Variable warnings after editing variables.json'
+      );
+      // and there should't be any warnings now
+      if (diagnostics.length !== 0) {
+        expect.fail('Expected 0 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
     });
   }); // describe('lints ui.json')
 
   describe('lints variables.json', () => {
-    function createTemplateWithVariables(initialJson: string | object): Promise<vscode.TextEditor> {
-      return createTemplateWithRelatedFile('variableDefinition', 'variables.json', initialJson);
+    async function createTemplateWithVariables(initialJson: string | object): Promise<vscode.TextEditor> {
+      const [editor] = await createTemplateWithRelatedFiles({
+        field: 'variableDefinition',
+        path: 'variables.json',
+        initialJson
+      });
+      return editor;
     }
 
     it('shows problem on mulitple regex variable excludes', async () => {

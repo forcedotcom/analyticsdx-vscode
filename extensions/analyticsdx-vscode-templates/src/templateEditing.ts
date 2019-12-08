@@ -38,28 +38,8 @@ import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
 import { matchJsonNodesAtPattern } from './util/jsoncUtils';
-import { isSameUri, isUriUnder, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
-
-/** Traverse up from the file until you find the template-info.json, without leaving the vscode workspace folders.
- * @return the file uri, or undefined if not found (i.e. file is not part of a template)
- */
-export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.Uri | undefined> {
-  let dir = uriDirname(file);
-  // don't go out of the workspace
-  while (vscode.workspace.getWorkspaceFolder(dir)) {
-    file = dir.with({ path: path.join(dir.path, 'template-info.json') });
-    const stat = await uriStat(file);
-    // if there's a template-info.json there, check it
-    if (stat) {
-      // template-info.json is in dir, make sure it's a file though
-      return (stat.type & vscode.FileType.File) !== 0 ? file : undefined;
-    } else {
-      // otherwise, continue up the directory tree
-      dir = uriDirname(dir);
-    }
-  }
-  return undefined;
-}
+import { findTemplateInfoFileFor } from './util/templateUtils';
+import { isSameUri, isUriUnder, uriBasename, uriDirname } from './util/vscodeUtils';
 
 /** Wraps the setup for configuring editing for the files in a template directory. */
 class TemplateDirEditing extends Disposable {

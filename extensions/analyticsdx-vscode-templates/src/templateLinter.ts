@@ -9,9 +9,9 @@ import { findNodeAtLocation, getNodePath, JSONPath, Node as JsonNode, parseTree,
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO } from './constants';
-import { findTemplateInfoFileFor } from './templateEditing';
 import { Disposable } from './util/disposable';
 import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } from './util/jsoncUtils';
+import { findTemplateInfoFileFor } from './util/templateUtils';
 import { isValidRelpath } from './util/utils';
 import { isUriUnder, rangeForNode, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
 
@@ -45,44 +45,68 @@ function lengthJsonArrayAttributeValue(tree: JsonNode, ...pattern: JSONPath): [n
   return [nodes ? nodes.length : -1, node];
 }
 
+type JsonCacheValue = { readonly doc: vscode.TextDocument | undefined; readonly json: JsonNode | undefined };
+
 /** An object that can lint a template folder.
  * This currently does full lint only (no incremental) -- a second call to lint() will clear out any saved state
  * and rerun a lint.
  */
 export class TemplateLinter {
+  private static readonly VALID_REGEX_OPTIONS = /^[gimsuy]+$/;
+
   /** This will be called after each json parse of a template-info.json file, but before any linting takes place. */
   public onParsedTemplateInfo: ((doc: vscode.TextDocument, tree: JsonNode | undefined) => any) | undefined;
 
   /** The set of diagnostics found from the last call to lint() */
   public readonly diagnostics = new Map<vscode.TextDocument, vscode.Diagnostic[]>();
 
-  private static readonly VALID_REGEX_OPTIONS = /^[gimsuy]+$/;
+  // cache parsed json keyed on relative path, per call to lint().
+  private readonly jsonCache = new Map<string, JsonCacheValue>();
 
   constructor(
     public readonly templateInfoDoc: vscode.TextDocument,
     public readonly dir: vscode.Uri = uriDirname(templateInfoDoc.uri)
   ) {}
 
-  /** Open the text document for  */
-  private async openTemplateRelPathDocument(
-    dir: vscode.Uri,
-    templateInfo: JsonNode,
-    jsonpath: JSONPath
-  ): Promise<vscode.TextDocument | undefined> {
+  private getTemplateRelFilePath(dir: vscode.Uri, templateInfo: JsonNode, jsonpath: JSONPath) {
     const n = findNodeAtLocation(templateInfo, jsonpath);
     if (n && n.type === 'string') {
       const relpath = n.value as string;
       if (isValidRelpath(relpath)) {
-        const uri = dir.with({ path: path.join(dir.path, relpath) });
-        try {
-          return await vscode.workspace.openTextDocument(uri);
-        } catch (error) {
-          // should mean file doesn't exist or can't be opened, which lintRelFilePath() should have caught already,
-          // so we can just ignore it
-        }
+        return relpath;
       }
     }
     return undefined;
+  }
+
+  /** Open the text document for the value of the specified field and parse it, with caching.
+   */
+  private async loadTemplateRelPathJson(
+    dir: vscode.Uri,
+    templateInfo: JsonNode,
+    jsonpath: JSONPath
+  ): Promise<JsonCacheValue> {
+    const relpath = this.getTemplateRelFilePath(dir, templateInfo, jsonpath);
+    if (relpath) {
+      let cacheValue = this.jsonCache.get(relpath);
+      if (!cacheValue) {
+        let doc: vscode.TextDocument | undefined;
+        let json: JsonNode | undefined;
+        const uri = dir.with({ path: path.join(dir.path, relpath) });
+        try {
+          doc = await vscode.workspace.openTextDocument(uri);
+          if (doc) {
+            json = parseTree(doc.getText());
+          }
+        } catch (e) {
+          // this can happen if the file doesn't exist or can't be opened, but lintRelFilePath should warn on that alraedy
+        }
+        cacheValue = { doc, json };
+        this.jsonCache.set(relpath, cacheValue);
+      }
+      return cacheValue;
+    }
+    return { doc: undefined, json: undefined };
   }
 
   private createDiagnostic(
@@ -124,6 +148,8 @@ export class TemplateLinter {
   /** Run a lint, saving the results in this object. */
   public async lint(): Promise<this> {
     this.diagnostics.clear();
+    this.jsonCache.clear();
+
     const tree = parseTree(this.templateInfoDoc.getText());
     if (this.onParsedTemplateInfo) {
       try {
@@ -265,12 +291,11 @@ export class TemplateLinter {
   }
 
   private async lintVariables(templateInfo: JsonNode): Promise<void> {
-    const doc = await this.openTemplateRelPathDocument(this.dir, templateInfo, ['variableDefinition']);
-    if (doc) {
+    const { doc, json: variables } = await this.loadTemplateRelPathJson(this.dir, templateInfo, ['variableDefinition']);
+    if (doc && variables) {
       const diagnostics: vscode.Diagnostic[] = [];
       this.diagnostics.set(doc, diagnostics);
 
-      const variables = parseTree(doc.getText());
       this.lintVariablesExcludes(doc, variables, diagnostics);
       // TODO: other lints on variables
     }
@@ -391,63 +416,54 @@ export class TemplateLinter {
   }
 
   private async lintUi(templateInfo: JsonNode) {
-    const doc = await this.openTemplateRelPathDocument(this.dir, templateInfo, ['uiDefinition']);
-    if (doc) {
+    const { doc, json: ui } = await this.loadTemplateRelPathJson(this.dir, templateInfo, ['uiDefinition']);
+    if (doc && ui) {
       const diagnostics: vscode.Diagnostic[] = [];
       this.diagnostics.set(doc, diagnostics);
 
-      const ui = parseTree(doc.getText());
-      this.lintUiVariablesUniqueAcrossPages(doc, ui, diagnostics);
+      await this.lintUiVariablesExistInVariables(templateInfo, doc, ui, diagnostics);
       // TODO: other lints on uiDefinition
     }
   }
 
-  private lintUiVariablesUniqueAcrossPages(doc: vscode.TextDocument, ui: JsonNode, diagnostics: vscode.Diagnostic[]) {
+  private async lintUiVariablesExistInVariables(
+    templateInfo: JsonNode,
+    doc: vscode.TextDocument,
+    ui: JsonNode,
+    diagnostics: vscode.Diagnostic[]
+  ) {
+    // find all the variable names in the variables file
+    const { json: varJson } = await this.loadTemplateRelPathJson(this.dir, templateInfo, ['variableDefinition']);
+    const variableNames = new Set<string>();
+    if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
+      varJson.children.forEach(prop => {
+        if (
+          prop.type === 'property' &&
+          prop.children &&
+          prop.children[0] &&
+          prop.children[0].type === 'string' &&
+          prop.children[0].value
+        ) {
+          variableNames.add(prop.children[0].value as string);
+        }
+      });
+    }
     const pages = findNodeAtLocation(ui, ['pages']);
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
       // find all the variable objects
-      matchJsonNodesAtPattern(pages.children, ['variables', '*'])
-        // convert them to a map of name -> list of variable.name nodes with that name
-        .reduce((map, variable) => {
-          const [name, nameNode] = findJsonPrimitiveAttributeValue(variable, 'name');
-          if (nameNode && typeof name === 'string') {
-            const nodes = map.get(name) || [];
-            nodes.push(nameNode);
-            map.set(name, nodes);
+      matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {
+        if (nameNode && nameNode.type === 'string' && nameNode.value) {
+          const name = nameNode.value as string;
+          if (!variableNames.has(name)) {
+            this.createDiagnostic(doc, `Cannot find variable '${name}'`, nameNode, diagnostics);
+            // TODO: look for similar-spelled words in variablesNames to suggest
           }
-          return map;
-        }, new Map<string, JsonNode[]>())
-        // report a warning for each name w/ more than 1 variable object found
-        .forEach((nameNodes, name) => {
-          // REVIEWME: should we check if any of the variables have different visibilities? Does that make it ok to put
-          // the same variable on multiple pages?
-          if (nameNodes.length >= 2) {
-            // create a related info for each variable usage
-            const relateds = nameNodes.map(
-              variable =>
-                new vscode.DiagnosticRelatedInformation(
-                  new vscode.Location(doc.uri, rangeForNode(variable, doc, false)),
-                  `Other reference to variable '${name}'`
-                )
-            );
-            // create a warning for each variable usage
-            nameNodes.forEach((variable, i) => {
-              const diagnostic = this.createDiagnostic(
-                doc,
-                `Variable '${name}' referenced ${nameNodes.length} times`,
-                variable,
-                diagnostics
-              );
-              // add related infos for the other usages
-              diagnostic.relatedInformation = relateds
-                .filter((v, j) => i !== j)
-                .sort((r1, r2) => r1.location.range.start.line - r2.location.range.start.line);
-            });
-          }
-        });
+        }
+      });
     }
   }
 }
+
 export class TemplateLinterManager extends Disposable {
   // https://www.humanbenchmark.com/tests/reactiontime/statistics,
   // plus the linting on vscode extension package.json's is using 300ms

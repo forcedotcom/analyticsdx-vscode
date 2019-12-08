@@ -9,7 +9,7 @@
       "title": "Page1",
       "variables": [
         {
-          "name": "var1",
+          "name": "sobjectfield",
           "visibility": "Disabled"
         }
       ]
