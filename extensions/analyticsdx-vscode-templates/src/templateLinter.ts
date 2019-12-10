@@ -12,7 +12,7 @@ import { TEMPLATE_INFO } from './constants';
 import { Disposable } from './util/disposable';
 import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } from './util/jsoncUtils';
 import { findTemplateInfoFileFor } from './util/templateUtils';
-import { isValidRelpath } from './util/utils';
+import { fuzzySearcher, isValidRelpath } from './util/utils';
 import { isUriUnder, rangeForNode, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
 
 /** Find the value for the first attribute found at the pattern.
@@ -450,13 +450,19 @@ export class TemplateLinter {
     }
     const pages = findNodeAtLocation(ui, ['pages']);
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
+      const fuzzySearch = fuzzySearcher(variableNames);
       // find all the variable objects
       matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {
         if (nameNode && nameNode.type === 'string' && nameNode.value) {
           const name = nameNode.value as string;
           if (!variableNames.has(name)) {
-            this.createDiagnostic(doc, `Cannot find variable '${name}'`, nameNode, diagnostics);
-            // TODO: look for similar-spelled words in variablesNames to suggest
+            let mesg = `Cannot find variable '${name}'`;
+            // see if there's a variable w/ a similar name
+            const [match] = fuzzySearch(name);
+            if (match && match.length > 0) {
+              mesg += `, did you mean '${match}'?`;
+            }
+            this.createDiagnostic(doc, mesg, nameNode, diagnostics);
           }
         }
       });

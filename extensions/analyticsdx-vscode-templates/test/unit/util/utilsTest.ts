@@ -6,7 +6,13 @@
  */
 
 import { expect } from 'chai';
-import { isSameUriPath, isUriPathUnder, isValidRelpath, isWhitespaceChar } from '../../../src/util/utils';
+import {
+  fuzzySearcher,
+  isSameUriPath,
+  isUriPathUnder,
+  isValidRelpath,
+  isWhitespaceChar
+} from '../../../src/util/utils';
 
 // tslint:disable: no-unused-expression
 describe('utils', () => {
@@ -98,5 +104,63 @@ describe('utils', () => {
         });
       }
     );
+  });
+
+  describe('fuzzySearch()', () => {
+    let array = ['one', 'two', 'three'];
+    let arrayLike: ArrayLike<string> = Object.freeze({
+      length: array.length,
+      0: array[0],
+      1: array[1],
+      2: array[2]
+    });
+    // make sure everything works for each ArrayLike thing the method supports
+    [
+      [array, 'an array'],
+      [arrayLike, 'an ArrayLike'],
+      [new Set(array), 'a Set']
+    ].forEach(([values, description]) => {
+      it(`matches one from ${description}`, () => {
+        const fuzz = fuzzySearcher(values);
+        expect(fuzz('on')).has.members(['one']);
+        const [match] = fuzz('tw');
+        expect(match, 'destructured match').to.not.be.undefined;
+        expect(match).to.equal('two');
+      });
+
+      it(`matches multiple from ${description}`, () => {
+        const fuzz = fuzzySearcher(values, { limit: 2 });
+        expect(fuzz('on')).has.members(['one', 'two']);
+        expect(fuzz('t')).has.members(['two', 'three']);
+      });
+
+      it(`doesn't match from ${description}`, () => {
+        const fuzz = fuzzySearcher(values);
+        expect(fuzz('z')).has.members([]);
+        const [match] = fuzz('z');
+        expect(match, 'destructured match').to.be.undefined;
+      });
+    });
+
+    array = [];
+    arrayLike = Object.freeze({ length: 0 });
+    [
+      [array, 'array'],
+      [arrayLike, 'ArrayLike'],
+      [new Set<string>(), 'Set']
+    ].forEach(([values, description]) => {
+      it(`doesn't match on empty ${description}`, () => {
+        const fuzz = fuzzySearcher(values);
+        expect(fuzz('z')).has.members([]);
+      });
+    });
+
+    it("doesn't error on big pattern", () => {
+      const fuzz = fuzzySearcher(['one', 'two', 'three']);
+      let pattern = '012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
+      pattern += pattern;
+      // really just make sure it doesn't throw an error
+      expect(fuzz(pattern)).has.members([]);
+    });
   });
 });

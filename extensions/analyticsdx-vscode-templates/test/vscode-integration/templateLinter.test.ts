@@ -278,16 +278,23 @@ describe('TemplateLinterManager', () => {
     initialJson: string | object;
   };
   /** Create a template with a related file configured.
-   * @param relatedFileField the template-info.json field name
-   * @param filename the name of the related file
-   * @param initialJson the initial json for the related file
+   * @param file the related file information
    * @returns the related file editor
    */
   function createTemplateWithRelatedFiles(file: PathFieldAndJson): Promise<[vscode.TextEditor]>;
+  /** Create a template with a related files configured.
+   * @param file1 the related file information
+   * @param file2 the related file information
+   * @returns the related file editors
+   */
   function createTemplateWithRelatedFiles(
     file1: PathFieldAndJson,
     file2: PathFieldAndJson
   ): Promise<[vscode.TextEditor, vscode.TextEditor]>;
+  /** Create a template with a related file configured.
+   * @param files the related file(s) information
+   * @returns the related file editors
+   */
   async function createTemplateWithRelatedFiles(...files: PathFieldAndJson[]): Promise<vscode.TextEditor[]> {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
@@ -362,9 +369,13 @@ describe('TemplateLinterManager', () => {
         expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
       expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
-      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal("Cannot find variable 'badvar'");
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal(
+        "Cannot find variable 'badvar', did you mean 'var1'?"
+      );
       expect(diagnostics[1], 'diagnostic[1]').to.be.not.undefined;
-      expect(diagnostics[1].message, 'diagnostic[1].message').to.equal("Cannot find variable 'var2'");
+      expect(diagnostics[1].message, 'diagnostic[1].message').to.equal(
+        "Cannot find variable 'var2', did you mean 'var1'?"
+      );
 
       // now, change the 'badvar' ref to 'var1' in ui.json
       uiJson.pages[0].variables[0].name = 'var1';
@@ -382,7 +393,9 @@ describe('TemplateLinterManager', () => {
         expect.fail('Expected 1 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
       expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
-      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal("Cannot find variable 'var2'");
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal(
+        "Cannot find variable 'var2', did you mean 'var1'?"
+      );
 
       // now, add the 'var2' variable to variables.json
       variablesJson.var2 = {
