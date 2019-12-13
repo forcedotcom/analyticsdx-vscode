@@ -5,15 +5,12 @@
   "displayName": "ADX Test Utilities for VS Code",
   "description": "Provides test utilities to run mocha tests",
   "license": "BSD-3-Clause",
-  "dependencies": {
-    "shelljs": "0.8.3"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/chai": "^4.0.0",
     "@types/glob": "^5.0.30",
     "@types/mocha": "^2.2.38",
     "@types/node": "8.9.3",
-    "@types/shelljs": "0.7.9",
     "@types/sinon": "^2.3.2",
     "chai": "^4.0.2",
     "decache": "^4.1.0",

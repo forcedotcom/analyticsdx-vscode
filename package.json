@@ -2,6 +2,7 @@
   "devDependencies": {
     "@salesforce/dev-config": "1.4.1",
     "@types/mkdirp": "0.5.2",
+    "@types/shelljs": "0.7.9",
     "eslint": "4.13.1",
     "eslint-config-prettier": "2.9.0",
     "istanbul": "1.1.0-alpha.1",
@@ -9,6 +10,7 @@
     "mkdirp": "0.5.1",
     "prettier": "1.19.1",
     "remap-istanbul": "^0.9.5",
+    "shelljs": "0.8.3",
     "shx": "0.2.2",
     "snyk": "^1.82.1",
     "ts-loader": "5.4.5",
