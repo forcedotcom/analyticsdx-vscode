@@ -1,0 +1,52 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build:
+    # run on macOS so it can do ui stuff
+    runs-on: macOS-latest
+
+    timeout-minutes: 20
+
+    # for now, we just want to run on what VSCode uses (which is also in .nvmrc),
+    # but we may support move versions later
+    strategy:
+      matrix:
+        node-version: [10.11.0]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Build and test
+        run: |
+          npm install
+          npm run compile
+          npm run lint
+          npm test
+      - name: Clean and prep for packaging
+        run: |
+          npm run clean
+          npm install
+      - name: Compile for packaging
+        run: npm run compile
+        env:
+          NODE_ENV: production
+      - name: Package extensions
+        run: |
+          npm run vscode:package
+          # upload-artifact doesn't support globs, so put them in a single folder
+          mkdir dist-extensions
+          find . -name '*.vsix' -type f -exec mv {} dist-extensions \;
+      - name: Upload extensions
+        uses: actions/upload-artifact@v1
+        with:
+          name: extensions
+          path: dist-extensions
