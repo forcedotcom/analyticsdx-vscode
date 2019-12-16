@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 
-1.  We are using the same version of Node that the current release of VSCode uses (currently 10.11.0).
+1.  We are using the same version of Node that the current release of VSCode uses (currently 12.4.0).
     If you need to work with multiple versions of Node (e.g. for other projects), you might consider using
     [nvm](https://github.com/creationix/nvm).
 1.  It is suggested, though not required, that you use the Insiders version of VS

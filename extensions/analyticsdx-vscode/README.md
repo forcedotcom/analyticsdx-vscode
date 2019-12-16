@@ -26,7 +26,7 @@ Before you set up Salesforce Analytics Extensions for VS Code, make sure that yo
   scratch org feature or enabling analytics in the org.
   Or, see [create a Salesforce DX project](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_workspace_setup.htm)
   for information about setting up a project using Salesforce CLI.
-- **[Visual Studio Code](https://code.visualstudio.com/download) v1.38 or later**
+- **[Visual Studio Code](https://code.visualstudio.com/download) v1.41 or later**
 
 <!--
 

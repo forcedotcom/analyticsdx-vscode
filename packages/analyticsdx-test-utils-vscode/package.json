@@ -10,7 +10,7 @@
     "@types/chai": "^4.0.0",
     "@types/glob": "^5.0.30",
     "@types/mocha": "^2.2.38",
-    "@types/node": "8.9.3",
+    "@types/node": "12.12.18",
     "@types/sinon": "^2.3.2",
     "chai": "^4.0.2",
     "decache": "^4.1.0",
@@ -25,7 +25,7 @@
     "request-light": "0.2.4",
     "sinon": "^2.3.6",
     "source-map-support": "^0.4.15",
-    "typescript": "3.5.2"
+    "typescript": "3.7.3"
   },
   "scripts": {
     "compile": "tsc -p ./",
