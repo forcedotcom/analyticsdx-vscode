@@ -3,7 +3,7 @@
     "@salesforce/dev-config": "1.4.1",
     "@types/mkdirp": "0.5.2",
     "@types/shelljs": "0.7.9",
-    "eslint": "4.13.1",
+    "eslint": "6.7.2",
     "eslint-config-prettier": "2.9.0",
     "istanbul": "1.1.0-alpha.1",
     "lerna": "3.13.1",
