@@ -70,7 +70,8 @@
             "DatasetDateType",
             "DatasetAnyFieldType",
             "ArrayType",
-            "ObjectType"
+            "ObjectType",
+            "ConnectorType"
           ]
         },
         "enums": {},
@@ -81,7 +82,8 @@
         "sizeLimit": {},
         "properties": {},
         "required": {},
-        "strictValidation": {}
+        "strictValidation": {},
+        "connectorType": {}
       },
       "defaultSnippets": [
         {
@@ -182,6 +184,16 @@
             }
           },
           "required": ["type", "itemsType"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "ConnectorType"
+            },
+            "connectorType": {
+              "description": "The type of connector to offer to the user.  Only used for ConnectorType variables."
+            }
+          }
         },
         {
           "properties": {
