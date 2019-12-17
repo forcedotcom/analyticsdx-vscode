@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { TEMPLATE_INFO } from './constants';
 import { Disposable } from './util/disposable';
 import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } from './util/jsoncUtils';
+import { Logger } from './util/logger';
 import { findTemplateInfoFileFor } from './util/templateUtils';
 import { fuzzySearcher, isValidRelpath } from './util/utils';
 import { isUriUnder, rangeForNode, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
@@ -481,15 +482,21 @@ export class TemplateLinterManager extends Disposable {
   private timer: NodeJS.Timer | undefined;
   private templateInfoQueue = new Set<vscode.TextDocument>();
 
+  private readonly logger: Logger;
+
   /** Constructor.
    * @param onParsedTemplateInfo callback for when we just parsed a template-info.js and are about to lint it.
    */
-  constructor(private readonly onParsedTemplateInfo?: (doc: vscode.TextDocument, tree: JsonNode | undefined) => any) {
+  constructor(
+    private readonly onParsedTemplateInfo?: (doc: vscode.TextDocument, tree: JsonNode | undefined) => any,
+    output?: vscode.OutputChannel
+  ) {
     super();
     this.disposables.push(this.diagnosticsCollection);
+    this.logger = Logger.from(output);
   }
 
-  public start(): TemplateLinterManager {
+  public start(): this {
     this.disposables.push(
       vscode.workspace.onDidOpenTextDocument(doc => this.checkDocForQueuing(doc)),
       vscode.workspace.onDidChangeTextDocument(event => this.checkDocForQueuing(event.document)),
@@ -611,6 +618,7 @@ export class TemplateLinterManager extends Disposable {
     this.templateInfoQueue.forEach(doc => {
       this.templateInfoQueue.delete(doc);
       try {
+        const hrstart = process.hrtime();
         const result = this.lintTemplateInfo(doc);
         if (!result) {
           // delete any diagnostics for any files under that templateInfo dir
@@ -618,7 +626,11 @@ export class TemplateLinterManager extends Disposable {
         } else {
           const p = result
             .then(linter => this.setAllTemplateDiagnostics(linter.dir, linter.diagnostics))
-            .catch(console.error);
+            .catch(console.error)
+            .finally(() => {
+              const hrend = process.hrtime(hrstart);
+              this.logger.log(`Finished lint of ${doc.uri.toString()} in ${hrend[0]}s. ${hrend[1] / 1000000}ms.`);
+            });
           all = all.then(v => p);
         }
       } catch (e) {
