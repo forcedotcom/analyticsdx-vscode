@@ -16,7 +16,7 @@
     "ts-loader": "5.4.5",
     "tslint": "5.5.0",
     "tslint-no-focused-test": "0.5.0",
-    "typescript": "3.5.2",
+    "typescript": "3.7.3",
     "vsce": "1.62.0",
     "vscode-test": "1.0.0",
     "webpack": "4.30.0",
@@ -26,6 +26,7 @@
     "postinstall": "lerna bootstrap -- --no-package-lock && node scripts/reformat-with-prettier",
     "bootstrap": "lerna bootstrap -- --no-package-lock && node scripts/reformat-with-prettier",
     "clean": "shx rm -rf test-assets/sfdx-simple/force-app/main/default/waveTemplates/test-template-* && lerna run clean",
+    "cleanall": "npm run clean && rm -rf node_modules package-lock.json",
     "compile": "lerna run --stream compile",
     "lint": "lerna run lint",
     "test": "lerna exec --concurrency 1 --stream --bail=false -- npm run test",
@@ -48,6 +49,6 @@
   },
   "license": "BSD-3-Clause",
   "dependencies": {
-    "node": "10.11.0"
+    "node": "12.4.0"
   }
 }
