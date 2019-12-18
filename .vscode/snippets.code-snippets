@@ -1,0 +1,46 @@
+{
+  // Place shared workspace snippets here.
+  // See https://code.visualstudio.com/docs/editor/userdefinedsnippets for format
+  "Insert Copyright Header": {
+    "prefix": "copyright",
+    "scope": "javascript,javascriptreact,typescript,typescriptreact,css,c,cpp,coffescript,java,less,php",
+    "body": [
+      "/*",
+      " * Copyright (c) ${CURRENT_YEAR}, salesforce.com, inc.",
+      " * All rights reserved.",
+      " * Licensed under the BSD 3-Clause license.",
+      " * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause",
+      " */",
+      "$0"
+    ],
+    "description": "Insert the Salesforce copyright header"
+  },
+  "Insert Copyright Header (html)": {
+    "prefix": "copyright",
+    "scope": "html,xml",
+    "body": [
+      "<!--",
+      " Copyright (c) ${CURRENT_YEAR}, salesforce.com, inc.",
+      " All rights reserved.",
+      " Licensed under the BSD 3-Clause license.",
+      " For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause",
+      "-->",
+      "$0"
+    ],
+    "description": "Insert the Salesforce copyright header"
+  },
+  "Insert Copyright Header (sh)": {
+    "prefix": "copyright",
+    "scope": "properties,shellscript,yaml",
+    "body": [
+      "##############################################################################################################",
+      "# Copyright (c) ${CURRENT_YEAR}, salesforce.com, inc.",
+      "# All rights reserved.",
+      "# Licensed under the BSD 3-Clause license.",
+      "# For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause",
+      "##############################################################################################################",
+      "$0"
+    ],
+    "description": "Insert the Salesforce copyright header"
+  }
+}

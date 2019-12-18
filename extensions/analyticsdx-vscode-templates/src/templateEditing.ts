@@ -14,11 +14,14 @@ import * as fspath from 'path';
 import { getErrorStatusDescription, xhr, XHRResponse } from 'request-light';
 import * as vscode from 'vscode';
 import {
+  CloseAction,
   DidChangeConfigurationNotification,
   DocumentRangeFormattingParams,
   DocumentRangeFormattingRequest,
+  ErrorAction,
   LanguageClient,
   LanguageClientOptions,
+  Message,
   NotificationType,
   RequestType,
   ResponseError,
@@ -38,7 +41,9 @@ import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
 import { matchJsonNodesAtPattern } from './util/jsoncUtils';
+import { Logger, PrefixingOutputChannel } from './util/logger';
 import { findTemplateInfoFileFor } from './util/templateUtils';
+import { isValidRelpath } from './util/utils';
 import { isSameUri, isUriUnder, uriBasename, uriDirname } from './util/vscodeUtils';
 
 /** Wraps the setup for configuring editing for the files in a template directory. */
@@ -131,7 +136,7 @@ class TemplateDirEditing extends Disposable {
     return dir.scheme + ':' + dir.path;
   }
 
-  public start() {
+  public start(): this {
     const templateInfoSelector: vscode.DocumentSelector = {
       scheme: this.dir.scheme,
       pattern: new vscode.RelativePattern(this.dir.path, 'template-info.json')
@@ -193,16 +198,6 @@ interface ISchemaAssociations {
   [pattern: string]: string[];
 }
 
-function isValidRelPath(relPath: string): boolean {
-  return (
-    relPath.length > 0 &&
-    !relPath.startsWith('/') &&
-    !relPath.startsWith('../') &&
-    !relPath.includes('/../') &&
-    !relPath.endsWith('/..')
-  );
-}
-
 /** Configure editing support for template files as they're opened. */
 export class TemplateEditingManager extends Disposable {
   private templateDirs = new Map<string, TemplateDirEditing>();
@@ -212,12 +207,15 @@ export class TemplateEditingManager extends Disposable {
   public readonly variablesSchemaPath: vscode.Uri;
   public readonly rulesSchemaPath: vscode.Uri;
 
-  constructor(context: vscode.ExtensionContext) {
+  private readonly logger: Logger;
+
+  constructor(context: vscode.ExtensionContext, output?: vscode.OutputChannel) {
     super();
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
     this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/ui-schema.json'));
     this.variablesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/variables-schema.json'));
     this.rulesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/rules-schema.json'));
+    this.logger = Logger.from(output);
   }
 
   public dispose() {
@@ -227,11 +225,11 @@ export class TemplateEditingManager extends Disposable {
     this.templateDirs.forEach(Disposable.safeDispose);
   }
 
-  public start() {
+  public start(): this {
     // listen for files being opened, to setup template editing if they're a template file
     this.disposables.push(vscode.workspace.onDidOpenTextDocument(doc => this.opened(doc)));
     // start out custom json schema language services
-    this.languageClient = new TemplateJsonLanguageClient(() => this.getSchemaAssociations());
+    this.languageClient = new TemplateJsonLanguageClient(() => this.getSchemaAssociations(), this.logger);
     this.disposables.push(this.languageClient.start());
     // listen for template directories being deleted, we have to listen to everything since, if a parent directory
     // is deleted, you just get 1 callback for the parent directory, so we have to do some calculations to determine
@@ -260,6 +258,7 @@ export class TemplateEditingManager extends Disposable {
     // setup editing for that folder if we haven't yet
     const editing = new TemplateDirEditing(dir);
     if (!this.templateDirs.has(editing.key)) {
+      this.logger.log(`Configuring editing for ${dir.toString()}`);
       this.templateDirs.set(editing.key, editing.start());
       this.updateSchemaAssociations();
       return true;
@@ -271,6 +270,7 @@ export class TemplateEditingManager extends Disposable {
     const key = typeof dirOrKey === 'string' ? dirOrKey : TemplateDirEditing.key(dirOrKey);
     const editing = this.templateDirs.get(key);
     if (editing) {
+      this.logger.log(`Stopping editing for ${editing.dir.toString()}`);
       this.templateDirs.delete(key);
       editing.dispose();
       this.updateSchemaAssociations();
@@ -322,7 +322,7 @@ export class TemplateEditingManager extends Disposable {
       if (editing.dir.scheme === 'file') {
         // for each template, find the related file paths and configure them with the right json-schema
         let filePath = editing.folderDefinitionPath;
-        if (filePath && isValidRelPath(filePath)) {
+        if (filePath && isValidRelpath(filePath)) {
           // REVIEWME: what if they put in the same file path in 2 different relPath fields?
           // right now, this will do last-one-wins. should be we both? that's probably weird.
           //
@@ -330,19 +330,19 @@ export class TemplateEditingManager extends Disposable {
         }
 
         filePath = editing.uiDefinitionPath;
-        if (filePath && isValidRelPath(filePath)) {
+        if (filePath && isValidRelpath(filePath)) {
           associations[path.join(editing.dir.path, filePath)] = [this.uiSchemaPath.toString()];
         }
 
         filePath = editing.variablesDefinitionPath;
-        if (filePath && isValidRelPath(filePath)) {
+        if (filePath && isValidRelpath(filePath)) {
           associations[path.join(editing.dir.path, filePath)] = [this.variablesSchemaPath.toString()];
         }
 
         const filePaths = editing.rulesDefinitionPaths;
         if (filePaths) {
           filePaths.forEach(filePath => {
-            if (filePath && isValidRelPath(filePath)) {
+            if (filePath && isValidRelpath(filePath)) {
               associations[path.join(editing.dir.path, filePath)] = [this.rulesSchemaPath.toString()];
             }
           });
@@ -429,12 +429,15 @@ class TemplateJsonLanguageClient extends Disposable {
   private languageClient: LanguageClient | undefined;
   private clientReady = false;
 
+  private langOutputChannel: PrefixingOutputChannel;
+
   /** Constructor.
    * @param getSchemaAssociations supplier of the file->json-schema associations, this will be invoked when
    *        then language server and client is ready, as well as from updateSchemaAssociations().
    */
-  constructor(private readonly getSchemaAssociations: () => ISchemaAssociations) {
+  constructor(private readonly getSchemaAssociations: () => ISchemaAssociations, logger: Logger) {
     super();
+    this.langOutputChannel = new PrefixingOutputChannel(logger, 'JSON Language Server');
   }
 
   public dispose() {
@@ -443,10 +446,13 @@ class TemplateJsonLanguageClient extends Disposable {
     this.clientReady = false;
   }
 
-  public start(): TemplateJsonLanguageClient {
+  public start(): this {
     // find the json extension included in the vscode installation
     const jsonExt = vscode.extensions.getExtension('vscode.json-language-features');
     if (!jsonExt) {
+      this.langOutputChannel.appendLine(
+        'Failed to find vscode.json-language-features extension, some template editing features will be unavailable.'
+      );
       vscode.window.showWarningMessage(
         'Failed to find vscode.json-language-features extension, some template editing features will be unavailable.'
       );
@@ -472,6 +478,18 @@ class TemplateJsonLanguageClient extends Disposable {
     // Options to control the language client
     const clientOptions: LanguageClientOptions = {
       documentSelector,
+      outputChannel: this.langOutputChannel,
+      traceOutputChannel: this.langOutputChannel,
+      errorHandler: {
+        error: (error: Error, message: Message, count: number) => {
+          this.langOutputChannel.appendLine(`error (#${count}): ${error}`);
+          return ErrorAction.Continue;
+        },
+        closed: () => {
+          this.langOutputChannel.appendLine('closed connection');
+          return CloseAction.DoNotRestart;
+        }
+      },
       initializationOptions: {
         // language server only loads file-URI. Fetching schemas with other protocols ('http'...) are made on the client.
         handledSchemaProtocols: ['file'],
@@ -500,6 +518,8 @@ class TemplateJsonLanguageClient extends Disposable {
     };
 
     this.clientReady = false;
+    this.langOutputChannel.appendLine('Starting language server and client...');
+    const hrstart = process.hrtime();
     const client = new LanguageClient(
       TEMPLATE_JSON_LANG_ID,
       'ADX Templates JSON Language Server',
@@ -514,99 +534,111 @@ class TemplateJsonLanguageClient extends Disposable {
     this.disposables.push(client.start());
 
     // tslint:disable-next-line: no-floating-promises
-    client.onReady().then(() => {
-      const schemaDocuments: { [uri: string]: boolean } = {};
+    client
+      .onReady()
+      .then(() => {
+        const schemaDocuments: { [uri: string]: boolean } = {};
 
-      // handle content request
-      client.onRequest(VSCodeContentRequest.type, (uriPath: string) => {
-        const uri = vscode.Uri.parse(uriPath);
-        if (uri.scheme !== 'http' && uri.scheme !== 'https') {
-          return vscode.workspace.openTextDocument(uri).then(
-            doc => {
-              schemaDocuments[uri.toString()] = true;
-              return doc.getText();
-            },
-            error => Promise.reject(error)
-          );
-        } else {
-          const headers = { 'Accept-Encoding': 'gzip, deflate' };
-          return xhr({ url: uriPath, followRedirects: 5, headers }).then(
-            response => response.responseText,
-            (error: XHRResponse) =>
-              Promise.reject(
-                new ResponseError(
-                  error.status,
-                  error.responseText || getErrorStatusDescription(error.status) || error.toString()
+        // handle content request
+        client.onRequest(VSCodeContentRequest.type, (uriPath: string) => {
+          const uri = vscode.Uri.parse(uriPath);
+          if (uri.scheme !== 'http' && uri.scheme !== 'https') {
+            return vscode.workspace.openTextDocument(uri).then(
+              doc => {
+                schemaDocuments[uri.toString()] = true;
+                return doc.getText();
+              },
+              error => Promise.reject(error)
+            );
+          } else {
+            const headers = { 'Accept-Encoding': 'gzip, deflate' };
+            return xhr({ url: uriPath, followRedirects: 5, headers }).then(
+              response => response.responseText,
+              (error: XHRResponse) =>
+                Promise.reject(
+                  new ResponseError(
+                    error.status,
+                    error.responseText || getErrorStatusDescription(error.status) || error.toString()
+                  )
                 )
-              )
-          );
+            );
+          }
+        });
+
+        const handleContentChange = (uriString: string) => {
+          if (schemaDocuments[uriString]) {
+            client.sendNotification(SchemaContentChangeNotification.type, uriString);
+            return true;
+          }
+          return false;
+        };
+        this.disposables.push(
+          vscode.workspace.onDidChangeTextDocument(e => handleContentChange(e.document.uri.toString()))
+        );
+        this.disposables.push(
+          vscode.workspace.onDidCloseTextDocument(d => {
+            const uriString = d.uri.toString();
+            if (handleContentChange(uriString)) {
+              delete schemaDocuments[uriString];
+            }
+          })
+        );
+
+        // initialize the schema associations (normally will be empty)
+        client.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations());
+
+        // manually register / deregister format provider based on the json.format.enable config, and the
+        // json and adx-template-json language specific settings
+        let rangeFormatting: vscode.Disposable | undefined;
+        function updateFormatterRegistration() {
+          const formatEnabled = vscode.workspace.getConfiguration().get('json.format.enable');
+          if (!formatEnabled && rangeFormatting) {
+            rangeFormatting.dispose();
+            rangeFormatting = undefined;
+          } else if (formatEnabled && !rangeFormatting) {
+            rangeFormatting = vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, {
+              provideDocumentRangeFormattingEdits(
+                document: vscode.TextDocument,
+                range: vscode.Range,
+                options: vscode.FormattingOptions,
+                token: vscode.CancellationToken
+              ): vscode.ProviderResult<vscode.TextEdit[]> {
+                const params: DocumentRangeFormattingParams = {
+                  textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
+                  range: client.code2ProtocolConverter.asRange(range),
+                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options))
+                };
+                return client
+                  .sendRequest(DocumentRangeFormattingRequest.type, params, token)
+                  .then(client.protocol2CodeConverter.asTextEdits, error => {
+                    client.logFailedRequest(DocumentRangeFormattingRequest.type, error);
+                    return Promise.resolve([]);
+                  });
+              }
+            });
+          }
+        }
+
+        updateFormatterRegistration();
+        this.disposables.push({ dispose: () => rangeFormatting && rangeFormatting.dispose() });
+        this.disposables.push(
+          vscode.workspace.onDidChangeConfiguration(
+            e => e.affectsConfiguration('json.format.enable') && updateFormatterRegistration()
+          )
+        );
+
+        this.clientReady = true;
+        const hrend = process.hrtime(hrstart);
+        this.langOutputChannel.appendLine(
+          `Language server and client started in ${hrend[0]}s. ${hrend[1] / 1000000}ms.`
+        );
+      })
+      .catch(e => {
+        this.langOutputChannel.appendLine('Failed to start language client or server: ' + e);
+        if (e instanceof Error && e.stack) {
+          this.langOutputChannel.appendLine(e.stack);
         }
       });
-
-      const handleContentChange = (uriString: string) => {
-        if (schemaDocuments[uriString]) {
-          client.sendNotification(SchemaContentChangeNotification.type, uriString);
-          return true;
-        }
-        return false;
-      };
-      this.disposables.push(
-        vscode.workspace.onDidChangeTextDocument(e => handleContentChange(e.document.uri.toString()))
-      );
-      this.disposables.push(
-        vscode.workspace.onDidCloseTextDocument(d => {
-          const uriString = d.uri.toString();
-          if (handleContentChange(uriString)) {
-            delete schemaDocuments[uriString];
-          }
-        })
-      );
-
-      // initialize the schema associations (normally will be empty)
-      client.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations());
-
-      // manually register / deregister format provider based on the json.format.enable config, and the
-      // json and adx-template-json language specific settings
-      let rangeFormatting: vscode.Disposable | undefined;
-      function updateFormatterRegistration() {
-        const formatEnabled = vscode.workspace.getConfiguration().get('json.format.enable');
-        if (!formatEnabled && rangeFormatting) {
-          rangeFormatting.dispose();
-          rangeFormatting = undefined;
-        } else if (formatEnabled && !rangeFormatting) {
-          rangeFormatting = vscode.languages.registerDocumentRangeFormattingEditProvider(documentSelector, {
-            provideDocumentRangeFormattingEdits(
-              document: vscode.TextDocument,
-              range: vscode.Range,
-              options: vscode.FormattingOptions,
-              token: vscode.CancellationToken
-            ): vscode.ProviderResult<vscode.TextEdit[]> {
-              const params: DocumentRangeFormattingParams = {
-                textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
-                range: client.code2ProtocolConverter.asRange(range),
-                options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options))
-              };
-              return client
-                .sendRequest(DocumentRangeFormattingRequest.type, params, token)
-                .then(client.protocol2CodeConverter.asTextEdits, error => {
-                  client.logFailedRequest(DocumentRangeFormattingRequest.type, error);
-                  return Promise.resolve([]);
-                });
-            }
-          });
-        }
-      }
-
-      updateFormatterRegistration();
-      this.disposables.push({ dispose: () => rangeFormatting && rangeFormatting.dispose() });
-      this.disposables.push(
-        vscode.workspace.onDidChangeConfiguration(
-          e => e.affectsConfiguration('json.format.enable') && updateFormatterRegistration()
-        )
-      );
-
-      this.clientReady = true;
-    });
 
     // add these lang config rules programmatically, to match what
     // https://github.com/microsoft/vscode/blob/master/extensions/json-language-features/client/src/jsonMain.ts does

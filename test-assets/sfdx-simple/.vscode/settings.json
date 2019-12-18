@@ -12,5 +12,8 @@
   "[adx-template-json]": {
     // we need this off so we can test that templateEditing's formatting logic works right
     "editor.detectIndentation": false
-  }
+  },
+  "adx-templates.logging.enabled": true,
+  "adx-templates.logging.console": false,
+  "adx-templates.logging.prefix": "Tests"
 }
