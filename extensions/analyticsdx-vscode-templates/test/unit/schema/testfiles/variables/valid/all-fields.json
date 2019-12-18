@@ -305,5 +305,29 @@
       "bar": true,
       "baz": 9
     }
+  },
+  "connector" : {
+    "label": "my connector",
+      "description": "This will be the connector.",
+     
+      "variableType": {
+         "type": "ConnectorType",
+         "connectorType" : "Salesforce"
+       },
+       "required": true
+  },
+  "connectorArray": {
+    "required": true,
+    "label": "an array of connectors",
+    "description": "choose some connectorys",
+    "defaultValue": [],
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "enums": [],
+        "type": "ConnectorType",
+        "connectorType" : "Salesforce"
+      }
+    }
   }
 }

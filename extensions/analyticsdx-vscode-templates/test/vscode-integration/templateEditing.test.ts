@@ -761,6 +761,7 @@ describe('TemplateEditorManager', () => {
         position,
         '"ArrayType"',
         '"BooleanType"',
+        '"ConnectorType"',
         '"DatasetAnyFieldType"',
         '"DatasetDateType"',
         '"DatasetDimensionType"',
