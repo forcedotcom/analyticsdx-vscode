@@ -1,0 +1,40 @@
+version: 1
+
+# For some reason, dependabot isn't finding the lerna.json specified folders,
+# plus I went to specify default reviewers for created PRs
+update_configs:
+  - package_manager: 'javascript'
+    directory: '/'
+    update_schedule: 'live'
+    default_reviewers:
+      - 'smithgp'
+
+  - package_manager: 'javascript'
+    directory: '/packages/analyticsdx-test-utils-vscode'
+    update_schedule: 'live'
+    default_reviewers:
+      - 'smithgp'
+
+  - package_manager: 'javascript'
+    directory: '/packages/salesforcedx-utils-vscode'
+    update_schedule: 'live'
+    default_reviewers:
+      - 'smithgp'
+
+  - package_manager: 'javascript'
+    directory: '/extensions/analyticsdx-vscode'
+    update_schedule: 'live'
+    default_reviewers:
+      - 'smithgp'
+
+  - package_manager: 'javascript'
+    directory: '/extensions/analyticsdx-vscode-core'
+    update_schedule: 'live'
+    default_reviewers:
+      - 'smithgp'
+
+  - package_manager: 'javascript'
+    directory: '/extensions/analyticsdx-vscode-templates'
+    update_schedule: 'live'
+    default_reviewers:
+      - 'smithgp'
