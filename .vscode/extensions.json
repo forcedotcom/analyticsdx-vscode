@@ -9,6 +9,8 @@
     "dbaeumer.vscode-eslint",
     "ms-vscode.vscode-typescript-tslint-plugin",
     // Formatting
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    // .github/workflows yml files schema
+    "me-dutour-mathieu.vscode-github-actions"
   ]
 }
