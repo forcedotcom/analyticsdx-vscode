@@ -500,6 +500,21 @@ class TemplateJsonLanguageClient extends Disposable {
         configurationSection: ['http'],
         fileEvents: vscode.workspace.createFileSystemWatcher('**/*.json')
       },
+      uriConverters: {
+        // Workaround for https://github.com/Microsoft/vscode-languageserver-node/issues/105 on windows
+        code2Protocol: (value: vscode.Uri) => {
+          if (/^win32/.test(process.platform)) {
+            // The *first* : is also being encoded which is not the standard for URI on Windows
+            // Here we transform it back to the standard way
+            return value.toString().replace('%3A', ':');
+          } else {
+            return value.toString();
+          }
+        },
+        protocol2Code: (value: string) => {
+          return vscode.Uri.parse(value);
+        }
+      },
       middleware: {
         workspace: {
           // if the configuration changes (from configurationSection above), send those to the language server
