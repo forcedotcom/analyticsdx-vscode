@@ -29,7 +29,7 @@
     "cleanall": "npm run clean && rm -rf node_modules package-lock.json",
     "compile": "lerna run --stream compile",
     "lint": "lerna run --stream lint",
-    "test": "lerna exec --concurrency 1 --stream --bail=false -- npm run test",
+    "test": "lerna run --concurrency 1 --stream --no-bail test",
     "test:unit": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:unit",
     "test:vscode-integration": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:vscode-integration",
     "test:vscode-insiders-integration": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:vscode-insiders-integration",
