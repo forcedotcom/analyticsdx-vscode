@@ -28,6 +28,7 @@ import {
   waveTemplatesUriPath,
   writeEmptyJsonFile
 } from './vscodeTestUtils';
+import { jsonPathToString } from '../../src/util/jsoncUtils';
 
 // tslint:disable:no-unused-expression
 describe('TemplateEditorManager', () => {
@@ -224,16 +225,24 @@ describe('TemplateEditorManager', () => {
       // the tests in the other describe()s for each related file will verify that the schems are actually all hooked up
     });
 
-    async function testCompletions(path: JSONPath, ...expectedPaths: string[]) {
+    async function testCompletions(jsonpath: JSONPath, ...expectedPaths: string[]) {
       const [, doc] = await openTemplateInfoAndWaitForDiagnostics('allRelpaths');
-      const position = findPositionByJsonPath(doc, path);
+      const position = findPositionByJsonPath(doc, jsonpath);
       expect(position, 'position').to.not.be.undefined;
       const list = await getCompletionItems(doc.uri, position!);
       expect(list.items.length, 'length').to.be.greaterThan(0);
+      const missing = [] as string[];
       expectedPaths.forEach(path => {
-        const found = list.items.some(item => item.detail === path);
-        expect(found, `items to contain ${path}`).to.be.true;
+        if (!list.items.some(item => item.detail === path)) {
+          missing.push(path);
+        }
       });
+      if (missing.length > 0) {
+        expect.fail(
+          `Missing [${missing.join(', ')}] in '${jsonPathToString(jsonpath)}' completions: ` +
+            list.items.map(item => item.detail || item.label).join(', ')
+        );
+      }
     }
 
     it('json file completions', async () => {
