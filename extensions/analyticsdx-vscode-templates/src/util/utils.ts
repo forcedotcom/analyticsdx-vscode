@@ -35,6 +35,23 @@ export function isValidRelpath(relpath: string): boolean {
   );
 }
 
+/** Match a filepath's extension.
+ * @param filepath the filepath
+ * @param exts the set of file extensions that match, case-insensitive, do not include the leading '.'
+ */
+export function matchesFileExtension(filepath: string, ...exts: string[]): boolean {
+  const i = filepath.lastIndexOf('.');
+  const found = i >= 0 ? filepath.substring(i + 1).toLocaleLowerCase() : '';
+  return exts.some(ext => ext.toLocaleLowerCase() === found);
+}
+
+/** Generate a function that matches a filepath's extension.
+ * @param exts the set of file extensions that match, case-insensitive, do not include the leading '.'
+ */
+export function newFileExtensionFilter(...exts: string[]): (s: string) => boolean {
+  return s => matchesFileExtension(s, ...exts);
+}
+
 const noFuzzyMatch = () => [];
 const fuzzOptions = {
   // see Fuse.FuseOptions for valid options

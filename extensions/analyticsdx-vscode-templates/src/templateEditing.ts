@@ -29,10 +29,10 @@ import {
   TransportKind
 } from 'vscode-languageclient';
 import {
-  csvGlobFilter,
-  htmGlobFilter,
-  imageGlobFilter,
-  jsonGlobFilter,
+  csvFileFilter,
+  htmlFileFilter,
+  imageFileFilter,
+  jsonFileFilter,
   TEMPLATE_INFO,
   TEMPLATE_JSON_LANG_ID
 } from './constants';
@@ -146,22 +146,22 @@ class TemplateDirEditing extends Disposable {
       // locations that support *.json fies:
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.jsonRelFilePathLocationPatterns.some(location.matches),
-        filter: jsonGlobFilter
+        filter: jsonFileFilter
       }),
       // attributes that should have html paths
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.htmlRelFilePathLocationPatterns.some(location.matches),
-        filter: htmGlobFilter
+        filter: htmlFileFilter
       }),
       // attribute that should point to images
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.imageRelFilePathLocationPatterns.some(location.matches),
-        filter: imageGlobFilter
+        filter: imageFileFilter
       }),
       // the file in externalFiles should be a .csv
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(location.matches),
-        filter: csvGlobFilter
+        filter: csvFileFilter
       })
     );
     this.disposables.push(vscode.languages.registerCompletionItemProvider(templateInfoSelector, fileCompleter));

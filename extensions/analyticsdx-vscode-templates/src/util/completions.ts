@@ -5,7 +5,6 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { getLocation, Location } from 'jsonc-parser';
-import * as picomatch from 'picomatch';
 import * as vscode from 'vscode';
 import { uriDirname, uriReaddir } from './vscodeUtils';
 
@@ -34,12 +33,6 @@ export function newFilepathCompletionItem(
   // the editor seems to try the label, which could be '"foo.json"' (which it doesn't like), and then will next
   // look at the details
   return newCompletionItem(path, range, vscode.CompletionItemKind.File, path, insertText);
-}
-
-export function newGlobFilter(...globs: string[]): (s: string) => boolean {
-  // do case-insensitive matching everywhere
-  const matcher = picomatch(globs, { nocase: true });
-  return s => matcher(s);
 }
 
 type InsertInfo = { range?: vscode.Range; startText?: string; endText?: string };
