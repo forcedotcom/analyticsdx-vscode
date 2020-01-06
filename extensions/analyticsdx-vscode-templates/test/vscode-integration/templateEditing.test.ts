@@ -11,6 +11,7 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { TemplateEditingManager } from '../../src/templateEditing';
+import { jsonPathToString } from '../../src/util/jsoncUtils';
 import { scanLinesUntil, uriDirname, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 import {
@@ -20,6 +21,7 @@ import {
   getCompletionItems,
   openFile,
   openFileAndWaitForDiagnostics,
+  openTemplateInfo,
   openTemplateInfoAndWaitForDiagnostics,
   setDocumentText,
   uriFromTestRoot,
@@ -28,7 +30,6 @@ import {
   waveTemplatesUriPath,
   writeEmptyJsonFile
 } from './vscodeTestUtils';
-import { jsonPathToString } from '../../src/util/jsoncUtils';
 
 // tslint:disable:no-unused-expression
 describe('TemplateEditorManager', () => {
@@ -226,7 +227,9 @@ describe('TemplateEditorManager', () => {
     });
 
     async function testCompletions(jsonpath: JSONPath, ...expectedPaths: string[]) {
-      const [, doc] = await openTemplateInfoAndWaitForDiagnostics('allRelpaths');
+      const [doc] = await openTemplateInfo('allRelpaths');
+      // make sure the template editing stuff is fully setup for the directory
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(doc.uri), true);
       const position = findPositionByJsonPath(doc, jsonpath);
       expect(position, 'position').to.not.be.undefined;
       const list = await getCompletionItems(doc.uri, position!);
