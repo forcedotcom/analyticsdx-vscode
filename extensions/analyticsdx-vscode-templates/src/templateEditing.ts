@@ -139,7 +139,11 @@ class TemplateDirEditing extends Disposable {
   public start(): this {
     const templateInfoSelector: vscode.DocumentSelector = {
       scheme: this.dir.scheme,
-      pattern: new vscode.RelativePattern(this.dir.path, 'template-info.json')
+      pattern:
+        // RelativePattern is supposed to be a little better here, but only works right for file:// uris
+        this.dir.scheme === 'file'
+          ? new vscode.RelativePattern(this.dir.fsPath, 'template-info.json')
+          : path.join(this.dir.path, 'template-info.json')
     };
     // hook up additional code-completions for template-info.json
     const fileCompleter = new JsonAttributeCompletionItemProvider(
