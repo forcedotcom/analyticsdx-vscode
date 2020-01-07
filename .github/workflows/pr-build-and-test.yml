@@ -8,7 +8,30 @@ on:
 
 jobs:
   pr-build:
-    #runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js 12.4.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.4.0"
+      - name: Build
+        run: |
+          npm install
+          npm run compile
+          npm run lint
+      - name: Tests
+        # start X virtual frame buffer so tests can do ui
+        run: |
+          sudo /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+          DISPLAY=:10 npm test
+
+  # include a windows build job in PRs since mostly folks are developing on linux or mac, so
+  # we might not catch windows-specific failures locally as much
+  pr-build-windows:
     runs-on: windows-latest
 
     timeout-minutes: 15
@@ -18,14 +41,12 @@ jobs:
       - name: Use Node.js 12.4.0
         uses: actions/setup-node@v1
         with:
-          node-version: '12.4.0'
+          node-version: "12.4.0"
       - name: Build
+        # Note: npm run lint fails silently on windows for some reason, but we really only need
+        # to run it in one job anyways
         run: |
           npm install
           npm run compile
       - name: Tests
-        # start X virtual frame buffer so tests can do ui
-        #run: |
-        #  sudo /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
-        #  DISPLAY=:10 npm test
         run: npm test
