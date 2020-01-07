@@ -14,6 +14,6 @@
     "editor.detectIndentation": false
   },
   "adx-templates.logging.enabled": true,
-  "adx-templates.logging.console": false,
+  "adx-templates.logging.console": true,
   "adx-templates.logging.prefix": "Tests"
 }

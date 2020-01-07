@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import * as vscode from 'vscode';
-import { csvGlobFilter, TEMPLATE_INFO } from '../../../src/constants';
+import { csvFileFilter, TEMPLATE_INFO } from '../../../src/constants';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from '../../../src/util/completions';
 import { closeAllEditors, findPositionByJsonPath, openTemplateInfo } from '../vscodeTestUtils';
 
@@ -35,7 +35,7 @@ describe('JsonAttributeCompletionItemProvider', () => {
       // locations that support *.csv fies:
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(location.matches),
-        filter: csvGlobFilter
+        filter: csvFileFilter
       })
     );
 
@@ -64,7 +64,7 @@ describe('JsonAttributeCompletionItemProvider', () => {
     const provider = new JsonAttributeCompletionItemProvider(
       newRelativeFilepathDelegate({
         supported: location => false,
-        filter: csvGlobFilter
+        filter: csvFileFilter
       })
     );
 

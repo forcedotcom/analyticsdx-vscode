@@ -183,6 +183,9 @@ export async function createTempTemplate(
   ...subdirs: string[]
 ): Promise<[vscode.Uri, vscode.TextDocument | undefined, vscode.TextEditor | undefined]> {
   const basedir = uriFromTestRoot(waveTemplatesUriPath);
+  // Since tmpName() uses the filesystem directly, only supprt file:// uris, which is fine for now since
+  // we're only running tests against a file system workspace
+  expect(basedir.scheme, 'Base directry uri schema').to.equal('file');
   // Note: this prefix here is coordinated with the .gitignore in
   // /test-assets/sfdx-simple/force-app/main/default/waveTemplates so that
   // we don't accidently check in temp test files.
@@ -192,7 +195,7 @@ export async function createTempTemplate(
       if (err) {
         reject(err);
       }
-      resolve(basedir.with({ path: tmppath }));
+      resolve(vscode.Uri.file(tmppath));
     });
   });
   await vscode.workspace.fs.createDirectory(dir);

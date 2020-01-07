@@ -29,10 +29,10 @@ import {
   TransportKind
 } from 'vscode-languageclient';
 import {
-  csvGlobFilter,
-  htmGlobFilter,
-  imageGlobFilter,
-  jsonGlobFilter,
+  csvFileFilter,
+  htmlFileFilter,
+  imageFileFilter,
+  jsonFileFilter,
   TEMPLATE_INFO,
   TEMPLATE_JSON_LANG_ID
 } from './constants';
@@ -139,29 +139,33 @@ class TemplateDirEditing extends Disposable {
   public start(): this {
     const templateInfoSelector: vscode.DocumentSelector = {
       scheme: this.dir.scheme,
-      pattern: new vscode.RelativePattern(this.dir.path, 'template-info.json')
+      pattern:
+        // RelativePattern is supposed to be a little better here, but only works right for file:// uris
+        this.dir.scheme === 'file'
+          ? new vscode.RelativePattern(this.dir.fsPath, 'template-info.json')
+          : path.join(this.dir.path, 'template-info.json')
     };
     // hook up additional code-completions for template-info.json
     const fileCompleter = new JsonAttributeCompletionItemProvider(
       // locations that support *.json fies:
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.jsonRelFilePathLocationPatterns.some(location.matches),
-        filter: jsonGlobFilter
+        filter: jsonFileFilter
       }),
       // attributes that should have html paths
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.htmlRelFilePathLocationPatterns.some(location.matches),
-        filter: htmGlobFilter
+        filter: htmlFileFilter
       }),
       // attribute that should point to images
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.imageRelFilePathLocationPatterns.some(location.matches),
-        filter: imageGlobFilter
+        filter: imageFileFilter
       }),
       // the file in externalFiles should be a .csv
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(location.matches),
-        filter: csvGlobFilter
+        filter: csvFileFilter
       })
     );
     this.disposables.push(vscode.languages.registerCompletionItemProvider(templateInfoSelector, fileCompleter));
@@ -499,6 +503,21 @@ class TemplateJsonLanguageClient extends Disposable {
       synchronize: {
         configurationSection: ['http'],
         fileEvents: vscode.workspace.createFileSystemWatcher('**/*.json')
+      },
+      uriConverters: {
+        // Workaround for https://github.com/Microsoft/vscode-languageserver-node/issues/105 on windows
+        code2Protocol: (value: vscode.Uri) => {
+          if (/^win32/.test(process.platform)) {
+            // The *first* : is also being encoded which is not the standard for URI on Windows
+            // Here we transform it back to the standard way
+            return value.toString().replace('%3A', ':');
+          } else {
+            return value.toString();
+          }
+        },
+        protocol2Code: (value: string) => {
+          return vscode.Uri.parse(value);
+        }
       },
       middleware: {
         workspace: {

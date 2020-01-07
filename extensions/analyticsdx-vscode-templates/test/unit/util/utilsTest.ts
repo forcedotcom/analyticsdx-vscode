@@ -11,7 +11,8 @@ import {
   isSameUriPath,
   isUriPathUnder,
   isValidRelpath,
-  isWhitespaceChar
+  isWhitespaceChar,
+  matchesFileExtension
 } from '../../../src/util/utils';
 
 // tslint:disable: no-unused-expression
@@ -104,6 +105,26 @@ describe('utils', () => {
         });
       }
     );
+  });
+
+  describe('matchesFileExtension()', () => {
+    ['foo.txt', 'dir/file.Txt', '/tmp/dir1/file.txt', 'C:\\Progra~1\\dir\\File.TXT'].forEach(path => {
+      it(`single extension pattern matches ${path}`, () => {
+        expect(matchesFileExtension(path, 'txt')).to.be.true;
+      });
+      it(`single extension pattern doesn't match ${path}`, () => {
+        expect(matchesFileExtension(path, 'json')).to.be.false;
+      });
+    });
+
+    ['foo.ppt', 'dir1/file.ppt', 'dir1\\file.PPTX'].forEach(path => {
+      it(`mulitple extension patterns matches ${path}`, () => {
+        expect(matchesFileExtension(path, 'ppt', 'pptx')).to.be.true;
+      });
+      it(`mulitple extension patterns don't match ${path}`, () => {
+        expect(matchesFileExtension(path, 'htm', 'html')).to.be.false;
+      });
+    });
   });
 
   describe('fuzzySearch()', () => {

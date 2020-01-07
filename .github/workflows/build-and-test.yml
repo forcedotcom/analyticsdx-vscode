@@ -7,8 +7,9 @@ on:
       - develop
 
 jobs:
+  # The main build job is the only one that should build the extensions,
+  # and we really only need to run lint on one job so we'll do it here
   build:
-    # run on macOS so it can do ui stuff
     runs-on: macos-latest
 
     timeout-minutes: 20
@@ -45,3 +46,42 @@ jobs:
         with:
           name: extensions
           path: dist-extensions
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js 12.4.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.4.0"
+      - name: Build
+        run: |
+          npm install
+          npm run compile
+      - name: Tests
+        # start X virtual frame buffer so tests can do ui
+        run: |
+          sudo /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+          DISPLAY=:10 npm test
+
+  build-windows:
+    runs-on: windows-latest
+
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js 12.4.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.4.0"
+      - name: Build
+        run: |
+          npm install
+          npm run compile
+      - name: Tests
+        run: npm test

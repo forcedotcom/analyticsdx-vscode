@@ -11,6 +11,7 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { TemplateEditingManager } from '../../src/templateEditing';
+import { jsonPathToString } from '../../src/util/jsoncUtils';
 import { scanLinesUntil, uriDirname, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 import {
@@ -20,6 +21,7 @@ import {
   getCompletionItems,
   openFile,
   openFileAndWaitForDiagnostics,
+  openTemplateInfo,
   openTemplateInfoAndWaitForDiagnostics,
   setDocumentText,
   uriFromTestRoot,
@@ -44,10 +46,14 @@ describe('TemplateEditorManager', () => {
     expected: boolean
   ) {
     try {
-      return await waitFor(() => templateEditingManager.has(dir), has => has === expected, {
-        pauseMs: 500,
-        timeoutMs: 15000
-      });
+      return await waitFor(
+        () => templateEditingManager.has(dir),
+        has => has === expected,
+        {
+          pauseMs: 500,
+          timeoutMs: 15000
+        }
+      );
     } catch (e) {
       if (e && e.name === 'timeout') {
         expect.fail(`Timeout waiting for TemplateEditingManager.has(${dir})===${expected}`);
@@ -220,16 +226,26 @@ describe('TemplateEditorManager', () => {
       // the tests in the other describe()s for each related file will verify that the schems are actually all hooked up
     });
 
-    async function testCompletions(path: JSONPath, ...expectedPaths: string[]) {
-      const [, doc] = await openTemplateInfoAndWaitForDiagnostics('allRelpaths');
-      const position = findPositionByJsonPath(doc, path);
+    async function testCompletions(jsonpath: JSONPath, ...expectedPaths: string[]) {
+      const [doc] = await openTemplateInfo('allRelpaths');
+      // make sure the template editing stuff is fully setup for the directory
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(doc.uri), true);
+      const position = findPositionByJsonPath(doc, jsonpath);
       expect(position, 'position').to.not.be.undefined;
       const list = await getCompletionItems(doc.uri, position!);
       expect(list.items.length, 'length').to.be.greaterThan(0);
+      const missing = [] as string[];
       expectedPaths.forEach(path => {
-        const found = list.items.some(item => item.detail === path);
-        expect(found, `items to contain ${path}`).to.be.true;
+        if (!list.items.some(item => item.detail === path)) {
+          missing.push(path);
+        }
       });
+      if (missing.length > 0) {
+        expect.fail(
+          `Missing [${missing.join(', ')}] in '${jsonPathToString(jsonpath)}' completions: ` +
+            list.items.map(item => item.detail || item.label).join(', ')
+        );
+      }
     }
 
     it('json file completions', async () => {
@@ -462,9 +478,13 @@ describe('TemplateEditorManager', () => {
       await writeEmptyJsonFile(folderUri);
       const [, folderEditor] = await openFile(folderUri);
       // wait for the doc to get mapped to adx-template-json
-      await waitFor(() => folderEditor.document.languageId, id => id === TEMPLATE_JSON_LANG_ID, {
-        timeoutMessage: 'Timeout waiting for lanaugeId'
-      });
+      await waitFor(
+        () => folderEditor.document.languageId,
+        id => id === TEMPLATE_JSON_LANG_ID,
+        {
+          timeoutMessage: 'Timeout waiting for lanaugeId'
+        }
+      );
       // put in some badly-formatted json
       await setDocumentText(
         folderEditor,
@@ -514,8 +534,8 @@ describe('TemplateEditorManager', () => {
         undefined,
         // the .vscode/settigs.json in the test-assets/sfdx-simple workspace has tabSize: 2, so this should match
         2
-      ).replace('\r\n', '\n');
-      expect(folderEditor.document.getText().replace('\r\n', '\n'), 'folder.json text').to.equal(expectedJson);
+      ).replace(/\r\n/g, '\n');
+      expect(folderEditor.document.getText().replace(/\r\n/g, '\n'), 'folder.json text').to.equal(expectedJson);
     });
   }); // describe('configures folderDefinition')
 

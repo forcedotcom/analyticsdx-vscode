@@ -6,7 +6,7 @@
  */
 
 import { JSONPath } from 'jsonc-parser';
-import { newGlobFilter } from './util/completions';
+import { newFileExtensionFilter } from './util/utils';
 
 // Note: keep these in-sync with the publisher and name in package.json
 export const EXTENSION_PUBLISHER = 'salesforce';
@@ -16,11 +16,10 @@ export const EXTENSION_ID = EXTENSION_PUBLISHER + '.' + EXTENSION_NAME;
 // Note: keep this is sync with the language id in package.json
 export const TEMPLATE_JSON_LANG_ID = 'adx-template-json';
 
-// REVIEWME: just do these w/ s.toLocalLowerCase().endsWith() instead?
-export const jsonGlobFilter = newGlobFilter('**.json');
-export const htmGlobFilter = newGlobFilter('**.html', '**.htm');
-export const imageGlobFilter = newGlobFilter('**.png', '**.jpg', '**.gif', '**.svg');
-export const csvGlobFilter = newGlobFilter('**.csv');
+export const jsonFileFilter = newFileExtensionFilter('json');
+export const htmlFileFilter = newFileExtensionFilter('html', 'htm');
+export const imageFileFilter = newFileExtensionFilter('png', 'jpg', 'gif', 'svg');
+export const csvFileFilter = newFileExtensionFilter('csv');
 
 const jsonPats = [
   ['variableDefinition'] as JSONPath,
