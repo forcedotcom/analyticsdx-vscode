@@ -145,7 +145,6 @@ describe('TemplateEditorManager', () => {
     it('of template-info.json', async () => {
       [tmpdir] = await createTempTemplate(false);
       const templateEditingManager = await getTemplateEditorManager();
-      expect(templateEditingManager.has(tmpdir), `initial templateEditingManager.has(${tmpdir})`).to.be.false;
 
       // open the template-info.json
       const file = tmpdir!.with({ path: path.join(tmpdir.path, 'template-info.json') });
@@ -162,7 +161,6 @@ describe('TemplateEditorManager', () => {
     it('of template folder', async () => {
       [tmpdir] = await createTempTemplate(false);
       const templateEditingManager = await getTemplateEditorManager();
-      expect(templateEditingManager.has(tmpdir), `initial templateEditingManager.has(${tmpdir})`).to.be.false;
 
       // open the template-info.json
       const file = tmpdir!.with({ path: path.join(tmpdir.path, 'template-info.json') });
@@ -180,8 +178,6 @@ describe('TemplateEditorManager', () => {
       [tmpdir] = await createTempTemplate(false, false, 'subdir');
       const templateDir = tmpdir.with({ path: path.join(tmpdir.path, 'subdir') });
       const templateEditingManager = await getTemplateEditorManager();
-      expect(templateEditingManager.has(tmpdir), `initial templateEditingManager.has(${tmpdir})`).to.be.false;
-      expect(templateEditingManager.has(templateDir), `initial templateEditingManager.has(${templateDir})`).to.be.false;
 
       // open the template-info.json
       const file = templateDir.with({ path: path.join(templateDir.path, 'template-info.json') });
