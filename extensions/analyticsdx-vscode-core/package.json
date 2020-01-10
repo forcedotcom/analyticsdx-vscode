@@ -106,6 +106,38 @@
         "command": "analyticsdx.template.update",
         "title": "%analyticsdx_template_update_label%"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "analyticsdx.app.create.blank",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.app.delete",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.studio.open",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.studio.open.app",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.template.create",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.template.delete",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.template.update",
+          "when": "sfdx:project_opened"
+        }
+      ]
+    }
   }
 }
