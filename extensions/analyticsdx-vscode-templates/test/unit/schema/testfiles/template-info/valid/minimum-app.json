@@ -1,5 +1,5 @@
 {
-  "templateType": "app",
+  // templateType defaults to 'app' if left off
   "label": "AppForTemplate",
   "name": "AppForTemplate",
   "assetVersion": 47.0,

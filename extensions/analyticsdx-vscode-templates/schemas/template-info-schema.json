@@ -17,12 +17,11 @@
   },
   "then": {
     "$comment": "dashboard templates only need these",
-    "required": ["templateType", "name", "label", "assetVersion", "rules", "dashboards"]
+    "required": ["name", "label", "assetVersion", "rules", "dashboards"]
   },
   "else": {
     "$comment": "app templates need these",
     "required": [
-      "templateType",
       "name",
       "label",
       "assetVersion",
@@ -36,7 +35,7 @@
   },
   "properties": {
     "templateType": {
-      "description": "The type of asset for which this is a template.",
+      "description": "The type of asset for which this is a template. Defaults to 'app' if unspecified.",
       "default": "app",
       "oneOf": [
         {
