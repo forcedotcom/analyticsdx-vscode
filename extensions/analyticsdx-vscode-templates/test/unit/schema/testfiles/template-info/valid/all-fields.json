@@ -68,6 +68,15 @@
       "overwriteOnUpgrade": "${Variables.Has_Product == 'Yes'}"
     }
   ],
+  "recipes": [
+    {
+      "file": "recipes/recipe.json",
+      "label": "recipe",
+      "name": "recipe",
+      "condition": "${'No'}",
+      "overwriteOnUpgrade": "Always"
+    }
+  ],
   "datasetFiles": [
     {
       "label": "bar",

@@ -357,6 +357,49 @@
         ]
       }
     },
+    "recipes": {
+      "type": "array",
+      "description": "List of recipes to include in the template.",
+      "$comment": "For now, allow this to be specified, but do not offer it in code-completions until the feature is ready",
+      "doNotSuggest": true,
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "label"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the recipe json file."
+          },
+          "label": {
+            "type": "string",
+            "description": "The recipe label which MUST match the 'label' attribute in the dashborecipeard file."
+          },
+          "name": {
+            "type": "string",
+            "description": "The recipe name which MUST match the 'name' attribute in the recipe file."
+          },
+          "condition": {
+            "type": "string",
+            "description": "If this is met, then the recipe will be created in the app; otherwise, it will not be created."
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New recipe",
+            "body": {
+              "file": "recipes/${1:name}.json",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
     "externalFiles": {
       "type": "array",
       "description": "List of external files, CSV and descriptive files to be used in the template.",
