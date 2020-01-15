@@ -28,17 +28,7 @@ describe('template-info-schema.json hookup', () => {
     const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics('emptyTemplateInfo');
     const map = new Map(diagnostics.map(i => [i.message, i]));
     // there should be a warning for each these fields being missing
-    [
-      'name',
-      'label',
-      'assetVersion',
-      'releaseInfo',
-      'rules',
-      'dashboards',
-      'lenses',
-      'eltDataflows',
-      'externalFiles'
-    ].forEach(name => {
+    ['name', 'label', 'assetVersion', 'releaseInfo'].forEach(name => {
       const d = map.get('Missing property "' + name + '".');
       expect(d, name + ' diagnostic missing').to.be.not.undefined;
       expect(d!.severity, name + ' diagnostic severity').to.be.equals(vscode.DiagnosticSeverity.Warning);

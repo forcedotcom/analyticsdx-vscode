@@ -90,12 +90,11 @@ describe('TemplateLinterManager', () => {
       const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics(
         'Missing_required',
         true,
-        d => d && d.length >= 3
+        d => d && d.length >= 1
       );
-      // filter out the 'Missing property "..."' ones on dashboards and eltDataflows from the schema,
       // should just be the 1 warning
-      const map = new Map(diagnostics.filter(d => !d.message.includes('Missing property')).map(i => [i.code, i]));
-      // there should be a diagnostic on the templateType field for not having the fields
+      const map = new Map(diagnostics.map(i => [i.code, i]));
+      // there should be a diagnostic on the templateType field for not having a dashboard, dataflow, or dataset
       const d = map.get('templateType');
       expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
       expect(d!.message, 'message').to.be.equals(

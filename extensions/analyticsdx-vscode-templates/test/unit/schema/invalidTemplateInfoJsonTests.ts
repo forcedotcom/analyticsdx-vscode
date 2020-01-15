@@ -18,43 +18,28 @@ describe('template-info-schema.json finds errors in', () => {
 
   it('empty.json', async () => {
     const errors = await validate('empty.json');
-    errors.expectMissingProps(
-      true,
-      'name',
-      'label',
-      'assetVersion',
-      'releaseInfo',
-      'rules',
-      'dashboards',
-      'lenses',
-      'eltDataflows',
-      'externalFiles'
-    );
+    errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'releaseInfo');
     errors.expectNoInvalidProps();
     errors.expectNoUnrecognizedErrors();
   });
 
   it('empty-app.json', async () => {
     const errors = await validate('empty-app.json');
-    errors.expectMissingProps(
-      true,
-      'name',
-      'label',
-      'assetVersion',
-      'releaseInfo',
-      'rules',
-      'dashboards',
-      'lenses',
-      'eltDataflows',
-      'externalFiles'
-    );
+    errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'releaseInfo');
     errors.expectNoInvalidProps();
     errors.expectNoUnrecognizedErrors();
   });
 
   it('empty-dashboard.json', async () => {
     const errors = await validate('empty-dashboard.json');
-    errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'rules', 'dashboards');
+    errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'dashboards');
+    errors.expectNoInvalidProps();
+    errors.expectNoUnrecognizedErrors();
+  });
+
+  it('empty-lens.json', async () => {
+    const errors = await validate('empty-lens.json');
+    errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'lenses');
     errors.expectNoInvalidProps();
     errors.expectNoUnrecognizedErrors();
   });

@@ -1,7 +1,7 @@
 {
   "templateType": "temporaryapp",
-  "label": "AppForTemplate",
-  "name": "AppForTemplate",
+  "label": "MinTempApp",
+  "name": "MinTempApp",
   "assetVersion": 47.0,
   "rules": [
     {
