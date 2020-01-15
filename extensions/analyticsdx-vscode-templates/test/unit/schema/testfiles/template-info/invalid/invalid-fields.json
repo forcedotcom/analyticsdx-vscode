@@ -48,6 +48,14 @@
       "error": "This should trigger a warning"
     }
   ],
+  "recipes": [
+    {
+      "file": "recipes/name.json",
+      "label": "name",
+      "name": "name",
+      "error": "This should trigger a warning"
+    }
+  ],
   "datasetFiles": [
     {
       "label": "name",
