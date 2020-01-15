@@ -306,15 +306,26 @@
       "baz": 9
     }
   },
-  "connector" : {
+  "anyObject": {
+    "label": "Object Field w/o defined properties",
+    "variableType": {
+      "type": "ObjectType"
+    },
+    "defaultValue": {
+      "foo": "B",
+      "bar": true,
+      "baz": 9
+    }
+  },
+  "connector": {
     "label": "my connector",
-      "description": "This will be the connector.",
-     
-      "variableType": {
-         "type": "ConnectorType",
-         "connectorType" : "Salesforce"
-       },
-       "required": true
+    "description": "This will be the connector.",
+
+    "variableType": {
+      "type": "ConnectorType",
+      "connectorType": "Salesforce"
+    },
+    "required": true
   },
   "connectorArray": {
     "required": true,
@@ -326,7 +337,7 @@
       "itemsType": {
         "enums": [],
         "type": "ConnectorType",
-        "connectorType" : "Salesforce"
+        "connectorType": "Salesforce"
       }
     }
   }
