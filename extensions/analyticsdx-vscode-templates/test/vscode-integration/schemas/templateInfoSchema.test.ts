@@ -29,7 +29,6 @@ describe('template-info-schema.json hookup', () => {
     const map = new Map(diagnostics.map(i => [i.message, i]));
     // there should be a warning for each these fields being missing
     [
-      'templateType',
       'name',
       'label',
       'assetVersion',

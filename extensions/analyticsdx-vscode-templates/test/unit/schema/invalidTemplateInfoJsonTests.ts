@@ -20,7 +20,6 @@ describe('template-info-schema.json finds errors in', () => {
     const errors = await validate('empty.json');
     errors.expectMissingProps(
       true,
-      'templateType',
       'name',
       'label',
       'assetVersion',

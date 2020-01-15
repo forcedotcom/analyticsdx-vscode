@@ -6,7 +6,7 @@
  */
 
 import { expect } from 'chai';
-import { JSONPath, Node as JsonNode, ParseError, parseTree, printParseErrorCode } from 'jsonc-parser';
+import { JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser';
 import {
   findPropertyNodeFor,
   jsonPathToString,
@@ -14,6 +14,7 @@ import {
   matchJsonNodesAtPattern,
   pathPartsAreEquals
 } from '../../../src/util/jsoncUtils';
+import { parseErrorToString } from '../../testutils';
 
 // tslint:disable:no-unused-expression
 describe('jsoncUtils', () => {
@@ -22,18 +23,7 @@ describe('jsoncUtils', () => {
     const json = JSON.stringify(object, undefined, 2);
     const jsonNode = parseTree(JSON.stringify(object, undefined, 2), errors);
     if (errors.length > 0) {
-      const mesg = errors
-        .map(
-          e =>
-            printParseErrorCode(e.error) +
-            '[offset=' +
-            e.offset +
-            ', text="' +
-            json.substring(e.offset, e.offset + e.length) +
-            '"]'
-        )
-        .join(', ');
-      throw new Error('Failed to parse json: ' + mesg);
+      throw new Error('Failed to parse json: ' + errors.map(e => parseErrorToString(e, json)).join(', '));
     }
     return jsonNode;
   }

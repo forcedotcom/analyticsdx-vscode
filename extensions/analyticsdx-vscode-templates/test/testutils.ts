@@ -8,6 +8,7 @@
 import * as Ajv from 'ajv';
 import { expect } from 'chai';
 import * as fs from 'fs';
+import { parse, ParseError, printParseErrorCode } from 'jsonc-parser';
 import * as path from 'path';
 import * as readdirp from 'readdirp';
 import { promisify } from 'util';
@@ -67,6 +68,29 @@ export function waitFor<T>(
   });
 }
 
+/** Convert a ParserError from jsonc-parser to a human-readable string. */
+export function parseErrorToString(e: ParseError, text?: string): string {
+  return (
+    printParseErrorCode(e.error) +
+    '[offset=' +
+    e.offset +
+    (text ? `, text="${text.substring(e.offset, e.offset + e.length)}"` : '') +
+    ']'
+  );
+}
+
+/** Parse json w/ comments to an object. */
+export function jsoncParse(text: string, ignoreErrors = false): any {
+  const errors: ParseError[] = [];
+  const json = parse(text, errors, { disallowComments: false, allowTrailingComma: false });
+  if (!ignoreErrors && errors.length > 0) {
+    throw new Error(
+      `JSONC parse failed with ${errors.length} error(s): ` + errors.map(e => parseErrorToString(e, text)).join(', ')
+    );
+  }
+  return json;
+}
+
 /** Asynchronously generate a describe() testsuite for a json schema and a set of
  * test files, which should all be valid for the schema.
  * @param schema the json schema (as a json object)
@@ -105,7 +129,7 @@ export function generateJsonSchemaValidFilesTestSuite(
 
             entries.forEach(entry => {
               it(path.join(testFilesDir, entry.path), async () => {
-                const json = await readFile(entry.fullPath, { encoding: 'utf-8' }).then(JSON.parse);
+                const json = await readFile(entry.fullPath, { encoding: 'utf-8' }).then(jsoncParse);
                 const result = await validator(json);
                 if (!result || (validator.errors && validator.errors.length > 0)) {
                   expect.fail(
@@ -136,7 +160,7 @@ export function createRelPathValidateFn(schema: object, basedir: string): (relpa
   const readFile = promisify(fs.readFile);
 
   return async function validate(relpath: string) {
-    const json = await readFile(path.join(basedir, relpath), { encoding: 'utf-8' }).then(JSON.parse);
+    const json = await readFile(path.join(basedir, relpath), { encoding: 'utf-8' }).then(jsoncParse);
     const result = await validator(json);
     if (result || !validator.errors || validator.errors.length <= 0) {
       expect.fail('Expected validation errors on ' + relpath);
