@@ -202,7 +202,7 @@
             },
             "properties": {
               "type": "object",
-              "description": "A map of field name to variable type definition for the fields of this object.",
+              "description": "A map of field name to variable type definition for the fields of this object. If unspecified, or empty, then the value and defaultValue can have any fields of any type.",
               "additionalProperties": {
                 "$ref": "#/definitions/variableType"
               }
@@ -221,7 +221,7 @@
               "default": false
             }
           },
-          "required": ["type", "properties"]
+          "required": ["type"]
         },
         {
           "properties": {

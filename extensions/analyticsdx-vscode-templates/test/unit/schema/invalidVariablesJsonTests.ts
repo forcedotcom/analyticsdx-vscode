@@ -42,6 +42,6 @@ describe('variables-schema.json finds errors in', () => {
 
   it('missing-vartype-fields.json', async () => {
     const errors = await validate('missing-vartype-fields.json');
-    errors.expectMissingProps(false, 'array.variableType.itemsType', 'object.variableType.properties');
+    errors.expectMissingProps(false, 'array.variableType.itemsType');
   });
 });
