@@ -1,25 +1,11 @@
 {
   // templateType defaults to 'app' if left off
-  "label": "AppForTemplate",
-  "name": "AppForTemplate",
+  "label": "MinTemplate",
+  "name": "MinTemplate",
   "assetVersion": 47.0,
-  "rules": [
-    {
-      "type": "templateToApp",
-      "file": "template-to-app-rules.json"
-    }
-  ],
   "releaseInfo": {
     "templateVersion": "1.1"
-  },
-  "externalFiles": [],
-  "lenses": [],
-  "dashboards": [
-    {
-      "label": "New dashboard",
-      "name": "New_dashboard_tp",
-      "file": "dashboards/New_dashboard.json"
-    }
-  ],
-  "eltDataflows": []
+  }
+  // app template's technically need 1 dashboard, dataset, or dataflow, but that's checked by the linter
+  // and not the schema
 }

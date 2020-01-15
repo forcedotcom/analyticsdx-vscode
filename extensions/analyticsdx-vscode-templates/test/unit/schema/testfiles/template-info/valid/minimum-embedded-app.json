@@ -1,7 +1,7 @@
 {
   "templateType": "embeddedapp",
-  "label": "AppForTemplate",
-  "name": "AppForTemplate",
+  "label": "MinEmbedded",
+  "name": "MinEmbedded",
   "assetVersion": 47.0,
   "rules": [
     {

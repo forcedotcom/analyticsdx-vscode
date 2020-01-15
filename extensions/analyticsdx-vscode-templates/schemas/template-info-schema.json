@@ -16,22 +16,26 @@
     "required": ["templateType"]
   },
   "then": {
-    "$comment": "dashboard templates only need these",
-    "required": ["name", "label", "assetVersion", "rules", "dashboards"]
+    "$comment": "dashboard templates need these",
+    "required": ["name", "label", "assetVersion", "dashboards"]
   },
   "else": {
-    "$comment": "app templates need these",
-    "required": [
-      "name",
-      "label",
-      "assetVersion",
-      "releaseInfo",
-      "rules",
-      "dashboards",
-      "lenses",
-      "eltDataflows",
-      "externalFiles"
-    ]
+    "if": {
+      "properties": {
+        "templateType": {
+          "const": "lens"
+        }
+      },
+      "required": ["templateType"]
+    },
+    "then": {
+      "$comment": "lens templates need these",
+      "required": ["name", "label", "assetVersion", "lenses"]
+    },
+    "else": {
+      "$comment": "app templates need these",
+      "required": ["name", "label", "assetVersion", "releaseInfo"]
+    }
   },
   "properties": {
     "templateType": {

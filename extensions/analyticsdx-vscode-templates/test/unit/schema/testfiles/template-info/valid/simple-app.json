@@ -1,0 +1,39 @@
+{
+  // templateType defaults to 'app' if left off
+  "label": "Simple App",
+  "name": "SimpleApp",
+  "assetVersion": 47.0,
+  "rules": [
+    {
+      "type": "templateToApp",
+      "file": "template-to-app-rules.json"
+    }
+  ],
+  "releaseInfo": {
+    "templateVersion": "1.1"
+  },
+  "externalFiles": [
+    {
+      "name": "file",
+      "file": "external_files/file.csv",
+      "type": "CSV",
+      "schema": "external_files/file.json",
+      "userXmd": "external_files/file_Xmd.json"
+    }
+  ],
+  "lenses": [],
+  "dashboards": [
+    {
+      "label": "New dashboard",
+      "name": "New_dashboard_tp",
+      "file": "dashboards/New_dashboard.json"
+    }
+  ],
+  "eltDataflows": [
+    {
+      "file": "dataflows/dataflow.json",
+      "label": "dataflow",
+      "name": "dataflow"
+    }
+  ]
+}

@@ -1,14 +1,8 @@
 {
   "templateType": "dashboard",
-  "label": "AppForTemplate",
-  "name": "AppForTemplate",
+  "label": "MinDashboard",
+  "name": "MinDashboard",
   "assetVersion": 47.0,
-  "rules": [
-    {
-      "type": "templateToApp",
-      "file": "template-to-app-rules.json"
-    }
-  ],
   "dashboards": [
     {
       "label": "New dashboard",
