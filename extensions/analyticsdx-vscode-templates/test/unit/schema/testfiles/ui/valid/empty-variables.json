@@ -1,0 +1,20 @@
+{
+  "pages": [
+    // TemplateLinter will flag non-vfPage pages that don't have variables, the base schema allows it
+    {
+      "title": "No variables",
+      "vfPage": {
+        "name": "vfpage",
+        "namespace": "namespace"
+      }
+    },
+    {
+      "title": "Empty variables",
+      "variables": [],
+      "vfPage": {
+        "name": "vfpage",
+        "namespace": "namespace"
+      }
+    }
+  ]
+}

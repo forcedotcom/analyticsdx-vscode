@@ -43,12 +43,11 @@ describe('ui-schema.json finds errors in', () => {
     errors.expectMissingProps(
       true,
       'pages[0].title',
-      'pages[0].variables',
       'pages[1].vfPage.name',
       'pages[1].vfPage.namespace',
       'pages[2].variables[0].name'
     );
-    errors.expectInvalidProps(true, 'pages[1].variables');
+    errors.expectNoInvalidProps();
     errors.expectNoUnrecognizedErrors();
   });
 

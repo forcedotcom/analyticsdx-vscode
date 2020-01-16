@@ -414,6 +414,72 @@ describe('TemplateLinterManager', () => {
         expect.fail('Expected 0 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
     });
+
+    it('warnings on missing and empty variables on non-vfPage page', async () => {
+      // create a ui.json with missing variables on non-vfPage pages
+      const uiJson: {
+        pages: Array<{ title: string; variables?: any[]; vfPage?: { name: string; namespace: string } }>;
+      } = {
+        pages: [
+          {
+            title: 'Invalid missing variables'
+          },
+          {
+            title: 'Invalid empty variables',
+            variables: []
+          },
+          // we should not get warnings on the vfPage ones
+          {
+            title: 'Valid missing variables on vfPage',
+            vfPage: {
+              name: 'page',
+              namespace: 'ns'
+            }
+          },
+          {
+            title: 'Valid empty variables on vfPage',
+            variables: [],
+            vfPage: {
+              name: 'page',
+              namespace: 'ns'
+            }
+          }
+        ]
+      };
+      const [uiEditor] = await createTemplateWithRelatedFiles(
+        {
+          field: 'uiDefinition',
+          path: 'ui.json',
+          initialJson: uiJson
+        },
+        // include some variables we can reference
+        {
+          field: 'variableDefinition',
+          path: 'variables.json',
+          initialJson: { var1: {}, var2: {} }
+        }
+      );
+      // we should get warnings on the 2 pages
+      const diagnostics = (
+        await waitForDiagnostics(uiEditor.document.uri, d => d && d.length >= 2, 'Initial ui.json variable warnings')
+      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal('Either variables or vfPage must be specified');
+      expect(diagnostics[0].code, 'diagnostic[0].code').to.equal('pages[0]');
+      expect(diagnostics[1].message, 'diagnostic[1].message').to.equal(
+        'At least 1 variable or vfPage must be specified'
+      );
+      expect(diagnostics[1].code, 'diagnostic[1].code').to.equal('pages[1].variables');
+
+      // update the ui.json to set variables on those pages
+      uiJson.pages[0].variables = [{ name: 'var1' }];
+      uiJson.pages[1].variables = [{ name: 'var2' }];
+      await setDocumentText(uiEditor, uiJson);
+      // and the warnings should go away
+      await waitForDiagnostics(uiEditor.document.uri, d => !d || d.length === 0, 'ui.json warnings after edit');
+    });
   }); // describe('lints ui.json')
 
   describe('lints variables.json', () => {

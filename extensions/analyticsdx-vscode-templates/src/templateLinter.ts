@@ -422,9 +422,25 @@ export class TemplateLinter {
       const diagnostics: vscode.Diagnostic[] = [];
       this.diagnostics.set(doc, diagnostics);
 
+      this.lintUiVariablesSpecifiedForPages(doc, ui, diagnostics);
       await this.lintUiVariablesExistInVariables(templateInfo, doc, ui, diagnostics);
       // TODO: other lints on uiDefinition
     }
+  }
+
+  private lintUiVariablesSpecifiedForPages(doc: vscode.TextDocument, ui: JsonNode, diagnostics: vscode.Diagnostic[]) {
+    findNodeAtLocation(ui, ['pages'])?.children?.forEach(page => {
+      // if it's not a vfPage
+      if (!findNodeAtLocation(page, ['vfPage'])) {
+        const variables = findNodeAtLocation(page, ['variables']);
+        if (!variables) {
+          this.createDiagnostic(doc, 'Either variables or vfPage must be specified', page, diagnostics);
+        } else if (variables.type === 'array' && (!variables.children || variables.children.length <= 0)) {
+          this.createDiagnostic(doc, 'At least 1 variable or vfPage must be specified', variables, diagnostics);
+        }
+        // if variables is defined as something other than an array, the json schema should warn on that
+      }
+    });
   }
 
   private async lintUiVariablesExistInVariables(
