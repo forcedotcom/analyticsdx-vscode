@@ -14,7 +14,7 @@
       "description": "Configures the set of pages to show in the template wizrard for gathering the values for variables. The order in this list is the order they will be displayed.",
       "items": {
         "type": "object",
-        "required": ["title", "variables"],
+        "required": ["title"],
         "additionalProperties": false,
         "properties": {
           "title": {
@@ -67,8 +67,8 @@
           },
           "variables": {
             "type": "array",
-            "description": "The variables this page covers. If not using a custom vfPage, the order here is the order the variables' UIs will be presented in the template wizard.",
-            "minItems": 1,
+            "description": "The variables this page covers. If not using a custom vfPage, the order here is the order the variables' UIs will be presented in the template wizard. If using a custom vfPage, these variables will be passed into the page.",
+            "minItems": 0,
             "items": {
               "type": "object",
               "additionalProperties": false,
