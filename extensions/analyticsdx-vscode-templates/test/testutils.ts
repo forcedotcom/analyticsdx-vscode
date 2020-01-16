@@ -194,7 +194,8 @@ export class SchemaErrors {
             error.keyword === 'enum' ||
             error.keyword === 'not' ||
             error.keyword === 'minItems' ||
-            error.keyword === 'maxItems') &&
+            error.keyword === 'maxItems' ||
+            error.keyword === 'minLength') &&
           error.dataPath
         ) {
           // this means an invalid value in a field or wrong # of items in an array,
