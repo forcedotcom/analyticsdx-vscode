@@ -2,12 +2,24 @@
   "pages": [
     {},
     {
-      "title": "empty variables and page vfpage",
+      "title": "empty variable",
+      "variables": [{}]
+    },
+    {
+      "title": "empty page vfpage",
       "vfPage": {}
     },
     {
-      "title": "empty variable",
-      "variables": [{}]
+      "title": "empty page vfpage name",
+      "vfPage": {
+        "name": ""
+      }
+    },
+    {
+      "title": "all whitespace page vfpage name",
+      "vfPage": {
+        "name": "    \t    \r\n   "
+      }
     }
   ]
 }
