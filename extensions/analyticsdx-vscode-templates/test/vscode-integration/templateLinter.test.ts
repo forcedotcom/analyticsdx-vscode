@@ -135,8 +135,8 @@ describe('TemplateLinterManager', () => {
     it('shows problem on missing and empty fields on app template', async () => {
       const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics('Empty_and_missing_required');
       const map = new Map(diagnostics.map(i => [i.code, i]));
-      // there should be a diagnostic on the templateType field for not having the fields
-      const d = map.get('templateType');
+      // since the file doesn't have templateType, there should be a diagnostic on the root object for not having the fields
+      const d = map.get('');
       expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
       expect(d!.message, 'message').to.be.equals(
         'App templates must have at least 1 dashboard, dataflow, or dataset specified'
