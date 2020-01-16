@@ -25,8 +25,14 @@ describe('template-info-schema.json hookup', () => {
   // this is really just testing that vscode is picking up our schema on template-info.json's --
   // these diagnostics comes from vscode
   it('shows problems on empty file', async () => {
-    const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics('emptyTemplateInfo');
-    const map = new Map(diagnostics.map(i => [i.message, i]));
+    const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics(
+      'emptyTemplateInfo',
+      true,
+      d => d && d.length >= 4
+    );
+    // we should get a warning about needing 1 dashboard/dataflow/dataset on the root object from the linter,
+    // so just filter that out for now
+    const map = new Map(diagnostics.filter(d => d.message.startsWith('Missing property ')).map(d => [d.message, d]));
     // there should be a warning for each these fields being missing
     ['name', 'label', 'assetVersion', 'releaseInfo'].forEach(name => {
       const d = map.get('Missing property "' + name + '".');

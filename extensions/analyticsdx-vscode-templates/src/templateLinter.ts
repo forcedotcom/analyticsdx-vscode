@@ -186,9 +186,10 @@ export class TemplateLinter {
 
   private lintTemplateInfoMinimumObjects(doc: vscode.TextDocument, diagnostics: vscode.Diagnostic[], tree: JsonNode) {
     const [templateType, templateTypeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
-    // the json-schema should report the error if templateType is missing or not a string or not a valid value
-    if (templateType && typeof templateType === 'string') {
-      switch (templateType.toLocaleLowerCase()) {
+    // do the check if templateType is not specified or is a string; if it's anythigng else, the json-schema should
+    // show a warning
+    if (!templateTypeNode || (templateType && typeof templateType === 'string')) {
+      switch (templateType ? templateType.toLocaleLowerCase() : 'app') {
         case 'app':
         case 'embeddedapp': {
           // for app templates, it needs to have at least 1 dashboard, dataset, or dataflow specified,
