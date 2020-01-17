@@ -1,0 +1,33 @@
+{
+  // Note: if any more fields are made nullable, update templateInfoSchema.tests.ts as well
+  "templateType": null,
+  "label": "AppForTemplate",
+  "name": "AppForTemplate",
+  "description": null,
+  "assetVersion": 47.0,
+  "variableDefinition": null,
+  "uiDefinition": null,
+  "rules": null,
+  "ruleDefinition": null,
+  "assetIcon": null,
+  "templateIcon": null,
+  "releaseInfo": {
+    "templateVersion": "1.1",
+    "notesFile": null
+  },
+  "folderDefinition": null,
+  "externalFiles": null,
+  "lenses": null,
+  "dashboards": null,
+  "eltDataflows": null,
+  "recipes": null,
+  "datasetFiles": null,
+  "storedQueries": null,
+  "imageFiles": null,
+  "extendedTypes": null,
+  "icons": null,
+  "customAttributes": null,
+  "videos": null,
+  "tags": null,
+  "templateDependencies": null
+}

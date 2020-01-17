@@ -212,12 +212,24 @@ export async function createTempTemplate(
   if (!open) {
     return [dir, undefined, undefined];
   }
-  const [doc, editor] = await openTemplateInfo(dir, show);
+  const [doc, editor] = await openTemplateInfo(file, show);
   return [dir, doc, editor];
 }
 
+export function writeTextToFile(file: vscode.Uri, textOrObj: string | object): Thenable<void> {
+  const text = typeof textOrObj === 'string' ? textOrObj : JSON.stringify(textOrObj, undefined, 2);
+  const len = text.length;
+  // 2 bytes for each unicde char
+  const buf = new ArrayBuffer(len * 2);
+  const view = new Uint16Array(buf);
+  for (let i = 0; i < len; i++) {
+    view[i] = text.charCodeAt(i);
+  }
+  return vscode.workspace.fs.writeFile(file, new Uint8Array(buf));
+}
+
 export function writeEmptyJsonFile(file: vscode.Uri): Thenable<void> {
-  return vscode.workspace.fs.writeFile(file, Uint8Array.from([123, 125]));
+  return writeTextToFile(file, '{}');
 }
 
 export function findPositionByJsonPath(doc: vscode.TextDocument, path: JSONPath): vscode.Position | undefined {

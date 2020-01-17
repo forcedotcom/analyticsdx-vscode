@@ -1,0 +1,121 @@
+{
+  // Note: if any more fields are made nullable, update templateInfoSchema.tests.ts as well
+  "label": "AppForTemplate",
+  "name": "AppForTemplate",
+  "assetVersion": 47.0,
+  "releaseInfo": {
+    "templateVersion": "1.1"
+  },
+  "externalFiles": [
+    {
+      "name": "name",
+      "file": null,
+      "type": "CSV",
+      "schema": null,
+      "userXmd": null,
+      "condition": null,
+      "rows": null,
+      "overwriteOnUpgrade": null,
+      "label": null
+    }
+  ],
+  "lenses": [
+    {
+      "file": "lenses/name.json",
+      "label": "name",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null
+    }
+  ],
+  "dashboards": [
+    {
+      "file": "dashboards/name.json",
+      "label": "name",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null
+    }
+  ],
+  "eltDataflows": [
+    {
+      "file": "dataflows/name.json",
+      "label": "name",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null
+    }
+  ],
+  "recipes": [
+    {
+      "file": "recipes/name.json",
+      "label": "name",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null
+    }
+  ],
+  "datasetFiles": [
+    {
+      "label": "name",
+      "name": "name",
+      "userXmd": null,
+      "condition": null,
+      "overwriteOnUpgrade": null,
+      "file": null
+    }
+  ],
+  "storedQueries": [
+    {
+      "file": "queries/name.json",
+      "label": "name",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null
+    }
+  ],
+  "imageFiles": [
+    {
+      "file": "images/name.png",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null,
+      "label": null
+    }
+  ],
+  "extendedTypes": {
+    "stories": [
+      {
+        "file": "name.json",
+        "label": "name",
+        "name": "name",
+        "condition": null,
+        "overwriteOnUpgrade": null
+      }
+    ]
+  },
+  "icons": {
+    "appBadge": {
+      "name": "name",
+      "namespace": null
+    },
+    "templateBadge": {
+      "name": "name",
+      "namespace": null
+    },
+    "templatePreviews": null
+  },
+  "customAttributes": [
+    {
+      "label": "Features",
+      "values": null
+    }
+  ],
+  "templateDependencies": [
+    {
+      "name": "name",
+      "templateVersion": null,
+      "namespace": null
+    }
+  ]
+}
