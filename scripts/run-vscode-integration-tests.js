@@ -23,17 +23,19 @@ const { downloadDirToExecutablePath, insidersDownloadDirToExecutablePath } = req
       // workspace path
       path.join(__dirname, '..', 'test-assets', 'sfdx-simple'),
       // turn off any user extensions, so it should run with only extensions setup in the run target
-      '--disable-extensions'
+      '--disable-extensions',
+      '--verbose'
     ]
   };
+  console.log('Running vscode tests with:\n', JSON.stringify(opts, undefined, 2));
   try {
     const exitCode = await runTests(opts);
     if (exitCode !== 0) {
-      console.error('Either tests failed to run, or there was 1 or more test failures, exitCode=', exitCode);
+      console.error('Either tests failed to run, or there was 1 or more test failures');
     }
     process.exit(exitCode);
   } catch (e) {
-    console.error('Either tests failed to run, or there was 1 or more test failures:', e);
+    console.error('Either tests failed to run, or there was 1 or more test failures, error=', e);
     process.exit(1);
   }
 })();
