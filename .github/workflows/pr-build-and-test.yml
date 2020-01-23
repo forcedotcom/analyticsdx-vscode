@@ -26,5 +26,5 @@ jobs:
       - name: Tests
         # start X virtual frame buffer so tests can do ui
         run: |
-          sudo /usr/bin/Xvfb :10 -ac -audit 2 2>&1 &
+          sudo /usr/bin/Xvfb :10 -ac -audit 4 2>&1 &
           DISPLAY=:10 npm test
