@@ -36,6 +36,7 @@ import {
   TEMPLATE_INFO,
   TEMPLATE_JSON_LANG_ID
 } from './constants';
+import { telemetryService } from './telemetry';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
@@ -265,6 +266,7 @@ export class TemplateEditingManager extends Disposable {
       this.logger.log(`Configuring editing for ${dir.toString()}`);
       this.templateDirs.set(editing.key, editing.start());
       this.updateSchemaAssociations();
+      telemetryService.sendTemplateEditingConfigured(dir).catch();
       return true;
     }
     return false;
