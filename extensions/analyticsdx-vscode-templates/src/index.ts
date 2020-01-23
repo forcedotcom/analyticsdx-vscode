@@ -10,7 +10,7 @@ import { telemetryService } from './telemetry';
 import { TemplateEditingManager } from './templateEditing';
 import { TemplateLinterManager } from './templateLinter';
 import { Logger } from './util/logger';
-import { uriDirname } from './util/vscodeUtils';
+import { isRunningInDevMode, uriDirname } from './util/vscodeUtils';
 
 export type ExtensionType =
   | Readonly<{
@@ -37,9 +37,9 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
     context.subscriptions.push(output);
   }
   const logger = new Logger(output, {
-    // these 2 are intentionally not available in the Settings UI and are really just for when we run tests
-    // TODO: default this one to true if we're running from devmode (F5), otherwise false
-    toConsole: config.get<boolean>('logging.console', true),
+    // these 2 are intentionally not available in the Settings UI and are really just for when we run tests.
+    // default console output to true if we're running from devmode (F5), otherwise false
+    toConsole: config.get<boolean>('logging.console', isRunningInDevMode()),
     prefix: config.get<string>('logging.prefix')
   });
 

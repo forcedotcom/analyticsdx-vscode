@@ -8,19 +8,19 @@
 import * as util from 'util';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { telemetryService } from '.';
 import { EXTENSION_NAME } from '../constants';
 import { waitForDX } from '../dxsupport/waitForDX';
 
 export class TelemetryService {
   private static instance: TelemetryService;
+  // Note: in dev mode, reporter will be undefined, even if isTelemetryEnabled is true; that's by design in the
+  // salesforcedx-vscode-core extension
   private reporter: TelemetryReporter | undefined;
-  private isTelemetryEnabled: boolean;
+  private isTelemetryEnabled = false;
+  private sentTemplateEditingConfiguredEvent = false;
   private setup: Promise<TelemetryService | undefined> | undefined;
 
-  constructor() {
-    this.isTelemetryEnabled = false;
-  }
+  constructor() {}
 
   public static getInstance() {
     if (!TelemetryService.instance) {
@@ -32,18 +32,18 @@ export class TelemetryService {
   public async setupVSCodeTelemetry() {
     // if its already set up
     if (this.reporter) {
-      return Promise.resolve(telemetryService);
+      return Promise.resolve(this);
     }
     if (!this.setup) {
       this.setup = waitForDX(true)
         .then((coreDependency: vscode.Extension<any>) => {
           coreDependency.exports.telemetryService.showTelemetryMessage();
 
-          telemetryService.initializeService(
+          this.initializeService(
             coreDependency.exports.telemetryService.getReporter(),
             coreDependency.exports.telemetryService.isTelemetryEnabled()
           );
-          return telemetryService;
+          return this;
         })
         .catch(err => {
           return undefined;
@@ -52,7 +52,7 @@ export class TelemetryService {
     return this.setup;
   }
 
-  public initializeService(reporter: TelemetryReporter, isTelemetryEnabled: boolean): void {
+  public initializeService(reporter: TelemetryReporter | undefined, isTelemetryEnabled: boolean): void {
     this.isTelemetryEnabled = isTelemetryEnabled;
     this.reporter = reporter;
   }
@@ -77,13 +77,18 @@ export class TelemetryService {
     }
   }
 
-  public async sendCommandEvent(commandName?: string): Promise<void> {
-    await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled && commandName) {
-      this.reporter.sendTelemetryEvent('commandExecution', {
-        extensionName: EXTENSION_NAME,
-        commandName
-      });
+  public async sendTemplateEditingConfigured(dir: vscode.Uri) {
+    // only send this on the first template being opened, since, right now, we really only want to know if someone
+    // actually opened and used the template editing at all (vs. the extension start message, which will pretty much
+    // always happens so it really just tracks installs), and we don't want to flood appinsights with gobs of messages.
+    if (!this.sentTemplateEditingConfiguredEvent) {
+      this.sentTemplateEditingConfiguredEvent = true;
+      await this.setupVSCodeTelemetry();
+      if (this.reporter !== undefined && this.isTelemetryEnabled) {
+        this.reporter.sendTelemetryEvent('templateOpenedInSession', {
+          extensionName: EXTENSION_NAME
+        });
+      }
     }
   }
 

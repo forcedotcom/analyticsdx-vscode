@@ -10,6 +10,11 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { isSameUriPath, isUriPathUnder, isWhitespaceChar } from './utils';
 
+/** Tell if vscode is currently running dev mode. */
+export function isRunningInDevMode() {
+  // this is how the telemetry logic determines it currently
+  return vscode?.env?.machineId === 'someValue.machineId';
+}
 /**
  * Scan lines from the document until it reaches a stopping character.
  * @param document the document
