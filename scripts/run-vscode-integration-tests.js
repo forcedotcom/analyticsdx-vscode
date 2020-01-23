@@ -29,11 +29,11 @@ const { downloadDirToExecutablePath, insidersDownloadDirToExecutablePath } = req
   try {
     const exitCode = await runTests(opts);
     if (exitCode !== 0) {
-      console.error('Either tests failed to run, or there was 1 or more test failures');
+      console.error('Either tests failed to run, or there was 1 or more test failures, exitCode=', exitCode);
     }
     process.exit(exitCode);
   } catch (e) {
-    console.error('Either tests failed to run, or there was 1 or more test failures');
+    console.error('Either tests failed to run, or there was 1 or more test failures:', e);
     process.exit(1);
   }
 })();
