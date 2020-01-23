@@ -23,8 +23,7 @@ const { downloadDirToExecutablePath, insidersDownloadDirToExecutablePath } = req
       // workspace path
       path.join(__dirname, '..', 'test-assets', 'sfdx-simple'),
       // turn off any user extensions, so it should run with only extensions setup in the run target
-      '--disable-extensions',
-      '--verbose'
+      '--disable-extensions'
     ]
   };
   console.log('Running vscode tests with:\n', JSON.stringify(opts, undefined, 2));
