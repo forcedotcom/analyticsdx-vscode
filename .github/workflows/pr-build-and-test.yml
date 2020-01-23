@@ -17,7 +17,7 @@ jobs:
       - name: Use Node.js 12.4.0
         uses: actions/setup-node@v1
         with:
-          node-version: "12.4.0"
+          node-version: '12.4.0'
       - name: Build
         run: |
           npm install
@@ -26,7 +26,7 @@ jobs:
       - name: Tests
         # start X virtual frame buffer so tests can do ui
         run: |
-          sudo /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
+          sudo /usr/bin/Xvfb :10 -ac -audit 4 2>&1 &
           DISPLAY=:10 npm test
 
   # include a windows build job in PRs since mostly folks are developing on linux or mac, so
@@ -41,7 +41,7 @@ jobs:
       - name: Use Node.js 12.4.0
         uses: actions/setup-node@v1
         with:
-          node-version: "12.4.0"
+          node-version: '12.4.0'
       - name: Build
         # Note: npm run lint fails silently on windows for some reason, but we really only need
         # to run it in one job anyways
