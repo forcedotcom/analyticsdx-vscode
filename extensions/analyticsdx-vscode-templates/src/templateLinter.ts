@@ -14,7 +14,15 @@ import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } fro
 import { Logger } from './util/logger';
 import { findTemplateInfoFileFor } from './util/templateUtils';
 import { fuzzySearcher, isValidRelpath } from './util/utils';
-import { isUriUnder, rangeForNode, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
+import {
+  clearDiagnosticsUnder,
+  isUriAtOrUnder,
+  rangeForNode,
+  uriBasename,
+  uriDirname,
+  UriExistsDiagnosticCollection,
+  uriStat
+} from './util/vscodeUtils';
 
 /** Find the value for the first attribute found at the pattern.
  * @returns the value (string, boolean, number, or null), or undefined if not found or found node's value is not
@@ -494,7 +502,9 @@ export class TemplateLinterManager extends Disposable {
   // (https://github.com/microsoft/vscode/blob/master/extensions/extension-editing/src/extensionLinter.ts)
   private static readonly LINT_DEBOUNCE_MS = 300;
 
-  private diagnosticsCollection = vscode.languages.createDiagnosticCollection('analyticsdx-templates');
+  private diagnosticCollection = new UriExistsDiagnosticCollection(
+    vscode.languages.createDiagnosticCollection('analyticsdx-templates')
+  );
 
   private timer: NodeJS.Timer | undefined;
   private templateInfoQueue = new Set<vscode.TextDocument>();
@@ -509,7 +519,7 @@ export class TemplateLinterManager extends Disposable {
     output?: vscode.OutputChannel
   ) {
     super();
-    this.disposables.push(this.diagnosticsCollection);
+    this.disposables.push(this.diagnosticCollection);
     this.logger = Logger.from(output);
   }
 
@@ -565,7 +575,8 @@ export class TemplateLinterManager extends Disposable {
   private async uriDeleted(uri: vscode.Uri) {
     // if a template-info.json was deleted, clear all of the diagnostics for it and all related files
     if (uriBasename(uri) === 'template-info.json') {
-      this.setAllTemplateDiagnostics(uri);
+      this.unqueueTemplateInfo(uri);
+      this.setAllTemplateDiagnostics(uriDirname(uri));
     } else {
       // if a file under a template folder was deleted, relint the template
       const templateInfoUri = await findTemplateInfoFileFor(uri);
@@ -575,11 +586,8 @@ export class TemplateLinterManager extends Disposable {
       } else {
         // otherwise, it could be that the parent of a template folder (or higher) was deleted, so clear all the
         // diagnostics of any file under the delete uri
-        this.diagnosticsCollection.forEach(fileUri => {
-          if (isUriUnder(uri, fileUri)) {
-            this.diagnosticsCollection.delete(uri);
-          }
-        });
+        this.unqueueTemplateInfosUnder(uri);
+        clearDiagnosticsUnder(this.diagnosticCollection, uri);
       }
     }
   }
@@ -589,13 +597,29 @@ export class TemplateLinterManager extends Disposable {
     this.startTimer();
   }
 
+  private unqueueTemplateInfo(uri: vscode.Uri) {
+    this.templateInfoQueue.forEach(doc => {
+      if (uri.toString() === doc.uri.toString()) {
+        this.templateInfoQueue.delete(doc);
+      }
+    });
+  }
+
+  private unqueueTemplateInfosUnder(uri: vscode.Uri) {
+    this.templateInfoQueue.forEach(doc => {
+      if (isUriAtOrUnder(uri, doc.uri)) {
+        this.templateInfoQueue.delete(doc);
+      }
+    });
+  }
+
   private closed(doc: vscode.TextDocument) {
     this.clearDoc(doc);
   }
 
   private clearDoc(doc: vscode.TextDocument) {
     // TODO: we need to figure a better way to show/add diagnostics, tied to when the editor is shown/closed
-    this.diagnosticsCollection.delete(doc.uri);
+    this.diagnosticCollection.delete(doc.uri);
     this.templateInfoQueue.delete(doc);
   }
 
@@ -604,14 +628,11 @@ export class TemplateLinterManager extends Disposable {
   private setAllTemplateDiagnostics(dir: vscode.Uri, diagnostics?: Map<vscode.TextDocument, vscode.Diagnostic[]>) {
     // REVIEWME: do an immediate set here instead if we have diagnostics for that file in the map?
     // go through the current diagnostics and clear any diagnostics under that dir
-    this.diagnosticsCollection.forEach(file => {
-      if (isUriUnder(dir, file)) {
-        this.diagnosticsCollection.delete(file);
-      }
-    });
+    clearDiagnosticsUnder(this.diagnosticCollection, dir);
+
     if (diagnostics) {
       diagnostics.forEach((diagnostics, file) => {
-        this.diagnosticsCollection.set(file.uri, diagnostics);
+        this.diagnosticCollection.set(file.uri, diagnostics);
       });
     }
   }

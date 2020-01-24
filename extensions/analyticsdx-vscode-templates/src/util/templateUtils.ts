@@ -7,12 +7,15 @@
 
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
-import { uriDirname, uriStat } from './vscodeUtils';
+import { uriBasename, uriDirname, uriStat } from './vscodeUtils';
 
 /** Traverse up from the file until you find the template-info.json, without leaving the vscode workspace folders.
  * @return the file uri, or undefined if not found (i.e. file is not part of a template)
  */
 export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.Uri | undefined> {
+  if (uriBasename(file) === 'template-info.json') {
+    return file;
+  }
   let dir = uriDirname(file);
   // don't go out of the workspace
   while (vscode.workspace.getWorkspaceFolder(dir)) {

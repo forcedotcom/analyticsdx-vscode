@@ -167,7 +167,8 @@ export async function waitForDiagnostics(
 ): Promise<vscode.Diagnostic[]> {
   await vscode.commands.executeCommand('workbench.action.problems.focus');
   return waitFor(() => vscode.languages.getDiagnostics(uri), filter || defDiagnosticFilter, {
-    timeoutMessage: `Timeout waiting for: ${filterDescription}`
+    timeoutMessage: diagnostics =>
+      `Timeout waiting for: ${filterDescription}\nCurrent diagnostics:\n` + JSON.stringify(diagnostics, undefined, 2)
   });
 }
 

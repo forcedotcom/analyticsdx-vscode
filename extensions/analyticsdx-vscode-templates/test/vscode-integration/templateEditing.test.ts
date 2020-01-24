@@ -203,6 +203,14 @@ describe('TemplateEditorManager', () => {
       const templateDir = uriDirname(doc.uri);
       const templateEditingManager = await getTemplateEditorManager();
       await waitForTemplateEditorManagerHas(templateEditingManager, templateDir, true);
+      // make sure the languageId changes on the template-info.json
+      await waitFor(
+        () => doc.languageId,
+        langId => langId === TEMPLATE_JSON_LANG_ID,
+        {
+          timeoutMessage: langId => `Timed out waiting for languageId to switch from ${langId}`
+        }
+      );
       // make sure that the schema associations method has the schema for the various related files
       const associations = templateEditingManager.getSchemaAssociations();
       expect(associations[path.join(templateDir.path, 'folder.json')], 'folder.json schema').to.have.members([

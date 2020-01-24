@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { findPropertyNodeFor, matchJsonNodesAtPattern } from '../../../src/util/jsoncUtils';
 import {
   isSameUri,
+  isUriAtOrUnder,
   isUriUnder,
   rangeForNode,
   scanLinesUntil,
@@ -163,15 +164,18 @@ describe('vscodeUtils', () => {
         });
       });
 
-      [['/foo', '/'], ['/foo', '/foo'], ['/foo/', '/foobar'], ['/foo', '/foo/../bar']].forEach(
-        ([parentPath, filePath]) => {
-          const parent = vscode.Uri.parse(base + parentPath);
-          const file = vscode.Uri.parse(base + filePath);
-          it(`doesn't match ${parent} -> ${file}`, () => {
-            expect(isUriUnder(parent, file)).to.be.false;
-          });
-        }
-      );
+      [
+        ['/foo', '/'],
+        ['/foo', '/foo'],
+        ['/foo/', '/foobar'],
+        ['/foo', '/foo/../bar']
+      ].forEach(([parentPath, filePath]) => {
+        const parent = vscode.Uri.parse(base + parentPath);
+        const file = vscode.Uri.parse(base + filePath);
+        it(`doesn't match ${parent} -> ${file}`, () => {
+          expect(isUriUnder(parent, file)).to.be.false;
+        });
+      });
     });
 
     it("doesn't match on different scheme", () => {
@@ -189,7 +193,11 @@ describe('vscodeUtils', () => {
 
   describe('isSameUri()', () => {
     ['file://', 'http://www.salesforce.com'].forEach(base => {
-      [['/foo', '/foo'], ['/foo/', '/foo'], ['/foo', '/foo/']].forEach(([path1, path2]) => {
+      [
+        ['/foo', '/foo'],
+        ['/foo/', '/foo'],
+        ['/foo', '/foo/']
+      ].forEach(([path1, path2]) => {
         const uri1 = vscode.Uri.parse(base + path1);
         const uri2 = vscode.Uri.parse(base + path2);
         it(`matches ${uri1} -> ${uri2}`, () => {
@@ -228,29 +236,84 @@ describe('vscodeUtils', () => {
     });
   });
 
+  describe('isUriAtOrUnder', () => {
+    ['file://', 'http://www.salesforce.com'].forEach(base => {
+      [
+        ['/foo', '/foo'],
+        ['/foo/', '/foo'],
+        ['/foo', '/foo/'],
+        ['/foo', '/foo/file.json'],
+        ['/foo', '/foo/bar/file.json'],
+        ['/foo/', '/foo/bar/'],
+        ['/foo', '/foo/./file.json'],
+        ['/foo', '/foo/bar/../file.json']
+      ].forEach(([path1, path2]) => {
+        const uri1 = vscode.Uri.parse(base + path1);
+        const uri2 = vscode.Uri.parse(base + path2);
+        it(`matches ${uri1} -> ${uri2}`, () => {
+          expect(isUriAtOrUnder(uri1, uri2)).to.be.true;
+        });
+      });
+
+      [
+        ['/foo', '/'],
+        ['/foo/', '/foobar'],
+        ['/foo', '/foo/../bar'],
+        ['/foo/bar', '/foo'],
+        ['/foo/bar', '/foo/']
+      ].forEach(([path1, path2]) => {
+        const uri1 = vscode.Uri.parse(base + path1);
+        const uri2 = vscode.Uri.parse(base + path2);
+        it(`doesn't match ${uri1} -> ${uri2}`, () => {
+          expect(isUriAtOrUnder(uri1, uri2)).to.be.false;
+        });
+      });
+    });
+
+    it("doesn't match on different scheme", () => {
+      const uri1 = vscode.Uri.parse('file:///foo');
+      const uri2 = vscode.Uri.parse('http://www.salesforce.com/foo');
+      expect(isUriAtOrUnder(uri1, uri2)).to.be.false;
+    });
+
+    it("doesn't match on different authority", () => {
+      const uri1 = vscode.Uri.parse('http://localhost:6109/foo');
+      const uri2 = vscode.Uri.parse('http://www.salesforce.com/foo');
+      expect(isUriAtOrUnder(uri1, uri2)).to.be.false;
+    });
+  });
+
   describe('uriDirname()', () => {
     ['file://', 'http://www.salesforce.com'].forEach(base => {
-      [['/', '/'], ['/foo', '/'], ['/foo/', '/'], ['/foo/bar', '/foo'], ['/foo/bar/', '/foo']].forEach(
-        ([relpath, expectedDirname]) => {
-          const uri = vscode.Uri.parse(base + relpath);
-          it(`${uri} dirname -> ${expectedDirname}`, () => {
-            expect(uriDirname(uri).path).to.be.equals(expectedDirname);
-          });
-        }
-      );
+      [
+        ['/', '/'],
+        ['/foo', '/'],
+        ['/foo/', '/'],
+        ['/foo/bar', '/foo'],
+        ['/foo/bar/', '/foo']
+      ].forEach(([relpath, expectedDirname]) => {
+        const uri = vscode.Uri.parse(base + relpath);
+        it(`${uri} dirname -> ${expectedDirname}`, () => {
+          expect(uriDirname(uri).path).to.be.equals(expectedDirname);
+        });
+      });
     });
   });
 
   describe('uriBasename()', () => {
     ['file://', 'http://www.salesforce.com'].forEach(base => {
-      [['/', ''], ['/foo', 'foo'], ['/foo/', 'foo'], ['/foo/bar', 'bar'], ['/foo/bar/', 'bar']].forEach(
-        ([relpath, expectedBasename]) => {
-          const uri = vscode.Uri.parse(base + relpath);
-          it(`${uri} basename -> ${expectedBasename}`, () => {
-            expect(uriBasename(uri)).to.be.equals(expectedBasename);
-          });
-        }
-      );
+      [
+        ['/', ''],
+        ['/foo', 'foo'],
+        ['/foo/', 'foo'],
+        ['/foo/bar', 'bar'],
+        ['/foo/bar/', 'bar']
+      ].forEach(([relpath, expectedBasename]) => {
+        const uri = vscode.Uri.parse(base + relpath);
+        it(`${uri} basename -> ${expectedBasename}`, () => {
+          expect(uriBasename(uri)).to.be.equals(expectedBasename);
+        });
+      });
     });
   });
 
@@ -269,20 +332,16 @@ describe('vscodeUtils', () => {
       });
 
       it('finds files', async () => {
-        const list = (await uriReaddir(
-          rootDir,
-          ([path, fileType]) => (fileType & vscode.FileType.File) !== 0,
-          false
-        )).map(([path]) => path);
+        const list = (
+          await uriReaddir(rootDir, ([path, fileType]) => (fileType & vscode.FileType.File) !== 0, false)
+        ).map(([path]) => path);
         expect(list).to.have.members(['1.txt', '2.txt']);
       });
 
       it('finds directories', async () => {
-        const list = (await uriReaddir(
-          rootDir,
-          ([path, fileType]) => (fileType & vscode.FileType.Directory) !== 0,
-          false
-        )).map(([path]) => path);
+        const list = (
+          await uriReaddir(rootDir, ([path, fileType]) => (fileType & vscode.FileType.Directory) !== 0, false)
+        ).map(([path]) => path);
         expect(list).to.have.members(['dir1']);
       });
     });
@@ -322,10 +381,9 @@ describe('vscodeUtils', () => {
       });
 
       it('finds directories', async () => {
-        const list = (await uriReaddir(
-          rootDir,
-          ([path, fileType]) => (fileType & vscode.FileType.Directory) !== 0
-        )).map(([path]) => path);
+        const list = (
+          await uriReaddir(rootDir, ([path, fileType]) => (fileType & vscode.FileType.Directory) !== 0)
+        ).map(([path]) => path);
         expect(list).to.have.members(['dir1', 'dir1/dir11']);
       });
     });

@@ -83,12 +83,6 @@
   ],
   "main": "./out/src",
   "contributes": {
-    "jsonValidation": [
-      {
-        "fileMatch": "template-info.json",
-        "url": "./schemas/template-info-schema.json"
-      }
-    ],
     "languages": [
       {
         "id": "adx-template-json",

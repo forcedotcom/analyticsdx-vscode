@@ -11,7 +11,10 @@ import { waitFor } from '../testutils';
 describe('testutils', () => {
   describe('waitFor', () => {
     it('works on immediate answer', async () => {
-      const val = await waitFor(() => 'success', val => true);
+      const val = await waitFor(
+        () => 'success',
+        val => true
+      );
       expect(val).to.be.equals('success');
     });
 
@@ -36,14 +39,22 @@ describe('testutils', () => {
 
     it('works on delayed predicate', async () => {
       let count = 0;
-      const val = await waitFor(() => 'success', () => count++ !== 0, { pauseMs: 10, timeoutMs: 100 });
+      const val = await waitFor(
+        () => 'success',
+        () => count++ !== 0,
+        { pauseMs: 10, timeoutMs: 100 }
+      );
       expect(val).to.be.equals('success');
     });
 
     it('timeouts on no match', async () => {
       let val: string | undefined;
       try {
-        val = await waitFor(() => 'failed', () => false, { pauseMs: 10, timeoutMs: 100 });
+        val = await waitFor(
+          () => 'failed',
+          () => false,
+          { pauseMs: 10, timeoutMs: 100 }
+        );
       } catch (e) {
         expect((e as Error).message, 'timeout error message').to.be.equals('timeout');
         expect((e as Error).name, 'timeout error name').to.be.equals('timeout');
@@ -55,13 +66,61 @@ describe('testutils', () => {
     it('timeouts with custom message', async () => {
       let val: string | undefined;
       try {
-        val = await waitFor(() => 'failed', () => false, {
-          pauseMs: 10,
-          timeoutMs: 100,
-          timeoutMessage: 'Custom message'
-        });
+        val = await waitFor(
+          () => 'failed',
+          () => false,
+          {
+            pauseMs: 10,
+            timeoutMs: 100,
+            timeoutMessage: 'Custom message'
+          }
+        );
       } catch (e) {
         expect((e as Error).message, 'timeout error message').to.be.equals('Custom message');
+        expect((e as Error).name, 'timeout error name').to.be.equals('timeout');
+        return;
+      }
+      expect.fail('Expected a timeout, got ' + val);
+    });
+
+    it('timeouts with custom message function', async () => {
+      let val: string | undefined;
+      try {
+        val = await waitFor(
+          () => 'failed',
+          () => false,
+          {
+            pauseMs: 10,
+            timeoutMs: 100,
+            timeoutMessage: result => `Custom message, result: ${result}`
+          }
+        );
+      } catch (e) {
+        expect((e as Error).message, 'timeout error message').to.be.equals('Custom message, result: failed');
+        expect((e as Error).name, 'timeout error name').to.be.equals('timeout');
+        return;
+      }
+      expect.fail('Expected a timeout, got ' + val);
+    });
+
+    it('still timeouts on error in custom message function', async () => {
+      let val: string | undefined;
+      try {
+        val = await waitFor(
+          () => 'failed',
+          () => false,
+          {
+            pauseMs: 10,
+            timeoutMs: 100,
+            timeoutMessage: result => {
+              throw new Error('timeoutMessage error');
+            }
+          }
+        );
+      } catch (e) {
+        expect((e as Error).message, 'timeout error message').to.be.equals(
+          'timeout (error in timeoutMessage function: Error: timeoutMessage error)'
+        );
         expect((e as Error).name, 'timeout error name').to.be.equals('timeout');
         return;
       }
@@ -84,6 +143,30 @@ describe('testutils', () => {
         );
       } catch (e) {
         expect((e as Error).message, 'timeout error message').to.be.equals('timeout');
+        expect((e as Error).name, 'timeout error name').to.be.equals('timeout');
+        return;
+      }
+      expect.fail('Expected a timeout, got ' + val);
+    });
+
+    it('timeouts on error with custom message function', async () => {
+      let val: string | undefined;
+      try {
+        val = await waitFor(
+          () => {
+            throw new Error('failed');
+          },
+          () => true,
+          {
+            pauseMs: 10,
+            timeoutMs: 100,
+            timeoutMessage: result => `Custom message, result: ${result}`,
+            rejectOnError: false // don't reject on error, so this should timeout
+          }
+        );
+      } catch (e) {
+        // on an error, the value in the timeoutMessage should be undefined
+        expect((e as Error).message, 'timeout error message').to.be.equals('Custom message, result: undefined');
         expect((e as Error).name, 'timeout error name').to.be.equals('timeout');
         return;
       }

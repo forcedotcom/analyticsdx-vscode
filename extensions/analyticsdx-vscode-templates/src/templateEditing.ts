@@ -45,7 +45,7 @@ import { matchJsonNodesAtPattern } from './util/jsoncUtils';
 import { Logger, PrefixingOutputChannel } from './util/logger';
 import { findTemplateInfoFileFor } from './util/templateUtils';
 import { isValidRelpath } from './util/utils';
-import { isSameUri, isUriUnder, uriBasename, uriDirname } from './util/vscodeUtils';
+import { clearDiagnosticsUnder, isUriAtOrUnder, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
 
 /** Wraps the setup for configuring editing for the files in a template directory. */
 class TemplateDirEditing extends Disposable {
@@ -195,7 +195,7 @@ class TemplateDirEditing extends Disposable {
 
   /** Tell if our directory is the same as or underneath the specified directory. */
   public isAtOrUnder(uri: vscode.Uri): boolean {
-    return isSameUri(uri, this.dir) || isUriUnder(uri, this.dir);
+    return isUriAtOrUnder(uri, this.dir);
   }
 }
 
@@ -207,6 +207,7 @@ interface ISchemaAssociations {
 export class TemplateEditingManager extends Disposable {
   private templateDirs = new Map<string, TemplateDirEditing>();
   private languageClient: TemplateJsonLanguageClient | undefined;
+  public readonly templateInfoSchemaPath: vscode.Uri;
   public readonly folderSchemaPath: vscode.Uri;
   public readonly uiSchemaPath: vscode.Uri;
   public readonly variablesSchemaPath: vscode.Uri;
@@ -216,6 +217,7 @@ export class TemplateEditingManager extends Disposable {
 
   constructor(context: vscode.ExtensionContext, output?: vscode.OutputChannel) {
     super();
+    this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/template-info-schema.json'));
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
     this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/ui-schema.json'));
     this.variablesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/variables-schema.json'));
@@ -292,14 +294,8 @@ export class TemplateEditingManager extends Disposable {
     if (templateInfoFile) {
       const dir = uriDirname(templateInfoFile);
       this.startEditing(dir);
-      // set documentLangId here on non template-info .json files so it uses our
-      // language server
-      const filename = uriBasename(doc.uri);
-      if (
-        filename !== 'template-info.json' &&
-        filename.endsWith('.json') &&
-        (doc.languageId === 'json' || doc.languageId === 'jsonc')
-      ) {
+      // set documentLangId here on json files so it uses our language server
+      if (doc.languageId === 'json' || doc.languageId === 'jsonc') {
         vscode.languages.setTextDocumentLanguage(doc, TEMPLATE_JSON_LANG_ID);
       }
     }
@@ -307,9 +303,13 @@ export class TemplateEditingManager extends Disposable {
 
   private deleted(uri: vscode.Uri) {
     const basename = uriBasename(uri);
+    const diagnosticCollection = this.languageClient?.diagnosticCollection;
     if (basename === 'template-info.json') {
       const dir = uriDirname(uri);
       this.stopEditing(dir);
+      if (diagnosticCollection) {
+        clearDiagnosticsUnder(diagnosticCollection, dir);
+      }
     } else {
       // if the uri is a folder and it's a template folder, or the ancestor of any started template folders
       // Note: we can't stat the uri since it doesn't exist anymore, so we need to just use the uri path to see if any
@@ -317,6 +317,9 @@ export class TemplateEditingManager extends Disposable {
       this.templateDirs.forEach(editing => {
         if (editing.isAtOrUnder(uri)) {
           this.stopEditing(editing.key);
+          if (diagnosticCollection) {
+            clearDiagnosticsUnder(diagnosticCollection, editing.dir);
+          }
         }
       });
     }
@@ -356,6 +359,7 @@ export class TemplateEditingManager extends Disposable {
         // TODO: get other associated files from the template-info.json
       }
     });
+    associations['**/template-info.json'] = [this.templateInfoSchemaPath.toString()];
     return associations;
   }
 
@@ -452,6 +456,10 @@ class TemplateJsonLanguageClient extends Disposable {
     this.clientReady = false;
   }
 
+  public get diagnosticCollection(): vscode.DiagnosticCollection | undefined {
+    return this.languageClient?.diagnostics;
+  }
+
   public start(): this {
     // find the json extension included in the vscode installation
     const jsonExt = vscode.extensions.getExtension('vscode.json-language-features');
@@ -496,6 +504,7 @@ class TemplateJsonLanguageClient extends Disposable {
           return CloseAction.DoNotRestart;
         }
       },
+      diagnosticCollectionName: TEMPLATE_JSON_LANG_ID,
       initializationOptions: {
         // language server only loads file-URI. Fetching schemas with other protocols ('http'...) are made on the client.
         handledSchemaProtocols: ['file'],
@@ -534,6 +543,18 @@ class TemplateJsonLanguageClient extends Disposable {
             };
             this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, { settings });
           }
+        },
+        handleDiagnostics: (uri, diagnostics, next) => {
+          // only add the diagnostic if the file still exists (to handle the case of the file's folder was deleted
+          // while the lang-server was computing the diagnostics, so we don't have dangling diagnostics).
+          // we have to do it here, since we can't control the creation of the diagnosticCollection (only the name).
+          uriStat(uri)
+            .then(stat => {
+              if (stat) {
+                next(uri, diagnostics);
+              }
+            })
+            .catch(console.error);
         }
       }
     };
