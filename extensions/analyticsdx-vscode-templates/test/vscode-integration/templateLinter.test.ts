@@ -20,6 +20,9 @@ import {
   writeTextToFile
 } from './vscodeTestUtils';
 
+function sortDiagnostics(d1: vscode.Diagnostic, d2: vscode.Diagnostic) {
+  return d1.range.start.line - d2.range.start.line;
+}
 // tslint:disable:no-unused-expression
 describe('TemplateLinterManager', () => {
   let tmpdir: vscode.Uri | undefined;
@@ -361,7 +364,7 @@ describe('TemplateLinterManager', () => {
     // create the related file(s)
     const editors = await Promise.all(
       files.map(async file => {
-        const uri = tmpdir!.with({ path: path.join(tmpdir!.path, file.path) });
+        const uri = uriRelPath(tmpdir!, file.path);
         await writeEmptyJsonFile(uri);
         const [, editor] = await openFile(uri);
         await setDocumentText(editor, file.initialJson);
@@ -420,7 +423,7 @@ describe('TemplateLinterManager', () => {
       );
       // we should get a warning on each var in ui.json
       let diagnostics = (await waitForDiagnostics(uiEditor.document.uri, undefined, 'Initial variable warnings')).sort(
-        (d1, d2) => d1.range.start.line - d2.range.start.line
+        sortDiagnostics
       );
       if (diagnostics.length !== 2) {
         expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
@@ -444,7 +447,7 @@ describe('TemplateLinterManager', () => {
           d => d && d.length !== diagnostics.length,
           'Variable warnings after editing ui.json'
         )
-      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      ).sort(sortDiagnostics);
       // we should still have the warning about var2
       if (diagnostics.length !== 1) {
         expect.fail('Expected 1 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
@@ -473,7 +476,7 @@ describe('TemplateLinterManager', () => {
       }
     });
 
-    it('warnings on missing and empty variables on non-vfPage page', async () => {
+    it('shows warnings on missing and empty variables on non-vfPage page', async () => {
       // create a ui.json with missing variables on non-vfPage pages
       const uiJson: {
         pages: Array<{ title: string; variables?: any[]; vfPage?: { name: string; namespace: string } }>;
@@ -520,7 +523,7 @@ describe('TemplateLinterManager', () => {
       // we should get warnings on the 2 pages
       const diagnostics = (
         await waitForDiagnostics(uiEditor.document.uri, d => d && d.length >= 2, 'Initial ui.json variable warnings')
-      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      ).sort(sortDiagnostics);
       if (diagnostics.length !== 2) {
         expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
@@ -614,7 +617,7 @@ describe('TemplateLinterManager', () => {
       });
       const diagnostics = (
         await waitForDiagnostics(variablesEditor.document.uri, undefined, 'Initial invalid regex excludes warning')
-      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      ).sort(sortDiagnostics);
       if (diagnostics.length !== 6) {
         expect.fail('Expected 6 diagnostic, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
@@ -664,4 +667,84 @@ describe('TemplateLinterManager', () => {
       );
     });
   }); // describe('lints variables.json')
+
+  describe('lints rules.json', () => {
+    async function createTemplateWithRules(
+      initialJson: string | object,
+      rulesType: 'appToTemplate' | 'templateToApp' | 'ruleDefinition' = 'templateToApp'
+    ): Promise<vscode.TextEditor> {
+      // TODO: regular rules structure
+      const [editor] = await createTemplateWithRelatedFiles({
+        field: 'ruleDefinition',
+        path: 'rules.json',
+        initialJson
+      });
+      return editor;
+    }
+
+    it('shows problems on duplicate constants', async () => {
+      const rulesJson = {
+        constants: [
+          {
+            name: 'const1',
+            value: null
+          },
+          {
+            name: 'const2',
+            value: null
+          },
+          {
+            name: 'const1',
+            value: null
+          }
+        ]
+      };
+      const rulesEditor = await createTemplateWithRules(rulesJson);
+      const diagnostics = (
+        await waitForDiagnostics(
+          rulesEditor.document.uri,
+          d => d && d.length >= 2,
+          'Initial duplicate constants warnings'
+        )
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make we get the expected warnings
+      let diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate constant 'const1'");
+      expect(diagnostic.code, 'diagnostic[0].code').to.equal('constants[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(
+        diagnostic.relatedInformation?.[0].location.range.start.line,
+        'diagnostic[0].relatedInformation.line'
+      ).to.be.greaterThan(diagnostic.range.start.line, 'diagnostic[0].line');
+
+      diagnostic = diagnostics[1];
+      expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate constant 'const1'");
+      expect(diagnostic.code, 'diagnostic[1].code').to.equal('constants[2].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[1].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(
+        diagnostic.relatedInformation?.[0].location.range.start.line,
+        'diagnostic[1].relatedInformation.line'
+      ).to.be.lessThan(diagnostic.range.start.line, 'diagnostic[1].line');
+
+      // fix the duplicate constant
+      rulesJson.constants[2].name = 'const3';
+      await setDocumentText(rulesEditor, rulesJson);
+      await waitForDiagnostics(
+        rulesEditor.document.uri,
+        d => d && d.length === 0,
+        'No warnings after fixing duplicate constant'
+      );
+    });
+  }); // describe('lints rules.json')
 });
