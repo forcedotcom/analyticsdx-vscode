@@ -26,7 +26,7 @@ jobs:
       - name: Tests
         # start X virtual frame buffer so tests can do ui
         run: |
-          sudo /usr/bin/Xvfb :10 -ac -audit 4 2>&1 &
+          sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
           DISPLAY=:10 npm test
 
   # include a windows build job in PRs since mostly folks are developing on linux or mac, so

@@ -59,5 +59,9 @@
       "fileMatch": ["/**/template-info.json"],
       "url": "/extensions/analyticsdx-vscode-templates/schemas/template-info-schema.json"
     }
-  ]
+  ],
+  // let prettier format yaml files
+  "yaml.format.enable": false,
+  "yaml.format.singleQuote": true,
+  "yaml.format.printWidth": 120
 }
