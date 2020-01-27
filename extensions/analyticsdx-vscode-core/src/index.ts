@@ -17,6 +17,19 @@ import {
   updateTemplate
 } from './commands';
 
+function sendTelemetryCommand(
+  eventName: string,
+  extensionName: string,
+  properties?: {
+    [key: string]: string;
+  }
+) {
+  if (eventName && extensionName) {
+    // Note: we're intentionally not waiting for this to finish
+    telemetryService.sendTelemetryEvent(eventName, extensionName, properties).catch(console.error);
+  }
+}
+
 export function activate(context: ExtensionContext) {
   const extensionHRStart = process.hrtime();
 
@@ -34,7 +47,10 @@ export function activate(context: ExtensionContext) {
     commands.registerCommand('analyticsdx.studio.open.app', openAppInStudio),
     commands.registerCommand('analyticsdx.template.create', createTemplate),
     commands.registerCommand('analyticsdx.template.delete', deleteTemplate),
-    commands.registerCommand('analyticsdx.template.update', updateTemplate)
+    commands.registerCommand('analyticsdx.template.update', updateTemplate),
+    // Note: analyticsdx.telemetry.send is intentionally not listed in package.json; it's only for extension
+    // code to call
+    commands.registerCommand('analyticsdx.telemetry.send', sendTelemetryCommand)
   );
 
   console.log('Analytics DX CLI Extension Activated');

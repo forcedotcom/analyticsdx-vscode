@@ -58,6 +58,20 @@ export class TelemetryService {
     this.reporter = reporter;
   }
 
+  /** Send a custom telemetry event */
+  public async sendTelemetryEvent(
+    eventName: string,
+    extensionName: string,
+    properties: {
+      [key: string]: string;
+    } = {}
+  ) {
+    await this.setupVSCodeTelemetry();
+    if (this.reporter !== undefined && this.isTelemetryEnabled) {
+      this.reporter.sendTelemetryEvent(eventName, Object.assign(properties || {}, { extensionName }));
+    }
+  }
+
   public async sendExtensionActivationEvent(hrstart: [number, number]): Promise<void> {
     await this.setupVSCodeTelemetry();
     if (this.reporter !== undefined && this.isTelemetryEnabled) {

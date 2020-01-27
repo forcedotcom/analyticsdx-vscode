@@ -71,6 +71,7 @@
     "onCommand:analyticsdx.app.delete",
     "onCommand:analyticsdx.studio.open",
     "onCommand:analyticsdx.studio.open.app",
+    "onCommand:analyticsdx.telemetry.send",
     "onCommand:analyticsdx.template.create",
     "onCommand:analyticsdx.template.delete",
     "onCommand:analyticsdx.template.udpate"
