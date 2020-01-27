@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
-import { uriStat } from '../../src/util/vscodeUtils';
+import { uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import {
   closeAllEditors,
   createTempTemplate,
@@ -16,7 +16,8 @@ import {
   openTemplateInfoAndWaitForDiagnostics,
   setDocumentText,
   waitForDiagnostics,
-  writeEmptyJsonFile
+  writeEmptyJsonFile,
+  writeTextToFile
 } from './vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
@@ -228,18 +229,16 @@ describe('TemplateLinterManager', () => {
           2
         )
       );
-      const origNumDiagnostics = (
-        await waitForDiagnostics(
-          templateUri,
-          diagnostics =>
-            diagnostics &&
-            diagnostics.length >= 1 &&
-            diagnostics.some(
-              d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
-            ),
-          'Inital diagnostic on bad variableDefinition file'
-        )
-      ).length;
+      await waitForDiagnostics(
+        templateUri,
+        diagnostics =>
+          diagnostics &&
+          diagnostics.length >= 1 &&
+          diagnostics.some(
+            d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
+          ),
+        'Inital diagnostic on bad variableDefinition file'
+      );
 
       // create variables.json
       const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
@@ -249,7 +248,7 @@ describe('TemplateLinterManager', () => {
         templateUri,
         diagnostics =>
           diagnostics &&
-          diagnostics.length < origNumDiagnostics &&
+          diagnostics.length > 0 &&
           !diagnostics.some(
             d => d.code === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
           ),
@@ -270,6 +269,65 @@ describe('TemplateLinterManager', () => {
       );
     });
   }); // describe('lints template-info.json')
+
+  // if someone opens a related file (w/o opening template-info.json), TemplateLinter will possibly add diagnostics
+  // for template-info.json (or other related files); make sure those are removed appropriately, esp. when the
+  // template folder is deleted.
+  // Note: this is technically testing TemplateLinterManger (for diagnostics from the linter) and TemplateEditorManager
+  // (for diagnostics from the json-schemas), so if these start failing, see which diagnostics are left to figure out
+  // the right place to fix.
+  describe('cleans up all diagnostics', () => {
+    let templateInfo: vscode.Uri | undefined;
+    let uiJson: vscode.Uri | undefined;
+    beforeEach(async () => {
+      // create a template with errors in a related file and in template-info.json w/o opening any documents (yet)
+      [tmpdir] = await createTempTemplate(false);
+      uiJson = uriRelPath(tmpdir, 'ui.json');
+      await writeTextToFile(uiJson, {
+        error: 'This should trigger a diagnostic from the json-schema',
+        pages: [
+          {
+            variables: [
+              {
+                // and this should trigger a diagnostic from the linter
+                name: 'nosuchvar'
+              }
+            ]
+          }
+        ]
+      });
+      templateInfo = uriRelPath(tmpdir, 'template-info.json');
+      await writeTextToFile(templateInfo, {
+        // this should give diagnostics from both the json schema and the linter
+        templateType: 'app',
+        uiDefinition: 'ui.json'
+      });
+    });
+
+    it('when folder is deleted', async () => {
+      await openFile(uiJson!, true);
+      await waitForDiagnostics(uiJson!, d => d && d.length >= 2, 'initial diagnostics on ui.json');
+      // make sure there's diagnostics on template-info.json, too
+      await waitForDiagnostics(templateInfo!, d => d && d.length >= 2, 'initial diagnostics on template-info.json');
+
+      // now, delete the folder
+      await vscode.workspace.fs.delete(tmpdir!, { recursive: true, useTrash: false });
+      await waitForDiagnostics(uiJson!, d => d?.length === 0, '0 diagnostics on ui.json after delete');
+      await waitForDiagnostics(templateInfo!, d => d?.length === 0, '0 diagnostics on template-info.json after delete');
+    });
+
+    it('when template-info.json is deleted', async () => {
+      await openFile(uiJson!, true);
+      await waitForDiagnostics(uiJson!, d => d && d.length >= 2, 'initial diagnostics on ui.json');
+      // make sure there's diagnostics on template-info.json, too
+      await waitForDiagnostics(templateInfo!, d => d && d.length >= 2, 'initial diagnostics on template-info.json');
+
+      // now, delete template-info.json
+      await vscode.workspace.fs.delete(templateInfo!, { recursive: true, useTrash: false });
+      await waitForDiagnostics(uiJson!, d => d?.length === 0, '0 diagnostics on ui.json after delete');
+      await waitForDiagnostics(templateInfo!, d => d?.length === 0, '0 diagnostics on template-info.json after delete');
+    });
+  });
 
   type PathFieldAndJson = {
     field: string;
@@ -297,7 +355,7 @@ describe('TemplateLinterManager', () => {
   async function createTemplateWithRelatedFiles(...files: PathFieldAndJson[]): Promise<vscode.TextEditor[]> {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+    const templateUri = uriRelPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     const templateJson: { [key: string]: any } = {};
     // create the related file(s)

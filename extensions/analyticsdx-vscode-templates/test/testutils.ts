@@ -35,15 +35,16 @@ export function waitFor<T>(
     pauseMs?: number;
     timeoutMs?: number;
     rejectOnError?: boolean;
-    timeoutMessage?: string;
+    timeoutMessage?: string | ((lastval: T | undefined) => string);
   } = {}
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const start = new Date().getTime();
     // call the func and check against predicate, will schedule itself if it doesn't resolve/reject
     function check() {
+      let val: T | undefined;
       try {
-        const val = func();
+        val = func();
         if (predicate(val)) {
           resolve(val);
           return;
@@ -56,7 +57,18 @@ export function waitFor<T>(
       }
       // check for timeout
       if (new Date().getTime() - start >= timeoutMs) {
-        const e = new Error(timeoutMessage || 'timeout');
+        const msg =
+          typeof timeoutMessage === 'string'
+            ? timeoutMessage
+            : (() => {
+                // still do the timeout reject(), even if timeoutMessage() fails
+                try {
+                  return timeoutMessage(val);
+                } catch (e) {
+                  return `timeout (error in timeoutMessage function: ${e})`;
+                }
+              })();
+        const e = new Error(msg ?? 'timeout');
         e.name = 'timeout';
         reject(e);
         return;

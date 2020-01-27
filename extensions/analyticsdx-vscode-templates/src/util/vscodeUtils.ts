@@ -84,6 +84,15 @@ export function isSameUri(uri1: vscode.Uri, uri2: vscode.Uri): boolean {
   return uri1.scheme === uri2.scheme && uri1.authority === uri2.authority && isSameUriPath(uri1.path, uri2.path);
 }
 
+export function isUriAtOrUnder(dir: vscode.Uri, file: vscode.Uri): boolean {
+  return isSameUri(dir, file) || isUriUnder(dir, file);
+}
+
+/** Add relative path(s) to a base uri. */
+export function uriRelPath(base: vscode.Uri, ...relpath: string[]): vscode.Uri {
+  return base.with({ path: path.join(base.path, ...relpath) });
+}
+
 /** Get the the basename of the path of a uri. */
 export function uriBasename(uri: vscode.Uri): string {
   return path.basename(uri.path);
@@ -167,4 +176,66 @@ function _filterReaddirEntry(
   filter: ReaddirFilter
 ): boolean {
   return filter([reldir ? path.join(reldir, name) : name, fileType]);
+}
+
+export function clearDiagnosticsUnder(diagnostics: vscode.DiagnosticCollection, dir: vscode.Uri) {
+  diagnostics.forEach(file => {
+    if (isUriUnder(dir, file)) {
+      diagnostics.delete(file);
+    }
+  });
+}
+
+/** A DiagnosticCollection that will only set diagnostics if the uri exists, to avoid
+ * adding problems on files that got deleted while linting is running
+ */
+export class UriExistsDiagnosticCollection implements vscode.DiagnosticCollection {
+  constructor(private readonly diagnostics: vscode.DiagnosticCollection) {}
+
+  public get name() {
+    return this.diagnostics.name;
+  }
+
+  public set(uri: vscode.Uri, diagnostics: readonly vscode.Diagnostic[] | undefined): void;
+  public set(entries: ReadonlyArray<[vscode.Uri, readonly vscode.Diagnostic[] | undefined]>): void;
+  public set(uri: any, diagnostics?: any) {
+    uriStat(uri)
+      .then(stat => {
+        if (stat) {
+          this.diagnostics.set(uri, diagnostics);
+        }
+      })
+      .catch(console.error);
+  }
+
+  public delete(uri: vscode.Uri): void {
+    this.diagnostics.delete(uri);
+  }
+
+  public clear(): void {
+    this.diagnostics.clear();
+  }
+
+  public forEach(
+    callback: (
+      uri: vscode.Uri,
+      diagnostics: readonly vscode.Diagnostic[],
+      collection: vscode.DiagnosticCollection
+    ) => void,
+    thisArg?: any
+  ): void {
+    this.diagnostics.forEach(callback, thisArg);
+  }
+
+  public get(uri: vscode.Uri): readonly vscode.Diagnostic[] | undefined {
+    return this.diagnostics.get(uri);
+  }
+
+  public has(uri: vscode.Uri): boolean {
+    return this.diagnostics.has(uri);
+  }
+
+  public dispose(): void {
+    return this.diagnostics.dispose();
+  }
 }
