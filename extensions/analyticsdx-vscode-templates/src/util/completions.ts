@@ -6,7 +6,9 @@
  */
 import { getLocation, Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { uriDirname, uriReaddir } from './vscodeUtils';
+import { EXTENSION_NAME } from '../constants';
+import { jsonPathToString } from './jsoncUtils';
+import { uriBasename, uriDirname, uriReaddir } from './vscodeUtils';
 
 export function newCompletionItem(
   text: string,
@@ -28,7 +30,7 @@ export function newFilepathCompletionItem(
   range?: vscode.Range,
   insertText?: string | vscode.SnippetString
 ): vscode.CompletionItem {
-  // since we might be wrapping the path in "'s (so it inserts correctly into the json-editor's word rnage),
+  // since we might be wrapping the path in "'s (so it inserts correctly into the json-editor's word range),
   // we have to set the item.details to the path or the editor won't show the file-type specific icon correctly;
   // the editor seems to try the label, which could be '"foo.json"' (which it doesn't like), and then will next
   // look at the details
@@ -107,7 +109,25 @@ export function newRelativeFilepathDelegate(delegate: {
           // only include files that match the filter
           (fileType & vscode.FileType.File) !== 0 && (!delegate.filter || delegate.filter(path, document, location))
       );
-      return entries.map(([path]) => newFilepathCompletionItem(path, range));
+      return entries.map(([path]) => {
+        const item = newFilepathCompletionItem(path, range);
+        // send telemetry when someone uses a relpath code completion item
+        item.command = {
+          command: 'analyticsdx.telemetry.send',
+          title: 'Sending telemetry',
+          arguments: [
+            'codeCompletionUsed',
+            EXTENSION_NAME,
+            {
+              label: item.label,
+              type: 'relpath',
+              jsonPath: jsonPathToString(location.path),
+              fileName: uriBasename(document.uri)
+            }
+          ]
+        };
+        return item;
+      });
     }
   };
 }

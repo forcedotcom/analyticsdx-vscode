@@ -6,8 +6,9 @@
  */
 import { findNodeAtOffset, getNodePath, JSONPath, Node as JsonNode, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
+import { EXTENSION_NAME } from '../constants';
 import { findPropertyNodeFor, jsonPathToString, pathPartsAreEquals } from './jsoncUtils';
-import { rangeForNode } from './vscodeUtils';
+import { rangeForNode, uriBasename } from './vscodeUtils';
 
 // TODO: refactor this into a master (which does the parse) and delegates,
 // to avoid parsing the json multiple times and to register only one action provider
@@ -34,9 +35,24 @@ export class RemoveJsonPropertyCodeActionProvider implements vscode.CodeActionPr
       if ((!token || !token.isCancellationRequested) && node && this.isSupportedAttributeNode(node, path)) {
         const propNode = findPropertyNodeFor(node, path);
         if (propNode) {
-          const fix = new vscode.CodeAction('Remove ' + jsonPathToString(path), vscode.CodeActionKind.QuickFix);
+          const jsonPathStr = jsonPathToString(path);
+          const fix = new vscode.CodeAction(`Remove ${jsonPathStr}`, vscode.CodeActionKind.QuickFix);
           fix.edit = new vscode.WorkspaceEdit();
           fix.edit.delete(document.uri, rangeForNode(propNode, document, true));
+          // send telemetry when someone uses a quick fix
+          fix.command = {
+            command: 'analyticsdx.telemetry.send',
+            title: 'Sending telemetry',
+            arguments: [
+              'quickFixUsed',
+              EXTENSION_NAME,
+              {
+                title: fix.title,
+                jsonPath: jsonPathStr,
+                fileName: uriBasename(document.uri)
+              }
+            ]
+          };
           return [fix];
         }
       }
