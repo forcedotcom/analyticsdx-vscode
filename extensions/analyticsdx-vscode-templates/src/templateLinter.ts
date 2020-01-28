@@ -151,6 +151,52 @@ export class TemplateLinter {
     return diagnostic;
   }
 
+  /** Finds if non-unique values are found amongst the string values for a jsonpath.
+   * @param doc the document
+   * @param tree the json structure of the document
+   * @param jsonpath the path to the value nodes in the json
+   * @param message the message for a diagnostic for each duplicate value node, can be a string or function
+   * @param relatedMessage if specified, relatedInformation for each other found value will be added to the diagnostics,
+   *        with this message
+   */
+  private lintUniqueValues(
+    doc: vscode.TextDocument,
+    tree: JsonNode,
+    jsonpath: JSONPath,
+    message: string | ((value: string) => string),
+    relatedMessage?: string | ((value: string) => string)
+  ) {
+    // value -> list of nodes w/ that value
+    const values = matchJsonNodesAtPattern(tree, jsonpath).reduce((values, node) => {
+      if (node.type === 'string' && typeof node.value === 'string' && node.value) {
+        const nodes = values.get(node.value) || [];
+        nodes.push(node);
+        values.set(node.value, nodes);
+      }
+      return values;
+    }, new Map<string, JsonNode[]>());
+
+    values.forEach((nodes, value) => {
+      if (nodes.length > 1) {
+        nodes.forEach(node => {
+          const diagnostic = this.addDiagnostic(doc, typeof message === 'string' ? message : message(value), node);
+          // create related information for the other locations
+          if (relatedMessage) {
+            diagnostic.relatedInformation = nodes
+              .filter(other => other !== node)
+              .map(
+                other =>
+                  new vscode.DiagnosticRelatedInformation(
+                    new vscode.Location(doc.uri, rangeForNode(other, doc)),
+                    typeof relatedMessage === 'string' ? relatedMessage : relatedMessage(value)
+                  )
+              );
+          }
+        });
+      }
+    });
+  }
+
   // TODO: figure out how to do incremental linting (or if we even should)
   // Currently, this and #opened() always starts with the template-info.json at-or-above the modified file, and then
   // does a full lint of the whole template folder, which ends up parsing the template-info and every related file to
@@ -492,38 +538,16 @@ export class TemplateLinter {
   }
 
   private lintRulesFile(doc: vscode.TextDocument, rules: JsonNode) {
-    this.lintRulesFileUniqueConstantNames(doc, rules);
-  }
-
-  private lintRulesFileUniqueConstantNames(doc: vscode.TextDocument, rules: JsonNode) {
-    // constant name -> list of fields w/ that name
-    const names = matchJsonNodesAtPattern(rules, ['constants', '*', 'name']).reduce((names, node) => {
-      if (node.type === 'string' && typeof node.value === 'string' && node.value) {
-        const nodes = names.get(node.value) || [];
-        nodes.push(node);
-        names.set(node.value, nodes);
-      }
-      return names;
-    }, new Map<string, JsonNode[]>());
-
-    names.forEach((nodes, name) => {
-      // make a warning if the constant name is used 2+ times
-      if (nodes.length > 1) {
-        nodes.forEach(node => {
-          const diagnostic = this.addDiagnostic(doc, `Duplicate constant '${name}'`, node);
-          // create related information for the other locations
-          diagnostic.relatedInformation = nodes
-            .filter(other => other !== node)
-            .map(
-              other =>
-                new vscode.DiagnosticRelatedInformation(
-                  new vscode.Location(doc.uri, rangeForNode(other, doc)),
-                  'Other usage'
-                )
-            );
-        });
-      }
-    });
+    // make sure the constants' names are unique
+    this.lintUniqueValues(
+      doc,
+      rules,
+      ['constants', '*', 'name'],
+      name => `Duplicate constant '${name}'`,
+      'Other usage'
+    );
+    // make sure the rules' names are unique
+    this.lintUniqueValues(doc, rules, ['rules', '*', 'name'], name => `Duplicate rule name '${name}'`, 'Other usage');
   }
 }
 
