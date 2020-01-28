@@ -158,20 +158,26 @@ export class TemplateLinter {
    * @param message the message for a diagnostic for each duplicate value node, can be a string or function
    * @param relatedMessage if specified, relatedInformation for each other found value will be added to the diagnostics,
    *        with this message
+   * @param computeValue if specified, a function to compute the value from the matched node; can return undefined to
+   *        ignore the node, defaults to the string value of the node
    */
   private lintUniqueValues(
     doc: vscode.TextDocument,
-    tree: JsonNode,
+    tree: JsonNode | JsonNode[],
     jsonpath: JSONPath,
     message: string | ((value: string) => string),
-    relatedMessage?: string | ((value: string) => string)
+    relatedMessage?: string | ((value: string) => string),
+    computeValue: (node: JsonNode) => string | undefined = node => {
+      return node.type === 'string' && typeof node.value === 'string' ? node.value : undefined;
+    }
   ) {
     // value -> list of nodes w/ that value
     const values = matchJsonNodesAtPattern(tree, jsonpath).reduce((values, node) => {
-      if (node.type === 'string' && typeof node.value === 'string' && node.value) {
-        const nodes = values.get(node.value) || [];
+      const value = computeValue(node);
+      if (value) {
+        const nodes = values.get(value) || [];
         nodes.push(node);
-        values.set(node.value, nodes);
+        values.set(value, nodes);
       }
       return values;
     }, new Map<string, JsonNode[]>());
@@ -548,6 +554,34 @@ export class TemplateLinter {
     );
     // make sure the rules' names are unique
     this.lintUniqueValues(doc, rules, ['rules', '*', 'name'], name => `Duplicate rule name '${name}'`, 'Other usage');
+    // make sure macro namespace:name is unique
+    this.lintUniqueValues(
+      doc,
+      rules,
+      ['macros', '*', 'definitions', '*', 'name'],
+      name => `Duplicate macro '${name}'`,
+      'Other usage',
+      // compute namespace:name from the name value json node
+      name => {
+        // REVIEWME: should we skip name's or namespace's that don't match the schema regex?
+        // The server runtime doesn't, although the rules won't validate in the server if the name/ns don't match
+        // the regex so the macros wouldn't even be there to run.
+        // Let's do this for now, so you get both the dup warning and the regex warnings
+        if (name.type === 'string' && typeof name.value === 'string' && name.value) {
+          // find the ancestor macro, via the parent chain:
+          // "name": <name> -> the definition {} -> the definitions [] ->
+          // "definitions": [] -> the macro {}
+          const macro = name.parent?.parent?.parent?.parent?.parent;
+          if (macro) {
+            const ns = findNodeAtLocation(macro, ['namespace']);
+            if (ns && ns.type === 'string' && typeof ns.value === 'string' && ns.value) {
+              return ns.value + ':' + name.value;
+            }
+          }
+        }
+        return undefined;
+      }
+    );
   }
 }
 

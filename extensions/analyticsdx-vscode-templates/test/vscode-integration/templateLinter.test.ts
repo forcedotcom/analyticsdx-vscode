@@ -843,5 +843,84 @@ describe('TemplateLinterManager', () => {
         'No warnings after fixing duplicate rule name'
       );
     });
+
+    it('shows problems on duplicate macros', async () => {
+      const rulesJson = {
+        macros: [
+          {
+            namespace: 'ns1',
+            definitions: [
+              {
+                name: 'macro1',
+                returns: ''
+              },
+              {
+                name: 'macro1',
+                returns: ''
+              }
+            ]
+          },
+          {
+            namespace: 'ns1',
+            definitions: [
+              {
+                name: 'macro1',
+                returns: ''
+              }
+            ]
+          }
+        ]
+      };
+      const rulesEditor = await createTemplateWithRules(rulesJson, 'appToTemplate');
+      let diagnostics = (
+        await waitForDiagnostics(rulesEditor.document.uri, d => d && d.length >= 3, 'Initial duplicate macros warnings')
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 3) {
+        expect.fail('Expected 3 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      diagnostics.forEach((diagnostic, i) => {
+        expect(diagnostic, `diagnostic[${i}]`).to.not.be.undefined;
+        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal("Duplicate macro 'ns1:macro1'");
+        // the last diagnostic should be on the 2nd macro's definitions
+        expect(diagnostic.code, `diagnostic[${i}].code`).to.equal(
+          i === 2 ? 'macros[1].definitions[0].name' : `macros[0].definitions[${i}].name`
+        );
+        expect(diagnostic.relatedInformation?.length, `diagnostic[${i}].relatedInformation.length`).to.equal(2);
+        diagnostic.relatedInformation!.forEach((relatedInfo, i) => {
+          expect(relatedInfo?.message, `diagnostic[${i}].relatedInformation.message`).to.equal('Other usage');
+        });
+      });
+
+      // first, fix the duplicate namespace
+      rulesJson.macros[1].namespace = 'ns2';
+      await setDocumentText(rulesEditor, rulesJson);
+      diagnostics = (
+        await waitForDiagnostics(
+          rulesEditor.document.uri,
+          d => d && d.length === 2,
+          '2 warnings after fixing duplicate namespace'
+        )
+      ).sort(sortDiagnostics);
+      // make sure we get the expected warnings
+      diagnostics.forEach((diagnostic, i) => {
+        expect(diagnostic, `diagnostic[${i}]`).to.not.be.undefined;
+        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal("Duplicate macro 'ns1:macro1'");
+        expect(diagnostic.code, `diagnostic[${i}].code`).to.equal(`macros[0].definitions[${i}].name`);
+        expect(diagnostic.relatedInformation?.length, `diagnostic[${i}].relatedInformation.length`).to.equal(1);
+        diagnostic.relatedInformation!.forEach((relatedInfo, i) => {
+          expect(relatedInfo?.message, `diagnostic[${i}].relatedInformation.message`).to.equal('Other usage');
+        });
+      });
+
+      // fix the duplicate definition name, and all the warnings should go away
+      rulesJson.macros[0].definitions[1].name = 'macro2';
+      await setDocumentText(rulesEditor, rulesJson);
+      await waitForDiagnostics(
+        rulesEditor.document.uri,
+        d => d && d.length === 0,
+        'No warnings after fixing duplicate macro name'
+      );
+    });
   }); // describe('lints rules.json')
 });
