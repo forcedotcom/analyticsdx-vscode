@@ -582,6 +582,27 @@ export class TemplateLinter {
         return undefined;
       }
     );
+
+    this.lintMacrosHaveReturnsOrActions(doc, rules);
+  }
+
+  private lintMacrosHaveReturnsOrActions(doc: vscode.TextDocument, rules: JsonNode) {
+    matchJsonNodesAtPattern(rules, ['macros', '*', 'definitions', '*']).forEach(definition => {
+      const returns = findNodeAtLocation(definition, ['returns']);
+      if (!returns) {
+        const [count, actions] = lengthJsonArrayAttributeValue(definition, 'actions');
+        // add diagnostic on either attribute missing or is an empty array; if it's a non-array, there should be
+        // schema warning about that already
+        if (!actions || count === 0) {
+          this.addDiagnostic(
+            doc,
+            "Macro should have a 'return' or at least one action",
+            actions ?? definition,
+            vscode.DiagnosticSeverity.Information
+          );
+        }
+      }
+    });
   }
 }
 

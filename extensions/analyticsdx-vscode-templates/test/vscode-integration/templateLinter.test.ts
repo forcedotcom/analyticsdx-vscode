@@ -922,5 +922,67 @@ describe('TemplateLinterManager', () => {
         'No warnings after fixing duplicate macro name'
       );
     });
+
+    it('shows infos on no-op macro definitions', async () => {
+      const rulesJson: {
+        macros: Array<{
+          namespace: string;
+          definitions: Array<{ name: string; returns?: string; actions?: Array<{ action: string; path: string }> }>;
+        }>;
+      } = {
+        macros: [
+          {
+            namespace: 'ns1',
+            definitions: [
+              {
+                name: 'macro1'
+              },
+              {
+                name: 'macro2',
+                actions: []
+              },
+              {
+                name: 'valid',
+                actions: [
+                  {
+                    action: 'delete',
+                    path: '$.name'
+                  }
+                ],
+                returns: ''
+              }
+            ]
+          }
+        ]
+      };
+      const rulesEditor = await createTemplateWithRules(rulesJson, 'appToTemplate');
+      const diagnostics = (
+        await waitForDiagnostics(rulesEditor.document.uri, d => d && d.length >= 2, 'Initial no-op macros warnings')
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      diagnostics.forEach((diagnostic, i) => {
+        expect(diagnostic, `diagnostic[${i}]`).to.not.be.undefined;
+        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal(
+          "Macro should have a 'return' or at least one action"
+        );
+        expect(diagnostic.severity, `diagnostic[${i}].severity`).to.equal(vscode.DiagnosticSeverity.Information);
+        expect(diagnostic.code, `diagnostic[${i}].code`).to.equal(
+          i === 0 ? 'macros[0].definitions[0]' : 'macros[0].definitions[1].actions'
+        );
+      });
+
+      // fix them
+      rulesJson.macros[0].definitions[0].returns = 'foo';
+      rulesJson.macros[0].definitions[1].actions!.push({ action: 'delete', path: '$.name' });
+      await setDocumentText(rulesEditor, rulesJson);
+      await waitForDiagnostics(
+        rulesEditor.document.uri,
+        d => d && d.length === 0,
+        'No warnings after fixing no-op macros'
+      );
+    });
   }); // describe('lints rules.json')
 });
