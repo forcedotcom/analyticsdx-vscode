@@ -162,39 +162,45 @@ export class TemplateLinter {
    *        ignore the node, defaults to the string value of the node
    */
   private lintUniqueValues(
-    doc: vscode.TextDocument,
-    tree: JsonNode | JsonNode[],
+    sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode | JsonNode[] }>,
     jsonpath: JSONPath,
-    message: string | ((value: string) => string),
-    relatedMessage?: string | ((value: string) => string),
-    computeValue: (node: JsonNode) => string | undefined = node => {
+    message: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
+    relatedMessage?: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
+    computeValue: (node: JsonNode, doc: vscode.TextDocument) => string | undefined = node => {
       return node.type === 'string' && typeof node.value === 'string' ? node.value : undefined;
     }
   ) {
-    // value -> list of nodes w/ that value
-    const values = matchJsonNodesAtPattern(tree, jsonpath).reduce((values, node) => {
-      const value = computeValue(node);
-      if (value) {
-        const nodes = values.get(value) || [];
-        nodes.push(node);
-        values.set(value, nodes);
-      }
-      return values;
-    }, new Map<string, JsonNode[]>());
+    // value -> list of doc+node's w/ that value
+    const values = new Map<string, Array<{ doc: vscode.TextDocument; node: JsonNode }>>();
+    sources.forEach(({ doc, nodes: tree }) => {
+      matchJsonNodesAtPattern(tree, jsonpath).reduce((values, node) => {
+        const value = computeValue(node, doc);
+        if (value) {
+          const matches = values.get(value) || [];
+          matches.push({ doc, node });
+          values.set(value, matches);
+        }
+        return values;
+      }, values);
+    });
 
-    values.forEach((nodes, value) => {
-      if (nodes.length > 1) {
-        nodes.forEach(node => {
-          const diagnostic = this.addDiagnostic(doc, typeof message === 'string' ? message : message(value), node);
+    values.forEach((matches, value) => {
+      if (matches.length > 1) {
+        matches.forEach(({ doc, node }) => {
+          const diagnostic = this.addDiagnostic(
+            doc,
+            typeof message === 'string' ? message : message(value, doc, node),
+            node
+          );
           // create related information for the other locations
           if (relatedMessage) {
-            diagnostic.relatedInformation = nodes
-              .filter(other => other !== node)
+            diagnostic.relatedInformation = matches
+              .filter(other => other.node !== node)
               .map(
                 other =>
                   new vscode.DiagnosticRelatedInformation(
-                    new vscode.Location(doc.uri, rangeForNode(other, doc)),
-                    typeof relatedMessage === 'string' ? relatedMessage : relatedMessage(value)
+                    new vscode.Location(other.doc.uri, rangeForNode(other.node, other.doc)),
+                    typeof relatedMessage === 'string' ? relatedMessage : relatedMessage(value, other.doc, other.node)
                   )
               );
           }
@@ -544,48 +550,56 @@ export class TemplateLinter {
   }
 
   private async lintRules(templateInfo: JsonNode): Promise<void> {
-    // find all the json nodes that point to rel-path rules files
-    const nodes = matchJsonNodesAtPattern(templateInfo, ['rules', '*', 'file']).filter(n => n.type === 'string');
+    // find all the json nodes that point to rel-path rules files, per ruleType
+    const templateToAppFiles: JsonNode[] = [];
+    const appToTemplateFiles: JsonNode[] = [];
+    matchJsonNodesAtPattern(templateInfo, ['rules', '*']).forEach(rule => {
+      const file = findNodeAtLocation(rule, ['file']);
+      if (file && file.type === 'string') {
+        const type = findNodeAtLocation(rule, ['type']);
+        if (type?.value === 'appToTemplate') {
+          appToTemplateFiles.push(file);
+        } else {
+          templateToAppFiles.push(file);
+        }
+      }
+    });
     const ruleDef = findNodeAtLocation(templateInfo, ['ruleDefinition']);
     if (ruleDef?.type === 'string') {
-      nodes.push(ruleDef);
+      templateToAppFiles.push(ruleDef);
     }
-    let all: Promise<void> = Promise.resolve(undefined);
-    nodes.forEach(node => {
-      const p = this.loadTemplateRelPathJson(templateInfo, node)
-        .then(({ doc, json: rules }) => {
-          if (doc && rules) {
-            return this.lintRulesFile(doc, rules);
-          } else {
-            // the rel-path lint should already warn about bad/missing file
-            return Promise.resolve();
-          }
-        })
-        .catch(er => {
-          console.error(er);
-          // don't stop the whole lint on this
-          return Promise.resolve();
-        });
-      all = all.then(v => p);
-    });
-    return all;
+
+    // now load those documents & json
+    const [templateToAppJsons, appToTemplateJsons] = await Promise.all([
+      this.loadRulesJsons(templateInfo, templateToAppFiles),
+      this.loadRulesJsons(templateInfo, appToTemplateFiles)
+    ]);
+    this.lintRulesFiles(templateToAppJsons);
+    this.lintRulesFiles(appToTemplateJsons);
   }
 
-  private lintRulesFile(doc: vscode.TextDocument, rules: JsonNode) {
+  private async loadRulesJsons(
+    templateInfo: JsonNode,
+    pathNodes: JsonNode[]
+  ): Promise<Array<{ doc: vscode.TextDocument; nodes: JsonNode }>> {
+    const all = await Promise.all(pathNodes.map(node => this.loadTemplateRelPathJson(templateInfo, node)));
+    const found = [] as Array<{ doc: vscode.TextDocument; nodes: JsonNode }>;
+    all.forEach(val => {
+      if (val?.doc && val.json) {
+        found.push({ doc: val.doc, nodes: val.json });
+      }
+    });
+    return found;
+  }
+
+  private lintRulesFiles(sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode }>) {
     // make sure the constants' names are unique
-    this.lintUniqueValues(
-      doc,
-      rules,
-      ['constants', '*', 'name'],
-      name => `Duplicate constant '${name}'`,
-      'Other usage'
-    );
+    this.lintUniqueValues(sources, ['constants', '*', 'name'], name => `Duplicate constant '${name}'`, 'Other usage');
     // make sure the rules' names are unique
-    this.lintUniqueValues(doc, rules, ['rules', '*', 'name'], name => `Duplicate rule name '${name}'`, 'Other usage');
+    this.lintUniqueValues(sources, ['rules', '*', 'name'], name => `Duplicate rule name '${name}'`, 'Other usage');
     // make sure macro namespace:name is unique
     this.lintUniqueValues(
-      doc,
-      rules,
+      sources,
       ['macros', '*', 'definitions', '*', 'name'],
       name => `Duplicate macro '${name}'`,
       'Other usage',
@@ -611,7 +625,9 @@ export class TemplateLinter {
       }
     );
 
-    this.lintMacrosHaveReturnsOrActions(doc, rules);
+    sources.map(({ doc, nodes }) => {
+      this.lintMacrosHaveReturnsOrActions(doc, nodes);
+    });
   }
 
   private lintMacrosHaveReturnsOrActions(doc: vscode.TextDocument, rules: JsonNode) {
