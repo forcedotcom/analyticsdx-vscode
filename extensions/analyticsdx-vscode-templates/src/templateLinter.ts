@@ -224,6 +224,10 @@ export class TemplateLinter {
     }
 
     if (tree) {
+      // REVIEWME: if we ever start to have perf problems linting templates, we could either:
+      // 1. separate the async and sync scans in each of these methods, and start all the async ones, do all the sync
+      //    ones, and then await the async ones
+      // 2. make the scans fully async through worker_threads or similar
       await Promise.all([
         this.lintTemplateInfo(this.templateInfoDoc, tree),
         this.lintVariables(tree),
@@ -236,14 +240,38 @@ export class TemplateLinter {
 
   private async lintTemplateInfo(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
     // TODO: consider doing this via a visit down the tree, rather than searching mulitple times
-    await Promise.all([
-      this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree),
+
+    // start these up and let them run
+    const p = Promise.all([
       // make sure each place that can have a relative path to a file has a valid one
       // TODO: warn if they put the same relPath in twice in 2 different fields?
       ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path =>
         this.lintRelFilePath(this.templateInfoDoc, tree, path)
       )
     ]);
+    // while those are going, do these synchronous ones
+    this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
+    this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
+
+    // wait for the async ones
+    await p;
+  }
+
+  private lintTemplateInfoRulesAndRulesDefinition(doc: vscode.TextDocument, tree: JsonNode) {
+    // if template-info has both 'ruleDefinition' and one or more 'rules' elements, it won't deploy to the server, so
+    // show an  error on that
+    const ruleDefinition = findNodeAtLocation(tree, ['ruleDefinition']);
+    if (ruleDefinition && ruleDefinition.type === 'string') {
+      const [count] = lengthJsonArrayAttributeValue(tree, 'rules');
+      if (count > 0) {
+        this.addDiagnostic(
+          doc,
+          "Template is combining deprecated 'ruleDefinition' and 'rules'. Please consolidate 'ruleDefinition' into 'rules'",
+          ruleDefinition.parent || ruleDefinition,
+          vscode.DiagnosticSeverity.Error
+        );
+      }
+    }
   }
 
   private lintTemplateInfoMinimumObjects(doc: vscode.TextDocument, tree: JsonNode) {
