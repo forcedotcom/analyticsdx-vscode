@@ -152,8 +152,7 @@ export class TemplateLinter {
   }
 
   /** Finds if non-unique values are found amongst the string values for a jsonpath.
-   * @param doc the document
-   * @param tree the json structure of the document
+   * @param source the doc + json nodes to search for the jsonpath in
    * @param jsonpath the path to the value nodes in the json
    * @param message the message for a diagnostic for each duplicate value node, can be a string or function
    * @param relatedMessage if specified, relatedInformation for each other found value will be added to the diagnostics,
