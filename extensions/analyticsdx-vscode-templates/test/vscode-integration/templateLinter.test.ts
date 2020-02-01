@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
-import { uriRelPath, uriStat } from '../../src/util/vscodeUtils';
+import { uriBasename, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import {
   closeAllEditors,
   createTempTemplate,
@@ -19,6 +19,10 @@ import {
   writeEmptyJsonFile,
   writeTextToFile
 } from './vscodeTestUtils';
+
+function sortDiagnostics(d1: vscode.Diagnostic, d2: vscode.Diagnostic) {
+  return d1.range.start.line - d2.range.start.line;
+}
 
 // tslint:disable:no-unused-expression
 describe('TemplateLinterManager', () => {
@@ -36,6 +40,51 @@ describe('TemplateLinterManager', () => {
     }
     tmpdir = undefined;
   });
+
+  type PathFieldAndJson = {
+    // pass in a either top-level field name, or a function that will inject the appropriate structure into the
+    // template-info json structure
+    field: string | ((json: any, path: string) => void);
+    path: string;
+    initialJson: string | object;
+  };
+  /** Create a template with a related file configured.
+   * @param files the related file(s) information
+   * @returns the related file editors
+   */
+  async function createTemplateWithRelatedFiles(...files: PathFieldAndJson[]): Promise<vscode.TextEditor[]> {
+    [tmpdir] = await createTempTemplate(false);
+    // make an empty template
+    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+    const templateJson: { [key: string]: any } = {};
+    // create the related file(s)
+    const editors = await Promise.all(
+      files.map(async file => {
+        const uri = uriRelPath(tmpdir!, file.path);
+        await writeEmptyJsonFile(uri);
+        const [, editor] = await openFile(uri);
+        await setDocumentText(editor, file.initialJson);
+        // but since it's not reference by the template-info.json, it should have no errors
+        await waitForDiagnostics(
+          editor.document.uri,
+          d => d && d.length === 0,
+          `No initial diagnostics on ${file.path}`
+        );
+        // inject the attribute into the template-info json
+        if (typeof file.field === 'string') {
+          templateJson[file.field] = file.path;
+        } else {
+          file.field(templateJson, file.path);
+        }
+        return editor;
+      })
+    );
+
+    // now, hookup the related file(s)
+    await setDocumentText(templateEditor, templateJson);
+    return editors;
+  }
 
   describe('lints template-info.json', () => {
     function failOnUnexpected(map: Map<any, vscode.Diagnostic>) {
@@ -160,6 +209,56 @@ describe('TemplateLinterManager', () => {
       ).to.be.false;
 
       // there could also be a json-schema diagnostic that eltDataflows is missing, so don't failOnUnexpected()
+    });
+
+    it('shows error on having ruleDefinition and rules', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      await writeTextToFile(uriRelPath(tmpdir, 'rules1.json'), {});
+      await writeTextToFile(uriRelPath(tmpdir, 'rules2.json'), {});
+      // make a template with ruleDefinition and rules
+      const templateInfoUri = uriRelPath(tmpdir, 'template-info.json');
+      await writeTextToFile(templateInfoUri, {
+        rules: [
+          {
+            type: 'appToTemplate',
+            file: 'rules1.json'
+          }
+        ],
+        ruleDefinition: 'rules2.json'
+      });
+      // make sure we get the error
+      const errorFilter = (d: vscode.Diagnostic) =>
+        d.code === 'ruleDefinition' && d.severity === vscode.DiagnosticSeverity.Error;
+      const [allDiagnostics, , editor] = await openTemplateInfoAndWaitForDiagnostics(
+        templateInfoUri,
+        true,
+        d => d?.some(errorFilter),
+        'error on ruleDefinition'
+      );
+      const diagnostics = allDiagnostics.filter(errorFilter);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 initial ruleDefinition error, got:\n' + JSON.stringify(allDiagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal(
+        "Template is combining deprecated 'ruleDefinition' and 'rules'. Please consolidate 'ruleDefinition' into 'rules'"
+      );
+
+      // fix the error
+      await setDocumentText(editor, {
+        rules: [
+          {
+            type: 'appToTemplate',
+            file: 'rules1.json'
+          },
+          {
+            type: 'templateToApp',
+            file: 'rules2.json'
+          }
+        ]
+      });
+      // make sure the ruleDefinition error goes away
+      await waitForDiagnostics(editor.document.uri, d => d && d.filter(errorFilter).length === 0);
     });
 
     it('shows file path problems on app template', async () => {
@@ -329,58 +428,6 @@ describe('TemplateLinterManager', () => {
     });
   });
 
-  type PathFieldAndJson = {
-    field: string;
-    path: string;
-    initialJson: string | object;
-  };
-  /** Create a template with a related file configured.
-   * @param file the related file information
-   * @returns the related file editor
-   */
-  function createTemplateWithRelatedFiles(file: PathFieldAndJson): Promise<[vscode.TextEditor]>;
-  /** Create a template with a related files configured.
-   * @param file1 the related file information
-   * @param file2 the related file information
-   * @returns the related file editors
-   */
-  function createTemplateWithRelatedFiles(
-    file1: PathFieldAndJson,
-    file2: PathFieldAndJson
-  ): Promise<[vscode.TextEditor, vscode.TextEditor]>;
-  /** Create a template with a related file configured.
-   * @param files the related file(s) information
-   * @returns the related file editors
-   */
-  async function createTemplateWithRelatedFiles(...files: PathFieldAndJson[]): Promise<vscode.TextEditor[]> {
-    [tmpdir] = await createTempTemplate(false);
-    // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
-    const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
-    const templateJson: { [key: string]: any } = {};
-    // create the related file(s)
-    const editors = await Promise.all(
-      files.map(async file => {
-        const uri = tmpdir!.with({ path: path.join(tmpdir!.path, file.path) });
-        await writeEmptyJsonFile(uri);
-        const [, editor] = await openFile(uri);
-        await setDocumentText(editor, file.initialJson);
-        // but since it's not reference by the template-info.json, it should have no errors
-        await waitForDiagnostics(
-          editor.document.uri,
-          d => d && d.length === 0,
-          `No initial diagnostics on ${file.path}`
-        );
-        templateJson[file.field] = file.path;
-        return editor;
-      })
-    );
-
-    // now, hookup the related file(s)
-    await setDocumentText(templateEditor, templateJson);
-    return editors;
-  }
-
   describe('lints ui.json', () => {
     it('shows problems on unrecognized variables', async () => {
       // create a ui.json pointing to var that aren't in variables.json
@@ -420,7 +467,7 @@ describe('TemplateLinterManager', () => {
       );
       // we should get a warning on each var in ui.json
       let diagnostics = (await waitForDiagnostics(uiEditor.document.uri, undefined, 'Initial variable warnings')).sort(
-        (d1, d2) => d1.range.start.line - d2.range.start.line
+        sortDiagnostics
       );
       if (diagnostics.length !== 2) {
         expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
@@ -444,7 +491,7 @@ describe('TemplateLinterManager', () => {
           d => d && d.length !== diagnostics.length,
           'Variable warnings after editing ui.json'
         )
-      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      ).sort(sortDiagnostics);
       // we should still have the warning about var2
       if (diagnostics.length !== 1) {
         expect.fail('Expected 1 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
@@ -473,7 +520,7 @@ describe('TemplateLinterManager', () => {
       }
     });
 
-    it('warnings on missing and empty variables on non-vfPage page', async () => {
+    it('shows warnings on missing and empty variables on non-vfPage page', async () => {
       // create a ui.json with missing variables on non-vfPage pages
       const uiJson: {
         pages: Array<{ title: string; variables?: any[]; vfPage?: { name: string; namespace: string } }>;
@@ -520,7 +567,7 @@ describe('TemplateLinterManager', () => {
       // we should get warnings on the 2 pages
       const diagnostics = (
         await waitForDiagnostics(uiEditor.document.uri, d => d && d.length >= 2, 'Initial ui.json variable warnings')
-      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      ).sort(sortDiagnostics);
       if (diagnostics.length !== 2) {
         expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
@@ -614,7 +661,7 @@ describe('TemplateLinterManager', () => {
       });
       const diagnostics = (
         await waitForDiagnostics(variablesEditor.document.uri, undefined, 'Initial invalid regex excludes warning')
-      ).sort((d1, d2) => d1.range.start.line - d2.range.start.line);
+      ).sort(sortDiagnostics);
       if (diagnostics.length !== 6) {
         expect.fail('Expected 6 diagnostic, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
@@ -664,4 +711,636 @@ describe('TemplateLinterManager', () => {
       );
     });
   }); // describe('lints variables.json')
+
+  describe('lints rules.json', () => {
+    function createTemplateWithRules(
+      ...rules: Array<{ rulesJson: string | object; ruleType: 'appToTemplate' | 'templateToApp' | 'ruleDefinition' }>
+    ): Promise<vscode.TextEditor[]> {
+      const files = rules.map((file, i) => {
+        return {
+          field:
+            file.ruleType === 'ruleDefinition'
+              ? 'ruleDefinition'
+              : (json, path) => {
+                  const rules = json.rules || [];
+                  rules.push({
+                    type: file.ruleType,
+                    file: path
+                  });
+                  json.rules = rules;
+                },
+          path: `rules${i + 1}.json`,
+          initialJson: file.rulesJson
+        } as PathFieldAndJson;
+      });
+      return createTemplateWithRelatedFiles(...files);
+    }
+
+    it('shows problems on duplicate constants', async () => {
+      const rulesJson = {
+        constants: [
+          {
+            // this should conflict in same file
+            name: 'const1',
+            value: null
+          },
+          {
+            // this should conflict in rules2
+            name: 'const3',
+            value: null
+          },
+          {
+            name: 'const1',
+            value: null
+          },
+          {
+            // this should be fine
+            name: 'const4',
+            value: null
+          }
+        ]
+      };
+      const [rulesEditor, rules2Editor, rules3Editor] = await createTemplateWithRules(
+        { rulesJson, ruleType: 'templateToApp' },
+        {
+          rulesJson: {
+            constants: [
+              {
+                name: 'const3',
+                value: null
+              }
+            ]
+          },
+          ruleType: 'templateToApp'
+        },
+        {
+          rulesJson: {
+            constants: [
+              {
+                // this should be fine since it's a different ruleType
+                name: 'const3',
+                value: null
+              }
+            ]
+          },
+          ruleType: 'appToTemplate'
+        }
+      );
+      // check rule1.json diagnostics
+      let diagnostics = (
+        await waitForDiagnostics(
+          rulesEditor.document.uri,
+          d => d && d.length >= 3,
+          'Initial ' + uriBasename(rulesEditor.document.uri) + ' duplicate constants warnings'
+        )
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 3) {
+        expect.fail('Expected 3 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      let diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate constant 'const1'");
+      expect(diagnostic.code, 'diagnostic[0].code').to.equal('constants[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(
+        diagnostic.relatedInformation?.[0].location.range.start.line,
+        'diagnostic[0].relatedInformation.line'
+      ).to.be.greaterThan(diagnostic.range.start.line, 'diagnostic[0].line');
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[0].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+
+      diagnostic = diagnostics[1];
+      expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate constant 'const3'");
+      expect(diagnostic.code, 'diagnostic[1].code').to.equal('constants[1].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[1].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[1].relatedInformation.uri').to.equal(
+        rules2Editor.document.uri
+      );
+
+      diagnostic = diagnostics[2];
+      expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[2].message').to.equal("Duplicate constant 'const1'");
+      expect(diagnostic.code, 'diagnostic[2].code').to.equal('constants[2].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[2].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[2].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(
+        diagnostic.relatedInformation?.[0].location.range.start.line,
+        'diagnostic[2].relatedInformation.line'
+      ).to.be.lessThan(diagnostic.range.start.line, 'diagnostic[2].line');
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[0].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+
+      // check rules2.json warning
+      diagnostics = (
+        await waitForDiagnostics(
+          rules2Editor.document.uri,
+          d => d && d.length >= 1,
+          'Initial ' + uriBasename(rules2Editor.document.uri) + ' duplicate constants warnings'
+        )
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate constant 'const3'");
+      expect(diagnostic.code, 'diagnostic[0].code').to.equal('constants[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[0].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+
+      // and no warnings on rules3.json
+      await waitForDiagnostics(
+        rules3Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+      );
+
+      // fix the duplicate constants
+      rulesJson.constants[1].name = 'const2';
+      rulesJson.constants[2].name = 'const5';
+      await setDocumentText(rulesEditor, rulesJson);
+      await waitForDiagnostics(
+        rulesEditor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rulesEditor.document.uri) + ' after fixing duplicate constants'
+      );
+      await waitForDiagnostics(
+        rules2Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules2Editor.document.uri) + ' after fixing duplicate constants'
+      );
+      await waitForDiagnostics(
+        rules3Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+      );
+    });
+
+    it('shows problems on duplicate rule names', async () => {
+      const rulesJson = {
+        rules: [
+          {
+            // should conflict in same file
+            name: 'name1',
+            appliesTo: [
+              {
+                type: '*'
+              }
+            ],
+            actions: [
+              {
+                action: 'delete',
+                path: '$.name'
+              }
+            ]
+          },
+          {
+            // should conflict in rules2.json
+            name: 'name3',
+            appliesTo: [
+              {
+                type: '*'
+              }
+            ],
+            actions: [
+              {
+                action: 'delete',
+                path: '$.name'
+              }
+            ]
+          },
+          {
+            name: 'name1',
+            appliesTo: [
+              {
+                type: '*'
+              }
+            ],
+            actions: [
+              {
+                action: 'delete',
+                path: '$.name'
+              }
+            ]
+          },
+          {
+            // this should be fine
+            name: 'name4',
+            appliesTo: [
+              {
+                type: '*'
+              }
+            ],
+            actions: [
+              {
+                action: 'delete',
+                path: '$.name'
+              }
+            ]
+          }
+        ]
+      };
+      const [rulesEditor, rules2Editor, rules3Editor] = await createTemplateWithRules(
+        { rulesJson, ruleType: 'ruleDefinition' },
+        {
+          rulesJson: {
+            rules: [
+              {
+                name: 'name3',
+                appliesTo: [
+                  {
+                    type: '*'
+                  }
+                ],
+                actions: [
+                  {
+                    action: 'delete',
+                    path: '$.name'
+                  }
+                ]
+              }
+            ]
+          },
+          ruleType: 'templateToApp'
+        },
+        {
+          rulesJson: {
+            rules: [
+              {
+                // this should be fine since it's a different ruleType
+                name: 'name3',
+                appliesTo: [
+                  {
+                    type: '*'
+                  }
+                ],
+                actions: [
+                  {
+                    action: 'delete',
+                    path: '$.name'
+                  }
+                ]
+              }
+            ]
+          },
+          ruleType: 'appToTemplate'
+        }
+      );
+      // check rules1.json warnings
+      let diagnostics = (
+        await waitForDiagnostics(
+          rulesEditor.document.uri,
+          d => d && d.length >= 3,
+          'Initial ' + uriBasename(rulesEditor.document.uri) + ' duplicate rule names warnings'
+        )
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 3) {
+        expect.fail('Expected 3 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      let diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate rule name 'name1'");
+      expect(diagnostic.code, 'diagnostic[0].code').to.equal('rules[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[0].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+      expect(
+        diagnostic.relatedInformation?.[0].location.range.start.line,
+        'diagnostic[0].relatedInformation.line'
+      ).to.be.greaterThan(diagnostic.range.start.line, 'diagnostic[0].line');
+
+      diagnostic = diagnostics[1];
+      expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate rule name 'name3'");
+      expect(diagnostic.code, 'diagnostic[1].code').to.equal('rules[1].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[1].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[1].relatedInformation.uri').to.equal(
+        rules2Editor.document.uri
+      );
+
+      diagnostic = diagnostics[2];
+      expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[2].message').to.equal("Duplicate rule name 'name1'");
+      expect(diagnostic.code, 'diagnostic[2].code').to.equal('rules[2].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[2].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[2].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[2].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+      expect(
+        diagnostic.relatedInformation?.[0].location.range.start.line,
+        'diagnostic[2].relatedInformation.line'
+      ).to.be.lessThan(diagnostic.range.start.line, 'diagnostic[2].line');
+
+      // check rules2.json warnings
+      diagnostics = (
+        await waitForDiagnostics(
+          rules2Editor.document.uri,
+          d => d && d.length >= 1,
+          'Initial ' + uriBasename(rules2Editor.document.uri) + ' duplicate rule names warnings'
+        )
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate rule name 'name3'");
+      expect(diagnostic.code, 'diagnostic[0].code').to.equal('rules[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[0].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+
+      // and no warnings on rules3.json
+      await waitForDiagnostics(
+        rules3Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+      );
+
+      // fix the duplicate rule names
+      rulesJson.rules[1].name = 'name2';
+      rulesJson.rules[2].name = 'name5';
+      await setDocumentText(rulesEditor, rulesJson);
+      await waitForDiagnostics(
+        rulesEditor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rulesEditor.document.uri) + ' after fixing duplicate rule names'
+      );
+      await waitForDiagnostics(
+        rules2Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules2Editor.document.uri) + ' after fixing duplicate rule names'
+      );
+      await waitForDiagnostics(
+        rules3Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+      );
+    });
+
+    it('shows problems on duplicate macros', async () => {
+      const rulesJson = {
+        macros: [
+          {
+            namespace: 'ns1',
+            definitions: [
+              {
+                // should conflict in this file
+                name: 'macro1',
+                returns: ''
+              },
+              {
+                // should conflict in rule2.json
+                name: 'macro3',
+                returns: ''
+              }
+            ]
+          },
+          {
+            namespace: 'ns1',
+            definitions: [
+              {
+                name: 'macro1',
+                returns: ''
+              },
+              {
+                // should be fine
+                name: 'macro4',
+                returns: ''
+              }
+            ]
+          }
+        ]
+      };
+      const [rulesEditor, rules2Editor, rules3Editor] = await createTemplateWithRules(
+        { rulesJson, ruleType: 'appToTemplate' },
+        {
+          rulesJson: {
+            macros: [
+              {
+                namespace: 'ns1',
+                definitions: [
+                  {
+                    name: 'macro3',
+                    returns: ''
+                  }
+                ]
+              }
+            ]
+          },
+          ruleType: 'appToTemplate'
+        },
+        {
+          rulesJson: {
+            macros: [
+              {
+                namespace: 'ns1',
+                definitions: [
+                  {
+                    // this should be fine since it's a different ruleType
+                    name: 'macro3',
+                    returns: ''
+                  }
+                ]
+              }
+            ]
+          },
+          ruleType: 'templateToApp'
+        }
+      );
+      // check rules1.json warnings
+      let diagnostics = (
+        await waitForDiagnostics(
+          rulesEditor.document.uri,
+          d => d && d.length >= 3,
+          'Initial ' + uriBasename(rulesEditor.document.uri) + ' duplicate macros warnings'
+        )
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 3) {
+        expect.fail('Expected 3 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      let diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate macro 'ns1:macro1'");
+      expect(diagnostic.code, 'diagnostic[0].code').to.equal('macros[0].definitions[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[0].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+
+      diagnostic = diagnostics[1];
+      expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate macro 'ns1:macro3'");
+      expect(diagnostic.code, 'diagnostic[1].code').to.equal('macros[0].definitions[1].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[1].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[1].relatedInformation.uri').to.equal(
+        rules2Editor.document.uri
+      );
+
+      diagnostic = diagnostics[2];
+      expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[2].message').to.equal("Duplicate macro 'ns1:macro1'");
+      expect(diagnostic.code, 'diagnostic[2].code').to.equal('macros[1].definitions[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[2].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[2].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[2].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+
+      // check rules2.json warnings
+      diagnostics = (
+        await waitForDiagnostics(
+          rules2Editor.document.uri,
+          d => d && d.length >= 1,
+          'Initial ' + uriBasename(rules2Editor.document.uri) + ' duplicate macros warnings'
+        )
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate macro 'ns1:macro3'");
+      expect(diagnostic.code, 'diagnostic[0].code').to.equal('macros[0].definitions[0].name');
+      expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
+      expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
+        'Other usage'
+      );
+      expect(diagnostic.relatedInformation?.[0].location.uri, 'diagnostic[0].relatedInformation.uri').to.equal(
+        rulesEditor.document.uri
+      );
+
+      // and no warnings on rules3.json
+      await waitForDiagnostics(
+        rules3Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+      );
+
+      // fix the duplicate definition name, and all the warnings should go away
+      rulesJson.macros[0].definitions[1].name = 'macro2';
+      rulesJson.macros[1].namespace = 'ns2';
+      await setDocumentText(rulesEditor, rulesJson);
+      await waitForDiagnostics(
+        rulesEditor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rulesEditor.document.uri) + ' after fixing duplicate macro names'
+      );
+      await waitForDiagnostics(
+        rules2Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules2Editor.document.uri) + ' after fixing duplicate macro names'
+      );
+      await waitForDiagnostics(
+        rules3Editor.document.uri,
+        d => d && d.length === 0,
+        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+      );
+    });
+
+    it('shows infos on no-op macro definitions', async () => {
+      const rulesJson: {
+        macros: Array<{
+          namespace: string;
+          definitions: Array<{ name: string; returns?: string; actions?: Array<{ action: string; path: string }> }>;
+        }>;
+      } = {
+        macros: [
+          {
+            namespace: 'ns1',
+            definitions: [
+              {
+                name: 'macro1'
+              },
+              {
+                name: 'macro2',
+                actions: []
+              },
+              {
+                name: 'valid',
+                actions: [
+                  {
+                    action: 'delete',
+                    path: '$.name'
+                  }
+                ],
+                returns: ''
+              }
+            ]
+          }
+        ]
+      };
+      const [rulesEditor] = await createTemplateWithRules({ rulesJson, ruleType: 'appToTemplate' });
+      const diagnostics = (
+        await waitForDiagnostics(rulesEditor.document.uri, d => d && d.length >= 2, 'Initial no-op macros warnings')
+      ).sort(sortDiagnostics);
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we get the expected warnings
+      diagnostics.forEach((diagnostic, i) => {
+        expect(diagnostic, `diagnostic[${i}]`).to.not.be.undefined;
+        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal(
+          "Macro should have a 'return' or at least one action"
+        );
+        expect(diagnostic.severity, `diagnostic[${i}].severity`).to.equal(vscode.DiagnosticSeverity.Information);
+        expect(diagnostic.code, `diagnostic[${i}].code`).to.equal(
+          i === 0 ? 'macros[0].definitions[0]' : 'macros[0].definitions[1].actions'
+        );
+      });
+
+      // fix them
+      rulesJson.macros[0].definitions[0].returns = 'foo';
+      rulesJson.macros[0].definitions[1].actions!.push({ action: 'delete', path: '$.name' });
+      await setDocumentText(rulesEditor, rulesJson);
+      await waitForDiagnostics(
+        rulesEditor.document.uri,
+        d => d && d.length === 0,
+        'No warnings after fixing no-op macros'
+      );
+    });
+  }); // describe('lints rules.json')
 });

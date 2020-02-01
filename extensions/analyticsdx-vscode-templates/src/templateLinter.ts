@@ -21,6 +21,7 @@ import {
   uriBasename,
   uriDirname,
   UriExistsDiagnosticCollection,
+  uriRelPath,
   uriStat
 } from './util/vscodeUtils';
 
@@ -77,8 +78,8 @@ export class TemplateLinter {
     public readonly dir: vscode.Uri = uriDirname(templateInfoDoc.uri)
   ) {}
 
-  private getTemplateRelFilePath(dir: vscode.Uri, templateInfo: JsonNode, jsonpath: JSONPath) {
-    const n = findNodeAtLocation(templateInfo, jsonpath);
+  private getTemplateRelFilePath(dir: vscode.Uri, templateInfo: JsonNode, jsonpathOrNode: JSONPath | JsonNode) {
+    const n = Array.isArray(jsonpathOrNode) ? findNodeAtLocation(templateInfo, jsonpathOrNode) : jsonpathOrNode;
     if (n && n.type === 'string') {
       const relpath = n.value as string;
       if (isValidRelpath(relpath)) {
@@ -91,17 +92,16 @@ export class TemplateLinter {
   /** Open the text document for the value of the specified field and parse it, with caching.
    */
   private async loadTemplateRelPathJson(
-    dir: vscode.Uri,
     templateInfo: JsonNode,
-    jsonpath: JSONPath
+    jsonpathOrNode: JSONPath | JsonNode
   ): Promise<JsonCacheValue> {
-    const relpath = this.getTemplateRelFilePath(dir, templateInfo, jsonpath);
+    const relpath = this.getTemplateRelFilePath(this.dir, templateInfo, jsonpathOrNode);
     if (relpath) {
       let cacheValue = this.jsonCache.get(relpath);
       if (!cacheValue) {
         let doc: vscode.TextDocument | undefined;
         let json: JsonNode | undefined;
-        const uri = dir.with({ path: path.join(dir.path, relpath) });
+        const uri = uriRelPath(this.dir, relpath);
         try {
           doc = await vscode.workspace.openTextDocument(uri);
           if (doc) {
@@ -118,11 +118,10 @@ export class TemplateLinter {
     return { doc: undefined, json: undefined };
   }
 
-  private createDiagnostic(
+  private addDiagnostic(
     doc: vscode.TextDocument,
     mesg: string,
     location?: JsonNode,
-    diagnostics?: vscode.Diagnostic[],
     severity = vscode.DiagnosticSeverity.Warning
   ) {
     // for nodes for string values, the node offset & length will include the outer double-quotes, so take those
@@ -142,10 +141,71 @@ export class TemplateLinter {
     } else {
       diagnostic.code = location ? jsonPathToString(getNodePath(location)) : '';
     }
+
+    const diagnostics = this.diagnostics.get(doc);
     if (diagnostics) {
       diagnostics.push(diagnostic);
+    } else {
+      this.diagnostics.set(doc, [diagnostic]);
     }
     return diagnostic;
+  }
+
+  /** Finds if non-unique values are found amongst the string values for a jsonpath.
+   * @param source the doc + json nodes to search for the jsonpath in
+   * @param jsonpath the path to the value nodes in the json
+   * @param message the message for a diagnostic for each duplicate value node, can be a string or function
+   * @param relatedMessage if specified, relatedInformation for each other found value will be added to the diagnostics,
+   *        with this message
+   * @param computeValue if specified, a function to compute the value from the matched node; can return undefined to
+   *        ignore the node, defaults to the string value of the node
+   */
+  private lintUniqueValues(
+    sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode | JsonNode[] }>,
+    jsonpath: JSONPath,
+    message: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
+    relatedMessage?: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
+    computeValue: (node: JsonNode, doc: vscode.TextDocument) => string | undefined = node => {
+      return node.type === 'string' && typeof node.value === 'string' ? node.value : undefined;
+    }
+  ) {
+    // value -> list of doc+node's w/ that value
+    const values = new Map<string, Array<{ doc: vscode.TextDocument; node: JsonNode }>>();
+    sources.forEach(({ doc, nodes: tree }) => {
+      matchJsonNodesAtPattern(tree, jsonpath).reduce((values, node) => {
+        const value = computeValue(node, doc);
+        if (value) {
+          const matches = values.get(value) || [];
+          matches.push({ doc, node });
+          values.set(value, matches);
+        }
+        return values;
+      }, values);
+    });
+
+    values.forEach((matches, value) => {
+      if (matches.length > 1) {
+        matches.forEach(({ doc, node }) => {
+          const diagnostic = this.addDiagnostic(
+            doc,
+            typeof message === 'string' ? message : message(value, doc, node),
+            node
+          );
+          // create related information for the other locations
+          if (relatedMessage) {
+            diagnostic.relatedInformation = matches
+              .filter(other => other.node !== node)
+              .map(
+                other =>
+                  new vscode.DiagnosticRelatedInformation(
+                    new vscode.Location(other.doc.uri, rangeForNode(other.node, other.doc)),
+                    typeof relatedMessage === 'string' ? relatedMessage : relatedMessage(value, other.doc, other.node)
+                  )
+              );
+          }
+        });
+      }
+    });
   }
 
   // TODO: figure out how to do incremental linting (or if we even should)
@@ -169,30 +229,57 @@ export class TemplateLinter {
     }
 
     if (tree) {
+      // REVIEWME: if we ever start to have perf problems linting templates, we could either:
+      // 1. separate the async and sync scans in each of these methods, and start all the async ones, do all the sync
+      //    ones, and then await the async ones
+      // 2. make the scans fully async through worker_threads or similar
       await Promise.all([
         this.lintTemplateInfo(this.templateInfoDoc, tree),
         this.lintVariables(tree),
-        this.lintUi(tree)
+        this.lintUi(tree),
+        this.lintRules(tree)
       ]);
     }
     return this;
   }
 
   private async lintTemplateInfo(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
-    const diagnostics: vscode.Diagnostic[] = [];
-    this.diagnostics.set(this.templateInfoDoc, diagnostics);
     // TODO: consider doing this via a visit down the tree, rather than searching mulitple times
-    await Promise.all([
-      this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, diagnostics, tree),
+
+    // start these up and let them run
+    const p = Promise.all([
       // make sure each place that can have a relative path to a file has a valid one
       // TODO: warn if they put the same relPath in twice in 2 different fields?
       ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path =>
-        this.lintRelFilePath(this.templateInfoDoc, diagnostics, tree, path)
+        this.lintRelFilePath(this.templateInfoDoc, tree, path)
       )
     ]);
+    // while those are going, do these synchronous ones
+    this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
+    this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
+
+    // wait for the async ones
+    await p;
   }
 
-  private lintTemplateInfoMinimumObjects(doc: vscode.TextDocument, diagnostics: vscode.Diagnostic[], tree: JsonNode) {
+  private lintTemplateInfoRulesAndRulesDefinition(doc: vscode.TextDocument, tree: JsonNode) {
+    // if template-info has both 'ruleDefinition' and one or more 'rules' elements, it won't deploy to the server, so
+    // show an  error on that
+    const ruleDefinition = findNodeAtLocation(tree, ['ruleDefinition']);
+    if (ruleDefinition && ruleDefinition.type === 'string') {
+      const [count] = lengthJsonArrayAttributeValue(tree, 'rules');
+      if (count > 0) {
+        this.addDiagnostic(
+          doc,
+          "Template is combining deprecated 'ruleDefinition' and 'rules'. Please consolidate 'ruleDefinition' into 'rules'",
+          ruleDefinition.parent || ruleDefinition,
+          vscode.DiagnosticSeverity.Error
+        );
+      }
+    }
+  }
+
+  private lintTemplateInfoMinimumObjects(doc: vscode.TextDocument, tree: JsonNode) {
     const [templateType, templateTypeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
     // do the check if templateType is not specified or is a string; if it's anythigng else, the json-schema should
     // show a warning
@@ -221,12 +308,11 @@ export class TemplateLinter {
             { count: 0, nodes: [] as Array<[JsonNode, string]> }
           );
           if (count <= 0) {
-            const diagnostic = this.createDiagnostic(
+            const diagnostic = this.addDiagnostic(
               doc,
               'App templates must have at least 1 dashboard, dataflow, or dataset specified',
               // put the warning on the "templateType": "app" property
-              templateTypeNode && templateTypeNode.parent,
-              diagnostics
+              templateTypeNode && templateTypeNode.parent
             );
             // add a related warning on each empty array property node
             if (nodes.length > 0) {
@@ -247,12 +333,11 @@ export class TemplateLinter {
           // for dashboard templates, there needs to exactly 1 dashboard specified
           const [len, dashboards] = lengthJsonArrayAttributeValue(tree, 'dashboards');
           if (len !== 1) {
-            this.createDiagnostic(
+            this.addDiagnostic(
               doc,
               'Dashboard templates must have exactly 1 dashboard specified',
               // put it on the "dashboards" array, or the "templateType": "..." property, if either available
-              dashboards || (templateTypeNode && templateTypeNode.parent),
-              diagnostics
+              dashboards || (templateTypeNode && templateTypeNode.parent)
             );
           }
           break;
@@ -262,12 +347,7 @@ export class TemplateLinter {
     }
   }
 
-  private lintRelFilePath(
-    doc: vscode.TextDocument,
-    diagnostics: vscode.Diagnostic[],
-    tree: JsonNode,
-    patterns: Segment[]
-  ): Promise<void> {
+  private lintRelFilePath(doc: vscode.TextDocument, tree: JsonNode, patterns: Segment[]): Promise<void> {
     const nodes = matchJsonNodesAtPattern(tree, patterns);
     let all = Promise.resolve();
     nodes.forEach(n => {
@@ -275,17 +355,17 @@ export class TemplateLinter {
       if (n && n.type === 'string') {
         const relPath = (n.value as string) || '';
         if (!relPath || relPath.startsWith('/') || relPath.startsWith('../')) {
-          this.createDiagnostic(doc, 'Value should be a path relative to this file', n, diagnostics);
+          this.addDiagnostic(doc, 'Value should be a path relative to this file', n);
         } else if (relPath.includes('/../') || relPath.endsWith('/..')) {
-          this.createDiagnostic(doc, "Path should not contain '..' parts", n, diagnostics);
+          this.addDiagnostic(doc, "Path should not contain '..' parts", n);
         } else {
           const uri = doc.uri.with({ path: path.join(path.dirname(doc.uri.path), relPath) });
           const p = uriStat(uri)
             .then(stat => {
               if (!stat) {
-                this.createDiagnostic(doc, 'Specified file does not exist in workspace', n, diagnostics);
+                this.addDiagnostic(doc, 'Specified file does not exist in workspace', n);
               } else if ((stat.type & vscode.FileType.File) === 0) {
-                this.createDiagnostic(doc, 'Specified path is not a file', n, diagnostics);
+                this.addDiagnostic(doc, 'Specified path is not a file', n);
               }
             })
             .catch(er => {
@@ -301,17 +381,14 @@ export class TemplateLinter {
   }
 
   private async lintVariables(templateInfo: JsonNode): Promise<void> {
-    const { doc, json: variables } = await this.loadTemplateRelPathJson(this.dir, templateInfo, ['variableDefinition']);
+    const { doc, json: variables } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
     if (doc && variables) {
-      const diagnostics: vscode.Diagnostic[] = [];
-      this.diagnostics.set(doc, diagnostics);
-
-      this.lintVariablesExcludes(doc, variables, diagnostics);
+      this.lintVariablesExcludes(doc, variables);
       // TODO: other lints on variables
     }
   }
 
-  private lintVariablesExcludes(variablesDoc: vscode.TextDocument, tree: JsonNode, diagnostics: vscode.Diagnostic[]) {
+  private lintVariablesExcludes(variablesDoc: vscode.TextDocument, tree: JsonNode) {
     // In a variable.excludes, you can have any number of string literals and/or a max of one '/regex/[options]'
     // string. At runtime in the Studio UI, the regex string is extracted directly (no way to quote forward-slash) and
     // passed into `new RegExp(regex, options)`. The options are optional.
@@ -328,24 +405,14 @@ export class TemplateLinter {
               regexes.push(excludeNode);
               if (str.length === 1) {
                 // if it's just a /, then it's missing a closing / and it's an empty regex
-                this.createDiagnostic(
-                  variablesDoc,
-                  'Missing closing / for regular expression',
-                  excludeNode,
-                  diagnostics
-                );
+                this.addDiagnostic(variablesDoc, 'Missing closing / for regular expression', excludeNode);
               } else {
                 const lastIndex = str.lastIndexOf('/');
                 let pattern: string | undefined;
                 let options: string | undefined;
                 // this means there's no closing /
                 if (lastIndex < 1) {
-                  this.createDiagnostic(
-                    variablesDoc,
-                    'Missing closing / for regular expression',
-                    excludeNode,
-                    diagnostics
-                  );
+                  this.addDiagnostic(variablesDoc, 'Missing closing / for regular expression', excludeNode);
                   // still try to parse the regex text that's there
                   pattern = str.substring(1);
                 } else {
@@ -357,16 +424,11 @@ export class TemplateLinter {
                 // check the options
                 if (options && options.length) {
                   if (!TemplateLinter.VALID_REGEX_OPTIONS.test(options)) {
-                    this.createDiagnostic(variablesDoc, 'Invalid regular expression options', excludeNode, diagnostics);
+                    this.addDiagnostic(variablesDoc, 'Invalid regular expression options', excludeNode);
                     // clear it out to still test the regex text
                     options = undefined;
                   } else if (/(.).*\1/.test(options)) {
-                    this.createDiagnostic(
-                      variablesDoc,
-                      'Duplicate option in regular expression options',
-                      excludeNode,
-                      diagnostics
-                    );
+                    this.addDiagnostic(variablesDoc, 'Duplicate option in regular expression options', excludeNode);
                     // clear it out to still test the regex text
                     options = undefined;
                   }
@@ -391,14 +453,14 @@ export class TemplateLinter {
                       mesg += ': ' + errorMesg;
                     }
                   }
-                  this.createDiagnostic(variablesDoc, mesg, excludeNode, diagnostics);
+                  this.addDiagnostic(variablesDoc, mesg, excludeNode);
                 }
               }
             }
           }
         });
         if (regexes.length > 1) {
-          const diagnostic = this.createDiagnostic(
+          const diagnostic = this.addDiagnostic(
             variablesDoc,
             'Multiple regular expression excludes found, only the first will be used',
             // try to put the warning on the "excludes" part of the whole exclude property, otherwise just put it on
@@ -407,8 +469,7 @@ export class TemplateLinter {
               excludesNode.parent.type === 'property' &&
               excludesNode.parent.children &&
               excludesNode.parent.children[0]) ||
-              excludesNode,
-            diagnostics
+              excludesNode
           );
           // add DiagnosticRelatedInformation's for the excludeNode's that have regex's
           diagnostic.relatedInformation = regexes
@@ -426,40 +487,32 @@ export class TemplateLinter {
   }
 
   private async lintUi(templateInfo: JsonNode) {
-    const { doc, json: ui } = await this.loadTemplateRelPathJson(this.dir, templateInfo, ['uiDefinition']);
+    const { doc, json: ui } = await this.loadTemplateRelPathJson(templateInfo, ['uiDefinition']);
     if (doc && ui) {
-      const diagnostics: vscode.Diagnostic[] = [];
-      this.diagnostics.set(doc, diagnostics);
-
-      this.lintUiVariablesSpecifiedForPages(doc, ui, diagnostics);
-      await this.lintUiVariablesExistInVariables(templateInfo, doc, ui, diagnostics);
+      this.lintUiVariablesSpecifiedForPages(doc, ui);
+      await this.lintUiVariablesExistInVariables(templateInfo, doc, ui);
       // TODO: other lints on uiDefinition
     }
   }
 
-  private lintUiVariablesSpecifiedForPages(doc: vscode.TextDocument, ui: JsonNode, diagnostics: vscode.Diagnostic[]) {
+  private lintUiVariablesSpecifiedForPages(doc: vscode.TextDocument, ui: JsonNode) {
     findNodeAtLocation(ui, ['pages'])?.children?.forEach(page => {
       // if it's not a vfPage
       if (!findNodeAtLocation(page, ['vfPage'])) {
         const variables = findNodeAtLocation(page, ['variables']);
         if (!variables) {
-          this.createDiagnostic(doc, 'Either variables or vfPage must be specified', page, diagnostics);
+          this.addDiagnostic(doc, 'Either variables or vfPage must be specified', page);
         } else if (variables.type === 'array' && (!variables.children || variables.children.length <= 0)) {
-          this.createDiagnostic(doc, 'At least 1 variable or vfPage must be specified', variables, diagnostics);
+          this.addDiagnostic(doc, 'At least 1 variable or vfPage must be specified', variables);
         }
         // if variables is defined as something other than an array, the json schema should warn on that
       }
     });
   }
 
-  private async lintUiVariablesExistInVariables(
-    templateInfo: JsonNode,
-    doc: vscode.TextDocument,
-    ui: JsonNode,
-    diagnostics: vscode.Diagnostic[]
-  ) {
+  private async lintUiVariablesExistInVariables(templateInfo: JsonNode, doc: vscode.TextDocument, ui: JsonNode) {
     // find all the variable names in the variables file
-    const { json: varJson } = await this.loadTemplateRelPathJson(this.dir, templateInfo, ['variableDefinition']);
+    const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
     const variableNames = new Set<string>();
     if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
       varJson.children.forEach(prop => {
@@ -488,11 +541,111 @@ export class TemplateLinter {
             if (match && match.length > 0) {
               mesg += `, did you mean '${match}'?`;
             }
-            this.createDiagnostic(doc, mesg, nameNode, diagnostics);
+            this.addDiagnostic(doc, mesg, nameNode);
           }
         }
       });
     }
+  }
+
+  private async lintRules(templateInfo: JsonNode): Promise<void> {
+    // find all the json nodes that point to rel-path rules files, per ruleType
+    const templateToAppFiles: JsonNode[] = [];
+    const appToTemplateFiles: JsonNode[] = [];
+    matchJsonNodesAtPattern(templateInfo, ['rules', '*']).forEach(rule => {
+      const file = findNodeAtLocation(rule, ['file']);
+      if (file && file.type === 'string') {
+        const type = findNodeAtLocation(rule, ['type']);
+        if (type?.value === 'appToTemplate') {
+          appToTemplateFiles.push(file);
+        } else {
+          templateToAppFiles.push(file);
+        }
+      }
+    });
+    const ruleDef = findNodeAtLocation(templateInfo, ['ruleDefinition']);
+    if (ruleDef?.type === 'string') {
+      templateToAppFiles.push(ruleDef);
+    }
+
+    // now load those documents & json
+    const [templateToAppJsons, appToTemplateJsons] = await Promise.all([
+      this.loadRulesJsons(templateInfo, templateToAppFiles),
+      this.loadRulesJsons(templateInfo, appToTemplateFiles)
+    ]);
+    this.lintRulesFiles(templateToAppJsons);
+    this.lintRulesFiles(appToTemplateJsons);
+  }
+
+  private async loadRulesJsons(
+    templateInfo: JsonNode,
+    pathNodes: JsonNode[]
+  ): Promise<Array<{ doc: vscode.TextDocument; nodes: JsonNode }>> {
+    const all = await Promise.all(pathNodes.map(node => this.loadTemplateRelPathJson(templateInfo, node)));
+    const found = [] as Array<{ doc: vscode.TextDocument; nodes: JsonNode }>;
+    all.forEach(val => {
+      if (val?.doc && val.json) {
+        found.push({ doc: val.doc, nodes: val.json });
+      }
+    });
+    return found;
+  }
+
+  private lintRulesFiles(sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode }>) {
+    // make sure the constants' names are unique
+    this.lintUniqueValues(sources, ['constants', '*', 'name'], name => `Duplicate constant '${name}'`, 'Other usage');
+    // make sure the rules' names are unique
+    this.lintUniqueValues(sources, ['rules', '*', 'name'], name => `Duplicate rule name '${name}'`, 'Other usage');
+    // make sure macro namespace:name is unique
+    this.lintUniqueValues(
+      sources,
+      ['macros', '*', 'definitions', '*', 'name'],
+      name => `Duplicate macro '${name}'`,
+      'Other usage',
+      // compute namespace:name from the name value json node
+      name => {
+        // REVIEWME: should we skip name's or namespace's that don't match the schema regex?
+        // The server runtime doesn't, although the rules won't validate in the server if the name/ns don't match
+        // the regex so the macros wouldn't even be there to run.
+        // Let's do this for now, so you get both the dup warning and the regex warnings
+        if (name.type === 'string' && typeof name.value === 'string' && name.value) {
+          // find the ancestor macro, via the parent chain:
+          // "name": <name> -> the definition {} -> the definitions [] ->
+          // "definitions": [] -> the macro {}
+          const macro = name.parent?.parent?.parent?.parent?.parent;
+          if (macro) {
+            const ns = findNodeAtLocation(macro, ['namespace']);
+            if (ns && ns.type === 'string' && typeof ns.value === 'string' && ns.value) {
+              return ns.value + ':' + name.value;
+            }
+          }
+        }
+        return undefined;
+      }
+    );
+
+    sources.map(({ doc, nodes }) => {
+      this.lintMacrosHaveReturnsOrActions(doc, nodes);
+    });
+  }
+
+  private lintMacrosHaveReturnsOrActions(doc: vscode.TextDocument, rules: JsonNode) {
+    matchJsonNodesAtPattern(rules, ['macros', '*', 'definitions', '*']).forEach(definition => {
+      const returns = findNodeAtLocation(definition, ['returns']);
+      if (!returns) {
+        const [count, actions] = lengthJsonArrayAttributeValue(definition, 'actions');
+        // add diagnostic on either attribute missing or is an empty array; if it's a non-array, there should be
+        // schema warning about that already
+        if (!actions || count === 0) {
+          this.addDiagnostic(
+            doc,
+            "Macro should have a 'return' or at least one action",
+            actions ?? definition,
+            vscode.DiagnosticSeverity.Information
+          );
+        }
+      }
+    });
   }
 }
 

@@ -138,25 +138,29 @@ export async function openFileAndWaitForDiagnostics(
 export async function openTemplateInfoAndWaitForDiagnostics(
   relDirOrUri: string | vscode.Uri,
   show?: true,
-  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined
+  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined,
+  filterDescription?: string
 ): Promise<[vscode.Diagnostic[], vscode.TextDocument, vscode.TextEditor]>;
 export async function openTemplateInfoAndWaitForDiagnostics(
   relDirOrUri: string | vscode.Uri,
   show: false,
-  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined
+  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined,
+  filterDescription?: string
 ): Promise<[vscode.Diagnostic[], vscode.TextDocument, undefined]>;
 export async function openTemplateInfoAndWaitForDiagnostics(
   relDirOrUri: string | vscode.Uri,
   show: boolean,
-  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined
+  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined,
+  filterDescription?: string
 ): Promise<[vscode.Diagnostic[], vscode.TextDocument, vscode.TextEditor | undefined]>;
 export async function openTemplateInfoAndWaitForDiagnostics(
   relDirOrUri: string | vscode.Uri,
   show = true,
-  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined
+  filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined,
+  filterDescription?: string
 ): Promise<[vscode.Diagnostic[], vscode.TextDocument, vscode.TextEditor | undefined]> {
   const [doc, editor] = await openTemplateInfo(relDirOrUri, show);
-  return [await waitForDiagnostics(doc.uri, filter), doc, editor];
+  return [await waitForDiagnostics(doc.uri, filter, filterDescription), doc, editor];
 }
 
 const defDiagnosticFilter = (d: vscode.Diagnostic[] | undefined) => d && d.length > 0;
