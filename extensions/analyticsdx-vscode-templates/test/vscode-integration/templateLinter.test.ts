@@ -211,6 +211,107 @@ describe('TemplateLinterManager', () => {
       // there could also be a json-schema diagnostic that eltDataflows is missing, so don't failOnUnexpected()
     });
 
+    it('shows warning on relpath pointing to template-info.json', async () => {
+      const [t, , editor] = await createTempTemplate(true);
+      tmpdir = t;
+      await setDocumentText(editor!, {
+        uiDefinition: 'template-info.json'
+      });
+      const diagnosticFilter = (d: vscode.Diagnostic) => d.code === 'uiDefinition';
+      const diagnostics = (
+        await waitForDiagnostics(editor!.document.uri, d => d?.some(diagnosticFilter), 'initial uiDefinition warning')
+      ).filter(diagnosticFilter);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 uiDefinition diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
+      expect(diagnostics[0].message, 'diagnostic.message').equals("Path cannot be 'template-info.json'");
+    });
+
+    it('shows warnings on duplicate relpath usages', async () => {
+      const [t, , editor] = await createTempTemplate(true);
+      tmpdir = t;
+      await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+      await setDocumentText(editor!, {
+        variableDefinition: 'file.json',
+        uiDefinition: 'file.json',
+        folderDefinition: 'file.json',
+        ruleDefinition: 'file.json',
+        rules: [
+          {
+            type: 'templateToApp',
+            file: 'file.json'
+          }
+        ],
+        dashboards: [
+          {
+            file: 'file.json',
+            label: 'dashboard',
+            name: 'dashboard'
+          }
+        ],
+        lenses: [
+          {
+            file: 'file.json',
+            label: 'lens',
+            name: 'lens'
+          }
+        ],
+        eltDataflows: [
+          {
+            file: 'file.json',
+            label: 'dataflow',
+            name: 'dataflow'
+          }
+        ],
+        storedQueries: [
+          {
+            file: 'file.json',
+            label: 'stored-query'
+          }
+        ],
+        extendedTypes: {
+          stories: [
+            {
+              file: 'file.json',
+              label: 'story',
+              name: 'story'
+            }
+          ]
+        }
+      });
+      const dupFilter = (d: vscode.Diagnostic) => d?.message === 'Duplicate usage of path file.json';
+      const expectedPaths = [
+        'variableDefinition',
+        'uiDefinition',
+        'folderDefinition',
+        'ruleDefinition',
+        'rules[0].file',
+        'dashboards[0].file',
+        'lenses[0].file',
+        'eltDataflows[0].file',
+        'storedQueries[0].file',
+        'extendedTypes.stories[0].file'
+      ];
+      const diagnostics = (
+        await waitForDiagnostics(
+          editor!.document.uri,
+          d => d && d.filter(dupFilter).length >= expectedPaths.length,
+          'initial duplicate path warnings'
+        )
+      ).filter(dupFilter);
+      if (diagnostics.length !== expectedPaths.length) {
+        expect.fail(`Expected ${expectedPaths.length} diagnostics, got:\n` + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics.map(d => d.code, 'diagnostic codes')).to.include.members(expectedPaths);
+      diagnostics.forEach(d => {
+        expect(d.relatedInformation, `${d.code} diagnostic.relatedInformation`).to.not.be.undefined;
+        expect(d.relatedInformation!.length, `${d.code} diagnostic.relatedInformation.length`).to.equal(
+          expectedPaths.length - 1
+        );
+      });
+    });
+
     it('shows error on having ruleDefinition and rules', async () => {
       [tmpdir] = await createTempTemplate(false);
       await writeTextToFile(uriRelPath(tmpdir, 'rules1.json'), {});

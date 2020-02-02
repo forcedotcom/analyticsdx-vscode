@@ -250,10 +250,11 @@ describe('TemplateEditorManager', () => {
             list.items.map(item => item.detail || item.label).join(', ')
         );
       }
+      return list.items;
     }
 
     it('json file completions', async () => {
-      await testCompletions(
+      const completions = await testCompletions(
         TEMPLATE_INFO.jsonRelFilePathLocationPatterns[0],
         'dashboards/dashboard.json',
         'dataflows/dataflow.json',
@@ -262,6 +263,13 @@ describe('TemplateEditorManager', () => {
         'queries/query.json'
         // there's other json files in the template dir, but if we see these, then it's hooked up
       );
+      // make sure the completions don't include 'template-info.json'
+      if (completions.some(item => item.detail === 'template-info.json')) {
+        expect.fail(
+          'Completions should be not contain template-info.json, got: ' +
+            completions.map(item => item.detail || item.label)
+        );
+      }
     });
 
     it('html file completions', async () => {

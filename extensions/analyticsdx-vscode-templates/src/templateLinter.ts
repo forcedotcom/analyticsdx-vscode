@@ -151,9 +151,9 @@ export class TemplateLinter {
     return diagnostic;
   }
 
-  /** Finds if non-unique values are found amongst the string values for a jsonpath.
+  /** Finds if non-unique values are found amongst the string values for a jsonpath(s).
    * @param source the doc + json nodes to search for the jsonpath in
-   * @param jsonpath the path to the value nodes in the json
+   * @param jsonpathOrPaths the path or paths to the value nodes(s) in the json
    * @param message the message for a diagnostic for each duplicate value node, can be a string or function
    * @param relatedMessage if specified, relatedInformation for each other found value will be added to the diagnostics,
    *        with this message
@@ -162,7 +162,7 @@ export class TemplateLinter {
    */
   private lintUniqueValues(
     sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode | JsonNode[] }>,
-    jsonpath: JSONPath,
+    jsonpathOrPaths: JSONPath | readonly JSONPath[],
     message: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
     relatedMessage?: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
     computeValue: (node: JsonNode, doc: vscode.TextDocument) => string | undefined = node => {
@@ -171,16 +171,22 @@ export class TemplateLinter {
   ) {
     // value -> list of doc+node's w/ that value
     const values = new Map<string, Array<{ doc: vscode.TextDocument; node: JsonNode }>>();
+    const jsonpaths =
+      jsonpathOrPaths.length > 0 && Array.isArray(jsonpathOrPaths[0])
+        ? (jsonpathOrPaths as JSONPath[])
+        : [jsonpathOrPaths as JSONPath];
     sources.forEach(({ doc, nodes: tree }) => {
-      matchJsonNodesAtPattern(tree, jsonpath).reduce((values, node) => {
-        const value = computeValue(node, doc);
-        if (value) {
-          const matches = values.get(value) || [];
-          matches.push({ doc, node });
-          values.set(value, matches);
-        }
-        return values;
-      }, values);
+      jsonpaths.forEach(jsonpath => {
+        matchJsonNodesAtPattern(tree, jsonpath).reduce((values, node) => {
+          const value = computeValue(node, doc);
+          if (value) {
+            const matches = values.get(value) || [];
+            matches.push({ doc, node });
+            values.set(value, matches);
+          }
+          return values;
+        }, values);
+      });
     });
 
     values.forEach((matches, value) => {
@@ -255,8 +261,16 @@ export class TemplateLinter {
       )
     ]);
     // while those are going, do these synchronous ones
+
     this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
+    // make sure no 2+ relpath fields point to the same definition file (since that will be mess up our schema associations)
+    this.lintUniqueValues(
+      [{ doc, nodes: tree }],
+      TEMPLATE_INFO.definitionFilePathLocationPatterns,
+      relpath => `Duplicate usage of path ${relpath}`,
+      'Other usage'
+    );
 
     // wait for the async ones
     await p;
@@ -358,6 +372,8 @@ export class TemplateLinter {
           this.addDiagnostic(doc, 'Value should be a path relative to this file', n);
         } else if (relPath.includes('/../') || relPath.endsWith('/..')) {
           this.addDiagnostic(doc, "Path should not contain '..' parts", n);
+        } else if (relPath === 'template-info.json') {
+          this.addDiagnostic(doc, "Path cannot be 'template-info.json'", n);
         } else {
           const uri = doc.uri.with({ path: path.join(path.dirname(doc.uri.path), relPath) });
           const p = uriStat(uri)

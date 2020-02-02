@@ -21,7 +21,7 @@ export const htmlFileFilter = newFileExtensionFilter('html', 'htm');
 export const imageFileFilter = newFileExtensionFilter('png', 'jpg', 'gif', 'svg');
 export const csvFileFilter = newFileExtensionFilter('csv');
 
-const jsonPats = [
+const definitionFilesPats = [
   ['variableDefinition'] as JSONPath,
   ['uiDefinition'],
   ['folderDefinition'],
@@ -30,11 +30,14 @@ const jsonPats = [
   ['dashboards', '*', 'file'],
   ['lenses', '*', 'file'],
   ['eltDataflows', '*', 'file'],
+  ['storedQueries', '*', 'file'],
+  ['extendedTypes', '*', '*', 'file']
+];
+const jsonPats = [
+  ...definitionFilesPats,
   ['externalFiles', '*', 'schema'],
   ['externalFiles', '*', 'userXmd'],
-  ['storedQueries', '*', 'file'],
-  ['datasetFiles', '*', 'userXmd'],
-  ['extendedTypes', '*', '*', 'file']
+  ['datasetFiles', '*', 'userXmd']
 ];
 const htmlPats = [['releaseInfo', 'notesFile'] as JSONPath];
 const imagePats = [['imageFiles', '*', 'file'] as JSONPath];
@@ -44,6 +47,11 @@ const csvPats = [['externalFiles', '*', 'file'] as JSONPath];
  * Constants related to template-info.json files.
  */
 export const TEMPLATE_INFO = Object.freeze({
+  /** JSONPaths to attributes that are relative-paths to object definition files.
+   * Generally, these should not be referenced more than once in a template.
+   */
+  definitionFilePathLocationPatterns: Object.freeze(definitionFilesPats),
+
   /**
    * JSONPaths to attributes that should be relative-paths to other json files.
    */
