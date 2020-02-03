@@ -47,6 +47,10 @@ import { findTemplateInfoFileFor } from './util/templateUtils';
 import { isValidRelpath } from './util/utils';
 import { clearDiagnosticsUnder, isUriAtOrUnder, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
 
+function templateJsonFileFilter(s: string) {
+  return jsonFileFilter(s) && s !== 'template-info.json';
+}
+
 /** Wraps the setup for configuring editing for the files in a template directory. */
 class TemplateDirEditing extends Disposable {
   /** A hashkey for checking for equality between different instances. */
@@ -151,7 +155,7 @@ class TemplateDirEditing extends Disposable {
       // locations that support *.json fies:
       newRelativeFilepathDelegate({
         supported: location => TEMPLATE_INFO.jsonRelFilePathLocationPatterns.some(location.matches),
-        filter: jsonFileFilter
+        filter: templateJsonFileFilter
       }),
       // attributes that should have html paths
       newRelativeFilepathDelegate({
@@ -327,40 +331,45 @@ export class TemplateEditingManager extends Disposable {
 
   public getSchemaAssociations(): ISchemaAssociations {
     const associations: ISchemaAssociations = {};
+    // for each template, find the related file paths and configure them with the right json-schema.
     this.templateDirs.forEach(editing => {
       if (editing.dir.scheme === 'file') {
-        // for each template, find the related file paths and configure them with the right json-schema
-        let filePath = editing.folderDefinitionPath;
-        if (filePath && isValidRelpath(filePath)) {
-          // REVIEWME: what if they put in the same file path in 2 different relPath fields?
-          // right now, this will do last-one-wins. should be we both? that's probably weird.
-          //
-          associations[path.join(editing.dir.path, filePath)] = [this.folderSchemaPath.toString()];
-        }
+        this.addRelpathSchemaAssociation(
+          associations,
+          this.folderSchemaPath,
+          editing.dir,
+          editing.folderDefinitionPath
+        );
 
-        filePath = editing.uiDefinitionPath;
-        if (filePath && isValidRelpath(filePath)) {
-          associations[path.join(editing.dir.path, filePath)] = [this.uiSchemaPath.toString()];
-        }
+        this.addRelpathSchemaAssociation(associations, this.uiSchemaPath, editing.dir, editing.uiDefinitionPath);
 
-        filePath = editing.variablesDefinitionPath;
-        if (filePath && isValidRelpath(filePath)) {
-          associations[path.join(editing.dir.path, filePath)] = [this.variablesSchemaPath.toString()];
-        }
+        this.addRelpathSchemaAssociation(
+          associations,
+          this.variablesSchemaPath,
+          editing.dir,
+          editing.variablesDefinitionPath
+        );
 
-        const filePaths = editing.rulesDefinitionPaths;
-        if (filePaths) {
-          filePaths.forEach(filePath => {
-            if (filePath && isValidRelpath(filePath)) {
-              associations[path.join(editing.dir.path, filePath)] = [this.rulesSchemaPath.toString()];
-            }
-          });
-        }
+        editing.rulesDefinitionPaths?.forEach(filePath => {
+          this.addRelpathSchemaAssociation(associations, this.rulesSchemaPath, editing.dir, filePath);
+        });
+
         // TODO: get other associated files from the template-info.json
       }
     });
     associations['**/template-info.json'] = [this.templateInfoSchemaPath.toString()];
     return associations;
+  }
+
+  private addRelpathSchemaAssociation(
+    associations: ISchemaAssociations,
+    schema: vscode.Uri,
+    dir: vscode.Uri,
+    relpath: string | undefined
+  ) {
+    if (relpath && isValidRelpath(relpath) && relpath !== 'template-info.json') {
+      associations[path.join(dir.path, relpath)] = [schema.toString()];
+    }
   }
 
   private updateSchemaAssociations() {
