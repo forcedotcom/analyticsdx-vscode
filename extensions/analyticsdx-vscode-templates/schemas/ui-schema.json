@@ -91,11 +91,11 @@
                       "patternErrorMessage": "Value must one of 'Disabled', 'Hidden', or 'Visible', or a {{...}} expression.",
                       "examples": [
                         "{{Variables.booleanVariable}}",
-                        "{{Variables.booleanVariable ? 'Visiible' : 'Disabled'}}",
-                        "{{Variables.stringVariable == 'Yes' ? 'Visiible' : 'Hidden'}}",
-                        "{{Variables.numberVariable == 5 ? 'Visiible' : 'Hidden'}}",
-                        "{{Variables.stringArray contains 'X' ? 'Visiible' : 'Hidden'}}",
-                        "{{Variables.numberArray contains 5 ? 'Visiible' : 'Hidden'}}"
+                        "{{Variables.booleanVariable ? 'Visible' : 'Disabled'}}",
+                        "{{Variables.stringVariable == 'Yes' ? 'Visible' : 'Hidden'}}",
+                        "{{Variables.numberVariable == 5 ? 'Visible' : 'Hidden'}}",
+                        "{{Variables.stringArray contains 'X' ? 'Visible' : 'Hidden'}}",
+                        "{{Variables.numberArray contains 5 ? 'Visible' : 'Hidden'}}"
                       ]
                     },
                     {
@@ -146,7 +146,8 @@
               "title": "${1:Page title}",
               "variables": [
                 {
-                  "name": "${2:name}"
+                  "name": "${2:name}",
+                  "visibility": "${3:Visible}"
                 }
               ]
             }
@@ -161,7 +162,8 @@
               "title": "${1:Page title}",
               "variables": [
                 {
-                  "name": "${2:name}"
+                  "name": "${2:name}",
+                  "visibility": "${3:Visible}"
                 }
               ]
             }

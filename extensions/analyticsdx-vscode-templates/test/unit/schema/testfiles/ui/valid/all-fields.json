@@ -59,7 +59,7 @@
         },
         {
           "name": "ternary",
-          "visibility": "{{Variables.stringVariable == 'Yes' ? 'Visiible' : 'Hidden'}}"
+          "visibility": "{{Variables.stringVariable == 'Yes' ? 'Visible' : 'Hidden'}}"
         }
       ]
     }
