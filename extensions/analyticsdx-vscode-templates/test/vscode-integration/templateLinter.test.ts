@@ -211,6 +211,35 @@ describe('TemplateLinterManager', () => {
       // there could also be a json-schema diagnostic that eltDataflows is missing, so don't failOnUnexpected()
     });
 
+    it('shows problem on template name not matching folder name', async () => {
+      const [t, , editor] = await createTempTemplate(true);
+      tmpdir = t;
+      const dirname = uriBasename(t);
+      await setDocumentText(editor!, {
+        name: 'NotTheFolderName'
+      });
+      const diagnosticFilter = (d: vscode.Diagnostic) => d.code === 'name';
+      const diagnostics = (
+        await waitForDiagnostics(editor!.document.uri, d => d?.some(diagnosticFilter), 'initial name warning')
+      ).filter(diagnosticFilter);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 name diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
+      expect(diagnostics[0].message, 'diagnostic.message').equals(
+        `Template name must match the template folder name '${dirname}'`
+      );
+      // fix the name
+      await setDocumentText(editor!, {
+        name: dirname
+      });
+      await waitForDiagnostics(
+        editor!.document.uri,
+        d => d && d.filter(diagnosticFilter).length === 0,
+        'no name warning after fix'
+      );
+    });
+
     it('shows warning on relpath pointing to template-info.json', async () => {
       const [t, , editor] = await createTempTemplate(true);
       tmpdir = t;

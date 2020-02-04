@@ -175,7 +175,7 @@ describe('TemplateEditorManager', () => {
     });
 
     it("of template folder's folder", async () => {
-      [tmpdir] = await createTempTemplate(false, false, 'subdir');
+      [tmpdir] = await createTempTemplate(false, { show: false }, 'subdir');
       const templateDir = tmpdir.with({ path: path.join(tmpdir.path, 'subdir') });
       const templateEditingManager = await getTemplateEditorManager();
 

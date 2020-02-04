@@ -25,7 +25,7 @@
   "scripts": {
     "postinstall": "lerna bootstrap -- --no-package-lock && node scripts/reformat-with-prettier",
     "bootstrap": "lerna bootstrap -- --no-package-lock && node scripts/reformat-with-prettier",
-    "clean": "shx rm -rf test-assets/sfdx-simple/force-app/main/default/waveTemplates/test-template-* && lerna run clean",
+    "clean": "shx rm -rf test-assets/sfdx-simple/force-app/main/default/waveTemplates/test_template_* && lerna run clean",
     "cleanall": "npm run clean && rm -rf node_modules package-lock.json",
     "compile": "lerna run --stream compile",
     "lint": "lerna run --stream lint",

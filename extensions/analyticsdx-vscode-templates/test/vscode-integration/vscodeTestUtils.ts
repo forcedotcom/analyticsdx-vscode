@@ -13,6 +13,7 @@ import * as vscode from 'vscode';
 import { ExtensionType as TemplateExtensionType } from '../../src';
 import { EXTENSION_ID } from '../../src/constants';
 import { matchJsonNodeAtPattern } from '../../src/util/jsoncUtils';
+import { uriBasename } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 
 // the tests here open vscode against /test-assets/sfdx-simple,
@@ -178,13 +179,20 @@ export async function waitForDiagnostics(
 
 /** Create a temporary directory in waveTemplates/ and an empty template-info.json.
  * @param open true to open the template-info.json file
- * @param show true to open the editor on the template-info.json (if open == true)
+ * @param show true to open the editor on the template-info.json (if open == true); defaults to true
+ * @param includeName true to set the name field in the template-info.json to the folder name; defaults to false
  * @param subdir optional sub directories paths under the temp directory, in which to create the template
  * @return the temp directory, and the document (if open == true) and the editor (if show == true).
  */
 export async function createTempTemplate(
   open: boolean,
-  show = true,
+  {
+    show = true,
+    includeName = false
+  }: {
+    show?: boolean;
+    includeName?: boolean;
+  } = {},
   ...subdirs: string[]
 ): Promise<[vscode.Uri, vscode.TextDocument | undefined, vscode.TextEditor | undefined]> {
   const basedir = uriFromTestRoot(waveTemplatesUriPath);
@@ -196,7 +204,8 @@ export async function createTempTemplate(
   // we don't accidently check in temp test files.
   // If you change this base name here, be sure to change that .gitignore
   const dir = await new Promise<vscode.Uri>((resolve, reject) => {
-    tmp.tmpName({ dir: basedir.fsPath, prefix: 'test-template-' }, (err, tmppath) => {
+    // the folder name needs to be a valid dev name; tmpName() is supposed to only use alphanum chars
+    tmp.tmpName({ dir: basedir.fsPath, prefix: 'test_template_' }, (err, tmppath) => {
       if (err) {
         reject(err);
       }
@@ -212,8 +221,9 @@ export async function createTempTemplate(
     }
   }
   const file = templateDir.with({ path: path.join(templateDir.path, 'template-info.json') });
-  // write {} into the file directly
-  await writeEmptyJsonFile(file);
+  // write the template-info.json file
+  await writeTextToFile(file, includeName ? { name: uriBasename(templateDir) } : {});
+
   if (!open) {
     return [dir, undefined, undefined];
   }

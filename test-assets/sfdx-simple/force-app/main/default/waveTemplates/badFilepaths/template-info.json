@@ -1,7 +1,7 @@
 {
   "templateType": "app",
-  "label": "BadFilePaths",
-  "name": "BadFilePaths",
+  "label": "Bad File Paths",
+  "name": "badFilepaths",
   "assetVersion": 46.0,
   "releaseInfo": {
     "templateVersion": "1.1",

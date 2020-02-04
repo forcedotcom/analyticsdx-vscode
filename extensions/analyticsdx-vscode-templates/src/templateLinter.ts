@@ -261,7 +261,7 @@ export class TemplateLinter {
       )
     ]);
     // while those are going, do these synchronous ones
-
+    this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
     this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
     // make sure no 2+ relpath fields point to the same definition file (since that will be mess up our schema associations)
@@ -274,6 +274,17 @@ export class TemplateLinter {
 
     // wait for the async ones
     await p;
+  }
+
+  private lintTemplateInfoDevName(doc: vscode.TextDocument, tree: JsonNode) {
+    const [name, nodeName] = findJsonPrimitiveAttributeValue(tree, 'name');
+    if (name && typeof name === 'string') {
+      // name has to match the template's folder name
+      const dirname = path.basename(path.dirname(doc.uri.path));
+      if (name !== dirname) {
+        this.addDiagnostic(doc, `Template name must match the template folder name '${dirname}'`, nodeName);
+      }
+    }
   }
 
   private lintTemplateInfoRulesAndRulesDefinition(doc: vscode.TextDocument, tree: JsonNode) {
