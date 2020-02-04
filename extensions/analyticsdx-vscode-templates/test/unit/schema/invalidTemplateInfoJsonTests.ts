@@ -59,6 +59,7 @@ describe('template-info-schema.json finds errors in', () => {
       'name',
       'label',
       'description',
+      'assetVersion',
       'releaseInfo.error',
       'rules[0].error',
       'externalFiles[0].error',
@@ -93,6 +94,11 @@ describe('template-info-schema.json finds errors in', () => {
       });
     }
   );
+
+  it('invalid-assertVersion.json', async () => {
+    const errors = await validate('invalid-assetVersion.json');
+    errors.expectInvalidProps(false, 'assetVersion');
+  });
 
   it('missing-required-fields.json', async () => {
     const errors = await validate('missing-required-fields.json');
