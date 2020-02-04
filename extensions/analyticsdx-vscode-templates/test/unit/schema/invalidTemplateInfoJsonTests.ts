@@ -57,6 +57,7 @@ describe('template-info-schema.json finds errors in', () => {
       true,
       'error',
       'name',
+      'label',
       'releaseInfo.error',
       'rules[0].error',
       'externalFiles[0].error',

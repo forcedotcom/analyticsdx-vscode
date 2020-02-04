@@ -2,7 +2,7 @@
   "templateType": "dashboard",
   "error": "This should trigger a warning",
   "name": "0Invalid__name_",
-  "label": "label",
+  "label": "label too long 0123456789012345678901234567890123456789012345678901234567890123456789",
   "assetVersion": 47.0,
   "releaseInfo": {
     "templateVersion": "1.0",

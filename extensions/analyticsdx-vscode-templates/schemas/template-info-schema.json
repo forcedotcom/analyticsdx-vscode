@@ -92,7 +92,8 @@
     },
     "label": {
       "type": "string",
-      "description": "The template name that is visible to users."
+      "description": "The template name that is visible to users.",
+      "maxLength": 80
     },
     "description": {
       "type": [
