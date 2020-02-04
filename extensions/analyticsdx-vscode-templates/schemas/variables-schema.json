@@ -74,16 +74,36 @@
             "ConnectorType"
           ]
         },
-        "enums": {},
-        "min": {},
-        "max": {},
-        "dataType": {},
-        "itemsType": {},
-        "sizeLimit": {},
-        "properties": {},
-        "required": {},
-        "strictValidation": {},
-        "connectorType": {}
+        "enums": {
+          "doNotSuggest": true
+        },
+        "min": {
+          "doNotSuggest": true
+        },
+        "max": {
+          "doNotSuggest": true
+        },
+        "dataType": {
+          "doNotSuggest": true
+        },
+        "itemsType": {
+          "doNotSuggest": true
+        },
+        "sizeLimit": {
+          "doNotSuggest": true
+        },
+        "properties": {
+          "doNotSuggest": true
+        },
+        "required": {
+          "doNotSuggest": true
+        },
+        "strictValidation": {
+          "doNotSuggest": true
+        },
+        "connectorType": {
+          "doNotSuggest": true
+        }
       },
       "defaultSnippets": [
         {
@@ -106,7 +126,8 @@
               "description": "The possible string values.",
               "items": {
                 "type": "string"
-              }
+              },
+              "doNotSuggest": false
             }
           },
           "required": ["type"]
@@ -118,11 +139,13 @@
             },
             "min": {
               "type": ["number", "integer"],
-              "description": "The minimum numeric value."
+              "description": "The minimum numeric value.",
+              "doNotSuggest": false
             },
             "max": {
               "type": ["number", "integer"],
-              "description": "The maximum numeric value."
+              "description": "The maximum numeric value.",
+              "doNotSuggest": false
             },
             "enums": {
               "type": "array",
@@ -130,7 +153,8 @@
               "description": "The possible numeric values.",
               "items": {
                 "type": ["number", "integer"]
-              }
+              },
+              "doNotSuggest": false
             }
           },
           "required": ["type"]
@@ -153,7 +177,8 @@
                 "xsd:int",
                 "xsd:string",
                 "xsd:time"
-              ]
+              ],
+              "doNotSuggest": false
             }
           },
           "required": ["type"]
@@ -180,7 +205,8 @@
                   "type": ["number", "integer"],
                   "description": "The maximum size of the array."
                 }
-              }
+              },
+              "doNotSuggest": false
             }
           },
           "required": ["type", "itemsType"]
@@ -191,9 +217,11 @@
               "const": "ConnectorType"
             },
             "connectorType": {
-              "description": "The type of connector to offer to the user.  Only used for ConnectorType variables."
+              "description": "The type of connector to offer to the user.  Only used for ConnectorType variables.",
+              "doNotSuggest": false
             }
-          }
+          },
+          "required": ["type"]
         },
         {
           "properties": {
@@ -213,12 +241,14 @@
               "minItems": 0,
               "items": {
                 "type": "string"
-              }
+              },
+              "doNotSuggest": false
             },
             "strictValidation": {
               "type": "boolean",
               "description": "Specifies if this perform strict validation of the fields values against the property definitions. Defaults to false.",
-              "default": false
+              "default": false,
+              "doNotSuggest": false
             }
           },
           "required": ["type"]
@@ -227,7 +257,7 @@
           "properties": {
             "type": {
               "not": {
-                "enum": ["StringType", "NumberType", "SobjectFieldType", "ArrayType", "ObjectType"]
+                "enum": ["StringType", "NumberType", "SobjectFieldType", "ArrayType", "ObjectType", "ConnectorType"]
               }
             }
           }

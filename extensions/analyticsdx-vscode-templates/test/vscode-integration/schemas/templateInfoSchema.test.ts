@@ -19,35 +19,13 @@ import {
   openTemplateInfo,
   openTemplateInfoAndWaitForDiagnostics,
   setDocumentText,
+  verifyCompletionsContain,
   waitForDiagnostics,
   writeTextToFile
 } from '../vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
 describe('template-info-schema.json hookup', () => {
-  async function verifyCompletionsContain(
-    document: vscode.TextDocument,
-    position: vscode.Position,
-    ...expectedLabels: string[]
-  ) {
-    const list = await getCompletionItems(document.uri, position);
-    const labels = list.items.map(item => item.label);
-    expect(labels, 'completion items').to.include.members(expectedLabels);
-    // also we shouldn't get any duplicate code completion items (which can come if something else, like the default
-    // json language service, is injecting extra stuff into our document type).
-    const dups: string[] = [];
-    list.items
-      .reduce((m, val) => m.set(val.label, (m.get(val.label) || 0) + 1), new Map<string, number>())
-      .forEach((num, label) => {
-        if (num >= 2) {
-          dups.push(label);
-        }
-      });
-    if (dups.length > 0) {
-      expect.fail('Found duplicate completion items: ' + dups.join(', '));
-    }
-  }
-
   describe('shows problems on', () => {
     beforeEach(closeAllEditors);
     afterEach(closeAllEditors);

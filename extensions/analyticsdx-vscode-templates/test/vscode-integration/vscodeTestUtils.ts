@@ -13,7 +13,7 @@ import * as vscode from 'vscode';
 import { ExtensionType as TemplateExtensionType } from '../../src';
 import { EXTENSION_ID } from '../../src/constants';
 import { matchJsonNodeAtPattern } from '../../src/util/jsoncUtils';
-import { uriBasename } from '../../src/util/vscodeUtils';
+import { uriBasename, uriRelPath } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 
 // the tests here open vscode against /test-assets/sfdx-simple,
@@ -247,6 +247,49 @@ export function writeEmptyJsonFile(file: vscode.Uri): Thenable<void> {
   return writeTextToFile(file, '{}');
 }
 
+export type PathFieldAndJson = {
+  // pass in a either top-level field name, or a function that will inject the appropriate structure into the
+  // template-info json structure
+  field: string | ((json: any, path: string) => void);
+  path: string;
+  initialJson: string | object;
+};
+/** Create a template with related file(s) configured.
+ * @param files the related file(s) information
+ * @returns the template folder uri and related file editors
+ */
+export async function createTemplateWithRelatedFiles(
+  ...files: PathFieldAndJson[]
+): Promise<[vscode.Uri, vscode.TextEditor[]]> {
+  const [tmpdir] = await createTempTemplate(false);
+  // make an empty template
+  const templateUri = uriRelPath(tmpdir, 'template-info.json');
+  const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+  const templateJson: { [key: string]: any } = {};
+  // create the related file(s)
+  const editors = await Promise.all(
+    files.map(async file => {
+      const uri = uriRelPath(tmpdir!, file.path);
+      await writeEmptyJsonFile(uri);
+      const [, editor] = await openFile(uri);
+      await setDocumentText(editor, file.initialJson);
+      // but since it's not reference by the template-info.json, it should have no errors
+      await waitForDiagnostics(editor.document.uri, d => d && d.length === 0, `No initial diagnostics on ${file.path}`);
+      // inject the attribute into the template-info json
+      if (typeof file.field === 'string') {
+        templateJson[file.field] = file.path;
+      } else {
+        file.field(templateJson, file.path);
+      }
+      return editor;
+    })
+  );
+
+  // now, hookup the related file(s)
+  await setDocumentText(templateEditor, templateJson);
+  return [tmpdir, editors];
+}
+
 export function findPositionByJsonPath(doc: vscode.TextDocument, path: JSONPath): vscode.Position | undefined {
   const root = parseTree(doc.getText());
   const node = matchJsonNodeAtPattern(root, path);
@@ -282,4 +325,28 @@ export async function getCompletionItems(uri: vscode.Uri, position: vscode.Posit
     expect.fail('Expected vscode.CompletionList, got undefined');
   }
   return result!;
+}
+
+export async function verifyCompletionsContain(
+  document: vscode.TextDocument,
+  position: vscode.Position,
+  ...expectedLabels: string[]
+): Promise<vscode.CompletionItem[]> {
+  const list = await getCompletionItems(document.uri, position);
+  const labels = list.items.map(item => item.label);
+  expect(labels, 'completion items').to.include.members(expectedLabels);
+  // also we shouldn't get any duplicate code completion items (which can come if something else, like the default
+  // json language service, is injecting extra stuff into our document type).
+  const dups: string[] = [];
+  list.items
+    .reduce((m, val) => m.set(val.label, (m.get(val.label) || 0) + 1), new Map<string, number>())
+    .forEach((num, label) => {
+      if (num >= 2) {
+        dups.push(label);
+      }
+    });
+  if (dups.length > 0) {
+    expect.fail('Found duplicate completion items: ' + dups.join(', '));
+  }
+  return list.items;
 }

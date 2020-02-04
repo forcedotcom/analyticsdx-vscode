@@ -11,9 +11,11 @@ import * as vscode from 'vscode';
 import { uriBasename, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import {
   closeAllEditors,
+  createTemplateWithRelatedFiles as _createTemplateWithRelatedFiles,
   createTempTemplate,
   openFile,
   openTemplateInfoAndWaitForDiagnostics,
+  PathFieldAndJson,
   setDocumentText,
   waitForDiagnostics,
   writeEmptyJsonFile,
@@ -41,48 +43,10 @@ describe('TemplateLinterManager', () => {
     tmpdir = undefined;
   });
 
-  type PathFieldAndJson = {
-    // pass in a either top-level field name, or a function that will inject the appropriate structure into the
-    // template-info json structure
-    field: string | ((json: any, path: string) => void);
-    path: string;
-    initialJson: string | object;
-  };
-  /** Create a template with a related file configured.
-   * @param files the related file(s) information
-   * @returns the related file editors
-   */
-  async function createTemplateWithRelatedFiles(...files: PathFieldAndJson[]): Promise<vscode.TextEditor[]> {
-    [tmpdir] = await createTempTemplate(false);
-    // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
-    const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
-    const templateJson: { [key: string]: any } = {};
-    // create the related file(s)
-    const editors = await Promise.all(
-      files.map(async file => {
-        const uri = uriRelPath(tmpdir!, file.path);
-        await writeEmptyJsonFile(uri);
-        const [, editor] = await openFile(uri);
-        await setDocumentText(editor, file.initialJson);
-        // but since it's not reference by the template-info.json, it should have no errors
-        await waitForDiagnostics(
-          editor.document.uri,
-          d => d && d.length === 0,
-          `No initial diagnostics on ${file.path}`
-        );
-        // inject the attribute into the template-info json
-        if (typeof file.field === 'string') {
-          templateJson[file.field] = file.path;
-        } else {
-          file.field(templateJson, file.path);
-        }
-        return editor;
-      })
-    );
-
-    // now, hookup the related file(s)
-    await setDocumentText(templateEditor, templateJson);
+  async function createTemplateWithRelatedFiles(...files: PathFieldAndJson[]) {
+    const [dir, editors] = await _createTemplateWithRelatedFiles(...files);
+    // save off the temp directory so it'll get deleted
+    tmpdir = dir;
     return editors;
   }
 
