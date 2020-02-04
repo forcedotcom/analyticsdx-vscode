@@ -1,7 +1,7 @@
 {
   "templateType": "dashboard",
-  "label": "Missing_dashboards_Dashboard",
-  "name": "Missing dashboads Dashboard",
+  "name": "Missing_dashboards_Dashboard",
+  "label": "Missing dashboads Dashboard",
   "description": "For linter.test.ts, a dashboard template missing 'dashboards' field",
   "assetVersion": 46.0,
   "rules": [

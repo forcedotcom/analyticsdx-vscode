@@ -56,6 +56,7 @@ describe('template-info-schema.json finds errors in', () => {
     errors.expectInvalidProps(
       true,
       'error',
+      'name',
       'releaseInfo.error',
       'rules[0].error',
       'externalFiles[0].error',
@@ -78,6 +79,15 @@ describe('template-info-schema.json finds errors in', () => {
     );
     errors.expectNoMissingProps();
     errors.expectNoUnrecognizedErrors();
+  });
+
+  // make sure the regex for name catches the various invalid values
+  ['empty-name.json', 'invalid-name1.json', 'invalid-name2.json', 'invalid-name3.json'].forEach(file => {
+    it(file, async () => {
+      const errors = await validate(file);
+      // name should be invalid (plus a bunch more this test isn't interested in)
+      errors.expectInvalidProps(false, 'name');
+    });
   });
 
   it('missing-required-fields.json', async () => {

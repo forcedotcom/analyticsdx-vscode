@@ -1,7 +1,7 @@
 {
   "templateType": "dashboard",
-  "label": "Empty_dashboards_Dashboard",
-  "name": "Empty dashboads Dashboard",
+  "name": "Empty_dashboards_Dashboard",
+  "label": "Empty dashboads Dashboard",
   "description": "For linter.test.ts, a dashboard template with multiple 'dashboards'",
   "assetVersion": 46.0,
   "rules": [

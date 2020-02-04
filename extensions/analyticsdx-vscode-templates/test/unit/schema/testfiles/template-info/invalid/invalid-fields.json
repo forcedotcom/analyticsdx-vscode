@@ -1,7 +1,7 @@
 {
   "templateType": "dashboard",
   "error": "This should trigger a warning",
-  "name": "name",
+  "name": "0Invalid__name_",
   "label": "label",
   "assetVersion": 47.0,
   "releaseInfo": {
@@ -111,7 +111,9 @@
     {
       "label": "label",
       "error": "This should trigger a warning",
-      "values": ["value"]
+      "values": [
+        "value"
+      ]
     }
   ],
   "videos": [
