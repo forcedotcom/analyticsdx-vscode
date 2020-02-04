@@ -84,13 +84,15 @@ describe('template-info-schema.json finds errors in', () => {
   });
 
   // make sure the regex for name catches the various invalid values
-  ['empty-name.json', 'invalid-name1.json', 'invalid-name2.json', 'invalid-name3.json'].forEach(file => {
-    it(file, async () => {
-      const errors = await validate(file);
-      // name should be invalid (plus a bunch more this test isn't interested in)
-      errors.expectInvalidProps(false, 'name');
-    });
-  });
+  ['empty-name.json', 'invalid-name1.json', 'invalid-name2.json', 'invalid-name3.json', 'invalid-name3.json'].forEach(
+    file => {
+      it(file, async () => {
+        const errors = await validate(file);
+        // name should be invalid (plus a bunch more this test isn't interested in)
+        errors.expectInvalidProps(false, 'name');
+      });
+    }
+  );
 
   it('missing-required-fields.json', async () => {
     const errors = await validate('missing-required-fields.json');

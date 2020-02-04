@@ -64,6 +64,7 @@
     "name": {
       "type": "string",
       "description": "The unique developer name of the template. If this is changed, it creates a new template; if it is changed to an existing template devName, it overwrites the existing template.",
+      "maxLength": 80,
       "pattern": "^(?!.*__)(?!.*_$)[A-Za-z][A-Za-z0-9_]*$",
       "patternErrorMessage": "Value should start with an ascii letter, followed by letters, numbers, or underscores. It cannot contain consecutive underscores nor end in an underscore."
     },
