@@ -3,6 +3,7 @@
   "error": "This should trigger a warning",
   "name": "0Invalid__name_",
   "label": "label too long 0123456789012345678901234567890123456789012345678901234567890123456789",
+  "description": "description too long 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234",
   "assetVersion": 47.0,
   "releaseInfo": {
     "templateVersion": "1.0",
@@ -111,9 +112,7 @@
     {
       "label": "label",
       "error": "This should trigger a warning",
-      "values": [
-        "value"
-      ]
+      "values": ["value"]
     }
   ],
   "videos": [

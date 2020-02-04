@@ -13,18 +13,11 @@
         "const": "dashboard"
       }
     },
-    "required": [
-      "templateType"
-    ]
+    "required": ["templateType"]
   },
   "then": {
     "$comment": "dashboard templates need these",
-    "required": [
-      "name",
-      "label",
-      "assetVersion",
-      "dashboards"
-    ]
+    "required": ["name", "label", "assetVersion", "dashboards"]
   },
   "else": {
     "if": {
@@ -33,27 +26,15 @@
           "const": "lens"
         }
       },
-      "required": [
-        "templateType"
-      ]
+      "required": ["templateType"]
     },
     "then": {
       "$comment": "lens templates need these",
-      "required": [
-        "name",
-        "label",
-        "assetVersion",
-        "lenses"
-      ]
+      "required": ["name", "label", "assetVersion", "lenses"]
     },
     "else": {
       "$comment": "app templates need these",
-      "required": [
-        "name",
-        "label",
-        "assetVersion",
-        "releaseInfo"
-      ]
+      "required": ["name", "label", "assetVersion", "releaseInfo"]
     }
   },
   "properties": {
@@ -63,11 +44,7 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": [
-            "app",
-            "dashboard",
-            "embeddedapp"
-          ],
+          "enum": ["app", "dashboard", "embeddedapp"],
           "enumDescriptions": [
             "Specify that this is an application template.",
             "Specify that this is a dashboard template.",
@@ -96,11 +73,9 @@
       "maxLength": 80
     },
     "description": {
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": ["null", "string"],
       "description": "The template description to tell users about the asset they will be creating using the template.",
+      "maxLength": 255,
       "defaultSnippets": [
         {
           "label": "\"\"",
@@ -109,10 +84,7 @@
       ]
     },
     "assetIcon": {
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": ["null", "string"],
       "deprecationMessage": "Deprecated - use 'icons.appBadge' instead.",
       "description": "(Deprecated - use 'icons.appBadge' instead) Sets the app icon at creation. There are 20 app icons stored as .png files in Analytics, which are numbered 1-20. If not specified, system will use default icon 1.png for the app.",
       "defaultSnippets": [
@@ -123,10 +95,7 @@
       ]
     },
     "templateIcon": {
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": ["null", "string"],
       "default": "default.png",
       "deprecationMessage": "Deprecated - use 'icons.templateBadge' instead.",
       "description": "(Deprecated - use icons.templateBadge instead) Sets the template icon to display in the UI. If not specified, system will use default icon for the template (default.png). Currently, default.png is the only icon ISVs can use.",
@@ -138,14 +107,9 @@
       ]
     },
     "icons": {
-      "type": [
-        "null",
-        "object"
-      ],
+      "type": ["null", "object"],
       "description": "Specifies icons to display in the UI for the template.",
-      "examples": [
-        {}
-      ],
+      "examples": [{}],
       "additionalProperties": false,
       "properties": {
         "appBadge": {
@@ -161,14 +125,9 @@
           "deprecationMessage": "Deprecated - no longer used."
         },
         "templatePreviews": {
-          "type": [
-            "null",
-            "array"
-          ],
+          "type": ["null", "array"],
           "minItems": 0,
-          "examples": [
-            []
-          ],
+          "examples": [[]],
           "description": "Preview icons for the template.",
           "items": {
             "$ref": "#/definitions/previewIcon",
@@ -187,9 +146,7 @@
       "type": "object",
       "description": "Release information for the template.",
       "additionalProperties": false,
-      "required": [
-        "templateVersion"
-      ],
+      "required": ["templateVersion"],
       "properties": {
         "templateVersion": {
           "type": "string",
@@ -197,10 +154,7 @@
           "pattern": "^[0-9]+\\.[0-9]+$"
         },
         "notesFile": {
-          "type": [
-            "null",
-            "string"
-          ],
+          "type": ["null", "string"],
           "description": "A template dev defined HTML file to describe new release details. Basic HTML formatting is supported, but not links or javascript. Defaults to using the template description as release notes if file is not specified.",
           "defaultSnippets": [
             {
@@ -221,29 +175,18 @@
       ]
     },
     "rules": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "Defines the rules files for converting to and from the template, loaded 1st to last and order matters for dependencies.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "type",
-          "file"
-        ],
+        "required": ["type", "file"],
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "templateToApp",
-              "appToTemplate"
-            ],
+            "enum": ["templateToApp", "appToTemplate"],
             "enumDescriptions": [
               "Rules to apply when creating a new app from a template.",
               "Rules to apply when updating the template from the master app ."
@@ -283,10 +226,7 @@
       ]
     },
     "ruleDefinition": {
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": ["null", "string"],
       "deprecationMessage": "Deprecated - use a templateToApp rule instead.",
       "description": "(Deprecated - use a templateToApp rule instead) Define a single templateToApp rules file for the template.",
       "defaultSnippets": [
@@ -297,10 +237,7 @@
       ]
     },
     "uiDefinition": {
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": ["null", "string"],
       "description": "Path to the UI information file.",
       "defaultSnippets": [
         {
@@ -310,10 +247,7 @@
       ]
     },
     "variableDefinition": {
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": ["null", "string"],
       "description": "Path to the variables definition file.",
       "defaultSnippets": [
         {
@@ -323,10 +257,7 @@
       ]
     },
     "folderDefinition": {
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": ["null", "string"],
       "description": "Path to the folder definition file.",
       "defaultSnippets": [
         {
@@ -339,10 +270,7 @@
       "type": "object",
       "description": "Registers an Apex class that runs on wizard load, app create, and app upgrade. The Apex class examines the org and sets variable values.",
       "additionalProperties": false,
-      "required": [
-        "namespace",
-        "name"
-      ],
+      "required": ["namespace", "name"],
       "properties": {
         "namespace": {
           "type": "string",
@@ -365,22 +293,14 @@
       ]
     },
     "dashboards": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of dashboards to include in the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "file",
-          "label"
-        ],
+        "required": ["file", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -395,10 +315,7 @@
             "description": "The dashboard name which MUST match the 'name' attribute in the dashboard file."
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the dashboard will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -428,22 +345,14 @@
       }
     },
     "lenses": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of lenses to include in the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "file",
-          "label"
-        ],
+        "required": ["file", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -458,10 +367,7 @@
             "description": "The lens name which MUST match the 'name' attribute in the lens file."
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the lens will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -491,23 +397,14 @@
       }
     },
     "eltDataflows": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of dataflows to include in the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "file",
-          "name",
-          "label"
-        ],
+        "required": ["file", "name", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -522,10 +419,7 @@
             "description": "The dataflow name which MUST match the 'name' attribute in the dataflow file."
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the dataflow will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -555,24 +449,16 @@
       }
     },
     "recipes": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of recipes to include in the template.",
       "$comment": "For now, allow this to be specified, but do not offer it in code-completions until the feature is ready",
       "doNotSuggest": true,
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "file",
-          "label"
-        ],
+        "required": ["file", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -587,10 +473,7 @@
             "description": "The recipe name which MUST match the 'name' attribute in the recipe file."
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the recipe will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -620,28 +503,17 @@
       }
     },
     "externalFiles": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of external files, CSV and descriptive files to be used in the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name",
-          "type"
-        ],
+        "required": ["name", "type"],
         "properties": {
           "file": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "Path to the file.",
             "defaultSnippets": [
               {
@@ -653,9 +525,7 @@
           "type": {
             "type": "string",
             "description": "The type of the data in the extenral file. Currently, only 'CSV' is supported.",
-            "enum": [
-              "CSV"
-            ],
+            "enum": ["CSV"],
             "default": "CSV"
           },
           "name": {
@@ -663,10 +533,7 @@
             "description": "The externalFile name, which ,iust match the 'name' attribute in the schema file."
           },
           "schema": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "Path to the schema file (describes the format of the data).",
             "defaultSnippets": [
               {
@@ -676,10 +543,7 @@
             ]
           },
           "userXmd": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "Path to the XMD file (describes the display format of the data).",
             "defaultSnippets": [
               {
@@ -689,10 +553,7 @@
             ]
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the external file will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -706,10 +567,7 @@
             ]
           },
           "rows": {
-            "type": [
-              "null",
-              "number"
-            ],
+            "type": ["null", "number"],
             "default": 5,
             "minimum": 1,
             "maximum": 1000,
@@ -719,10 +577,7 @@
             "$ref": "#/definitions/overwriteOnUpgrade"
           },
           "label": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "$comment": "Technnically supported but not used in runtime",
             "doNotSuggest": true,
             "defaultSnippets": [
@@ -748,22 +603,14 @@
       }
     },
     "datasetFiles": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of datasets to be used in the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "label",
-          "name"
-        ],
+        "required": ["label", "name"],
         "properties": {
           "label": {
             "type": "string",
@@ -774,10 +621,7 @@
             "description": "The dataset name."
           },
           "userXmd": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "Path to the XMD file for the dataset.",
             "defaultSnippets": [
               {
@@ -787,10 +631,7 @@
             ]
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the dataset will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -807,10 +648,7 @@
             "$ref": "#/definitions/overwriteOnUpgrade"
           },
           "file": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "$comment": "Technnically supported but not used in runtime",
             "doNotSuggest": true,
             "defaultSnippets": [
@@ -834,22 +672,14 @@
       }
     },
     "imageFiles": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of app images to be used in the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name",
-          "file"
-        ],
+        "required": ["name", "file"],
         "properties": {
           "file": {
             "type": "string",
@@ -860,10 +690,7 @@
             "description": "The image name."
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the dataset will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -880,10 +707,7 @@
             "$ref": "#/definitions/overwriteOnUpgrade"
           },
           "label": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "$comment": "Technnically supported but not used in runtime",
             "doNotSuggest": true,
             "defaultSnippets": [
@@ -906,22 +730,14 @@
       }
     },
     "storedQueries": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "List of storied queries to use in the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "file",
-          "label"
-        ],
+        "required": ["file", "label"],
         "properties": {
           "file": {
             "type": "string",
@@ -936,10 +752,7 @@
             "description": "The stored query name."
           },
           "condition": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "If this is met, then the stored query will be created in the app; otherwise, it will not be created.",
             "defaultSnippets": [
               {
@@ -969,14 +782,9 @@
       }
     },
     "extendedTypes": {
-      "type": [
-        "null",
-        "object"
-      ],
+      "type": ["null", "object"],
       "description": "",
-      "examples": [
-        {}
-      ],
+      "examples": [{}],
       "additionalProperties": {
         "type": "array",
         "description": "The list of named extended types",
@@ -984,10 +792,7 @@
         "items": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "file",
-            "label"
-          ],
+          "required": ["file", "label"],
           "properties": {
             "file": {
               "type": "string",
@@ -1002,10 +807,7 @@
               "description": "The extended type name."
             },
             "condition": {
-              "type": [
-                "null",
-                "string"
-              ],
+              "type": ["null", "string"],
               "description": "If this is met, then the extended type will be created in the app; otherwise, it will not be created.",
               "defaultSnippets": [
                 {
@@ -1050,22 +852,15 @@
       ]
     },
     "customAttributes": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "Define custom meta data attributes for the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
         "description": "A custom meta data attribute for the template.",
-        "required": [
-          "label"
-        ],
+        "required": ["label"],
         "properties": {
           "label": {
             "description": "Custom attribute display label",
@@ -1075,12 +870,7 @@
               },
               {
                 "type": "string",
-                "enum": [
-                  "Features",
-                  "Salesforce Objects",
-                  "Publisher",
-                  "Industry"
-                ],
+                "enum": ["Features", "Salesforce Objects", "Publisher", "Industry"],
                 "enumDescriptions": [
                   "List of features provided by this template",
                   "List of salesforce objects this template uses.",
@@ -1091,13 +881,8 @@
             ]
           },
           "values": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "examples": [
-              []
-            ],
+            "type": ["null", "array"],
+            "examples": [[]],
             "items": {
               "type": "string"
             }
@@ -1108,40 +893,25 @@
             "label": "New customAttribute",
             "body": {
               "label": "${1:label}",
-              "values": [
-                "${2:value}"
-              ]
+              "values": ["${2:value}"]
             }
           }
         ]
       }
     },
     "videos": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "Associate online videos to the template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "purpose",
-          "id",
-          "linkType",
-          "label"
-        ],
+        "required": ["purpose", "id", "linkType", "label"],
         "properties": {
           "purpose": {
             "type": "string",
-            "enum": [
-              "walkthrough",
-              "onboarding"
-            ],
+            "enum": ["walkthrough", "onboarding"],
             "default": "onboarding",
             "description": "The purpose of the video."
           },
@@ -1152,14 +922,8 @@
           "linkType": {
             "description": "The video provider.",
             "type": "string",
-            "enum": [
-              "youtube",
-              "vidyard"
-            ],
-            "enumDescriptions": [
-              "Youtube.com is the video provider.",
-              "vidyard.com is the video provider"
-            ]
+            "enum": ["youtube", "vidyard"],
+            "enumDescriptions": ["Youtube.com is the video provider.", "vidyard.com is the video provider"]
           },
           "label": {
             "type": "string",
@@ -1174,49 +938,32 @@
       }
     },
     "tags": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "Keywords to tag on this template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "string"
       },
       "defaultSnippets": [
         {
           "label": "New tags",
-          "body": [
-            "${1:tag}"
-          ]
+          "body": ["${1:tag}"]
         }
       ]
     },
     "templateDependencies": {
-      "type": [
-        "null",
-        "array"
-      ],
+      "type": ["null", "array"],
       "description": "Other templates that this template depends upon. For each, an application will need to exist that was created from the dependent template.",
       "minItems": 0,
-      "examples": [
-        []
-      ],
+      "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "properties": {
           "namespace": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "The dependent template namespace.",
             "defaultSnippets": [
               {
@@ -1230,10 +977,7 @@
             "description": "The dependent template name."
           },
           "templateVersion": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": ["null", "string"],
             "description": "The version matcher of the dependent template this template requires. You can optionally use =, >, >=, <, and <= at beginning.",
             "pattern": "^(=|>|>=|<|<=)?[0-9]+(\\.[0-9]+)?$",
             "defaultSnippets": [
@@ -1260,15 +1004,10 @@
     "icon": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "properties": {
         "namespace": {
-          "type": [
-            "null",
-            "string"
-          ],
+          "type": ["null", "string"],
           "description": "The icon namespace.",
           "defaultSnippets": [
             {
@@ -1294,16 +1033,10 @@
     "previewIcon": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name",
-        "label"
-      ],
+      "required": ["name", "label"],
       "properties": {
         "namespace": {
-          "type": [
-            "null",
-            "string"
-          ],
+          "type": ["null", "string"],
           "description": "The icon namespace.",
           "defaultSnippets": [
             {
@@ -1321,10 +1054,7 @@
           "description": "The display label of the template preview."
         },
         "description": {
-          "type": [
-            "null",
-            "string"
-          ],
+          "type": ["null", "string"],
           "description": "The description of the template preview.",
           "defaultSnippets": [
             {
@@ -1365,11 +1095,7 @@
         {
           "type": "string",
           "default": "IfDifferent",
-          "enum": [
-            "Always",
-            "IfDifferent",
-            "Never"
-          ],
+          "enum": ["Always", "IfDifferent", "Never"],
           "enumDescriptions": [
             "Always overwrite this object on upgrade.",
             "Overwrite this object on upgrade if it differs from the template's version.",

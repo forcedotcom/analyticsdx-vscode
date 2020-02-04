@@ -60,8 +60,9 @@
       "url": "/extensions/analyticsdx-vscode-templates/schemas/template-info-schema.json"
     }
   ],
-  // let prettier format yaml files
+  // make sure prettier is formatting yaml and json files
   "yaml.format.enable": false,
   "yaml.format.singleQuote": true,
-  "yaml.format.printWidth": 120
+  "yaml.format.printWidth": 120,
+  "json.format.enable": false
 }
