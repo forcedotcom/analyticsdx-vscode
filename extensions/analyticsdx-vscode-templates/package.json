@@ -28,6 +28,7 @@
     "@salesforce/salesforcedx-utils-vscode": "46.3.0",
     "fuse.js": "3.4.6",
     "jsonc-parser": "2.1.0",
+    "jsonpath": "1.0.2",
     "lodash.isequal": "4.5.0",
     "request-light": "0.2.4",
     "vscode-extension-telemetry": "0.0.17",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@salesforce/analyticsdx-test-utils-vscode": "0.0.1",
     "@types/chai": "^4.0.0",
+    "@types/jsonpath": "0.2.0",
     "@types/lodash.isequal": "^4.5.5",
     "@types/mocha": "2.2.38",
     "@types/node": "12.12.18",

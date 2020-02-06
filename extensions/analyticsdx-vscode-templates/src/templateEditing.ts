@@ -36,6 +36,7 @@ import {
   TEMPLATE_INFO,
   TEMPLATE_JSON_LANG_ID
 } from './constants';
+import { RulesJsonPathReferenceFinder } from './rules/references';
 import { telemetryService } from './telemetry';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
@@ -51,8 +52,13 @@ function templateJsonFileFilter(s: string) {
   return jsonFileFilter(s) && s !== 'template-info.json';
 }
 
+export type PathNameLabel = {
+  path: string;
+  name?: string;
+  label?: string;
+};
 /** Wraps the setup for configuring editing for the files in a template directory. */
-class TemplateDirEditing extends Disposable {
+export class TemplateDirEditing extends Disposable {
   /** A hashkey for checking for equality between different instances. */
   public readonly key: string;
 
@@ -60,6 +66,11 @@ class TemplateDirEditing extends Disposable {
   private _uiDefinitionPath: string | undefined;
   private _variablesDefinitionPath: string | undefined;
   private _rulesDefinitionPaths: Set<string> | undefined;
+  private _dashboardPaths: Set<PathNameLabel> | undefined;
+  private _lensPaths: Set<PathNameLabel> | undefined;
+  private _schemaPaths: Set<PathNameLabel> | undefined;
+  private _dataflowPaths: Set<PathNameLabel> | undefined;
+  private _xmdPaths: Set<PathNameLabel> | undefined;
 
   constructor(public readonly dir: vscode.Uri) {
     super();
@@ -77,6 +88,29 @@ class TemplateDirEditing extends Disposable {
       return matchJsonNodesAtPattern(tree, pattern)
         .filter(node => node.type === 'string' && node.value)
         .map(node => node.value as string);
+    }
+    return undefined;
+  }
+
+  private getRelFileInfosFromPattern(tree: JsonNode | undefined, ...pattern: JSONPath) {
+    if (tree) {
+      const infos: PathNameLabel[] = [];
+      matchJsonNodesAtPattern(tree, pattern)
+        .filter(node => node.type === 'string' && node.value)
+        .forEach(node => {
+          // "rel-path" -> "file": "rel-path" -> {}
+          const parent = node.parent?.parent;
+          if (parent) {
+            const name = findNodeAtLocation(parent, ['name']);
+            const label = findNodeAtLocation(parent, ['label']);
+            infos.push({
+              path: node.value as string,
+              name: name?.type === 'string' && typeof name.value === 'string' ? name.value : undefined,
+              label: label?.type === 'string' && typeof label.value === 'string' ? label.value : undefined
+            });
+          }
+        });
+      return infos;
     }
     return undefined;
   }
@@ -116,7 +150,17 @@ class TemplateDirEditing extends Disposable {
       updated = true;
     }
 
-    // TODO: pull out other rel-paths from template-info
+    // Note: for now, we're not using these to configure any editing support below, so we don't need to check
+    // if they actually changed, but we might need to in the future
+    this._dashboardPaths = new Set(this.getRelFileInfosFromPattern(tree, 'dashboards', '*', 'file'));
+    this._lensPaths = new Set(this.getRelFileInfosFromPattern(tree, 'lenses', '*', 'file'));
+    this._schemaPaths = new Set(this.getRelFileInfosFromPattern(tree, 'externalFiles', '*', 'schema'));
+    this._dataflowPaths = new Set(this.getRelFileInfosFromPattern(tree, 'eltDataflows', '*', 'file'));
+    this._xmdPaths = new Set(this.getRelFileInfosFromPattern(tree, 'externalFiles', '*', 'userXmd'));
+    this.getRelFileInfosFromPattern(tree, 'datasetFiles', '*', 'userXmd')?.forEach(p => this._xmdPaths?.add(p));
+
+    // REVIEWME: pull out other rel-paths from template-info?
+
     return updated;
   }
 
@@ -134,6 +178,26 @@ class TemplateDirEditing extends Disposable {
 
   get rulesDefinitionPaths() {
     return this._rulesDefinitionPaths;
+  }
+
+  get dashboardPaths() {
+    return this._dashboardPaths;
+  }
+
+  get lensPaths() {
+    return this._lensPaths;
+  }
+
+  get schemaPaths() {
+    return this._schemaPaths;
+  }
+
+  get dataflowPaths() {
+    return this._dataflowPaths;
+  }
+
+  get xmdPaths() {
+    return this._xmdPaths;
   }
 
   public static key(dir: vscode.Uri) {
@@ -192,8 +256,15 @@ class TemplateDirEditing extends Disposable {
       })
     );
 
-    // TODO: hookup editing support for the other template file types
+    const relatedFileSelector: vscode.DocumentSelector = {
+      scheme: this.dir.scheme,
+      pattern: path.join(this.dir.path, '**', '*.json')
+    };
+    this.disposables.push(
+      vscode.languages.registerReferenceProvider(relatedFileSelector, new RulesJsonPathReferenceFinder(this))
+    );
 
+    // TODO: hookup editing support for the other template file types and operations here
     return this;
   }
 

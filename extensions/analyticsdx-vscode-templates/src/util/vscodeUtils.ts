@@ -5,9 +5,10 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Node as JsonNode } from 'jsonc-parser';
+import { findNodeAtLocation, Node as JsonNode, parse as parseJsonc, parseTree } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
+import { jsonpathSearch } from './jsonpath';
 import { isSameUriPath, isUriPathUnder, isWhitespaceChar } from './utils';
 
 /** Tell if vscode is currently running dev mode. */
@@ -74,6 +75,66 @@ export function rangeForNode(node: JsonNode, document: vscode.TextDocument, incl
     // property in the parent object
   }
   return new vscode.Range(start, end);
+}
+
+/** Search the listed files for the specified json-path.
+ * @param jsonpath the jsonpath string
+ * @param uriOrUris the vscode.Uri(s) to search against.
+ * @param selectPropertyNode true to return range(s) of the matching parent property node(s), false (default) to
+ *        return the range(s) of the matching value node.
+ * @return the matching locations (uri and range)
+ */
+export async function calculateJsonpathAgainst(
+  jsonpath: string,
+  uriOrUris: vscode.Uri | vscode.Uri[],
+  selectPropertyNode = false
+): Promise<vscode.Location[]> {
+  let all = Promise.resolve([] as vscode.Location[]);
+  const uris = Array.isArray(uriOrUris) ? uriOrUris : [uriOrUris];
+  uris.forEach(uri => {
+    // let each file (potentially) run in parallel
+    const p = _calculateJsonpathAgainst(jsonpath, uri, selectPropertyNode);
+    all = all.then(all =>
+      p
+        .then(locations => {
+          all.push(...locations);
+          return all;
+        })
+        .catch(e => {
+          // don't fail the whole result if one file fails
+          console.error(e);
+          // REVIEWME: show the error(s) in a message dialog or something?
+          return all;
+        })
+    );
+  });
+  return all;
+}
+
+async function _calculateJsonpathAgainst(
+  jsonpath: string,
+  uri: vscode.Uri,
+  selectPropertyNode = false
+): Promise<vscode.Location[]> {
+  const doc = await vscode.workspace.openTextDocument(uri);
+  const txt = doc.getText();
+  const obj = parseJsonc(txt);
+  // jsonpath library works against json objects, but we need offsets to calculcate ranges,
+  // so run jsonpath.path() to get the list of matching paths, then use our methods against JsonNode to convert those to
+  // ranges
+  const locations: vscode.Location[] = [];
+  const matches = jsonpathSearch(jsonpath, obj);
+  if (matches && matches.length > 0) {
+    const tree = parseTree(txt);
+    matches.forEach(match => {
+      const node = findNodeAtLocation(tree, match);
+      if (node) {
+        const selection = selectPropertyNode && node.parent?.type === 'property' ? node.parent : node;
+        locations.push(new vscode.Location(uri, rangeForNode(selection, doc)));
+      }
+    });
+  }
+  return locations;
 }
 
 export function isUriUnder(parent: vscode.Uri, file: vscode.Uri): boolean {
