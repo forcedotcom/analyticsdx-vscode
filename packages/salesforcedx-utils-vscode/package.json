@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.0",
-    "@types/cross-spawn": "6.0.0",
+    "@types/cross-spawn": "6.0.1",
     "@types/glob": "^5.0.30",
     "@types/mocha": "^2.2.38",
     "@types/node": "12.12.18",
