@@ -27,7 +27,7 @@
   "dependencies": {
     "@salesforce/salesforcedx-utils-vscode": "46.3.0",
     "tmp": "0.1.0",
-    "vscode-extension-telemetry": "0.0.17"
+    "vscode-extension-telemetry": "0.1.2"
   },
   "devDependencies": {
     "@salesforce/analyticsdx-test-utils-vscode": "0.0.1",
