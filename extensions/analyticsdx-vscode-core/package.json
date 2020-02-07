@@ -33,7 +33,7 @@
     "@salesforce/analyticsdx-test-utils-vscode": "0.0.1",
     "@types/chai": "^4.0.0",
     "@types/mocha": "2.2.38",
-    "@types/node": "12.12.18",
+    "@types/node": "13.7.0",
     "@types/open": "6.0.0",
     "@types/sinon": "^2.3.2",
     "@types/tmp": "0.1.0",

@@ -16,7 +16,7 @@
     "@types/cross-spawn": "6.0.0",
     "@types/glob": "^5.0.30",
     "@types/mocha": "^2.2.38",
-    "@types/node": "12.12.18",
+    "@types/node": "13.7.0",
     "@types/path-exists": "^1.0.29",
     "@types/sinon": "^2.3.2",
     "chai": "^4.0.2",
