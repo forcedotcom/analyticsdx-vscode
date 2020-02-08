@@ -25,7 +25,7 @@
     "request-light": "0.2.4",
     "sinon": "^2.3.6",
     "source-map-support": "^0.4.15",
-    "typescript": "3.7.3"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "compile": "tsc -p ./",
