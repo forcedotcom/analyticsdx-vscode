@@ -52,7 +52,7 @@
     "mocha-multi-reporters": "^1.1.4",
     "nyc": "^13",
     "readdirp": "3.1.1",
-    "shx": "0.2.2",
+    "shx": "0.3.2",
     "sinon": "^2.3.6",
     "tmp": "0.1.0",
     "typescript": "3.7.3"
