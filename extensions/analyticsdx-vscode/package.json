@@ -22,7 +22,7 @@
     "vscode": "^1.41.0"
   },
   "devDependencies": {
-    "shx": "0.2.2"
+    "shx": "0.3.2"
   },
   "scripts": {
     "clean": "shx rm -f analyticsdx-vscode-*.vsix",
