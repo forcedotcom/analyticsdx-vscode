@@ -32,7 +32,7 @@
     "request-light": "0.2.4",
     "shx": "0.3.2",
     "sinon": "^2.3.6",
-    "source-map-support": "^0.4.15",
+    "source-map-support": "^0.5.16",
     "typescript": "3.7.3"
   },
   "scripts": {
