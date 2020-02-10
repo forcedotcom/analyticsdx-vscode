@@ -55,7 +55,7 @@
     "shx": "0.3.2",
     "sinon": "^2.3.6",
     "tmp": "0.1.0",
-    "typescript": "3.7.3"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "vscode:prepublish": "npm prune --production",
