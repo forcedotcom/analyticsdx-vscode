@@ -987,7 +987,7 @@ describe('TemplateLinterManager', () => {
       );
     });
 
-    it('shows problems on duplicate rule names', async () => {
+    it('shows hints on duplicate rule names', async () => {
       const rulesJson = {
         rules: [
           {
@@ -1102,7 +1102,7 @@ describe('TemplateLinterManager', () => {
         await waitForDiagnostics(
           rulesEditor.document.uri,
           d => d && d.length >= 3,
-          'Initial ' + uriBasename(rulesEditor.document.uri) + ' duplicate rule names warnings'
+          'Initial ' + uriBasename(rulesEditor.document.uri) + ' duplicate rule names hints'
         )
       ).sort(sortDiagnostics);
       if (diagnostics.length !== 3) {
@@ -1113,6 +1113,7 @@ describe('TemplateLinterManager', () => {
       expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate rule name 'name1'");
       expect(diagnostic.code, 'diagnostic[0].code').to.equal('rules[0].name');
+      expect(diagnostic.severity, 'diagnostic[0].severity').to.equal(vscode.DiagnosticSeverity.Hint);
       expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
         'Other usage'
@@ -1129,6 +1130,7 @@ describe('TemplateLinterManager', () => {
       expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate rule name 'name3'");
       expect(diagnostic.code, 'diagnostic[1].code').to.equal('rules[1].name');
+      expect(diagnostic.severity, 'diagnostic[1].severity').to.equal(vscode.DiagnosticSeverity.Hint);
       expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[1].relatedInformation.message').to.equal(
         'Other usage'
@@ -1141,6 +1143,7 @@ describe('TemplateLinterManager', () => {
       expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[2].message').to.equal("Duplicate rule name 'name1'");
       expect(diagnostic.code, 'diagnostic[2].code').to.equal('rules[2].name');
+      expect(diagnostic.severity, 'diagnostic[2].severity').to.equal(vscode.DiagnosticSeverity.Hint);
       expect(diagnostic.relatedInformation?.length, 'diagnostic[2].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[2].relatedInformation.message').to.equal(
         'Other usage'
@@ -1158,7 +1161,7 @@ describe('TemplateLinterManager', () => {
         await waitForDiagnostics(
           rules2Editor.document.uri,
           d => d && d.length >= 1,
-          'Initial ' + uriBasename(rules2Editor.document.uri) + ' duplicate rule names warnings'
+          'Initial ' + uriBasename(rules2Editor.document.uri) + ' duplicate rule names hints'
         )
       ).sort(sortDiagnostics);
       if (diagnostics.length !== 1) {
@@ -1181,7 +1184,7 @@ describe('TemplateLinterManager', () => {
       await waitForDiagnostics(
         rules3Editor.document.uri,
         d => d && d.length === 0,
-        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+        'No hints on ' + uriBasename(rules3Editor.document.uri)
       );
 
       // fix the duplicate rule names
@@ -1191,17 +1194,17 @@ describe('TemplateLinterManager', () => {
       await waitForDiagnostics(
         rulesEditor.document.uri,
         d => d && d.length === 0,
-        'No warnings on ' + uriBasename(rulesEditor.document.uri) + ' after fixing duplicate rule names'
+        'No hints on ' + uriBasename(rulesEditor.document.uri) + ' after fixing duplicate rule names'
       );
       await waitForDiagnostics(
         rules2Editor.document.uri,
         d => d && d.length === 0,
-        'No warnings on ' + uriBasename(rules2Editor.document.uri) + ' after fixing duplicate rule names'
+        'No hints on ' + uriBasename(rules2Editor.document.uri) + ' after fixing duplicate rule names'
       );
       await waitForDiagnostics(
         rules3Editor.document.uri,
         d => d && d.length === 0,
-        'No warnings on ' + uriBasename(rules3Editor.document.uri)
+        'No hints on ' + uriBasename(rules3Editor.document.uri)
       );
     });
 
