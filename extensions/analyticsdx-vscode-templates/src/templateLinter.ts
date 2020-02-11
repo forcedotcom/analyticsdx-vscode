@@ -167,7 +167,8 @@ export class TemplateLinter {
     relatedMessage?: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
     computeValue: (node: JsonNode, doc: vscode.TextDocument) => string | undefined = node => {
       return node.type === 'string' && typeof node.value === 'string' ? node.value : undefined;
-    }
+    },
+    severity = vscode.DiagnosticSeverity.Warning
   ) {
     // value -> list of doc+node's w/ that value
     const values = new Map<string, Array<{ doc: vscode.TextDocument; node: JsonNode }>>();
@@ -195,7 +196,8 @@ export class TemplateLinter {
           const diagnostic = this.addDiagnostic(
             doc,
             typeof message === 'string' ? message : message(value, doc, node),
-            node
+            node,
+            severity
           );
           // create related information for the other locations
           if (relatedMessage) {
@@ -622,7 +624,14 @@ export class TemplateLinter {
     // make sure the constants' names are unique
     this.lintUniqueValues(sources, ['constants', '*', 'name'], name => `Duplicate constant '${name}'`, 'Other usage');
     // make sure the rules' names are unique
-    this.lintUniqueValues(sources, ['rules', '*', 'name'], name => `Duplicate rule name '${name}'`, 'Other usage');
+    this.lintUniqueValues(
+      sources,
+      ['rules', '*', 'name'],
+      name => `Duplicate rule name '${name}'`,
+      'Other usage',
+      undefined,
+      vscode.DiagnosticSeverity.Hint
+    );
     // make sure macro namespace:name is unique
     this.lintUniqueValues(
       sources,
