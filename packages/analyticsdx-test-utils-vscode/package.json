@@ -11,7 +11,6 @@
     "@types/glob": "^7.1.1",
     "@types/mocha": "7.0.1",
     "@types/node": "12.12.18",
-    "@types/sinon": "^2.3.2",
     "chai": "^4.0.2",
     "decache": "^4.1.0",
     "glob": "^7.1.2",
@@ -24,7 +23,6 @@
     "remap-istanbul": "^0.9.5",
     "request-light": "0.2.4",
     "shx": "0.3.2",
-    "sinon": "^2.3.6",
     "source-map-support": "^0.5.16",
     "typescript": "3.7.5"
   },
