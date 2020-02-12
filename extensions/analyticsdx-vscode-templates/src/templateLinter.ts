@@ -518,9 +518,11 @@ export class TemplateLinter {
   private async lintUi(templateInfo: JsonNode) {
     const { doc, json: ui } = await this.loadTemplateRelPathJson(templateInfo, ['uiDefinition']);
     if (doc && ui) {
+      // let this one start
+      const p = this.lintUiCheckVariables(templateInfo, doc, ui);
+      // run this one while that's running
       this.lintUiVariablesSpecifiedForPages(doc, ui);
-      await this.lintUiVariablesExistInVariables(templateInfo, doc, ui);
-      // TODO: other lints on uiDefinition
+      return p;
     }
   }
 
@@ -539,38 +541,61 @@ export class TemplateLinter {
     });
   }
 
-  private async lintUiVariablesExistInVariables(templateInfo: JsonNode, doc: vscode.TextDocument, ui: JsonNode) {
-    // find all the variable names in the variables file
+  private async lintUiCheckVariables(templateInfo: JsonNode, uiDoc: vscode.TextDocument, ui: JsonNode) {
+    // find all the variable names & types in the variables file
     const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
-    const variableNames = new Set<string>();
+    const variableTypes: Record<string, string> = {};
     if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
       varJson.children.forEach(prop => {
         if (
           prop.type === 'property' &&
           prop.children &&
+          // child[0] is the variable name, child[1] is the variable definition
           prop.children[0] &&
           prop.children[0].type === 'string' &&
           prop.children[0].value
         ) {
-          variableNames.add(prop.children[0].value as string);
+          const name = prop.children[0].value as string;
+          const [type] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'type');
+          variableTypes[name] = typeof type === 'string' && type ? type : 'StringType';
         }
       });
     }
+
+    // go through the ui pages
     const pages = findNodeAtLocation(ui, ['pages']);
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
-      const fuzzySearch = fuzzySearcher(variableNames);
+      const fuzzySearch = fuzzySearcher({
+        // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
+        [Symbol.iterator]: () => Object.keys(variableTypes)[Symbol.iterator]()
+      });
       // find all the variable objects
       matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {
         if (nameNode && nameNode.type === 'string' && nameNode.value) {
           const name = nameNode.value as string;
-          if (!variableNames.has(name)) {
+          // make sure the page variable is in variables.json
+          if (!variableTypes[name]) {
             let mesg = `Cannot find variable '${name}'`;
             // see if there's a variable w/ a similar name
             const [match] = fuzzySearch(name);
             if (match && match.length > 0) {
               mesg += `, did you mean '${match}'?`;
             }
-            this.addDiagnostic(doc, mesg, nameNode);
+            this.addDiagnostic(uiDoc, mesg, nameNode);
+          } else {
+            // if it's a non-vfpage page, then make sure the variable type is valid
+            // "varname" -> "name": "varname" -> variable {} -> variables[] -> "variables": [] -> page {}
+            const page = nameNode.parent?.parent?.parent?.parent?.parent;
+            if (page && !findNodeAtLocation(page, ['vfPage'])) {
+              const type = variableTypes[name];
+              if (type === 'ObjectType' || type === 'DateTimeType' || type === 'DatasetAnyFieldType') {
+                this.addDiagnostic(
+                  uiDoc,
+                  `${type} variable '${name}' is not supported in non-visualForce pages`,
+                  nameNode
+                );
+              }
+            }
           }
         }
       });

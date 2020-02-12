@@ -1,0 +1,34 @@
+{
+  "StringTypeVar": {
+    "variableType": {
+      "type": "StringType"
+    }
+  },
+  "ObjectTypeVar": {
+    "description": "This can't be put in a non-vfpage page",
+    "defaultValue": {
+      "one": "1"
+    },
+    "variableType": {
+      "type": "ObjectType",
+      "properties": {
+        "one": {
+          "type": "StringType"
+        }
+      },
+      "required": ["one"]
+    }
+  },
+  "DateTimeTypeVar": {
+    "description": "This can't be put in a non-vfpage page",
+    "variableType": {
+      "type": "DateTimeType"
+    }
+  },
+  "DatasetAnyFieldTypeVar": {
+    "description": "This can't be put in a non-vfpage page",
+    "variableType": {
+      "type": "DatasetAnyFieldType"
+    }
+  }
+}

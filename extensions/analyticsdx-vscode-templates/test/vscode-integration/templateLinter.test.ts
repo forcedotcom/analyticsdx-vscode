@@ -17,7 +17,9 @@ import {
   openTemplateInfoAndWaitForDiagnostics,
   PathFieldAndJson,
   setDocumentText,
+  uriFromTestRoot,
   waitForDiagnostics,
+  waveTemplatesUriPath,
   writeEmptyJsonFile,
   writeTextToFile
 } from './vscodeTestUtils';
@@ -678,6 +680,31 @@ describe('TemplateLinterManager', () => {
       await setDocumentText(uiEditor, uiJson);
       // and the warnings should go away
       await waitForDiagnostics(uiEditor.document.uri, d => !d || d.length === 0, 'ui.json warnings after edit');
+    });
+
+    it('shows warnings on unsupported variable types on non-vfpage apex', async () => {
+      // only look for diagnostics on page variables
+      const varFilter = (d: vscode.Diagnostic) =>
+        typeof d.code === 'string' && /^pages\[\d\]\.variables\[/.test(d.code);
+
+      const [doc] = await openFile(uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json'));
+      const diagnostics = (
+        await waitForDiagnostics(doc.uri, d => d && d.filter(varFilter).length >= 3, 'initial diagnostics on ui.json')
+      )
+        .filter(varFilter)
+        .sort(sortDiagnostics);
+      if (diagnostics.length !== 3) {
+        expect.fail('Expected 3 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // the 3 should be for these variable types
+      ['DateTimeType', 'ObjectType', 'DatasetAnyFieldType'].forEach((type, i) => {
+        const diagnostic = diagnostics[i];
+        expect(diagnostic, `diagnostic[${i}]`).to.be.not.undefined;
+        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal(
+          `${type} variable '${type}Var' is not supported in non-visualForce pages`
+        );
+        expect(diagnostic.code, `diagnostic[${i}].code`).to.equal(`pages[0].variables[${i}].name`);
+      });
     });
   }); // describe('lints ui.json')
 

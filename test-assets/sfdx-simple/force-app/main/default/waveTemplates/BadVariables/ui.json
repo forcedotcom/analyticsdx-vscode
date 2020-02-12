@@ -1,0 +1,44 @@
+{
+  "pages": [
+    {
+      "title": "Invalid variable types in non-vfPage",
+      "variables": [
+        // these should get errors about the type
+        {
+          "name": "DateTimeTypeVar"
+        },
+        {
+          "name": "ObjectTypeVar"
+        },
+        {
+          "name": "DatasetAnyFieldTypeVar"
+        },
+        // this should be fine
+        {
+          "name": "StringTypeVar"
+        }
+      ]
+    },
+    {
+      "title": "Valid in vfPage",
+      "vfPage": {
+        "name": "name",
+        "namespace": "namespace"
+      },
+      "variables": [
+        {
+          "name": "DateTimeTypeVar"
+        },
+        {
+          "name": "ObjectTypeVar"
+        },
+        {
+          "name": "DatasetAnyFieldTypeVar"
+        },
+        {
+          "name": "StringTypeVar"
+        }
+      ]
+    }
+  ]
+}

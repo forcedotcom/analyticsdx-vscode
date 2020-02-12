@@ -132,7 +132,7 @@ export async function openFileAndWaitForDiagnostics(
   show = true,
   filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined
 ): Promise<[vscode.Diagnostic[], vscode.TextDocument, vscode.TextEditor | undefined]> {
-  const [doc, editor] = await openTemplateInfo(uri);
+  const [doc, editor] = await openTemplateInfo(uri, show);
   return [await waitForDiagnostics(doc.uri, filter), doc, editor];
 }
 
