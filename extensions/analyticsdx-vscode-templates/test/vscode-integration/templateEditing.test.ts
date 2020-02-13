@@ -12,13 +12,14 @@ import * as vscode from 'vscode';
 import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { TemplateEditingManager } from '../../src/templateEditing';
 import { jsonPathToString } from '../../src/util/jsoncUtils';
-import { scanLinesUntil, uriDirname, uriStat } from '../../src/util/vscodeUtils';
+import { scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 import {
   closeAllEditors,
   createTempTemplate,
   findPositionByJsonPath,
   getCompletionItems,
+  getDefinitionLocations,
   openFile,
   openFileAndWaitForDiagnostics,
   openTemplateInfo,
@@ -725,6 +726,23 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
       expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
+    });
+
+    it('go to definition support for variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
+      const [doc] = await openFile(uri, true);
+      // we should see the 3 warnings about the bad var types
+      await waitForDiagnostics(uri, d => d && d.length >= 3);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+      const position = findPositionByJsonPath(doc, ['pages', 0, 'variables', 0, 'name']);
+      expect(position, 'pages[0].variables[0].name').to.not.be.undefined;
+
+      const locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
+      if (locations.length !== 1) {
+        expect.fail('Expected 1 location, got:\n' + JSON.stringify(locations, undefined, 2));
+      }
+      expect(locations[0].uri.path, 'location path').to.equal(uriRelPath(uriDirname(uri), 'variables.json').path);
     });
   }); // describe('configures uiDefinition')
 

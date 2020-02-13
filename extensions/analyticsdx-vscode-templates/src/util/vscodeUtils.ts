@@ -15,6 +15,23 @@ export function isRunningInDevMode() {
   // this is how the telemetry logic determines it currently
   return vscode?.env?.machineId === 'someValue.machineId';
 }
+
+/** Create a document selector for paths relative to a base directory.
+ * @param dir the base dir.
+ * @param paths the path parts, can include '**' and '*' for glob-matching
+ */
+export function createRelPathDocumentSelector(dir: vscode.Uri, ...paths: string[]): vscode.DocumentSelector {
+  return {
+    scheme: dir.scheme,
+    pattern:
+      // RelativePattern is supposed to be a little better here, but only works right for file:// uris;
+      // also, on windows, starting the pattern with dir.path doesn't match correctly
+      dir.scheme === 'file'
+        ? new vscode.RelativePattern(dir.fsPath, path.join(...paths))
+        : path.join(dir.path, ...paths)
+  };
+}
+
 /**
  * Scan lines from the document until it reaches a stopping character.
  * @param document the document

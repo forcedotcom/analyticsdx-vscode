@@ -327,6 +327,17 @@ export async function getCompletionItems(uri: vscode.Uri, position: vscode.Posit
   return result!;
 }
 
+export async function getDefinitionLocations(uri: vscode.Uri, position: vscode.Position): Promise<vscode.Location[]> {
+  const result = await vscode.commands.executeCommand<vscode.Location[]>(
+    'vscode.executeDefinitionProvider',
+    uri,
+    position
+  );
+  if (!result) {
+    expect.fail('Expected vscode.Location[], got undefined');
+  }
+  return result!;
+}
 export async function verifyCompletionsContain(
   document: vscode.TextDocument,
   position: vscode.Position,
