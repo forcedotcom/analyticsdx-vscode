@@ -714,13 +714,14 @@ export class TemplateLinterManager extends Disposable {
   // https://www.humanbenchmark.com/tests/reactiontime/statistics,
   // plus the linting on vscode extension package.json's is using 300ms
   // (https://github.com/microsoft/vscode/blob/master/extensions/extension-editing/src/extensionLinter.ts)
-  private static readonly LINT_DEBOUNCE_MS = 300;
+  public static readonly LINT_DEBOUNCE_MS = 300;
 
   private diagnosticCollection = new UriExistsDiagnosticCollection(
     vscode.languages.createDiagnosticCollection('analyticsdx-templates')
   );
 
   private timer: NodeJS.Timer | undefined;
+  private _isLinting = false;
   private templateInfoQueue = new Set<vscode.TextDocument>();
 
   private readonly logger: Logger;
@@ -753,6 +754,16 @@ export class TemplateLinterManager extends Disposable {
 
     vscode.workspace.textDocuments.forEach(doc => this.checkDocForQueuing(doc));
     return this;
+  }
+
+  /** Are we actively linting templates? */
+  public get isLinting() {
+    return this._isLinting;
+  }
+
+  /** Is this not actively linting and not planning to lint soon? */
+  public get isQuiet() {
+    return !this.isLinting && this.templateInfoQueue.size <= 0;
   }
 
   public dispose() {
@@ -866,31 +877,40 @@ export class TemplateLinterManager extends Disposable {
 
   /** Run against the current queue of template-info documents awaiting linting. */
   private async lint() {
-    let all = Promise.resolve();
-    this.templateInfoQueue.forEach(doc => {
-      this.templateInfoQueue.delete(doc);
-      try {
-        const hrstart = process.hrtime();
-        const result = this.lintTemplateInfo(doc);
-        if (!result) {
-          // delete any diagnostics for any files under that templateInfo dir
-          this.setAllTemplateDiagnostics(uriDirname(doc.uri));
-        } else {
-          const p = result
-            .then(linter => this.setAllTemplateDiagnostics(linter.dir, linter.diagnostics))
-            .catch(console.error)
-            .finally(() => {
-              const hrend = process.hrtime(hrstart);
-              this.logger.log(`Finished lint of ${doc.uri.toString()} in ${hrend[0]}s. ${hrend[1] / 1000000}ms.`);
-            });
-          all = all.then(v => p);
+    this._isLinting = true;
+    try {
+      let all = Promise.resolve();
+      this.templateInfoQueue.forEach(doc => {
+        this.templateInfoQueue.delete(doc);
+        try {
+          const hrstart = process.hrtime();
+          const result = this.lintTemplateInfo(doc);
+          if (!result) {
+            // delete any diagnostics for any files under that templateInfo dir
+            this.setAllTemplateDiagnostics(uriDirname(doc.uri));
+          } else {
+            const p = result
+              .then(linter => this.setAllTemplateDiagnostics(linter.dir, linter.diagnostics))
+              .catch(console.error)
+              .finally(() => {
+                const hrend = process.hrtime(hrstart);
+                this.logger.log(`Finished lint of ${doc.uri.toString()} in ${hrend[0]}s. ${hrend[1] / 1000000}ms.`);
+              });
+            all = all.then(v => p);
+          }
+        } catch (e) {
+          console.debug('Failed to lint ' + doc.uri.toString(), e);
+          this.setAllTemplateDiagnostics(doc.uri);
         }
-      } catch (e) {
-        console.debug('Failed to lint ' + doc.uri.toString(), e);
-        this.setAllTemplateDiagnostics(doc.uri);
-      }
-    });
-    return all;
+      });
+      // reset isLinting when all the linting is done
+      return all.finally(() => (this._isLinting = false));
+    } catch (e) {
+      // if we get an error here (which we shouldn't), then the promise didn't get the .finally() to reset isLinting,
+      // so just do it now
+      this._isLinting = false;
+      throw e;
+    }
   }
 
   private lintTemplateInfo(doc: vscode.TextDocument): undefined | Promise<TemplateLinter> {

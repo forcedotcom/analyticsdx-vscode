@@ -11,8 +11,11 @@ import { posix as path } from 'path';
 import * as tmp from 'tmp';
 import * as vscode from 'vscode';
 import { ExtensionType as TemplateExtensionType } from '../../src';
-import { EXTENSION_ID } from '../../src/constants';
+import { EXTENSION_ID, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
+import { TemplateEditingManager } from '../../src/templateEditing';
+import { TemplateLinterManager } from '../../src/templateLinter';
 import { matchJsonNodeAtPattern } from '../../src/util/jsoncUtils';
+import { findTemplateInfoFileFor } from '../../src/util/templateUtils';
 import { uriBasename, uriRelPath } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 
@@ -68,6 +71,54 @@ export function uriFromTestRoot(...paths: string[]): vscode.Uri {
   return root.uri;
 }
 
+export async function getTemplateEditorManager() {
+  const ext = (await waitForTemplateExtensionActive()).exports;
+  // tslint:disable:no-unused-expression
+  expect(ext, 'extension exports').to.not.be.undefined;
+  expect(ext!.templateEditingManager, 'templateEditingManager').to.not.be.undefined;
+  return ext!.templateEditingManager;
+}
+
+export function waitForTemplateEditorManagerHas(
+  templateEditingManager: TemplateEditingManager,
+  dir: vscode.Uri,
+  expected: boolean
+): Promise<boolean> {
+  return waitFor(
+    () => templateEditingManager.has(dir),
+    has => has === expected,
+    {
+      pauseMs: 500,
+      timeoutMs: 15000,
+      timeoutMessage: () => `Timeout waiting for TemplateEditingManager.has(${dir}) to be ${expected}`
+    }
+  );
+}
+
+export async function getTemplateLinterManager() {
+  const ext = (await waitForTemplateExtensionActive()).exports;
+  // tslint:disable:no-unused-expression
+  expect(ext, 'extension exports').to.not.be.undefined;
+  expect(ext!.templateLinterManager, 'templateLinterManager').to.not.be.undefined;
+  return ext!.templateLinterManager;
+}
+
+export function waitForTemplateLinterManagerIsQuiet(
+  linterManager: TemplateLinterManager,
+  expected = true
+): Promise<boolean> {
+  return waitFor(
+    () => linterManager.isQuiet,
+    quiet => quiet === expected,
+    {
+      // check this state a little more often than the linter timer runs
+      pauseMs: TemplateLinterManager.LINT_DEBOUNCE_MS - 100,
+      timeoutMs: 15000,
+      timeoutMessage: () => `Timeout waiting for TemplateLinterManager.isQuiet to be ${expected}`
+    }
+  );
+}
+
 export async function openFile(uri: vscode.Uri, show?: true): Promise<[vscode.TextDocument, vscode.TextEditor]>;
 export async function openFile(uri: vscode.Uri, show: false): Promise<[vscode.TextDocument, undefined]>;
 export async function openFile(
@@ -79,6 +130,17 @@ export async function openFile(
   show = true
 ): Promise<[vscode.TextDocument, vscode.TextEditor | undefined]> {
   const doc = await vscode.workspace.openTextDocument(uri);
+  // if we're opening a template json file, wait for the editor manager to kick in and switch the language id
+  if ((await findTemplateInfoFileFor(doc.uri)) && (doc.languageId === 'json' || doc.languageId === 'jsonc')) {
+    await waitFor(
+      () => doc.languageId,
+      langId => langId === TEMPLATE_JSON_LANG_ID,
+      {
+        timeoutMessage: langId =>
+          `Timeout waiting for ${doc.uri.path} language id to switch to ${TEMPLATE_JSON_LANG_ID} from ${langId}`
+      }
+    );
+  }
   let editor: vscode.TextEditor | undefined;
   if (show) {
     // we need to give a column to have multiple editor open, otherwise it will always replace an active editor
@@ -132,7 +194,7 @@ export async function openFileAndWaitForDiagnostics(
   show = true,
   filter?: (d: vscode.Diagnostic[] | undefined) => boolean | undefined
 ): Promise<[vscode.Diagnostic[], vscode.TextDocument, vscode.TextEditor | undefined]> {
-  const [doc, editor] = await openTemplateInfo(uri, show);
+  const [doc, editor] = await openFile(uri, show);
   return [await waitForDiagnostics(doc.uri, filter), doc, editor];
 }
 
@@ -171,6 +233,11 @@ export async function waitForDiagnostics(
   filterDescription = `diagnostics on ${uri.toString()}`
 ): Promise<vscode.Diagnostic[]> {
   await vscode.commands.executeCommand('workbench.action.problems.focus');
+  // if it's a template file, then presumably it just opened or some edits were made, so wait for the linter to finish
+  // up any work it's doing
+  if (await findTemplateInfoFileFor(uri)) {
+    await waitForTemplateLinterManagerIsQuiet(await getTemplateLinterManager());
+  }
   return waitFor(() => vscode.languages.getDiagnostics(uri), filter || defDiagnosticFilter, {
     timeoutMessage: diagnostics =>
       `Timeout waiting for: ${filterDescription}\nCurrent diagnostics:\n` + JSON.stringify(diagnostics, undefined, 2)

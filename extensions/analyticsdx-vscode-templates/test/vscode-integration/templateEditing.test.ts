@@ -10,7 +10,6 @@ import { findNodeAtLocation, JSONPath, parseTree } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
-import { TemplateEditingManager } from '../../src/templateEditing';
 import { jsonPathToString } from '../../src/util/jsoncUtils';
 import { scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
@@ -20,6 +19,7 @@ import {
   findPositionByJsonPath,
   getCompletionItems,
   getDefinitionLocations,
+  getTemplateEditorManager,
   openFile,
   openFileAndWaitForDiagnostics,
   openTemplateInfo,
@@ -28,42 +28,13 @@ import {
   uriFromTestRoot,
   verifyCompletionsContain,
   waitForDiagnostics,
-  waitForTemplateExtensionActive,
+  waitForTemplateEditorManagerHas,
   waveTemplatesUriPath,
   writeEmptyJsonFile
 } from './vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
 describe('TemplateEditorManager', () => {
-  async function getTemplateEditorManager() {
-    const ext = (await waitForTemplateExtensionActive()).exports;
-    expect(ext, 'extension exports').to.not.be.undefined;
-    expect(ext!.templateEditingManager, 'templateEditingManager').to.not.be.undefined;
-    return ext!.templateEditingManager;
-  }
-
-  async function waitForTemplateEditorManagerHas(
-    templateEditingManager: TemplateEditingManager,
-    dir: vscode.Uri,
-    expected: boolean
-  ) {
-    try {
-      return await waitFor(
-        () => templateEditingManager.has(dir),
-        has => has === expected,
-        {
-          pauseMs: 500,
-          timeoutMs: 15000
-        }
-      );
-    } catch (e) {
-      if (e && e.name === 'timeout') {
-        expect.fail(`Timeout waiting for TemplateEditingManager.has(${dir})===${expected}`);
-      }
-      throw e;
-    }
-  }
-
   describe('starts on', () => {
     let tmpdir: vscode.Uri | undefined;
     beforeEach(async () => {
