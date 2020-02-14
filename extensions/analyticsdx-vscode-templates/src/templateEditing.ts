@@ -37,6 +37,7 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
+import { UiVariableCompletionItemProviderDelegate } from './ui/completions';
 import { UiVariableDefinitionProvider } from './ui/definitions';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
@@ -193,13 +194,18 @@ export class TemplateDirEditing extends Disposable {
       })
     );
 
+    // hookup editing support for the other template file types and operations here
     const relatedFileSelector = createRelPathDocumentSelector(this.dir, '**', '*.json');
-    // hookup Go To Definition from variable name in ui.json to variable.json
-    this.disposables.push(
-      vscode.languages.registerDefinitionProvider(relatedFileSelector, new UiVariableDefinitionProvider(this))
-    );
 
-    // TODO: hookup editing support for the other template file types and operations here
+    this.disposables.push(
+      // hookup Go To Definition from variable name in ui.json to variable.json
+      vscode.languages.registerDefinitionProvider(relatedFileSelector, new UiVariableDefinitionProvider(this)),
+      // hookup code-completion for variables names in page in ui.json's
+      vscode.languages.registerCompletionItemProvider(
+        relatedFileSelector,
+        new JsonAttributeCompletionItemProvider(new UiVariableCompletionItemProviderDelegate(this))
+      )
+    );
 
     return this;
   }

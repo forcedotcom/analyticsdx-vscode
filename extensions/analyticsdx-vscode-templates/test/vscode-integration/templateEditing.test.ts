@@ -715,6 +715,59 @@ describe('TemplateEditorManager', () => {
       }
       expect(locations[0].uri.path, 'location path').to.equal(uriRelPath(uriDirname(uri), 'variables.json').path);
     });
+
+    it('code completions for variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
+      const [doc] = await openFile(uri, true);
+      // we should see the 3 warnings about the bad var types
+      await waitForDiagnostics(uri, d => d && d.length >= 3);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+      const position = findPositionByJsonPath(doc, ['pages', 0, 'variables', 0, 'name']);
+      expect(position, 'pages[0].variables[0].name').to.not.be.undefined;
+      const completions = (
+        await verifyCompletionsContain(
+          doc,
+          position!,
+          '"DatasetAnyFieldTypeVar"',
+          '"DateTimeTypeVar"',
+          '"ObjectTypeVar"',
+          '"StringArrayVar"',
+          '"StringTypeVar"'
+        )
+      ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+      if (completions.length !== 5) {
+        expect.fail('Expected 5 completions, got: ' + completions.map(i => i.label).join(', '));
+      }
+      // check some more stuff on the completion items
+      [
+        {
+          detail: '(DatasetAnyFieldType) A dataset any field variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(DateTimeType) A datetime variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(ObjectType) An object variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(StringType[])',
+          docs: undefined
+        },
+        {
+          detail: '(StringType) A string variable',
+          docs: 'String variable description'
+        }
+      ].forEach(({ detail, docs }, i) => {
+        const item = completions[i];
+        expect(item.kind, `${item.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
+        expect(item.detail, `${item.label} details`).to.equal(detail);
+        expect(item.documentation, `${item.label} documentation`).to.equal(docs);
+      });
+    });
   }); // describe('configures uiDefinition')
 
   describe('configures variablesDefinition', () => {
