@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonAttributeDefinitionProvider } from '../util/definitions';
 import { isValidRelpath } from '../util/utils';
-import { isUriUnder, rangeForNode, uriRelPath } from '../util/vscodeUtils';
+import { rangeForNode, uriRelPath } from '../util/vscodeUtils';
 
 /** Handle CMD+Click from a variable name in ui.json to the variable in variables.json. */
 export class UiVariableDefinitionProvider extends JsonAttributeDefinitionProvider {
@@ -43,12 +43,8 @@ export class UiVariableDefinitionProvider extends JsonAttributeDefinitionProvide
   ): boolean {
     return (
       // make sure it's in the uiDefinition file for the template
-      isUriUnder(this.templateEditing.dir, document.uri) &&
-      this.templateEditing.uiDefinitionPath &&
-      isValidRelpath(this.templateEditing.uiDefinitionPath) &&
-      document.uri.path.endsWith(`/${this.templateEditing.uiDefinitionPath}`) &&
+      this.templateEditing.isUiDefinitionFile(document.uri) &&
       // and that the template has a variableDefinition
-      this.templateEditing.variablesDefinitionPath &&
       isValidRelpath(this.templateEditing.variablesDefinitionPath) &&
       // and that's it's in a variable name field
       location.matches(['pages', '*', 'variables', '*', 'name']) &&

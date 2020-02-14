@@ -12,7 +12,7 @@ import { TemplateDirEditing } from '../templateEditing';
 import { JsonAttributeCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
 import { jsonPathToString } from '../util/jsoncUtils';
 import { isValidRelpath } from '../util/utils';
-import { isUriUnder, uriBasename, uriRelPath } from '../util/vscodeUtils';
+import { uriBasename, uriRelPath } from '../util/vscodeUtils';
 
 /** Get variable names for the variable name in the pages in ui.json. */
 export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCompletionItemProviderDelegate {
@@ -26,12 +26,8 @@ export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCo
   ): boolean {
     return (
       // make sure it's in the uiDefinition file for the template
-      isUriUnder(this.templateEditing.dir, document.uri) &&
-      !!this.templateEditing.uiDefinitionPath &&
-      isValidRelpath(this.templateEditing.uiDefinitionPath) &&
-      document.uri.path.endsWith(`/${this.templateEditing.uiDefinitionPath}`) &&
+      this.templateEditing.isUiDefinitionFile(document.uri) &&
       // and that the template has a variableDefinition
-      !!this.templateEditing.variablesDefinitionPath &&
       isValidRelpath(this.templateEditing.variablesDefinitionPath) &&
       // and that it's in a variable name field
       location.matches(['pages', '*', 'variables', '*', 'name'])

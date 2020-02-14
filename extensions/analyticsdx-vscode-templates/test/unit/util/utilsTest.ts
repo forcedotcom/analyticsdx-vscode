@@ -98,13 +98,20 @@ describe('utils', () => {
       });
     });
 
-    ['/path.html', '../file.html', 'dir/../file', 'dir/../../../../../../../../../etc/passwd', 'dir/..'].forEach(
-      path => {
-        it(`doesn't match '${path}'`, () => {
-          expect(isValidRelpath(path)).to.be.false;
-        });
-      }
-    );
+    [
+      '/path.html',
+      '../file.html',
+      'dir/../file',
+      'dir/../../../../../../../../../etc/passwd',
+      'dir/..',
+      '',
+      null,
+      undefined
+    ].forEach(path => {
+      it(`doesn't match ${JSON.stringify(path)}`, () => {
+        expect(isValidRelpath(path)).to.be.false;
+      });
+    });
   });
 
   describe('matchesFileExtension()', () => {

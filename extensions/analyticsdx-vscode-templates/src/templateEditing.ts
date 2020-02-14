@@ -37,8 +37,7 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
-import { UiVariableCompletionItemProviderDelegate } from './ui/completions';
-import { UiVariableDefinitionProvider } from './ui/definitions';
+import { UiVariableCompletionItemProviderDelegate, UiVariableDefinitionProvider } from './ui';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
@@ -53,7 +52,10 @@ import {
   isUriAtOrUnder,
   uriBasename,
   uriDirname,
-  uriStat
+  uriStat,
+  isSameUri,
+  uriRelPath,
+  isUriUnder
 } from './util/vscodeUtils';
 
 function templateJsonFileFilter(s: string) {
@@ -135,6 +137,16 @@ export class TemplateDirEditing extends Disposable {
 
   get uiDefinitionPath() {
     return this._uiDefinitionPath;
+  }
+
+  /** Tell if the specified file uri corresponds to our uiDefinition path. */
+  public isUiDefinitionFile(file: vscode.Uri): boolean {
+    return (
+      isUriUnder(this.dir, file) &&
+      !!this.uiDefinitionPath &&
+      isValidRelpath(this.uiDefinitionPath) &&
+      isSameUri(uriRelPath(this.dir, this.uiDefinitionPath), file)
+    );
   }
 
   get variablesDefinitionPath() {
