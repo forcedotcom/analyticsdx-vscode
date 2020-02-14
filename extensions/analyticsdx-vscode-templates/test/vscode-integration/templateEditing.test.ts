@@ -10,15 +10,16 @@ import { findNodeAtLocation, JSONPath, parseTree } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
-import { TemplateEditingManager } from '../../src/templateEditing';
 import { jsonPathToString } from '../../src/util/jsoncUtils';
-import { scanLinesUntil, uriDirname, uriStat } from '../../src/util/vscodeUtils';
+import { scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 import {
   closeAllEditors,
   createTempTemplate,
   findPositionByJsonPath,
   getCompletionItems,
+  getDefinitionLocations,
+  getTemplateEditorManager,
   openFile,
   openFileAndWaitForDiagnostics,
   openTemplateInfo,
@@ -27,42 +28,13 @@ import {
   uriFromTestRoot,
   verifyCompletionsContain,
   waitForDiagnostics,
-  waitForTemplateExtensionActive,
+  waitForTemplateEditorManagerHas,
   waveTemplatesUriPath,
   writeEmptyJsonFile
 } from './vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
 describe('TemplateEditorManager', () => {
-  async function getTemplateEditorManager() {
-    const ext = (await waitForTemplateExtensionActive()).exports;
-    expect(ext, 'extension exports').to.not.be.undefined;
-    expect(ext!.templateEditingManager, 'templateEditingManager').to.not.be.undefined;
-    return ext!.templateEditingManager;
-  }
-
-  async function waitForTemplateEditorManagerHas(
-    templateEditingManager: TemplateEditingManager,
-    dir: vscode.Uri,
-    expected: boolean
-  ) {
-    try {
-      return await waitFor(
-        () => templateEditingManager.has(dir),
-        has => has === expected,
-        {
-          pauseMs: 500,
-          timeoutMs: 15000
-        }
-      );
-    } catch (e) {
-      if (e && e.name === 'timeout') {
-        expect.fail(`Timeout waiting for TemplateEditingManager.has(${dir})===${expected}`);
-      }
-      throw e;
-    }
-  }
-
   describe('starts on', () => {
     let tmpdir: vscode.Uri | undefined;
     beforeEach(async () => {
@@ -725,6 +697,76 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
       expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
+    });
+
+    it('go to definition support for variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
+      const [doc] = await openFile(uri, true);
+      // we should see the 3 warnings about the bad var types
+      await waitForDiagnostics(uri, d => d && d.length >= 3);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+      const position = findPositionByJsonPath(doc, ['pages', 0, 'variables', 0, 'name']);
+      expect(position, 'pages[0].variables[0].name').to.not.be.undefined;
+
+      const locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
+      if (locations.length !== 1) {
+        expect.fail('Expected 1 location, got:\n' + JSON.stringify(locations, undefined, 2));
+      }
+      expect(locations[0].uri.path, 'location path').to.equal(uriRelPath(uriDirname(uri), 'variables.json').path);
+    });
+
+    it('code completions for variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
+      const [doc] = await openFile(uri, true);
+      // we should see the 3 warnings about the bad var types
+      await waitForDiagnostics(uri, d => d && d.length >= 3);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+      const position = findPositionByJsonPath(doc, ['pages', 0, 'variables', 0, 'name']);
+      expect(position, 'pages[0].variables[0].name').to.not.be.undefined;
+      const completions = (
+        await verifyCompletionsContain(
+          doc,
+          position!,
+          '"DatasetAnyFieldTypeVar"',
+          '"DateTimeTypeVar"',
+          '"ObjectTypeVar"',
+          '"StringArrayVar"',
+          '"StringTypeVar"'
+        )
+      ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+      if (completions.length !== 5) {
+        expect.fail('Expected 5 completions, got: ' + completions.map(i => i.label).join(', '));
+      }
+      // check some more stuff on the completion items
+      [
+        {
+          detail: '(DatasetAnyFieldType) A dataset any field variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(DateTimeType) A datetime variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(ObjectType) An object variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(StringType[])',
+          docs: undefined
+        },
+        {
+          detail: '(StringType) A string variable',
+          docs: 'String variable description'
+        }
+      ].forEach(({ detail, docs }, i) => {
+        const item = completions[i];
+        expect(item.kind, `${item.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
+        expect(item.detail, `${item.label} details`).to.equal(detail);
+        expect(item.documentation, `${item.label} documentation`).to.equal(docs);
+      });
     });
   }); // describe('configures uiDefinition')
 

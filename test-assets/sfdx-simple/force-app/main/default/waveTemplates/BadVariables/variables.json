@@ -1,0 +1,48 @@
+{
+  "StringTypeVar": {
+    "label": "A string variable",
+    "description": "String variable description",
+    "variableType": {
+      "type": "StringType"
+    }
+  },
+  "ObjectTypeVar": {
+    "label": "An object variable",
+    "description": "This can't be put in a non-vfpage page",
+    "defaultValue": {
+      "one": "1"
+    },
+    "variableType": {
+      "type": "ObjectType",
+      "properties": {
+        "one": {
+          "type": "StringType"
+        }
+      },
+      "required": ["one"]
+    }
+  },
+  "DateTimeTypeVar": {
+    "label": "A datetime variable",
+    "description": "This can't be put in a non-vfpage page",
+    "variableType": {
+      "type": "DateTimeType"
+    }
+  },
+  "DatasetAnyFieldTypeVar": {
+    "label": "A dataset any field variable",
+    "description": "This can't be put in a non-vfpage page",
+    "variableType": {
+      "type": "DatasetAnyFieldType"
+    }
+  },
+  "StringArrayVar": {
+    // intentionally no label nor description for templateEditing.test.ts to check for
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "StringType"
+      }
+    }
+  }
+}

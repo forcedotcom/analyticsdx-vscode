@@ -37,6 +37,8 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
+import { UiVariableCompletionItemProviderDelegate } from './ui/completions';
+import { UiVariableDefinitionProvider } from './ui/definitions';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
@@ -45,14 +47,21 @@ import { matchJsonNodesAtPattern } from './util/jsoncUtils';
 import { Logger, PrefixingOutputChannel } from './util/logger';
 import { findTemplateInfoFileFor } from './util/templateUtils';
 import { isValidRelpath } from './util/utils';
-import { clearDiagnosticsUnder, isUriAtOrUnder, uriBasename, uriDirname, uriStat } from './util/vscodeUtils';
+import {
+  clearDiagnosticsUnder,
+  createRelPathDocumentSelector,
+  isUriAtOrUnder,
+  uriBasename,
+  uriDirname,
+  uriStat
+} from './util/vscodeUtils';
 
 function templateJsonFileFilter(s: string) {
   return jsonFileFilter(s) && s !== 'template-info.json';
 }
 
 /** Wraps the setup for configuring editing for the files in a template directory. */
-class TemplateDirEditing extends Disposable {
+export class TemplateDirEditing extends Disposable {
   /** A hashkey for checking for equality between different instances. */
   public readonly key: string;
 
@@ -142,14 +151,7 @@ class TemplateDirEditing extends Disposable {
   }
 
   public start(): this {
-    const templateInfoSelector: vscode.DocumentSelector = {
-      scheme: this.dir.scheme,
-      pattern:
-        // RelativePattern is supposed to be a little better here, but only works right for file:// uris
-        this.dir.scheme === 'file'
-          ? new vscode.RelativePattern(this.dir.fsPath, 'template-info.json')
-          : path.join(this.dir.path, 'template-info.json')
-    };
+    const templateInfoSelector = createRelPathDocumentSelector(this.dir, 'template-info.json');
     // hook up additional code-completions for template-info.json
     const fileCompleter = new JsonAttributeCompletionItemProvider(
       // locations that support *.json fies:
@@ -175,7 +177,7 @@ class TemplateDirEditing extends Disposable {
     );
     this.disposables.push(vscode.languages.registerCompletionItemProvider(templateInfoSelector, fileCompleter));
 
-    // hook up Go To/Peek Defintion (Alt+Click) for relative-path fields in template-info.json
+    // hook up Go To/Peek Defintion for relative-path fields in template-info.json
     const defProvider = new JsonAttributeRelFilePathDefinitionProvider(TEMPLATE_INFO.allRelFilePathLocationPatterns);
     this.disposables.push(vscode.languages.registerDefinitionProvider(templateInfoSelector, defProvider));
 
@@ -192,7 +194,18 @@ class TemplateDirEditing extends Disposable {
       })
     );
 
-    // TODO: hookup editing support for the other template file types
+    // hookup editing support for the other template file types and operations here
+    const relatedFileSelector = createRelPathDocumentSelector(this.dir, '**', '*.json');
+
+    this.disposables.push(
+      // hookup Go To Definition from variable name in ui.json to variable.json
+      vscode.languages.registerDefinitionProvider(relatedFileSelector, new UiVariableDefinitionProvider(this)),
+      // hookup code-completion for variables names in page in ui.json's
+      vscode.languages.registerCompletionItemProvider(
+        relatedFileSelector,
+        new JsonAttributeCompletionItemProvider(new UiVariableCompletionItemProviderDelegate(this))
+      )
+    );
 
     return this;
   }
