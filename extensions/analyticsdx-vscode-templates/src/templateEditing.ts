@@ -49,13 +49,13 @@ import { isValidRelpath } from './util/utils';
 import {
   clearDiagnosticsUnder,
   createRelPathDocumentSelector,
+  isSameUri,
   isUriAtOrUnder,
+  isUriUnder,
   uriBasename,
   uriDirname,
-  uriStat,
-  isSameUri,
   uriRelPath,
-  isUriUnder
+  uriStat
 } from './util/vscodeUtils';
 
 function templateJsonFileFilter(s: string) {

@@ -11,7 +11,7 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { jsonPathToString } from '../../src/util/jsoncUtils';
-import { scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
+import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 import {
   closeAllEditors,
@@ -397,7 +397,7 @@ describe('TemplateEditorManager', () => {
       // that should give us a warning about folder.json not existing
       await waitForDiagnostics(
         templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => d.code === 'folderDefinition')
+        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'folderDefinition')
       );
       // create a folder.json that has a comment and some bad json
       const folderUri = tmpdir.with({ path: path.join(tmpdir.path, 'folder.json') });
@@ -676,7 +676,7 @@ describe('TemplateEditorManager', () => {
       // that should give us a warning about ui.json not existing
       await waitForDiagnostics(
         templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => d.code === 'uiDefinition')
+        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'uiDefinition')
       );
       // create a ui.json that has a comment and some bad json
       const uiUri = tmpdir.with({ path: path.join(tmpdir.path, 'ui.json') });
@@ -954,7 +954,7 @@ describe('TemplateEditorManager', () => {
       // that should give us a warning about variables.json not existing
       await waitForDiagnostics(
         templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => d.code === 'variableDefinition')
+        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'variableDefinition')
       );
       // create a variables.json that has a comment and some bad json
       const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
@@ -1171,7 +1171,7 @@ describe('TemplateEditorManager', () => {
       // that should give us a warning about rules.json not existing
       await waitForDiagnostics(
         templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => d.code === 'rules[0].file')
+        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'rules[0].file')
       );
       // create a rules.json that has a comment and some bad json
       const rulesUri = tmpdir.with({ path: path.join(tmpdir.path, 'rules.json') });

@@ -256,3 +256,25 @@ export class UriExistsDiagnosticCollection implements vscode.DiagnosticCollectio
     return this.diagnostics.dispose();
   }
 }
+
+/** An extension to the base diagnostic so we add some more fields. */
+export class AdxDiagnostic extends vscode.Diagnostic {
+  public jsonpath?: string;
+  public args?: Record<string, any>;
+
+  public addArg(name: string, val: any): this {
+    if (!this.args) {
+      this.args = {};
+    }
+    this.args[name] = val;
+    return this;
+  }
+}
+
+export function jsonpathFrom(d: vscode.Diagnostic): string | undefined {
+  return (d as AdxDiagnostic).jsonpath;
+}
+
+export function argsFrom(d: vscode.Diagnostic): Record<string, any> | undefined {
+  return (d as AdxDiagnostic).args;
+}

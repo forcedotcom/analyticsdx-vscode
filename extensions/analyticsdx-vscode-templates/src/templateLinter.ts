@@ -15,6 +15,7 @@ import { Logger } from './util/logger';
 import { findTemplateInfoFileFor } from './util/templateUtils';
 import { fuzzySearcher, isValidRelpath } from './util/utils';
 import {
+  AdxDiagnostic,
   clearDiagnosticsUnder,
   isUriAtOrUnder,
   rangeForNode,
@@ -133,14 +134,15 @@ export class TemplateLinter {
           doc.positionAt(location.offset + location.length - rangeMod)
         )
       : new vscode.Range(0, 0, 0, 0);
-    const diagnostic = new vscode.Diagnostic(range, mesg, severity);
+    const diagnostic = new AdxDiagnostic(range, mesg, severity);
     // if a property node is sent in, we need to use its first child (the property name) to calculate the
     // json-path for the diagnostics
     if (location && location.type === 'property' && location.children && location.children[0].type === 'string') {
-      diagnostic.code = jsonPathToString(getNodePath(location.children[0]));
+      diagnostic.jsonpath = jsonPathToString(getNodePath(location.children[0]));
     } else {
-      diagnostic.code = location ? jsonPathToString(getNodePath(location)) : '';
+      diagnostic.jsonpath = location ? jsonPathToString(getNodePath(location)) : '';
     }
+    // REVIEWME: pass in code? args?
 
     const diagnostics = this.diagnostics.get(doc);
     if (diagnostics) {
