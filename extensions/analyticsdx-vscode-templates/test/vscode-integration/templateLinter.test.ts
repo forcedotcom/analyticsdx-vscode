@@ -8,7 +8,8 @@
 import { expect } from 'chai';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
-import { jsonpathFrom, uriBasename, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
+import { ERRORS } from '../../src/constants';
+import { argsFrom, jsonpathFrom, uriBasename, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import {
   closeAllEditors,
   createTemplateWithRelatedFiles as _createTemplateWithRelatedFiles,
@@ -75,6 +76,7 @@ describe('TemplateLinterManager', () => {
       const d = map.get('templateType');
       expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
       expect(d!.message, 'message').to.be.equals('Dashboard templates must have exactly 1 dashboard specified');
+      expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_DASH_ONE_DASHBOARD);
       map.delete('templateType');
 
       failOnUnexpected(map);
@@ -87,6 +89,7 @@ describe('TemplateLinterManager', () => {
       const d = map.get('dashboards');
       expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
       expect(d!.message, 'message').to.be.equals('Dashboard templates must have exactly 1 dashboard specified');
+      expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_DASH_ONE_DASHBOARD);
       map.delete('dashboards');
 
       failOnUnexpected(map);
@@ -99,6 +102,7 @@ describe('TemplateLinterManager', () => {
       const d = map.get('dashboards');
       expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
       expect(d!.message, 'message').to.be.equals('Dashboard templates must have exactly 1 dashboard specified');
+      expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_DASH_ONE_DASHBOARD);
       map.delete('dashboards');
 
       failOnUnexpected(map);
@@ -118,6 +122,7 @@ describe('TemplateLinterManager', () => {
       expect(d!.message, 'message').to.be.equals(
         'App templates must have at least 1 dashboard, dataflow, or dataset specified'
       );
+      expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
       // on the missing fields, there shouldn't be any relatedInformations
       expect(d!.relatedInformation, 'relatedInformation').to.be.undefined;
       map.delete('templateType');
@@ -134,6 +139,7 @@ describe('TemplateLinterManager', () => {
       expect(d!.message, 'message').to.be.equals(
         'App templates must have at least 1 dashboard, dataflow, or dataset specified'
       );
+      expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
       // there should be related information for dashboards, datasets, and dataflows being empty
       expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;
       if (d!.relatedInformation!.length !== 3) {
@@ -159,6 +165,7 @@ describe('TemplateLinterManager', () => {
       expect(d!.message, 'message').to.be.equals(
         'App templates must have at least 1 dashboard, dataflow, or dataset specified'
       );
+      expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
       // there should be relatedInformations for dashboards and datasets
       expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;
       if (d!.relatedInformation!.length !== 2) {
@@ -197,6 +204,7 @@ describe('TemplateLinterManager', () => {
       expect(diagnostics[0].message, 'diagnostic.message').equals(
         `Template name must match the template folder name '${dirname}'`
       );
+      expect(diagnostics[0].code, 'diagnostic code').to.be.equal(ERRORS.TMPL_NAME_MATCH_FOLDER_NAME);
       // fix the name
       await setDocumentText(editor!, {
         name: dirname
@@ -223,6 +231,7 @@ describe('TemplateLinterManager', () => {
       }
       expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
       expect(diagnostics[0].message, 'diagnostic.message').equals("Path cannot be 'template-info.json'");
+      expect(diagnostics[0].code, 'diagnostic.code').equals(ERRORS.TMPL_INVALID_REL_PATH);
     });
 
     it('shows warnings on duplicate relpath usages', async () => {
@@ -302,6 +311,7 @@ describe('TemplateLinterManager', () => {
       }
       expect(diagnostics.map(d => jsonpathFrom(d), 'diagnostic jsonpaths')).to.include.members(expectedPaths);
       diagnostics.forEach(d => {
+        expect(d.code, `${jsonpathFrom(d)} diagnotic.code`).to.equal(ERRORS.TMPL_DUPLICATE_REL_PATH);
         expect(d.relatedInformation, `${jsonpathFrom(d)} diagnostic.relatedInformation`).to.not.be.undefined;
         expect(d.relatedInformation!.length, `${jsonpathFrom(d)} diagnostic.relatedInformation.length`).to.equal(
           expectedPaths.length - 1
@@ -341,6 +351,7 @@ describe('TemplateLinterManager', () => {
       expect(diagnostics[0].message, 'diagnostic[0].message').to.equal(
         "Template is combining deprecated 'ruleDefinition' and 'rules'. Please consolidate 'ruleDefinition' into 'rules'"
       );
+      expect(diagnostics[0].code, 'diagnostics[0].code').to.equals(ERRORS.TMPL_RULES_AND_RULE_DEFINITION);
 
       // fix the error
       await setDocumentText(editor, {
@@ -380,8 +391,9 @@ describe('TemplateLinterManager', () => {
       ].forEach(path => {
         const d = map.get(path);
         expect(d, path + ' diagnostic missing').to.be.not.undefined;
-        expect(d!.message, path + ' diagnostic message').to.be.equals('Specified file does not exist in workspace');
-        expect(d!.severity, path + ' diagnostic severity').to.be.equals(vscode.DiagnosticSeverity.Warning);
+        expect(d!.message, path + ' diagnostic message').to.equal('Specified file does not exist in workspace');
+        expect(d!.code, path + ' diagnostic code').to.equal(ERRORS.TMPL_REL_PATH_NOT_EXIST);
+        expect(d!.severity, path + ' diagnostic severity').to.equal(vscode.DiagnosticSeverity.Warning);
         map.delete(path);
       });
 
@@ -389,21 +401,25 @@ describe('TemplateLinterManager', () => {
       ['releaseInfo.notesFile', 'extendedTypes.visualforcePages[0].file', 'imageFiles[0].file'].forEach(path => {
         const d = map.get(path);
         expect(d, path + ' diagnostic missing').to.be.not.undefined;
-        expect(d!.message, path + ' diagnostic message').to.be.equals('Value should be a path relative to this file');
-        expect(d!.severity, path + ' diagnostic severity').to.be.equals(vscode.DiagnosticSeverity.Warning);
+        expect(d!.message, path + ' diagnostic message').to.equal('Value should be a path relative to this file');
+        expect(d!.code, path + ' diagnostic code').to.equal(ERRORS.TMPL_INVALID_REL_PATH);
+        expect(d!.severity, path + ' diagnostic severity').to.equal(vscode.DiagnosticSeverity.Warning);
         map.delete(path);
       });
 
       // the other expected errors
-      const expected: Record<string, string> = {
-        'datasetFiles[0].userXmd': "Path should not contain '..' parts",
-        'storedQueries[0].file': 'Specified path is not a file'
+      const expected: Record<string, [string, string]> = {
+        'datasetFiles[0].userXmd': ["Path should not contain '..' parts", ERRORS.TMPL_INVALID_REL_PATH],
+        'storedQueries[0].file': ['Specified path is not a file', ERRORS.TMPL_REL_PATH_NOT_FILE]
       };
       Object.keys(expected).forEach(path => {
         const d = map.get(path);
-        expect(d, path + ' diagnostic missing').to.be.not.undefined;
-        expect(d!.message, path + ' diagnostic message').to.be.equals(expected[path]);
-        expect(d!.severity, path + ' diagnostic severity').to.be.equals(vscode.DiagnosticSeverity.Warning);
+        const expectedMesg = expected[path][0];
+        const expectedCode = expected[path][1];
+        expect(d, path + ' diagnostic missing').to.not.be.undefined;
+        expect(d!.message, path + ' diagnostic message').to.equal(expectedMesg);
+        expect(d!.code, path + ' diagnostic code').to.equal(expectedCode);
+        expect(d!.severity, path + ' diagnostic severity').to.equal(vscode.DiagnosticSeverity.Warning);
         map.delete(path);
       });
 
@@ -426,14 +442,14 @@ describe('TemplateLinterManager', () => {
           2
         )
       );
+
+      const diagnosticFilter = (d: vscode.Diagnostic) =>
+        jsonpathFrom(d) === 'variableDefinition' &&
+        d.code === ERRORS.TMPL_REL_PATH_NOT_EXIST &&
+        d.message === 'Specified file does not exist in workspace';
       await waitForDiagnostics(
         templateUri,
-        diagnostics =>
-          diagnostics &&
-          diagnostics.length >= 1 &&
-          diagnostics.some(
-            d => jsonpathFrom(d) === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
-          ),
+        diagnostics => diagnostics && diagnostics.length >= 1 && diagnostics.some(diagnosticFilter),
         'Inital diagnostic on bad variableDefinition file'
       );
 
@@ -443,12 +459,7 @@ describe('TemplateLinterManager', () => {
       // and the diagnostic should go away
       await waitForDiagnostics(
         templateUri,
-        diagnostics =>
-          diagnostics &&
-          diagnostics.length > 0 &&
-          !diagnostics.some(
-            d => jsonpathFrom(d) === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
-          ),
+        diagnostics => diagnostics && diagnostics.length > 0 && !diagnostics.some(diagnosticFilter),
         'No more variableDefinition diagnostic after creating variables.json'
       );
 
@@ -457,11 +468,7 @@ describe('TemplateLinterManager', () => {
       // and the diagnostic should come back
       await waitForDiagnostics(
         templateUri,
-        diagnostics =>
-          diagnostics &&
-          diagnostics.some(
-            d => jsonpathFrom(d) === 'variableDefinition' && d.message === 'Specified file does not exist in workspace'
-          ),
+        diagnostics => diagnostics && diagnostics.some(diagnosticFilter),
         'Diagnostic on variableDefinition should exist after deleting variables.json'
       );
     });
@@ -570,14 +577,21 @@ describe('TemplateLinterManager', () => {
       if (diagnostics.length !== 2) {
         expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
-      expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
-      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal(
+      expect(diagnostics[0], 'diagnostics[0]').to.be.not.undefined;
+      expect(diagnostics[0].message, 'diagnostics[0].message').to.equal(
         "Cannot find variable 'badvar', did you mean 'var1'?"
       );
-      expect(diagnostics[1], 'diagnostic[1]').to.be.not.undefined;
-      expect(diagnostics[1].message, 'diagnostic[1].message').to.equal(
+      expect(diagnostics[0].code, 'diagnostics[0].message').to.equal(ERRORS.UI_PAGE_UNKNOWN_VARIABLE);
+      expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name)').to.equal('badvar');
+      expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match)').to.equal('var1');
+
+      expect(diagnostics[1], 'diagnostics[1]').to.be.not.undefined;
+      expect(diagnostics[1].message, 'diagnostics[1].message').to.equal(
         "Cannot find variable 'var2', did you mean 'var1'?"
       );
+      expect(diagnostics[1].code, 'diagnostics[1].message').to.equal(ERRORS.UI_PAGE_UNKNOWN_VARIABLE);
+      expect(argsFrom(diagnostics[1])?.name, 'diagnostics[1].args.name)').to.equal('var2');
+      expect(argsFrom(diagnostics[1])?.match, 'diagnostics[1].args.name)').to.equal('var1');
 
       // now, change the 'badvar' ref to 'var1' in ui.json
       uiJson.pages[0].variables[0].name = 'var1';
@@ -594,10 +608,13 @@ describe('TemplateLinterManager', () => {
       if (diagnostics.length !== 1) {
         expect.fail('Expected 1 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
-      expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
-      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal(
+      expect(diagnostics[0], 'diagnostics[0]').to.be.not.undefined;
+      expect(diagnostics[0].message, 'diagnostics[0].message').to.equal(
         "Cannot find variable 'var2', did you mean 'var1'?"
       );
+      expect(diagnostics[0].code, 'diagnostics[0].message').to.equal(ERRORS.UI_PAGE_UNKNOWN_VARIABLE);
+      expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name)').to.equal('var2');
+      expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match)').to.equal('var1');
 
       // now, add the 'var2' variable to variables.json
       variablesJson.var2 = {
@@ -671,9 +688,11 @@ describe('TemplateLinterManager', () => {
       }
       expect(diagnostics[0].message, 'diagnostic[0].message').to.equal('Either variables or vfPage must be specified');
       expect(jsonpathFrom(diagnostics[0]), 'diagnostic[0].jsonpath').to.equal('pages[0]');
+      expect(diagnostics[0].code, 'diagnostics[0].code').to.equal(ERRORS.UI_PAGE_MISSING_VARIABLES);
       expect(diagnostics[1].message, 'diagnostic[1].message').to.equal(
         'At least 1 variable or vfPage must be specified'
       );
+      expect(diagnostics[1].code, 'diagnostics[1].code').to.equal(ERRORS.UI_PAGE_EMPTY_VARIABLES);
       expect(jsonpathFrom(diagnostics[1]), 'diagnostic[1].jsonpath').to.equal('pages[1].variables');
 
       // update the ui.json to set variables on those pages
@@ -700,11 +719,12 @@ describe('TemplateLinterManager', () => {
       // the 3 should be for these variable types
       ['DateTimeType', 'ObjectType', 'DatasetAnyFieldType'].forEach((type, i) => {
         const diagnostic = diagnostics[i];
-        expect(diagnostic, `diagnostic[${i}]`).to.be.not.undefined;
-        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal(
+        expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
+        expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
           `${type} variable '${type}Var' is not supported in non-visualForce pages`
         );
-        expect(jsonpathFrom(diagnostic), `diagnostic[${i}].jsonpath`).to.equal(`pages[0].variables[${i}].name`);
+        expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE);
+        expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(`pages[0].variables[${i}].name`);
       });
     });
   }); // describe('lints ui.json')
@@ -742,6 +762,7 @@ describe('TemplateLinterManager', () => {
       expect(diagnostic.message, 'diagnostic.message').to.equal(
         'Multiple regular expression excludes found, only the first will be used'
       );
+      expect(diagnostic.code, 'diagnotic.code').to.equal(ERRORS.VARS_MULTIPLE_REGEXES);
       // there should be a relatedInfo for each regex exclude value
       expect(diagnostic.relatedInformation, 'diagnostic.relatedInformation').to.be.not.undefined;
       expect(diagnostic.relatedInformation!.length, 'diagnostic.relatedInformation.length').to.equal(2);
@@ -794,26 +815,31 @@ describe('TemplateLinterManager', () => {
       expect(diagnostic.message, 'diagnostic[1].message')
         .to.match(/^Invalid regular expression:/)
         .and.match(/Unterminated group$/);
+      expect(diagnostic.code, 'diagnotic[1].code').to.equal(ERRORS.VARS_INVALID_REGEX);
       expect(jsonpathFrom(diagnostic), 'diagnostic[1].jsonpath').to.equal('foovar.excludes[2]');
 
       diagnostic = diagnostics[2];
       expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[2].message').to.equal('Missing closing / for regular expression');
+      expect(diagnostic.code, 'diagnotic[2].code').to.equal(ERRORS.VARS_REGEX_MISSING_SLASH);
       expect(jsonpathFrom(diagnostic), 'diagnostic[2].jsonpath').to.equal('foovar.excludes[3]');
 
       diagnostic = diagnostics[3];
       expect(diagnostic, 'diagnostic[3]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[3].message').to.equal('Missing closing / for regular expression');
+      expect(diagnostic.code, 'diagnotic[3].code').to.equal(ERRORS.VARS_REGEX_MISSING_SLASH);
       expect(jsonpathFrom(diagnostic), 'diagnostic[3].jsonpath').to.equal('foovar.excludes[4]');
 
       diagnostic = diagnostics[4];
       expect(diagnostic, 'diagnostic[4]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[4].message').to.equal('Invalid regular expression options');
+      expect(diagnostic.code, 'diagnotic[4].code').to.equal(ERRORS.VARS_INVALID_REGEX_OPTIONS);
       expect(jsonpathFrom(diagnostic), 'diagnostic[4].jsonpath').to.equal('foovar.excludes[5]');
 
       diagnostic = diagnostics[5];
       expect(diagnostic, 'diagnostic[5]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[5].message').to.equal('Duplicate option in regular expression options');
+      expect(diagnostic.code, 'diagnotic[4].code').to.equal(ERRORS.VARS_INVALID_REGEX_OPTIONS);
       expect(jsonpathFrom(diagnostic), 'diagnostic[5].jsonpath').to.equal('foovar.excludes[6]');
 
       // fix variables.json, make sure diagnostic goes away
@@ -923,6 +949,7 @@ describe('TemplateLinterManager', () => {
       let diagnostic = diagnostics[0];
       expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate constant 'const1'");
+      expect(diagnostic.code, 'diagnotic[0].code').to.equal(ERRORS.RULES_DUPLICATE_CONSTANT);
       expect(jsonpathFrom(diagnostic), 'diagnostic[0].jsonpath').to.equal('constants[0].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
@@ -939,6 +966,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[1];
       expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate constant 'const3'");
+      expect(diagnostic.code, 'diagnotic[1].code').to.equal(ERRORS.RULES_DUPLICATE_CONSTANT);
       expect(jsonpathFrom(diagnostic), 'diagnostic[1].jsonpath').to.equal('constants[1].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[1].relatedInformation.message').to.equal(
@@ -951,6 +979,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[2];
       expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[2].message').to.equal("Duplicate constant 'const1'");
+      expect(diagnostic.code, 'diagnotic[2].code').to.equal(ERRORS.RULES_DUPLICATE_CONSTANT);
       expect(jsonpathFrom(diagnostic), 'diagnostic[2].jsonpath').to.equal('constants[2].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[2].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[2].relatedInformation.message').to.equal(
@@ -978,6 +1007,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[0];
       expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate constant 'const3'");
+      expect(diagnostic.code, 'diagnotic[0].code').to.equal(ERRORS.RULES_DUPLICATE_CONSTANT);
       expect(jsonpathFrom(diagnostic), 'diagnostic[0].jsonpath').to.equal('constants[0].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
@@ -1140,6 +1170,7 @@ describe('TemplateLinterManager', () => {
       let diagnostic = diagnostics[0];
       expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate rule name 'name1'");
+      expect(diagnostic.code, 'diagnotic[0].code').to.equal(ERRORS.RULES_DUPLICATE_RULE_NAME);
       expect(jsonpathFrom(diagnostic), 'diagnostic[0].jsonpath').to.equal('rules[0].name');
       expect(diagnostic.severity, 'diagnostic[0].severity').to.equal(vscode.DiagnosticSeverity.Hint);
       expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
@@ -1157,6 +1188,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[1];
       expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate rule name 'name3'");
+      expect(diagnostic.code, 'diagnotic[1].code').to.equal(ERRORS.RULES_DUPLICATE_RULE_NAME);
       expect(jsonpathFrom(diagnostic), 'diagnostic[1].jsonpath').to.equal('rules[1].name');
       expect(diagnostic.severity, 'diagnostic[1].severity').to.equal(vscode.DiagnosticSeverity.Hint);
       expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
@@ -1170,6 +1202,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[2];
       expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[2].message').to.equal("Duplicate rule name 'name1'");
+      expect(diagnostic.code, 'diagnotic[2].code').to.equal(ERRORS.RULES_DUPLICATE_RULE_NAME);
       expect(jsonpathFrom(diagnostic), 'diagnostic[2].jsonpath').to.equal('rules[2].name');
       expect(diagnostic.severity, 'diagnostic[2].severity').to.equal(vscode.DiagnosticSeverity.Hint);
       expect(diagnostic.relatedInformation?.length, 'diagnostic[2].relatedInformation.length').to.equal(1);
@@ -1199,6 +1232,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[0];
       expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate rule name 'name3'");
+      expect(diagnostic.code, 'diagnotic[0].code').to.equal(ERRORS.RULES_DUPLICATE_RULE_NAME);
       expect(jsonpathFrom(diagnostic), 'diagnostic[0].jsonpath').to.equal('rules[0].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
@@ -1321,6 +1355,7 @@ describe('TemplateLinterManager', () => {
       let diagnostic = diagnostics[0];
       expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate macro 'ns1:macro1'");
+      expect(diagnostic.code, 'diagnotic[0].code').to.equal(ERRORS.RULES_DUPLICATE_MACRO);
       expect(jsonpathFrom(diagnostic), 'diagnostic[0].jsonpath').to.equal('macros[0].definitions[0].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
@@ -1333,6 +1368,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[1];
       expect(diagnostic, 'diagnostic[1]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[1].message').to.equal("Duplicate macro 'ns1:macro3'");
+      expect(diagnostic.code, 'diagnotic[1].code').to.equal(ERRORS.RULES_DUPLICATE_MACRO);
       expect(jsonpathFrom(diagnostic), 'diagnostic[1].jsonpath').to.equal('macros[0].definitions[1].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[1].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[1].relatedInformation.message').to.equal(
@@ -1345,6 +1381,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[2];
       expect(diagnostic, 'diagnostic[2]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[2].message').to.equal("Duplicate macro 'ns1:macro1'");
+      expect(diagnostic.code, 'diagnotic[2].code').to.equal(ERRORS.RULES_DUPLICATE_MACRO);
       expect(jsonpathFrom(diagnostic), 'diagnostic[2].jsonpath').to.equal('macros[1].definitions[0].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[2].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[2].relatedInformation.message').to.equal(
@@ -1369,6 +1406,7 @@ describe('TemplateLinterManager', () => {
       diagnostic = diagnostics[0];
       expect(diagnostic, 'diagnostic[0]').to.not.be.undefined;
       expect(diagnostic.message, 'diagnostic[0].message').to.equal("Duplicate macro 'ns1:macro3'");
+      expect(diagnostic.code, 'diagnotic[0].code').to.equal(ERRORS.RULES_DUPLICATE_MACRO);
       expect(jsonpathFrom(diagnostic), 'diagnostic[0].jsonpath').to.equal('macros[0].definitions[0].name');
       expect(diagnostic.relatedInformation?.length, 'diagnostic[0].relatedInformation.length').to.equal(1);
       expect(diagnostic.relatedInformation?.[0].message, 'diagnostic[0].relatedInformation.message').to.equal(
@@ -1447,12 +1485,13 @@ describe('TemplateLinterManager', () => {
       }
       // make sure we get the expected warnings
       diagnostics.forEach((diagnostic, i) => {
-        expect(diagnostic, `diagnostic[${i}]`).to.not.be.undefined;
-        expect(diagnostic.message, `diagnostic[${i}].message`).to.equal(
+        expect(diagnostic, `diagnostics[${i}]`).to.not.be.undefined;
+        expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
           "Macro should have a 'return' or at least one action"
         );
-        expect(diagnostic.severity, `diagnostic[${i}].severity`).to.equal(vscode.DiagnosticSeverity.Information);
-        expect(jsonpathFrom(diagnostic), `diagnostic[${i}].jsonpath`).to.equal(
+        expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.RULES_NOOP_MACRO);
+        expect(diagnostic.severity, `diagnostics[${i}].severity`).to.equal(vscode.DiagnosticSeverity.Information);
+        expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(
           i === 0 ? 'macros[0].definitions[0]' : 'macros[0].definitions[1].actions'
         );
       });
