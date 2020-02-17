@@ -129,7 +129,7 @@ export function matchJsonNodeAtPattern(
   return found;
 }
 
-const idRegex = /^[A-Za-z][-A-Za-z0-9_:.]*$/;
+const jsonIdRegex = /^[A-Za-z][-A-Za-z0-9_]*$/;
 /**
  * Convert the specified path of a node to a an javascript-style expression (e.g. foo.bar[2])
  */
@@ -138,7 +138,7 @@ export function jsonPathToString(path: JSONPath): string {
   path.forEach(part => {
     if (typeof part === 'string') {
       // if the part is valid json-ish id, slap it on directly
-      if (idRegex.test(part) && part !== 'true' && part !== 'false') {
+      if (jsonIdRegex.test(part) && part !== 'true' && part !== 'false') {
         if (buf) {
           buf += '.';
         }
