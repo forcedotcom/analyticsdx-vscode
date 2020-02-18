@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Node as JsonNode } from 'jsonc-parser';
+import { Edit as JsonEdit, Node as JsonNode } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { isSameUriPath, isUriPathUnder, isWhitespaceChar } from './utils';
@@ -91,6 +91,36 @@ export function rangeForNode(node: JsonNode, document: vscode.TextDocument, incl
     // property in the parent object
   }
   return new vscode.Range(start, end);
+}
+
+/** Convert json edits (from modify() in jsonc-parser) to edits in a WorkspaceEdit. */
+export function jsonEditsToWorkspaceEdit(
+  edits: JsonEdit[],
+  document: vscode.TextDocument,
+  wsEdit: vscode.WorkspaceEdit
+) {
+  edits.forEach(edit => {
+    if (edit.content) {
+      if (edit.length <= 0) {
+        // insert
+        wsEdit.insert(document.uri, document.positionAt(edit.offset), edit.content);
+      } else {
+        // replace
+        wsEdit.replace(
+          document.uri,
+          new vscode.Range(document.positionAt(edit.offset), document.positionAt(edit.offset + edit.length)),
+          edit.content
+        );
+      }
+    } else {
+      // remove text
+      wsEdit.delete(
+        document.uri,
+        new vscode.Range(document.positionAt(edit.offset), document.positionAt(edit.offset + edit.length))
+      );
+    }
+  });
+  return wsEdit;
 }
 
 export function isUriUnder(parent: vscode.Uri, file: vscode.Uri): boolean {

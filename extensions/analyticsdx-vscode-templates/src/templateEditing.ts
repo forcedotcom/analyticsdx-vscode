@@ -37,7 +37,11 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
-import { UiVariableCompletionItemProviderDelegate, UiVariableDefinitionProvider } from './ui';
+import {
+  UiVariableCodeActionProvider,
+  UiVariableCompletionItemProviderDelegate,
+  UiVariableDefinitionProvider
+} from './ui';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
@@ -216,7 +220,11 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerCompletionItemProvider(
         relatedFileSelector,
         new JsonAttributeCompletionItemProvider(new UiVariableCompletionItemProviderDelegate(this))
-      )
+      ),
+      // hookup quick fixes for variable names in ui.json's
+      vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
+        providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
+      })
     );
 
     return this;

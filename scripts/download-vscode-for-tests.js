@@ -19,6 +19,7 @@ function symlink(src, dest) {
 // Downloads an instance of VS Code for tests to either .vscode-test/insiders or .vscode-test/stable
 (async function() {
   const installDir = process.env.CODE_VERSION === 'insiders' ? 'insiders' : 'stable';
+  console.log(`#!# Downloading ${installDir}...`);
   const electron = await downloadAndUnzipVSCode(installDir);
   // downloadAndUnzipVSCode generates a path (with a version #) to the Electron executable, like:
   //   .../.vscode-test/vscode-1.36.1/Visual Studio Code.app/Contents/MacOS/Electron

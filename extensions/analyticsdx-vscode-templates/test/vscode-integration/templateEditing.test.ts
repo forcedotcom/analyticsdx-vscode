@@ -9,14 +9,16 @@ import { expect } from 'chai';
 import { findNodeAtLocation, JSONPath, parseTree } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
-import { TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
+import { ERRORS, TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { jsonPathToString } from '../../src/util/jsoncUtils';
 import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 import {
   closeAllEditors,
+  createTemplateWithRelatedFiles,
   createTempTemplate,
   findPositionByJsonPath,
+  getCodeActions,
   getCompletionItems,
   getDefinitionLocations,
   getTemplateEditorManager,
@@ -32,6 +34,10 @@ import {
   waveTemplatesUriPath,
   writeEmptyJsonFile
 } from './vscodeTestUtils';
+
+function sortDiagnostics(d1: vscode.Diagnostic, d2: vscode.Diagnostic) {
+  return d1.range.start.line - d2.range.start.line;
+}
 
 // tslint:disable:no-unused-expression
 describe('TemplateEditorManager', () => {
@@ -767,6 +773,100 @@ describe('TemplateEditorManager', () => {
         expect(item.detail, `${item.label} details`).to.equal(detail);
         expect(item.documentation, `${item.label} documentation`).to.equal(docs);
       });
+    });
+
+    it('quick fixes on bad variable names', async () => {
+      const uiJson = {
+        pages: [
+          {
+            title: 'Test Title',
+            variables: [{ name: 'varname' }, { name: 'foo' }]
+          }
+        ]
+      };
+      const [t, [uiEditor, variablesEditor]] = await createTemplateWithRelatedFiles(
+        {
+          field: 'uiDefinition',
+          path: 'ui.json',
+          initialJson: uiJson
+        },
+        {
+          field: 'variableDefinition',
+          path: 'variables.json',
+          initialJson: {
+            varname1: {
+              variableType: {
+                type: 'StringType'
+              }
+            }
+          }
+        }
+      );
+      tmpdir = t;
+
+      // get the 2 expected diagnostics on the variables in ui.json
+      const diagnosticFilter = (d: vscode.Diagnostic) => d.code === ERRORS.UI_PAGE_UNKNOWN_VARIABLE;
+      let diagnostics = (
+        await waitForDiagnostics(
+          uiEditor.document.uri,
+          ds => ds && ds.filter(diagnosticFilter).length === 2,
+          'Initial 2 invalid variable warnings on ui.json'
+        )
+      )
+        .filter(diagnosticFilter)
+        .sort(sortDiagnostics);
+      // and there shouldn't be any warnings on variables.json
+      await waitForDiagnostics(variablesEditor.document.uri, d => d && d.length === 0);
+
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[0].variables[0].name');
+      expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal('pages[0].variables[1].name');
+
+      // the 1st diagnostic should be for 'varname', which should have just the 2 quickfixes
+      let actions = await getCodeActions(uiEditor.document.uri, diagnostics[0].range);
+      if (actions.length !== 2) {
+        expect.fail('Expected 2 code actions, got: [' + actions.map(a => a.title).join(', ') + ']');
+      }
+      expect(actions[0].title, 'varname action[0].title').to.equals("Create variable 'varname'");
+      expect(actions[0].edit, 'varname action[0].edit').to.not.be.undefined;
+      expect(actions[1].title, 'varname action[1].title').to.equals("Switch to 'varname1'");
+      expect(actions[1].edit, 'varname action[1].edit').to.not.be.undefined;
+      // run the Switch to... quick action
+      if (!(await vscode.workspace.applyEdit(actions[1].edit!))) {
+        expect.fail(`Quick fix '${actions[1].title}' failed`);
+      }
+
+      // that should fix that diagnostic, leaving the one on 'foo'
+      diagnostics = (
+        await waitForDiagnostics(
+          uiEditor.document.uri,
+          ds => ds && ds.filter(diagnosticFilter).length === 1,
+          '1 invalid variable warning on ui.json after first quick fix'
+        )
+      )
+        .filter(diagnosticFilter)
+        .sort(sortDiagnostics);
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[0].variables[1].name');
+      // and there should just be the Create variable quick fix for 'foo'
+      actions = await getCodeActions(uiEditor.document.uri, diagnostics[0].range);
+      if (actions.length !== 1) {
+        expect.fail('Expected 1 code actions, got: [' + actions.map(a => a.title).join(', ') + ']');
+      }
+      expect(actions[0].title, 'varname action[0].title').to.equals("Create variable 'foo'");
+      expect(actions[0].edit, 'varname action[0].edit').to.not.be.undefined;
+      // run that Create variable... quick fix
+      if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+        expect.fail(`Quick fix '${actions[0].title}' failed`);
+      }
+      // which should fix the warning on ui.json
+      await waitForDiagnostics(uiEditor.document.uri, ds => ds && ds.filter(diagnosticFilter).length === 0);
+      // and variables.json should be good, too
+      await waitForDiagnostics(variablesEditor.document.uri, d => d && d.length === 0);
+      // make sure the 'foo' variable go into variables.json
+      const variables = parseTree(variablesEditor.document.getText());
+      const fooNode = findNodeAtLocation(variables, ['foo']);
+      expect(fooNode, 'foo in variables.json').to.not.be.undefined;
+      // and that it's a {} object
+      expect(fooNode!.type, 'foo in variables.json type').to.equal('object');
     });
   }); // describe('configures uiDefinition')
 
