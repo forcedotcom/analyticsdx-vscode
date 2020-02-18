@@ -13,6 +13,7 @@ import { JsonAttributeCompletionItemProviderDelegate, newCompletionItem } from '
 import { jsonPathToString } from '../util/jsoncUtils';
 import { isValidRelpath } from '../util/utils';
 import { uriBasename, uriRelPath } from '../util/vscodeUtils';
+import { isValidVariableName } from '../util/templateUtils';
 
 /** Get variable names for the variable name in the pages in ui.json. */
 export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCompletionItemProviderDelegate {
@@ -52,7 +53,8 @@ export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCo
           child.type === 'property' &&
           child.children?.[0]?.type === 'string' &&
           typeof child.children[0].value === 'string' &&
-          child.children[0].value
+          child.children[0].value &&
+          isValidVariableName(child.children[0].value)
         ) {
           const item = newCompletionItem(child.children[0].value, range, vscode.CompletionItemKind.Variable);
           // try to pull the variable type, label and description to add to the completion item

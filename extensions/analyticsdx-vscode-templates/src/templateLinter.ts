@@ -12,7 +12,7 @@ import { ERRORS, LINTER_SOURCE_ID, TEMPLATE_INFO } from './constants';
 import { Disposable } from './util/disposable';
 import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } from './util/jsoncUtils';
 import { Logger } from './util/logger';
-import { findTemplateInfoFileFor } from './util/templateUtils';
+import { findTemplateInfoFileFor, isValidVariableName } from './util/templateUtils';
 import { fuzzySearcher, isValidRelpath } from './util/utils';
 import {
   AdxDiagnostic,
@@ -623,7 +623,11 @@ export class TemplateLinter {
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
       const fuzzySearch = fuzzySearcher({
         // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
-        [Symbol.iterator]: () => Object.keys(variableTypes)[Symbol.iterator]()
+        [Symbol.iterator]: () =>
+          Object.keys(variableTypes)
+            // also, only include valid variable names in the fuzzy search
+            .filter(isValidVariableName)
+            [Symbol.iterator]()
       });
       // find all the variable objects
       matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {

@@ -6,6 +6,10 @@
       "variables": [{}]
     },
     {
+      "title": "invalid variable",
+      "variables": [{ "name": "this is a bad name" }]
+    },
+    {
       "title": "empty page vfpage",
       "vfPage": {}
     },
