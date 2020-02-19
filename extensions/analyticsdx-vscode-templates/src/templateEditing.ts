@@ -37,8 +37,11 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
-import { UiVariableCompletionItemProviderDelegate } from './ui/completions';
-import { UiVariableDefinitionProvider } from './ui/definitions';
+import {
+  UiVariableCodeActionProvider,
+  UiVariableCompletionItemProviderDelegate,
+  UiVariableDefinitionProvider
+} from './ui';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
@@ -50,9 +53,12 @@ import { isValidRelpath } from './util/utils';
 import {
   clearDiagnosticsUnder,
   createRelPathDocumentSelector,
+  isSameUri,
   isUriAtOrUnder,
+  isUriUnder,
   uriBasename,
   uriDirname,
+  uriRelPath,
   uriStat
 } from './util/vscodeUtils';
 
@@ -137,6 +143,16 @@ export class TemplateDirEditing extends Disposable {
     return this._uiDefinitionPath;
   }
 
+  /** Tell if the specified file uri corresponds to our uiDefinition path. */
+  public isUiDefinitionFile(file: vscode.Uri): boolean {
+    return (
+      isUriUnder(this.dir, file) &&
+      !!this.uiDefinitionPath &&
+      isValidRelpath(this.uiDefinitionPath) &&
+      isSameUri(uriRelPath(this.dir, this.uiDefinitionPath), file)
+    );
+  }
+
   get variablesDefinitionPath() {
     return this._variablesDefinitionPath;
   }
@@ -204,7 +220,11 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerCompletionItemProvider(
         relatedFileSelector,
         new JsonAttributeCompletionItemProvider(new UiVariableCompletionItemProviderDelegate(this))
-      )
+      ),
+      // hookup quick fixes for variable names in ui.json's
+      vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
+        providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
+      })
     );
 
     return this;

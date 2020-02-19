@@ -8,13 +8,14 @@
 import { findNodeAtLocation, getNodePath, JSONPath, Node as JsonNode, parseTree, Segment } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
-import { TEMPLATE_INFO } from './constants';
+import { ERRORS, LINTER_SOURCE_ID, TEMPLATE_INFO } from './constants';
 import { Disposable } from './util/disposable';
 import { jsonPathToString, matchJsonNodeAtPattern, matchJsonNodesAtPattern } from './util/jsoncUtils';
 import { Logger } from './util/logger';
-import { findTemplateInfoFileFor } from './util/templateUtils';
+import { findTemplateInfoFileFor, isValidVariableName } from './util/templateUtils';
 import { fuzzySearcher, isValidRelpath } from './util/utils';
 import {
+  AdxDiagnostic,
   clearDiagnosticsUnder,
   isUriAtOrUnder,
   rangeForNode,
@@ -121,8 +122,12 @@ export class TemplateLinter {
   private addDiagnostic(
     doc: vscode.TextDocument,
     mesg: string,
+    code: string,
     location?: JsonNode,
-    severity = vscode.DiagnosticSeverity.Warning
+    {
+      severity = vscode.DiagnosticSeverity.Warning,
+      args
+    }: { severity?: vscode.DiagnosticSeverity; args?: Record<string, any> } = {}
   ) {
     // for nodes for string values, the node offset & length will include the outer double-quotes, so take those
     // off
@@ -133,14 +138,17 @@ export class TemplateLinter {
           doc.positionAt(location.offset + location.length - rangeMod)
         )
       : new vscode.Range(0, 0, 0, 0);
-    const diagnostic = new vscode.Diagnostic(range, mesg, severity);
+    const diagnostic = new AdxDiagnostic(range, mesg, severity);
+    diagnostic.source = LINTER_SOURCE_ID;
+    diagnostic.code = code;
     // if a property node is sent in, we need to use its first child (the property name) to calculate the
     // json-path for the diagnostics
     if (location && location.type === 'property' && location.children && location.children[0].type === 'string') {
-      diagnostic.code = jsonPathToString(getNodePath(location.children[0]));
+      diagnostic.jsonpath = jsonPathToString(getNodePath(location.children[0]));
     } else {
-      diagnostic.code = location ? jsonPathToString(getNodePath(location)) : '';
+      diagnostic.jsonpath = location ? jsonPathToString(getNodePath(location)) : '';
     }
+    diagnostic.args = args;
 
     const diagnostics = this.diagnostics.get(doc);
     if (diagnostics) {
@@ -155,6 +163,7 @@ export class TemplateLinter {
    * @param source the doc + json nodes to search for the jsonpath in
    * @param jsonpathOrPaths the path or paths to the value nodes(s) in the json
    * @param message the message for a diagnostic for each duplicate value node, can be a string or function
+   * @param code the error code
    * @param relatedMessage if specified, relatedInformation for each other found value will be added to the diagnostics,
    *        with this message
    * @param computeValue if specified, a function to compute the value from the matched node; can return undefined to
@@ -164,6 +173,7 @@ export class TemplateLinter {
     sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode | JsonNode[] }>,
     jsonpathOrPaths: JSONPath | readonly JSONPath[],
     message: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
+    code: string,
     relatedMessage?: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
     computeValue: (node: JsonNode, doc: vscode.TextDocument) => string | undefined = node => {
       return node.type === 'string' && typeof node.value === 'string' ? node.value : undefined;
@@ -196,8 +206,9 @@ export class TemplateLinter {
           const diagnostic = this.addDiagnostic(
             doc,
             typeof message === 'string' ? message : message(value, doc, node),
+            code,
             node,
-            severity
+            { severity }
           );
           // create related information for the other locations
           if (relatedMessage) {
@@ -271,6 +282,7 @@ export class TemplateLinter {
       [{ doc, nodes: tree }],
       TEMPLATE_INFO.definitionFilePathLocationPatterns,
       relpath => `Duplicate usage of path ${relpath}`,
+      ERRORS.TMPL_DUPLICATE_REL_PATH,
       'Other usage'
     );
 
@@ -284,7 +296,12 @@ export class TemplateLinter {
       // name has to match the template's folder name
       const dirname = path.basename(path.dirname(doc.uri.path));
       if (name !== dirname) {
-        this.addDiagnostic(doc, `Template name must match the template folder name '${dirname}'`, nodeName);
+        this.addDiagnostic(
+          doc,
+          `Template name must match the template folder name '${dirname}'`,
+          ERRORS.TMPL_NAME_MATCH_FOLDER_NAME,
+          nodeName
+        );
       }
     }
   }
@@ -299,8 +316,9 @@ export class TemplateLinter {
         this.addDiagnostic(
           doc,
           "Template is combining deprecated 'ruleDefinition' and 'rules'. Please consolidate 'ruleDefinition' into 'rules'",
+          ERRORS.TMPL_RULES_AND_RULE_DEFINITION,
           ruleDefinition.parent || ruleDefinition,
-          vscode.DiagnosticSeverity.Error
+          { severity: vscode.DiagnosticSeverity.Error }
         );
       }
     }
@@ -338,6 +356,7 @@ export class TemplateLinter {
             const diagnostic = this.addDiagnostic(
               doc,
               'App templates must have at least 1 dashboard, dataflow, or dataset specified',
+              ERRORS.TMPL_APP_MISSING_OBJECTS,
               // put the warning on the "templateType": "app" property
               templateTypeNode && templateTypeNode.parent
             );
@@ -363,6 +382,7 @@ export class TemplateLinter {
             this.addDiagnostic(
               doc,
               'Dashboard templates must have exactly 1 dashboard specified',
+              ERRORS.TMPL_DASH_ONE_DASHBOARD,
               // put it on the "dashboards" array, or the "templateType": "..." property, if either available
               dashboards || (templateTypeNode && templateTypeNode.parent)
             );
@@ -382,19 +402,24 @@ export class TemplateLinter {
       if (n && n.type === 'string') {
         const relPath = (n.value as string) || '';
         if (!relPath || relPath.startsWith('/') || relPath.startsWith('../')) {
-          this.addDiagnostic(doc, 'Value should be a path relative to this file', n);
+          this.addDiagnostic(doc, 'Value should be a path relative to this file', ERRORS.TMPL_INVALID_REL_PATH, n);
         } else if (relPath.includes('/../') || relPath.endsWith('/..')) {
-          this.addDiagnostic(doc, "Path should not contain '..' parts", n);
+          this.addDiagnostic(doc, "Path should not contain '..' parts", ERRORS.TMPL_INVALID_REL_PATH, n);
         } else if (relPath === 'template-info.json') {
-          this.addDiagnostic(doc, "Path cannot be 'template-info.json'", n);
+          this.addDiagnostic(doc, "Path cannot be 'template-info.json'", ERRORS.TMPL_INVALID_REL_PATH, n);
         } else {
           const uri = doc.uri.with({ path: path.join(path.dirname(doc.uri.path), relPath) });
           const p = uriStat(uri)
             .then(stat => {
               if (!stat) {
-                this.addDiagnostic(doc, 'Specified file does not exist in workspace', n);
+                this.addDiagnostic(
+                  doc,
+                  'Specified file does not exist in workspace',
+                  ERRORS.TMPL_REL_PATH_NOT_EXIST,
+                  n
+                );
               } else if ((stat.type & vscode.FileType.File) === 0) {
-                this.addDiagnostic(doc, 'Specified path is not a file', n);
+                this.addDiagnostic(doc, 'Specified path is not a file', ERRORS.TMPL_REL_PATH_NOT_FILE, n);
               }
             })
             .catch(er => {
@@ -434,14 +459,24 @@ export class TemplateLinter {
               regexes.push(excludeNode);
               if (str.length === 1) {
                 // if it's just a /, then it's missing a closing / and it's an empty regex
-                this.addDiagnostic(variablesDoc, 'Missing closing / for regular expression', excludeNode);
+                this.addDiagnostic(
+                  variablesDoc,
+                  'Missing closing / for regular expression',
+                  ERRORS.VARS_REGEX_MISSING_SLASH,
+                  excludeNode
+                );
               } else {
                 const lastIndex = str.lastIndexOf('/');
                 let pattern: string | undefined;
                 let options: string | undefined;
                 // this means there's no closing /
                 if (lastIndex < 1) {
-                  this.addDiagnostic(variablesDoc, 'Missing closing / for regular expression', excludeNode);
+                  this.addDiagnostic(
+                    variablesDoc,
+                    'Missing closing / for regular expression',
+                    ERRORS.VARS_REGEX_MISSING_SLASH,
+                    excludeNode
+                  );
                   // still try to parse the regex text that's there
                   pattern = str.substring(1);
                 } else {
@@ -453,11 +488,21 @@ export class TemplateLinter {
                 // check the options
                 if (options && options.length) {
                   if (!TemplateLinter.VALID_REGEX_OPTIONS.test(options)) {
-                    this.addDiagnostic(variablesDoc, 'Invalid regular expression options', excludeNode);
+                    this.addDiagnostic(
+                      variablesDoc,
+                      'Invalid regular expression options',
+                      ERRORS.VARS_INVALID_REGEX_OPTIONS,
+                      excludeNode
+                    );
                     // clear it out to still test the regex text
                     options = undefined;
                   } else if (/(.).*\1/.test(options)) {
-                    this.addDiagnostic(variablesDoc, 'Duplicate option in regular expression options', excludeNode);
+                    this.addDiagnostic(
+                      variablesDoc,
+                      'Duplicate option in regular expression options',
+                      ERRORS.VARS_INVALID_REGEX_OPTIONS,
+                      excludeNode
+                    );
                     // clear it out to still test the regex text
                     options = undefined;
                   }
@@ -482,7 +527,7 @@ export class TemplateLinter {
                       mesg += ': ' + errorMesg;
                     }
                   }
-                  this.addDiagnostic(variablesDoc, mesg, excludeNode);
+                  this.addDiagnostic(variablesDoc, mesg, ERRORS.VARS_INVALID_REGEX, excludeNode);
                 }
               }
             }
@@ -492,6 +537,7 @@ export class TemplateLinter {
           const diagnostic = this.addDiagnostic(
             variablesDoc,
             'Multiple regular expression excludes found, only the first will be used',
+            ERRORS.VARS_MULTIPLE_REGEXES,
             // try to put the warning on the "excludes" part of the whole exclude property, otherwise just put it on
             // the excludes array
             (excludesNode.parent &&
@@ -532,9 +578,19 @@ export class TemplateLinter {
       if (!findNodeAtLocation(page, ['vfPage'])) {
         const variables = findNodeAtLocation(page, ['variables']);
         if (!variables) {
-          this.addDiagnostic(doc, 'Either variables or vfPage must be specified', page);
+          this.addDiagnostic(
+            doc,
+            'Either variables or vfPage must be specified',
+            ERRORS.UI_PAGE_MISSING_VARIABLES,
+            page
+          );
         } else if (variables.type === 'array' && (!variables.children || variables.children.length <= 0)) {
-          this.addDiagnostic(doc, 'At least 1 variable or vfPage must be specified', variables);
+          this.addDiagnostic(
+            doc,
+            'At least 1 variable or vfPage must be specified',
+            ERRORS.UI_PAGE_EMPTY_VARIABLES,
+            variables
+          );
         }
         // if variables is defined as something other than an array, the json schema should warn on that
       }
@@ -567,7 +623,11 @@ export class TemplateLinter {
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
       const fuzzySearch = fuzzySearcher({
         // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
-        [Symbol.iterator]: () => Object.keys(variableTypes)[Symbol.iterator]()
+        [Symbol.iterator]: () =>
+          Object.keys(variableTypes)
+            // also, only include valid variable names in the fuzzy search
+            .filter(isValidVariableName)
+            [Symbol.iterator]()
       });
       // find all the variable objects
       matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {
@@ -578,10 +638,12 @@ export class TemplateLinter {
             let mesg = `Cannot find variable '${name}'`;
             // see if there's a variable w/ a similar name
             const [match] = fuzzySearch(name);
+            const args: Record<string, any> | undefined = { name };
             if (match && match.length > 0) {
+              args.match = match;
               mesg += `, did you mean '${match}'?`;
             }
-            this.addDiagnostic(uiDoc, mesg, nameNode);
+            this.addDiagnostic(uiDoc, mesg, ERRORS.UI_PAGE_UNKNOWN_VARIABLE, nameNode, { args });
           } else {
             // if it's a non-vfpage page, then make sure the variable type is valid
             // "varname" -> "name": "varname" -> variable {} -> variables[] -> "variables": [] -> page {}
@@ -592,6 +654,7 @@ export class TemplateLinter {
                 this.addDiagnostic(
                   uiDoc,
                   `${type} variable '${name}' is not supported in non-visualForce pages`,
+                  ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
                   nameNode
                 );
               }
@@ -647,12 +710,19 @@ export class TemplateLinter {
 
   private lintRulesFiles(sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode }>) {
     // make sure the constants' names are unique
-    this.lintUniqueValues(sources, ['constants', '*', 'name'], name => `Duplicate constant '${name}'`, 'Other usage');
+    this.lintUniqueValues(
+      sources,
+      ['constants', '*', 'name'],
+      name => `Duplicate constant '${name}'`,
+      ERRORS.RULES_DUPLICATE_CONSTANT,
+      'Other usage'
+    );
     // make sure the rules' names are unique
     this.lintUniqueValues(
       sources,
       ['rules', '*', 'name'],
       name => `Duplicate rule name '${name}'`,
+      ERRORS.RULES_DUPLICATE_RULE_NAME,
       'Other usage',
       undefined,
       vscode.DiagnosticSeverity.Hint
@@ -662,6 +732,7 @@ export class TemplateLinter {
       sources,
       ['macros', '*', 'definitions', '*', 'name'],
       name => `Duplicate macro '${name}'`,
+      ERRORS.RULES_DUPLICATE_MACRO,
       'Other usage',
       // compute namespace:name from the name value json node
       name => {
@@ -701,8 +772,9 @@ export class TemplateLinter {
           this.addDiagnostic(
             doc,
             "Macro should have a 'return' or at least one action",
+            ERRORS.RULES_NOOP_MACRO,
             actions ?? definition,
-            vscode.DiagnosticSeverity.Information
+            { severity: vscode.DiagnosticSeverity.Information }
           );
         }
       }

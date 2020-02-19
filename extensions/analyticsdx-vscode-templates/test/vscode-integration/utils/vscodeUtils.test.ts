@@ -10,9 +10,12 @@ import { Node as JsonNode, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { findPropertyNodeFor, matchJsonNodesAtPattern } from '../../../src/util/jsoncUtils';
 import {
+  AdxDiagnostic,
+  argsFrom,
   isSameUri,
   isUriAtOrUnder,
   isUriUnder,
+  jsonpathFrom,
   rangeForNode,
   scanLinesUntil,
   uriBasename,
@@ -23,14 +26,14 @@ import { closeAllEditors, uriFromTestRoot } from '../vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
 describe('vscodeUtils', () => {
-  let document: vscode.TextDocument;
-  before(async () => {
-    await closeAllEditors();
-    document = await vscode.workspace.openTextDocument(uriFromTestRoot('vscodeUtilsTest', 'vscodeUtils.test.json'));
-  });
-  after(closeAllEditors);
-
   describe('scanLinesUntil()', () => {
+    let document: vscode.TextDocument;
+    before(async () => {
+      await closeAllEditors();
+      document = await vscode.workspace.openTextDocument(uriFromTestRoot('vscodeUtilsTest', 'vscodeUtils.test.json'));
+    });
+    after(closeAllEditors);
+
     it('reads across lines', () => {
       // read from the beginning to the first '}', which should be on the 4th line
       const { end, ch } = scanLinesUntil(document, ch => ch === '}');
@@ -66,10 +69,15 @@ describe('vscodeUtils', () => {
   });
 
   describe('rangeForNode()', () => {
+    let document: vscode.TextDocument;
     let root: JsonNode;
-    before(() => {
+
+    before(async () => {
+      await closeAllEditors();
+      document = await vscode.workspace.openTextDocument(uriFromTestRoot('vscodeUtilsTest', 'vscodeUtils.test.json'));
       root = parseTree(document.getText());
     });
+    after(closeAllEditors);
 
     it('works for object node', () => {
       const nodes = matchJsonNodesAtPattern(root, ['foo']);
@@ -387,5 +395,75 @@ describe('vscodeUtils', () => {
         expect(list).to.have.members(['dir1', 'dir1/dir11']);
       });
     });
-  });
+  }); // describe('uriReaddir()')
+
+  describe('AdxDiagnostic', () => {
+    const toDispose = [] as Array<{ dispose: () => any }>;
+    let diagnosticCollection: vscode.DiagnosticCollection;
+    let uri: vscode.Uri;
+
+    before(() => {
+      diagnosticCollection = vscode.languages.createDiagnosticCollection();
+      toDispose.push(
+        diagnosticCollection,
+        // make a fake uri text provider for this test so we don't have to create a real file
+        vscode.workspace.registerTextDocumentContentProvider('adxtest', {
+          provideTextDocumentContent() {
+            return JSON.stringify({ a: ['b', 'c'], d: 42 }, undefined, 2);
+          }
+        })
+      );
+      uri = vscode.Uri.parse('adxtest:foo.adxtest');
+    });
+    after(() => {
+      vscode.Disposable.from(...toDispose).dispose();
+    });
+
+    beforeEach(() => {
+      diagnosticCollection.clear();
+    });
+
+    // make sure that we get AdxDiagnostic instance back when we put them in DiagnosticCollections, so we can
+    // find the extended attributes
+    describe('jsonpathFrom()', () => {
+      it('works on AdxDiagnostic', () => {
+        const d = new AdxDiagnostic(new vscode.Range(1, 2, 1, 5), 'error');
+        d.jsonpath = 'a[1]';
+        diagnosticCollection.set(uri, [d]);
+        const diagnostics = diagnosticCollection.get(uri);
+        expect(diagnostics!.length, 'diagnostics.length').to.equal(1);
+        expect(jsonpathFrom(diagnostics![0]), 'diagnostic.jsonpath').to.equal('a[1]');
+      });
+
+      it('works on vscode.Diagnostic', () => {
+        const d = new vscode.Diagnostic(new vscode.Range(1, 2, 1, 5), 'error');
+        diagnosticCollection.set(uri, [d]);
+        const diagnostics = diagnosticCollection.get(uri);
+        expect(diagnostics!.length, 'diagnostics.length').to.equal(1);
+        expect(jsonpathFrom(diagnostics![0]), 'diagnostic.jsonpath').to.be.undefined;
+      });
+    });
+
+    describe('argsFrom()', () => {
+      it('works on AdxDiagnostic', () => {
+        const d = new AdxDiagnostic(new vscode.Range(1, 2, 1, 5), 'error');
+        d.args = {
+          arg1: 'value1',
+          arg2: -42
+        };
+        diagnosticCollection.set(uri, [d]);
+        const diagnostics = diagnosticCollection.get(uri);
+        expect(diagnostics!.length, 'diagnostics.length').to.equal(1);
+        expect(argsFrom(diagnostics![0]), 'diagnostic.args').to.deep.equal({ arg1: 'value1', arg2: -42 });
+      });
+
+      it('works on vscode.Diagnostic', () => {
+        const d = new vscode.Diagnostic(new vscode.Range(1, 2, 1, 5), 'error');
+        diagnosticCollection.set(uri, [d]);
+        const diagnostics = diagnosticCollection.get(uri);
+        expect(diagnostics!.length, 'diagnostics.length').to.equal(1);
+        expect(argsFrom(diagnostics![0]), 'diagnostic.args').to.be.undefined;
+      });
+    });
+  }); // describe('AdxDiagnostic')
 });

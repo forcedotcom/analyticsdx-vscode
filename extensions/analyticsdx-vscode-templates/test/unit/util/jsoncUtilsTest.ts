@@ -438,9 +438,24 @@ describe('jsoncUtils', () => {
     });
 
     it('works for non-id fields in objects', () => {
-      const path: JSONPath = ['root', '000', 'a+b', 'a b', 'a/b', "'ab'", '"ab"', 'true', 'field'];
+      const path: JSONPath = [
+        'root',
+        '000',
+        'a+b',
+        'a b',
+        'a/b',
+        "'ab'",
+        '"ab"',
+        'true',
+        'a.b',
+        'a,b',
+        'a:b',
+        '[]',
+        '()',
+        'field'
+      ];
       expect(jsonPathToString(path)).to.be.equals(
-        'root["000"]["a+b"]["a b"]["a/b"]["\'ab\'"]["\\"ab\\""]["true"].field'
+        'root["000"]["a+b"]["a b"]["a/b"]["\'ab\'"]["\\"ab\\""]["true"]["a.b"]["a,b"]["a:b"]["[]"]["()"].field'
       );
     });
 

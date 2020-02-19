@@ -80,7 +80,9 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "Variable name, must match name of variable defined in variableDefinition file."
+                  "description": "Variable name, must match name of variable defined in variableDefinition file.",
+                  "$comment": "The variableDefinition file's fields have to match this regex, so match it here, too.",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]+$"
                 },
                 "visibility": {
                   "description": "Controls whether the variable should be visible. The value must one of 'Disabled', 'Hidden', or 'Visible', or a {{...}} expression against Variables that evaluates to one of those or true (Visible) or false (Hidden)",

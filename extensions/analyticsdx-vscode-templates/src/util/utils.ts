@@ -24,7 +24,7 @@ export function isSameUriPath(path1: string, path2: string): boolean {
 }
 
 /** Tell if the specified string is a valid relative-path (for templates) */
-export function isValidRelpath(relpath: string): boolean {
+export function isValidRelpath(relpath: string | undefined | null): boolean {
   return (
     !!relpath &&
     relpath.trim().length > 0 &&

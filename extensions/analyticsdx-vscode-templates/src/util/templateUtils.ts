@@ -32,3 +32,8 @@ export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.
   }
   return undefined;
 }
+
+const varNameRegex = /^[a-zA-Z_][a-zA-Z0-9_]+$/;
+export function isValidVariableName(name: string): boolean {
+  return varNameRegex.test(name);
+}

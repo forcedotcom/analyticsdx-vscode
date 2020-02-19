@@ -405,6 +405,19 @@ export async function getDefinitionLocations(uri: vscode.Uri, position: vscode.P
   }
   return result!;
 }
+
+export async function getCodeActions(uri: vscode.Uri, range: vscode.Range): Promise<vscode.CodeAction[]> {
+  const result = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+    'vscode.executeCodeActionProvider',
+    uri,
+    range
+  );
+  if (!result) {
+    expect.fail('Expected vscode.CodeAction[], got undefined');
+  }
+  return result!;
+}
+
 export async function verifyCompletionsContain(
   document: vscode.TextDocument,
   position: vscode.Position,

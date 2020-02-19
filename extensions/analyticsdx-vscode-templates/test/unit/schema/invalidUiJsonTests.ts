@@ -40,8 +40,8 @@ describe('ui-schema.json finds errors in', () => {
 
   it('invalid-pages.json', async () => {
     const errors = await validate('invalid-pages.json');
-    errors.expectMissingProps(true, 'pages[0].title', 'pages[1].variables[0].name', 'pages[2].vfPage.name');
-    errors.expectInvalidProps(true, 'pages[3].vfPage.name', 'pages[4].vfPage.name');
+    errors.expectMissingProps(true, 'pages[0].title', 'pages[1].variables[0].name', 'pages[3].vfPage.name');
+    errors.expectInvalidProps(true, 'pages[2].variables[0].name', 'pages[4].vfPage.name', 'pages[5].vfPage.name');
     errors.expectNoUnrecognizedErrors();
   });
 

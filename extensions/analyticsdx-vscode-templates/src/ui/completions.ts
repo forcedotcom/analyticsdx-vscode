@@ -11,8 +11,9 @@ import { EXTENSION_NAME } from '../constants';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonAttributeCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
 import { jsonPathToString } from '../util/jsoncUtils';
+import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
-import { isUriUnder, uriBasename, uriRelPath } from '../util/vscodeUtils';
+import { uriBasename, uriRelPath } from '../util/vscodeUtils';
 
 /** Get variable names for the variable name in the pages in ui.json. */
 export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCompletionItemProviderDelegate {
@@ -26,12 +27,8 @@ export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCo
   ): boolean {
     return (
       // make sure it's in the uiDefinition file for the template
-      isUriUnder(this.templateEditing.dir, document.uri) &&
-      !!this.templateEditing.uiDefinitionPath &&
-      isValidRelpath(this.templateEditing.uiDefinitionPath) &&
-      document.uri.path.endsWith(`/${this.templateEditing.uiDefinitionPath}`) &&
+      this.templateEditing.isUiDefinitionFile(document.uri) &&
       // and that the template has a variableDefinition
-      !!this.templateEditing.variablesDefinitionPath &&
       isValidRelpath(this.templateEditing.variablesDefinitionPath) &&
       // and that it's in a variable name field
       location.matches(['pages', '*', 'variables', '*', 'name'])
@@ -56,7 +53,8 @@ export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCo
           child.type === 'property' &&
           child.children?.[0]?.type === 'string' &&
           typeof child.children[0].value === 'string' &&
-          child.children[0].value
+          child.children[0].value &&
+          isValidVariableName(child.children[0].value)
         ) {
           const item = newCompletionItem(child.children[0].value, range, vscode.CompletionItemKind.Variable);
           // try to pull the variable type, label and description to add to the completion item
