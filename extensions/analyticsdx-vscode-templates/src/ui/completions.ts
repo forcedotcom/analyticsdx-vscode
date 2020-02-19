@@ -11,9 +11,9 @@ import { EXTENSION_NAME } from '../constants';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonAttributeCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
 import { jsonPathToString } from '../util/jsoncUtils';
+import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
 import { uriBasename, uriRelPath } from '../util/vscodeUtils';
-import { isValidVariableName } from '../util/templateUtils';
 
 /** Get variable names for the variable name in the pages in ui.json. */
 export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCompletionItemProviderDelegate {
