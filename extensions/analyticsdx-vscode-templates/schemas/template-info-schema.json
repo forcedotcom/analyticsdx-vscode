@@ -737,6 +737,7 @@
       "description": "List of storied queries to use in the template.",
       "minItems": 0,
       "examples": [[]],
+      "doNotSuggest": true,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -907,6 +908,7 @@
       "description": "Associate online videos to the template.",
       "minItems": 0,
       "examples": [[]],
+      "doNotSuggest": true,
       "items": {
         "type": "object",
         "additionalProperties": false,
