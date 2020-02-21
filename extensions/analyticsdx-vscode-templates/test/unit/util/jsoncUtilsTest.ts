@@ -156,7 +156,8 @@ describe('jsoncUtils', () => {
         {
           name: 'election_2012_template',
           namespace: 'sfdc_internal',
-          templateVersion: '1.1'
+          templateVersion: '1.1',
+          condition: '${Variables.IncludeElectionTemplate'
         },
         {
           name: 'featured_assets_template',

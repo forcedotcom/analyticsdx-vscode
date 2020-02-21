@@ -991,6 +991,20 @@
                 "body": "${0}"
               }
             ]
+          },
+          "condition": {
+            "type": ["null", "string"],
+            "description": "If this is met, then the template dependency will be required and available in expressions.",
+            "defaultSnippets": [
+              {
+                "label": "\"\"",
+                "body": "${0}"
+              },
+              {
+                "label": "${...} expression",
+                "body": "${Variables.${1:varname}}"
+              }
+            ]
           }
         },
         "defaultSnippets": [

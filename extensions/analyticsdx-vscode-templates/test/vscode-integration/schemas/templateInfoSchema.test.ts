@@ -235,7 +235,8 @@ describe('template-info-schema.json hookup', () => {
       templateDependencies: [
         {
           templateVersion: null,
-          namespace: null
+          namespace: null,
+          condition: null
         }
       ],
       videos: null,
@@ -314,6 +315,7 @@ describe('template-info-schema.json hookup', () => {
       { jsonpath: ['templateDependencies'], completions: ['[]'] },
       { jsonpath: ['templateDependencies', 0, 'namespace'], completions: ['""'] },
       { jsonpath: ['templateDependencies', 0, 'templateVersion'], completions: ['""'] },
+      { jsonpath: ['templateDependencies', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['videos'], completions: ['[]'] },
       { jsonpath: ['tags'], completions: ['[]', 'New tags'] }
     ].forEach(({ jsonpath, completions }) => {
