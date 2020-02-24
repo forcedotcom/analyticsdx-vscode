@@ -99,6 +99,10 @@ export const ERRORS = Object.freeze({
   TMPL_REL_PATH_NOT_FILE: 'tmpl-7',
   /** Duplicate relative path in template */
   TMPL_DUPLICATE_REL_PATH: 'tmpl-8',
+  /** Template is using assetIcon and icons.appBadge */
+  TMPL_ASSETICON_AND_APPBADGE: 'tmpl-9',
+  /** Template is using templateIcon and icons.templateBadge */
+  TMPL_TEMPLATEICON_AND_TEMPLATEBADGE: 'tmpl-10',
 
   /** Regex in variable in variable excludes is missing closing / */
   VARS_REGEX_MISSING_SLASH: 'vars-1',

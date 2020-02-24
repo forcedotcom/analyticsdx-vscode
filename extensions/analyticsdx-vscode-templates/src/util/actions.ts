@@ -4,11 +4,18 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { findNodeAtOffset, getNodePath, JSONPath, Node as JsonNode, parseTree } from 'jsonc-parser';
+import {
+  findNodeAtOffset,
+  getNodePath,
+  JSONPath,
+  modify as jsonModify,
+  Node as JsonNode,
+  parseTree
+} from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { quickFixUsedTelemetryCommand } from '../telemetry';
 import { findPropertyNodeFor, jsonPathToString, pathPartsAreEquals } from './jsoncUtils';
-import { rangeForNode } from './vscodeUtils';
+import { findEditorForDocument, getFormattingOptionsForEditor, jsonEditsToWorkspaceEdit } from './vscodeUtils';
 
 // TODO: refactor this into a master (which does the parse) and delegates,
 // to avoid parsing the json multiple times and to register only one action provider
@@ -38,7 +45,10 @@ export class RemoveJsonPropertyCodeActionProvider implements vscode.CodeActionPr
           const jsonPathStr = jsonPathToString(path);
           const fix = new vscode.CodeAction(`Remove ${jsonPathStr}`, vscode.CodeActionKind.QuickFix);
           fix.edit = new vscode.WorkspaceEdit();
-          fix.edit.delete(document.uri, rangeForNode(propNode, document, true));
+          const formattingOptions = getFormattingOptionsForEditor(findEditorForDocument(document));
+          // this should delete it, plus take care of leading/trailing commas
+          const edits = jsonModify(document.getText(), path, undefined, { formattingOptions });
+          jsonEditsToWorkspaceEdit(edits, document, fix.edit);
           // send telemetry when someone uses a quick fix
           fix.command = quickFixUsedTelemetryCommand(fix.title, jsonPathStr, document.uri);
           return [fix];

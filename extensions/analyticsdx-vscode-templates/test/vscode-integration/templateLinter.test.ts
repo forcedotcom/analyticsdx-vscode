@@ -370,6 +370,54 @@ describe('TemplateLinterManager', () => {
       await waitForDiagnostics(editor.document.uri, d => d && d.filter(errorFilter).length === 0);
     });
 
+    it('shows problems on having deprecated icons with new badges', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make a template with the deprecrated and new icons
+      const templateInfoUri = uriRelPath(tmpdir, 'template-info.json');
+      await writeTextToFile(templateInfoUri, {
+        assetIcon: '16.png',
+        templateIcon: 'default.png',
+        icons: {
+          appBadge: {
+            name: '16.png'
+          },
+          templateBadge: {
+            name: 'default.png'
+          }
+        }
+      });
+      // make sure we get the warnings on the deprecated fields
+      const diagnosticsFilter = (d: vscode.Diagnostic) =>
+        (d.code === ERRORS.TMPL_ASSETICON_AND_APPBADGE && jsonpathFrom(d) === 'assetIcon') ||
+        (d.code === ERRORS.TMPL_TEMPLATEICON_AND_TEMPLATEBADGE && jsonpathFrom(d) === 'templateIcon');
+      const diagnostics = (
+        await openTemplateInfoAndWaitForDiagnostics(
+          templateInfoUri,
+          true,
+          d => d && d.filter(diagnosticsFilter).length === 2,
+          'initial warnings on deprecated fields'
+        )
+      )[0]
+        .filter(diagnosticsFilter)
+        .sort(sortDiagnostics);
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 initial warnings, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal(
+        "Template is combining deprecated 'assetIcon' and 'icons.appBadge'"
+      );
+      expect(diagnostics[0].code, 'diagnostics[0].code').to.equals(ERRORS.TMPL_ASSETICON_AND_APPBADGE);
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equals('assetIcon');
+
+      expect(diagnostics[1], 'diagnostic[1]').to.be.not.undefined;
+      expect(diagnostics[1].message, 'diagnostic[1].message').to.equal(
+        "Template is combining deprecated 'templateIcon' and 'icons.templateBadge'"
+      );
+      expect(diagnostics[1].code, 'diagnostics[1].code').to.equals(ERRORS.TMPL_TEMPLATEICON_AND_TEMPLATEBADGE);
+      expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equals('templateIcon');
+    });
+
     it('shows file path problems on app template', async () => {
       const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics('badFilepaths');
       // filter out the Deprecated warning on rulesDefinition for this test

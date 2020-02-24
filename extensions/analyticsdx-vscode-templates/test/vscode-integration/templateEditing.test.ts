@@ -252,6 +252,95 @@ describe('TemplateEditorManager', () => {
       await testCompletions(TEMPLATE_INFO.imageRelFilePathLocationPatterns[0], 'images/image.png');
     });
 
+    it('quick fix to remove deprecated icon fields', async () => {
+      const [t, doc, editor] = await createTempTemplate(true);
+      tmpdir = t;
+      await setDocumentText(editor!, {
+        assetIcon: '16.png',
+        templateIcon: 'default.png',
+        icons: {
+          appBadge: {
+            name: '16.png'
+          },
+          templateBadge: {
+            name: 'default.png'
+          }
+        }
+      });
+      // wait for the warning on assetIcon
+      const assetIconFilter = (d: vscode.Diagnostic) =>
+        d.code === ERRORS.TMPL_ASSETICON_AND_APPBADGE && jsonpathFrom(d) === 'assetIcon';
+      let diagnostics = (
+        await waitForDiagnostics(
+          doc!.uri,
+          d => d && d.filter(assetIconFilter).length === 1,
+          'initial warnings on assetIcon'
+        )
+      )
+        .filter(assetIconFilter)
+        .sort(sortDiagnostics);
+      // look for the 'Remove assetIcon' quick fix on the first diagnostic
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('assetIcon');
+      let allActions = await getCodeActions(doc!.uri, diagnostics[0].range);
+      let actions = allActions.filter(a => a.title.startsWith('Remove assetIcon'));
+      if (actions.length !== 1) {
+        expect.fail('Expected 1 remove action for assetIcon, got: [' + allActions.map(a => a.title).join(', ') + ']');
+      }
+      expect(actions[0].edit, 'assetIcon quick fix.edit').to.not.be.undefined;
+      // run the quick fix
+      if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+        expect.fail(`Quick fix '${actions[0].title}' failed`);
+      }
+      // that should fix the assetIcon warning
+      await waitForDiagnostics(
+        doc!.uri,
+        d => d && d.filter(assetIconFilter).length === 0,
+        'no warnings on assetIcon after quick fix'
+      );
+
+      // wait for the warning on templateIcon
+      const templateIconFilter = (d: vscode.Diagnostic) =>
+        d.code === ERRORS.TMPL_TEMPLATEICON_AND_TEMPLATEBADGE && jsonpathFrom(d) === 'templateIcon';
+      diagnostics = (
+        await waitForDiagnostics(
+          doc!.uri,
+          d => d && d.filter(templateIconFilter).length === 1,
+          'initial warnings on templateIcon'
+        )
+      )
+        .filter(templateIconFilter)
+        .sort(sortDiagnostics);
+      // look for the 'Remove templateIcon' quick fix on the first diagnostic
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('templateIcon');
+      allActions = await getCodeActions(doc!.uri, diagnostics[0].range);
+      actions = allActions.filter(a => a.title.startsWith('Remove templateIcon'));
+      if (actions.length !== 1) {
+        expect.fail(
+          'Expected 1 remove action for templateIcon, got: [' + allActions.map(a => a.title).join(', ') + ']'
+        );
+      }
+      expect(actions[0].edit, 'templateIcon quick fix.edit').to.not.be.undefined;
+      // run the Remove templateIcon quick fix
+      if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+        expect.fail(`Quick fix '${actions[0].title}' failed`);
+      }
+      // that should fix the templateIcon warning
+      await waitForDiagnostics(
+        doc!.uri,
+        d => d && d.filter(templateIconFilter).length === 0,
+        'no warnings on templateIcon after quick fix'
+      );
+
+      // make sure assetIcon and templateIcon got removed
+      const tree = parseTree(doc!.getText());
+      if (findNodeAtLocation(tree, ['assetIcon'])) {
+        expect.fail('"assetIcon" was not removed from the file');
+      }
+      if (findNodeAtLocation(tree, ['templateIcon'])) {
+        expect.fail('"templateIcon" was not removed from the file');
+      }
+    });
+
     it('quick fix for missing relative path files', async () => {
       const [t, doc, editor] = await createTempTemplate(true);
       tmpdir = t;

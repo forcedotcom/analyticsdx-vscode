@@ -12,7 +12,14 @@ import { quickFixUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
-import { argsFrom, jsonEditsToWorkspaceEdit, uriRelPath, uriStat } from '../util/vscodeUtils';
+import {
+  argsFrom,
+  findEditorForDocument,
+  getFormattingOptionsForEditor,
+  jsonEditsToWorkspaceEdit,
+  uriRelPath,
+  uriStat
+} from '../util/vscodeUtils';
 
 /** The default body for a new variable. */
 const DEFAULT_VARIABLE_JSON: any = {
@@ -92,13 +99,10 @@ export class UiVariableCodeActionProvider implements vscode.CodeActionProvider {
         // otherwise, try to squish the variable into the variables file
         // jsonModify should throw an Error if the current variables file cannot be edited to include the new var
         // (i.e. it's not a top-level {})
-        const edits = jsonModify(currentText, [name], DEFAULT_VARIABLE_JSON, {
-          // FIXME: do we need to these? does workspace edit do the formatting automatically?
-          formattingOptions: {
-            insertSpaces: true,
-            tabSize: 2
-          }
-        });
+        const formattingOptions = getFormattingOptionsForEditor(
+          findEditorForDocument(varDoc) || findEditorForDocument(document)
+        );
+        const edits = jsonModify(currentText, [name], DEFAULT_VARIABLE_JSON, { formattingOptions });
         if (edits.length <= 0) {
           // nothing to do
           return undefined;

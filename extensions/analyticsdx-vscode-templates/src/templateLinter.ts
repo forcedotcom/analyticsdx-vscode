@@ -277,6 +277,7 @@ export class TemplateLinter {
     this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
     this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
+    this.lintTemplateInfoIcons(this.templateInfoDoc, tree);
     // make sure no 2+ relpath fields point to the same definition file (since that will be mess up our schema associations)
     this.lintUniqueValues(
       [{ doc, nodes: tree }],
@@ -390,6 +391,33 @@ export class TemplateLinter {
           break;
         }
         // REVIEWME: do Lens templates require anything?
+      }
+    }
+  }
+
+  private lintTemplateInfoIcons(doc: vscode.TextDocument, tree: JsonNode) {
+    // warn if they have both assetIcon and icons.appBadge
+    const assetIcon = findNodeAtLocation(tree, ['assetIcon']);
+    if (assetIcon) {
+      if (findNodeAtLocation(tree, ['icons', 'appBadge'])) {
+        this.addDiagnostic(
+          doc,
+          "Template is combining deprecated 'assetIcon' and 'icons.appBadge'",
+          ERRORS.TMPL_ASSETICON_AND_APPBADGE,
+          assetIcon.parent || assetIcon
+        );
+      }
+    }
+    // warn if they have both templateIcon and icons.templateBadge
+    const templateIcon = findNodeAtLocation(tree, ['templateIcon']);
+    if (templateIcon) {
+      if (findNodeAtLocation(tree, ['icons', 'templateBadge'])) {
+        this.addDiagnostic(
+          doc,
+          "Template is combining deprecated 'templateIcon' and 'icons.templateBadge'",
+          ERRORS.TMPL_TEMPLATEICON_AND_TEMPLATEBADGE,
+          templateIcon.parent || templateIcon
+        );
       }
     }
   }

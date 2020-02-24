@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Edit as JsonEdit, Node as JsonNode } from 'jsonc-parser';
+import { Edit as JsonEdit, FormattingOptions as JsonFormattingOptions, Node as JsonNode } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { isSameUriPath, isUriPathUnder, isWhitespaceChar } from './utils';
@@ -121,6 +121,30 @@ export function jsonEditsToWorkspaceEdit(
     }
   });
   return wsEdit;
+}
+
+/** Get formatting options (for modify() from jsonc-parser) from the editor's currently state, if available. */
+export function getFormattingOptionsForEditor(
+  editor: vscode.TextEditor | undefined,
+  defaults: JsonFormattingOptions = {}
+): JsonFormattingOptions {
+  if (editor) {
+    return {
+      tabSize: editor.options.tabSize as number,
+      insertSpaces: editor.options.insertSpaces as boolean,
+      eol: editor.document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n'
+    };
+  }
+  return defaults;
+}
+
+/** Find the editor for the specified document, if it's open. */
+export function findEditorForDocument(doc: vscode.TextDocument): vscode.TextEditor | undefined {
+  for (const editor of vscode.window.visibleTextEditors) {
+    if (editor.document === doc) {
+      return editor;
+    }
+  }
 }
 
 export function isUriUnder(parent: vscode.Uri, file: vscode.Uri): boolean {
