@@ -7,13 +7,12 @@
 
 import { findNodeAtLocation, Location, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { EXTENSION_NAME } from '../constants';
+import { codeCompletionUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonAttributeCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
-import { jsonPathToString } from '../util/jsoncUtils';
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
-import { uriBasename, uriRelPath } from '../util/vscodeUtils';
+import { uriRelPath } from '../util/vscodeUtils';
 
 /** Get variable names for the variable name in the pages in ui.json. */
 export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCompletionItemProviderDelegate {
@@ -83,20 +82,7 @@ export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCo
             }
           }
           // send telemetry when someone accepts the completion item
-          item.command = {
-            command: 'analyticsdx.telemetry.send',
-            title: 'Sending telemetry',
-            arguments: [
-              'codeCompletionUsed',
-              EXTENSION_NAME,
-              {
-                label: item.label,
-                type: 'variable',
-                jsonPath: jsonPathToString(location.path),
-                fileName: uriBasename(document.uri)
-              }
-            ]
-          };
+          item.command = codeCompletionUsedTelemetryCommand(item.label, 'variable', location.path, document.uri);
           items.push(item);
         }
       });

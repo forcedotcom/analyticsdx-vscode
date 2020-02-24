@@ -37,6 +37,7 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
+import { CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
@@ -198,15 +199,19 @@ export class TemplateDirEditing extends Disposable {
     this.disposables.push(vscode.languages.registerDefinitionProvider(templateInfoSelector, defProvider));
 
     // hook up quick fixes for deprecated elements that can simply be removed as a fix
-    const actionsProvider = new RemoveJsonPropertyCodeActionProvider(
+    const deprecatedFieldsActionsProvider = new RemoveJsonPropertyCodeActionProvider(
       ['icons', 'templateDetail'],
       ['ruleDefinition'],
       ['assetIcon'],
       ['templateIcon']
     );
     this.disposables.push(
-      vscode.languages.registerCodeActionsProvider(templateInfoSelector, actionsProvider, {
+      vscode.languages.registerCodeActionsProvider(templateInfoSelector, deprecatedFieldsActionsProvider, {
         providedCodeActionKinds: RemoveJsonPropertyCodeActionProvider.providedCodeActionKinds
+      }),
+      // and quick fixes for creating missing relative-path files
+      vscode.languages.registerCodeActionsProvider(templateInfoSelector, new CreateRelPathFileCodeActionProvider(), {
+        providedCodeActionKinds: CreateRelPathFileCodeActionProvider.providedCodeActionKinds
       })
     );
 

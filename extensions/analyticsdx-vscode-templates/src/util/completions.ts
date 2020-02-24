@@ -6,9 +6,8 @@
  */
 import { getLocation, Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { EXTENSION_NAME } from '../constants';
-import { jsonPathToString } from './jsoncUtils';
-import { uriBasename, uriDirname, uriReaddir } from './vscodeUtils';
+import { codeCompletionUsedTelemetryCommand } from '../telemetry';
+import { uriDirname, uriReaddir } from './vscodeUtils';
 
 export function newCompletionItem(
   text: string,
@@ -112,20 +111,7 @@ export function newRelativeFilepathDelegate(delegate: {
       return entries.map(([path]) => {
         const item = newFilepathCompletionItem(path, range);
         // send telemetry when someone uses a relpath code completion item
-        item.command = {
-          command: 'analyticsdx.telemetry.send',
-          title: 'Sending telemetry',
-          arguments: [
-            'codeCompletionUsed',
-            EXTENSION_NAME,
-            {
-              label: item.label,
-              type: 'relpath',
-              jsonPath: jsonPathToString(location.path),
-              fileName: uriBasename(document.uri)
-            }
-          ]
-        };
+        item.command = codeCompletionUsedTelemetryCommand(item.label, 'relpath', location.path, document.uri);
         return item;
       });
     }

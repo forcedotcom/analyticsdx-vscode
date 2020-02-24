@@ -151,8 +151,20 @@ describe('TemplateEditorManager', () => {
   }); // describe('stops on delete')
 
   describe('configures template-info.json', () => {
-    beforeEach(closeAllEditors);
-    afterEach(closeAllEditors);
+    let tmpdir: vscode.Uri | undefined;
+    beforeEach(async () => {
+      await closeAllEditors();
+      tmpdir = undefined;
+    });
+
+    afterEach(async () => {
+      await closeAllEditors();
+      // delete the temp folder if it got created
+      if (tmpdir && (await uriStat(tmpdir))) {
+        await vscode.workspace.fs.delete(tmpdir, { recursive: true, useTrash: false });
+      }
+      tmpdir = undefined;
+    });
 
     it('related file schemas', async () => {
       const [, doc] = await openTemplateInfoAndWaitForDiagnostics('allRelpaths');
@@ -238,6 +250,74 @@ describe('TemplateEditorManager', () => {
 
     it('image file completions', async () => {
       await testCompletions(TEMPLATE_INFO.imageRelFilePathLocationPatterns[0], 'images/image.png');
+    });
+
+    it('quick fix for missing relative path files', async () => {
+      const [t, doc, editor] = await createTempTemplate(true);
+      tmpdir = t;
+      await setDocumentText(editor!, {
+        folderDefinition: 'dir/folder.json',
+        imageFiles: [
+          {
+            file: 'images/image.png',
+            name: 'image.png'
+          }
+        ]
+      });
+      // wait for the warning on folderDefinition that the file doesn't exist
+      const folderFilter = (d: vscode.Diagnostic) =>
+        jsonpathFrom(d) === 'folderDefinition' && d.code === ERRORS.TMPL_REL_PATH_NOT_EXIST;
+      let [diagnostic] = (
+        await waitForDiagnostics(
+          doc!.uri,
+          d => d && d.filter(folderFilter).length === 1,
+          'initial warning on folderDefinition'
+        )
+      ).filter(folderFilter);
+      // look for the quick fix
+      let actions = await getCodeActions(doc!.uri, diagnostic.range);
+      if (actions.length !== 1) {
+        expect.fail(
+          'Expected 1 code actions for folderDefinition, got: [' + actions.map(a => a.title).join(', ') + ']'
+        );
+      }
+      expect(actions[0].title, 'quick fix title').to.equals('Create dir/folder.json');
+      expect(actions[0].edit, 'quick fix.edit').to.not.be.undefined;
+      // run the quick fix
+      if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+        expect.fail(`Quick fix '${actions[0].title}' failed`);
+      }
+      // that should fix the warning
+      await waitForDiagnostics(
+        doc!.uri,
+        d => d && d.filter(folderFilter).length === 0,
+        'no warnings on folderDefintion after quick fix'
+      );
+      // make sure the file got created
+      const uri = uriRelPath(tmpdir, 'dir/folder.json');
+      const stat = await uriStat(uri);
+      if (!stat) {
+        expect.fail(`${uri.toString()} doesn't exist after quick fix`);
+      }
+      // get the text of the new file, which shouldn't be empty since it's json
+      const folderDoc = await vscode.workspace.openTextDocument(uri);
+      expect(folderDoc.getText().trim().length, `${uri} char length`).to.be.greaterThan(0);
+
+      // wait for the warning on imageFiles that the file doesn't exist
+      const imageFilter = (d: vscode.Diagnostic) =>
+        jsonpathFrom(d) === 'imageFiles[0].file' && d.code === ERRORS.TMPL_REL_PATH_NOT_EXIST;
+      [diagnostic] = (
+        await waitForDiagnostics(
+          doc!.uri,
+          d => d && d.filter(imageFilter).length === 1,
+          'initial warning on imageFiles[0]'
+        )
+      ).filter(imageFilter);
+      // for paths pointing to files, there shouldn't be a quick fix
+      actions = await getCodeActions(doc!.uri, diagnostic.range);
+      if (actions.length !== 0) {
+        expect.fail('Expected 0 code actions for imageFile, got: [' + actions.map(a => a.title).join(', ') + ']');
+      }
     });
 
     // TODO: tests for definitionProvider, actionProvider, etc.

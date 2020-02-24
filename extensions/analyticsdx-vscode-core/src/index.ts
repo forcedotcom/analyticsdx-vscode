@@ -17,13 +17,7 @@ import {
   updateTemplate
 } from './commands';
 
-function sendTelemetryCommand(
-  eventName: string,
-  extensionName: string,
-  properties?: {
-    [key: string]: string;
-  }
-) {
+function sendTelemetryCommand(eventName: string, extensionName: string, properties?: Record<string, string>) {
   if (eventName && extensionName) {
     // Note: we're intentionally not waiting for this to finish
     telemetryService.sendTelemetryEvent(eventName, extensionName, properties).catch(console.error);

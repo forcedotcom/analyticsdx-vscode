@@ -7,18 +7,12 @@
 
 import { modify as jsonModify } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { ERRORS, EXTENSION_NAME, LINTER_SOURCE_ID } from '../constants';
+import { ERRORS, LINTER_SOURCE_ID } from '../constants';
+import { quickFixUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
-import {
-  argsFrom,
-  jsonEditsToWorkspaceEdit,
-  jsonpathFrom,
-  uriBasename,
-  uriRelPath,
-  uriStat
-} from '../util/vscodeUtils';
+import { argsFrom, jsonEditsToWorkspaceEdit, uriRelPath, uriStat } from '../util/vscodeUtils';
 
 /** The default body for a new variable. */
 const DEFAULT_VARIABLE_JSON: any = {
@@ -116,7 +110,7 @@ export class UiVariableCodeActionProvider implements vscode.CodeActionProvider {
   }
 
   private newUpdateVarAction(newName: string, document: vscode.TextDocument, diagnostic: vscode.Diagnostic) {
-    const fix = this.newBaseAction(`Switch to '${newName}'`, document.uri, diagnostic);
+    const fix = this.newBaseAction(`Switch to '${newName}'`, document.uri, diagnostic, newName);
     fix.isPreferred = true;
     fix.edit = new vscode.WorkspaceEdit();
     // always use the diagnostic's range, since the passed in range might a sub/super set of that
@@ -124,22 +118,21 @@ export class UiVariableCodeActionProvider implements vscode.CodeActionProvider {
     return fix;
   }
 
-  private newBaseAction(title: string, uri: vscode.Uri, diagnostic: vscode.Diagnostic): vscode.CodeAction {
+  private newBaseAction(
+    title: string,
+    uri: vscode.Uri,
+    diagnostic: vscode.Diagnostic,
+    match?: string
+  ): vscode.CodeAction {
     const fix = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
     fix.diagnostics = [diagnostic];
-    fix.command = {
-      command: 'analyticsdx.telemetry.send',
-      title: 'Sending telemetry',
-      arguments: [
-        'quickFixUsed',
-        EXTENSION_NAME,
-        {
-          title: fix.title,
-          jsonPath: jsonpathFrom(diagnostic),
-          fileName: uriBasename(uri)
-        }
-      ]
-    };
+    fix.command = quickFixUsedTelemetryCommand(
+      fix.title,
+      diagnostic,
+      uri,
+      diagnostic.code,
+      match ? { match } : undefined
+    );
     return fix;
   }
 }

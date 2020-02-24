@@ -416,7 +416,8 @@ export class TemplateLinter {
                   doc,
                   'Specified file does not exist in workspace',
                   ERRORS.TMPL_REL_PATH_NOT_EXIST,
-                  n
+                  n,
+                  { args: { relPath } }
                 );
               } else if ((stat.type & vscode.FileType.File) === 0) {
                 this.addDiagnostic(doc, 'Specified path is not a file', ERRORS.TMPL_REL_PATH_NOT_FILE, n);
