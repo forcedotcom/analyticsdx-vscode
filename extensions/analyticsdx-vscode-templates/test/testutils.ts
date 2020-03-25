@@ -6,6 +6,7 @@
  */
 
 import * as Ajv from 'ajv';
+import * as betterAjvErrors from 'better-ajv-errors';
 import { expect } from 'chai';
 import * as fs from 'fs';
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser';
@@ -135,7 +136,7 @@ export function generateJsonSchemaValidFilesTestSuite(
         } else {
           // we have to make the describe() in the async callback so that it works w/ run() and --delay in mocha
           return describe(schemaName + ' validates files', () => {
-            const ajv = new Ajv({ allErrors: true });
+            const ajv = new Ajv({ allErrors: true, jsonPointers: true });
             const validator = ajv.compile(schema);
             const readFile = promisify(fs.readFile);
 
@@ -144,9 +145,8 @@ export function generateJsonSchemaValidFilesTestSuite(
                 const json = await readFile(entry.fullPath, { encoding: 'utf-8' }).then(jsoncParse);
                 const result = await validator(json);
                 if (!result || (validator.errors && validator.errors.length > 0)) {
-                  expect.fail(
-                    'schema validation failed with errors:\n' + ajv.errorsText(validator.errors, { separator: ',\n' })
-                  );
+                  const errorsText = betterAjvErrors(schema, json, validator.errors, { indent: 2 });
+                  expect.fail('schema validation failed with errors:\n' + errorsText);
                 }
               });
             });

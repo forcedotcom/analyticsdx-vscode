@@ -68,6 +68,16 @@
       "pattern": "^(?!.*__)(?!.*_$)[A-Za-z][A-Za-z0-9_]*$",
       "patternErrorMessage": "Value should start with an ascii letter, followed by letters, numbers, or underscores. It cannot contain consecutive underscores nor end in an underscore."
     },
+    "namespace": {
+      "type": ["null", "string"],
+      "doNotSuggest": true,
+      "defaultSnippets": [
+        {
+          "label": "\"\"",
+          "body": "${0}"
+        }
+      ]
+    },
     "label": {
       "type": "string",
       "description": "The template name that is visible to users.",
