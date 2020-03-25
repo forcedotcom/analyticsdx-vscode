@@ -520,6 +520,65 @@ describe('TemplateLinterManager', () => {
         'Diagnostic on variableDefinition should exist after deleting variables.json'
       );
     });
+
+    it('warns on folder.json in embeddedapp', async () => {
+      // create an embeddedapp template, with 1 page for 1 variable (without yet opening it)
+      [tmpdir] = await createTempTemplate(false, { show: false });
+      await writeTextToFile(uriRelPath(tmpdir, 'variables.json'), {
+        var1: {
+          variableType: {
+            type: 'StringType'
+          },
+          defaultValue: 'default value'
+        }
+      });
+      const uiUri = uriRelPath(tmpdir, 'ui.json');
+      await writeTextToFile(uiUri, {
+        pages: [
+          {
+            title: 'Page1',
+            variables: [
+              {
+                name: 'var1',
+                visibility: 'Visible'
+              }
+            ]
+          }
+        ]
+      });
+      const templateInfoUri = uriRelPath(tmpdir!, 'template-info.json');
+      await writeTextToFile(templateInfoUri, {
+        templateType: 'embeddedapp',
+        name: uriBasename(tmpdir),
+        label: 'Embedded app with ui.json, which should give a warning',
+        assetVersion: 49.0,
+        releaseInfo: {
+          templateVersion: '1.0'
+        },
+        variableDefinition: 'variables.json',
+        uiDefinition: 'ui.json'
+      });
+
+      // make sure we get the 1 warning on uiDefinition
+      const diagnosticFilter = (d: vscode.Diagnostic) =>
+        jsonpathFrom(d) === 'uiDefinition' && d.code === ERRORS.TMPL_EMBEDDED_APP_WITH_UI;
+      await openTemplateInfoAndWaitForDiagnostics(
+        templateInfoUri,
+        true,
+        d => d?.filter(diagnosticFilter).length === 1,
+        'Diagnostic on uiDefinition being used in an embeddedapp'
+      );
+
+      // now change the ui.json to have no pages
+      const [, uiEditor] = await openFile(uiUri);
+      await setDocumentText(uiEditor, { pages: [] });
+      // and the warning should go away
+      await waitForDiagnostics(
+        templateInfoUri,
+        d => d?.filter(diagnosticFilter).length === 0,
+        'Diagnostic on uiDefinition to go away'
+      );
+    });
   }); // describe('lints template-info.json')
 
   // if someone opens a related file (w/o opening template-info.json), TemplateLinter will possibly add diagnostics

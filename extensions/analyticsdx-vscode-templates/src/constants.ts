@@ -103,6 +103,8 @@ export const ERRORS = Object.freeze({
   TMPL_ASSETICON_AND_APPBADGE: 'tmpl-9',
   /** Template is using templateIcon and icons.templateBadge */
   TMPL_TEMPLATEICON_AND_TEMPLATEBADGE: 'tmpl-10',
+  /** An embeddedapp template has a ui.json with pages. */
+  TMPL_EMBEDDED_APP_WITH_UI: 'tmpl-11',
 
   /** Regex in variable in variable excludes is missing closing / */
   VARS_REGEX_MISSING_SLASH: 'vars-1',

@@ -253,7 +253,7 @@ export class TemplateLinter {
       //    ones, and then await the async ones
       // 2. make the scans fully async through worker_threads or similar
       await Promise.all([
-        this.lintTemplateInfo(this.templateInfoDoc, tree),
+        this.lintTemplateInfo(tree),
         this.lintVariables(tree),
         this.lintUi(tree),
         this.lintRules(tree)
@@ -262,7 +262,7 @@ export class TemplateLinter {
     return this;
   }
 
-  private async lintTemplateInfo(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
+  private async lintTemplateInfo(tree: JsonNode): Promise<void> {
     // TODO: consider doing this via a visit down the tree, rather than searching mulitple times
 
     // start these up and let them run
@@ -271,7 +271,8 @@ export class TemplateLinter {
       // TODO: warn if they put the same relPath in twice in 2 different fields?
       ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path =>
         this.lintRelFilePath(this.templateInfoDoc, tree, path)
-      )
+      ),
+      this.lintTemplateInfoEmbeddedAppNoUi(this.templateInfoDoc, tree)
     ]);
     // while those are going, do these synchronous ones
     this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
@@ -280,7 +281,7 @@ export class TemplateLinter {
     this.lintTemplateInfoIcons(this.templateInfoDoc, tree);
     // make sure no 2+ relpath fields point to the same definition file (since that will be mess up our schema associations)
     this.lintUniqueValues(
-      [{ doc, nodes: tree }],
+      [{ doc: this.templateInfoDoc, nodes: tree }],
       TEMPLATE_INFO.definitionFilePathLocationPatterns,
       relpath => `Duplicate usage of path ${relpath}`,
       ERRORS.TMPL_DUPLICATE_REL_PATH,
@@ -289,6 +290,25 @@ export class TemplateLinter {
 
     // wait for the async ones
     await p;
+  }
+
+  private async lintTemplateInfoEmbeddedAppNoUi(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
+    const [type] = findJsonPrimitiveAttributeValue(tree, 'templateType');
+    if (type === 'embeddedapp') {
+      const uiDefNode = findNodeAtLocation(tree, ['uiDefinition']);
+      if (uiDefNode) {
+        const { json: uiJson } = await this.loadTemplateRelPathJson(tree, uiDefNode);
+        // if the ui.json file is specified and exists and has 1+ pages, add the warning
+        if (uiJson && lengthJsonArrayAttributeValue(uiJson, 'pages')[0] >= 1) {
+          this.addDiagnostic(
+            doc,
+            'Templates of type embeddedapp cannot use a uiDefinition file with pages',
+            ERRORS.TMPL_EMBEDDED_APP_WITH_UI,
+            uiDefNode.parent || uiDefNode
+          );
+        }
+      }
+    }
   }
 
   private lintTemplateInfoDevName(doc: vscode.TextDocument, tree: JsonNode) {
