@@ -702,7 +702,7 @@ export class TemplateLinter {
               if (type === 'ObjectType' || type === 'DateTimeType' || type === 'DatasetAnyFieldType') {
                 this.addDiagnostic(
                   uiDoc,
-                  `${type} variable '${name}' is not supported in non-visualForce pages`,
+                  `${type} variable '${name}' is not supported in non-Visualforce pages`,
                   ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
                   nameNode
                 );

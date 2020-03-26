@@ -828,7 +828,7 @@ describe('TemplateLinterManager', () => {
         const diagnostic = diagnostics[i];
         expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
         expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
-          `${type} variable '${type}Var' is not supported in non-visualForce pages`
+          `${type} variable '${type}Var' is not supported in non-Visualforce pages`
         );
         expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE);
         expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(`pages[0].variables[${i}].name`);
