@@ -245,8 +245,15 @@
                   }
                 },
                 "returns": {
-                  "type": "string",
-                  "description": "Optional value to return from the macro definition, can use ${...} expressions."
+                  "type": ["string", "boolean", "integer", "number", "object", "array", "null"],
+                  "description": "Optional value to return from the macro definition, can use ${...} expressions.",
+                  "examples": [true, false, [], {}, null],
+                  "defaultSnippets": [
+                    {
+                      "label": "\"\"",
+                      "body": "${0}"
+                    }
+                  ]
                 }
               },
               "defaultSnippets": [

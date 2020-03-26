@@ -1297,11 +1297,11 @@ describe('TemplateEditorManager', () => {
       position = doc.positionAt(node!.offset);
       await verifyCompletionsContain(doc, position, '"add"', '"delete"', '"eval"', '"put"', '"replace"', '"set"');
 
-      node = tree;
-      // this should be at the opening '{'
-      position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
-      // make sure it has the fields from the schema that aren't in the document
-      await verifyCompletionsContain(doc, position, 'macros');
+      // find the returns in the first macro definition, and make sure the examples and snippet works
+      node = findNodeAtLocation(tree, ['macros', 0, 'definitions', 0, 'returns']);
+      expect(node, 'macros[0].definitions[0].returns').to.not.be.undefined;
+      position = doc.positionAt(node!.offset);
+      await verifyCompletionsContain(doc, position, '""', 'true', 'false', 'null', '[]', '{}');
     });
 
     it('json-schema defaultSnippets', async () => {
