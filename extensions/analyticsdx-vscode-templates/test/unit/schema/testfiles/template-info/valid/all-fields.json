@@ -108,11 +108,11 @@
     }
   ],
   "extendedTypes": {
-    "visualforcePages": [
+    "discoveryStories": [
       {
-        "label": "Test Something",
-        "name": "DBVisualforcePage",
-        "file": "visualforce/vf.apexp",
+        "label": "Some Story",
+        "name": "Some_Story",
+        "file": "stories/story.json",
         "condition": "${Variables.Has_Product == 'Yes'}",
         "overwriteOnUpgrade": "Never"
       }

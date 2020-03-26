@@ -1,7 +1,7 @@
 {
   "templateType": "app",
   "label": "FullAppTemplate",
-  "name": "FullAppTemplate",
+  "name": "allRelpaths",
   "assetVersion": 46.0,
   "releaseInfo": {
     "templateVersion": "1.1",
@@ -65,11 +65,11 @@
     }
   ],
   "extendedTypes": {
-    "visualforcePages": [
+    "discoveryStories": [
       {
-        "label": "vfpage",
-        "name": "vfpage",
-        "file": "visualforce/vf.apexp"
+        "label": "story",
+        "name": "story",
+        "file": "stories/story.json"
       }
     ]
   },

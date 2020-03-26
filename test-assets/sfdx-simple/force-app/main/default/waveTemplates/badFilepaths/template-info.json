@@ -65,11 +65,11 @@
     }
   ],
   "extendedTypes": {
-    "visualforcePages": [
+    "discoveryStories": [
       {
-        "label": "dot-dot-vfpage",
-        "name": "dot-dot-vfpage",
-        "file": "../visualforce/dot-dot.apexp"
+        "label": "dot-dot-story",
+        "name": "dot-dot-story",
+        "file": "../stories/dot-dot-story.json"
       }
     ]
   },

@@ -1,5 +1,0 @@
-<apex:page >
-<h1 style="color:red;">Hello</h1>
-
-<a href = "mailto: abc@example.com">Send Email</a>
-</apex:page>

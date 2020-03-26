@@ -446,7 +446,7 @@ describe('TemplateLinterManager', () => {
       });
 
       // check for the ones complaining about non-relative or empty paths
-      ['releaseInfo.notesFile', 'extendedTypes.visualforcePages[0].file', 'imageFiles[0].file'].forEach(path => {
+      ['releaseInfo.notesFile', 'extendedTypes.discoveryStories[0].file', 'imageFiles[0].file'].forEach(path => {
         const d = map.get(path);
         expect(d, path + ' diagnostic missing').to.be.not.undefined;
         expect(d!.message, path + ' diagnostic message').to.equal('Value should be a path relative to this file');

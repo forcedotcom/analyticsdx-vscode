@@ -799,71 +799,60 @@
       "type": ["null", "object"],
       "description": "",
       "examples": [{}],
-      "additionalProperties": {
-        "type": "array",
-        "description": "The list of named extended types",
-        "minItems": 0,
-        "items": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["file", "label"],
-          "properties": {
-            "file": {
-              "type": "string",
-              "description": "Path to the extended type file."
-            },
-            "label": {
-              "type": "string",
-              "description": "The extended type label."
-            },
-            "name": {
-              "type": "string",
-              "description": "The extended type name."
-            },
-            "condition": {
-              "type": ["null", "string"],
-              "description": "If this is met, then the extended type will be created in the app; otherwise, it will not be created.",
-              "defaultSnippets": [
-                {
-                  "label": "\"\"",
-                  "body": "${0}"
-                },
-                {
-                  "label": "${...} expression",
-                  "body": "${Variables.${1:varname}}"
-                }
-              ]
-            },
-            "overwriteOnUpgrade": {
-              "$ref": "#/definitions/overwriteOnUpgrade"
-            }
-          },
-          "defaultSnippets": [
-            {
-              "label": "New extendedType",
-              "body": {
-                "file": "${1:name}.json",
-                "label": "${1}",
-                "name": "${1}"
+      "additionalProperties": false,
+      "properties": {
+        "discoveryStories": {
+          "type": "array",
+          "description": "The list of named extended types",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["file", "label"],
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Path to the extended type file."
+              },
+              "label": {
+                "type": "string",
+                "description": "The extended type label."
+              },
+              "name": {
+                "type": "string",
+                "description": "The extended type name."
+              },
+              "condition": {
+                "type": ["null", "string"],
+                "description": "If this is met, then the extended type will be created in the app; otherwise, it will not be created.",
+                "defaultSnippets": [
+                  {
+                    "label": "\"\"",
+                    "body": "${0}"
+                  },
+                  {
+                    "label": "${...} expression",
+                    "body": "${Variables.${1:varname}}"
+                  }
+                ]
+              },
+              "overwriteOnUpgrade": {
+                "$ref": "#/definitions/overwriteOnUpgrade"
               }
-            }
-          ]
-        }
-      },
-      "defaultSnippets": [
-        {
-          "label": "New extendedTypes",
-          "body": {
-            "${1:type}": [
+            },
+            "defaultSnippets": [
               {
-                "file": "${2:name}.json",
-                "label": "${2}",
-                "name": "${2}"
+                "label": "New discoveryStory",
+                "body": {
+                  "file": "${1:name}.json",
+                  "label": "${1}",
+                  "name": "${1}"
+                }
               }
             ]
           }
         }
-      ]
+      }
     },
     "customAttributes": {
       "type": ["null", "array"],
