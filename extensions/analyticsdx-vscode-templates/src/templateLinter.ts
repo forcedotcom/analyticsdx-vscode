@@ -694,19 +694,14 @@ export class TemplateLinter {
             }
             this.addDiagnostic(uiDoc, mesg, ERRORS.UI_PAGE_UNKNOWN_VARIABLE, nameNode, { args });
           } else {
-            // if it's a non-vfpage page, then make sure the variable type is valid
-            // "varname" -> "name": "varname" -> variable {} -> variables[] -> "variables": [] -> page {}
-            const page = nameNode.parent?.parent?.parent?.parent?.parent;
-            if (page && !findNodeAtLocation(page, ['vfPage'])) {
-              const type = variableTypes[name];
-              if (type === 'ObjectType' || type === 'DateTimeType' || type === 'DatasetAnyFieldType') {
-                this.addDiagnostic(
-                  uiDoc,
-                  `${type} variable '${name}' is not supported in non-Visualforce pages`,
-                  ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
-                  nameNode
-                );
-              }
+            const type = variableTypes[name];
+            if (type === 'ObjectType' || type === 'DateTimeType' || type === 'DatasetAnyFieldType') {
+              this.addDiagnostic(
+                uiDoc,
+                `${type} variable '${name}' is not supported in ui pages`,
+                ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
+                nameNode
+              );
             }
           }
         }

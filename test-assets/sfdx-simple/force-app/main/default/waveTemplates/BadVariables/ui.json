@@ -20,12 +20,13 @@
       ]
     },
     {
-      "title": "Valid in vfPage",
+      "title": "Invalid variables types in vfPage",
       "vfPage": {
         "name": "name",
         "namespace": "namespace"
       },
       "variables": [
+        // also bad here
         {
           "name": "DateTimeTypeVar"
         },
@@ -35,6 +36,7 @@
         {
           "name": "DatasetAnyFieldTypeVar"
         },
+        // this is also fine
         {
           "name": "StringTypeVar"
         }

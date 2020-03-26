@@ -810,29 +810,32 @@ describe('TemplateLinterManager', () => {
       await waitForDiagnostics(uiEditor.document.uri, d => !d || d.length === 0, 'ui.json warnings after edit');
     });
 
-    it('shows warnings on unsupported variable types on non-vfpage apex', async () => {
+    it('shows warnings on unsupported variable types in pages', async () => {
       // only look for diagnostics on page variables
       const varFilter = (d: vscode.Diagnostic) => /^pages\[\d\]\.variables\[/.test(jsonpathFrom(d) || '');
 
       const [doc] = await openFile(uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json'));
       const diagnostics = (
-        await waitForDiagnostics(doc.uri, d => d && d.filter(varFilter).length >= 3, 'initial diagnostics on ui.json')
+        await waitForDiagnostics(doc.uri, d => d && d.filter(varFilter).length >= 6, 'initial diagnostics on ui.json')
       )
         .filter(varFilter)
         .sort(sortDiagnostics);
-      if (diagnostics.length !== 3) {
-        expect.fail('Expected 3 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      if (diagnostics.length !== 6) {
+        expect.fail('Expected 6 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
-      // the 3 should be for these variable types
-      ['DateTimeType', 'ObjectType', 'DatasetAnyFieldType'].forEach((type, i) => {
-        const diagnostic = diagnostics[i];
-        expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
-        expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
-          `${type} variable '${type}Var' is not supported in non-Visualforce pages`
-        );
-        expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE);
-        expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(`pages[0].variables[${i}].name`);
-      });
+      // each page's 1st 3 vars should have the warnings
+      for (let j = 0; j < 2; j++) {
+        ['DateTimeType', 'ObjectType', 'DatasetAnyFieldType'].forEach((type, k) => {
+          const i = j * 3 + k;
+          const diagnostic = diagnostics[i];
+          expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
+          expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
+            `${type} variable '${type}Var' is not supported in ui pages`
+          );
+          expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE);
+          expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(`pages[${j}].variables[${k}].name`);
+        });
+      }
     });
   }); // describe('lints ui.json')
 
