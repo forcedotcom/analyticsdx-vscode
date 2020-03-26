@@ -1289,7 +1289,18 @@ describe('TemplateEditorManager', () => {
       let node = findNodeAtLocation(tree, ['rules', 0, 'appliesTo', 0, 'type']);
       expect(node, 'rules[0].appliesTo[0].type').to.not.be.undefined;
       let position = doc.positionAt(node!.offset);
-      await verifyCompletionsContain(doc, position, '"*"', '"dashboard"', '"lens"', '"schema"', '"workflow"', '"xmd"');
+      await verifyCompletionsContain(
+        doc,
+        position,
+        '"*"',
+        '"dashboard"',
+        '"discoveryStories"',
+        '"folder"',
+        '"lens"',
+        '"schema"',
+        '"workflow"',
+        '"xmd"'
+      );
 
       // find the actions.action in the first rule to see if the enum works
       node = findNodeAtLocation(tree, ['rules', 0, 'actions', 0, 'action']);

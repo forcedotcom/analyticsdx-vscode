@@ -75,10 +75,12 @@
                     {
                       "type": "string",
                       "default": "*",
-                      "enum": ["*", "dashboard", "lens", "schema", "workflow", "xmd"],
+                      "enum": ["*", "dashboard", "discoveryStories", "folder", "lens", "schema", "workflow", "xmd"],
                       "enumDescriptions": [
                         "Match all types of files.",
                         "Match dashboard files.",
+                        "Match extendedTypes discoveryStories files.",
+                        "Match the folderDefinition file.",
                         "Match lens files.",
                         "Match externalFile schema files.",
                         "Match dataflow files.",
