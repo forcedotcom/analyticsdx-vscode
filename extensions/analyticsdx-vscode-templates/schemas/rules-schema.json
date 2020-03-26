@@ -277,18 +277,23 @@
   },
   "definitions": {
     "condition": {
-      "type": ["string", "null"],
       "oneOf": [
         {
+          "type": "string",
           "pattern": "^\\${.+}$",
-          "patternErrorMessage": "Not a valid ${...} expression."
+          "patternErrorMessage": "Not a valid ${...} expression nor \"true\" nor \"false\"."
         },
         {
+          "type": "string",
           "enum": ["true", "false"]
         },
         {
+          "type": "string",
           "pattern": "^(T[Rr][Uu][Ee]|F[Aa][Ll][Ss][Ee])$",
           "$comment": "case-insensitive enum workaround"
+        },
+        {
+          "type": "null"
         }
       ]
     },

@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "name": "Make sure null conditions validate correctly",
+      "appliesTo": [],
+      "condition": null,
+      "actions": [
+        {
+          "action": "delete",
+          "path": "$.name",
+          "condition": null
+        }
+      ]
+    }
+  ]
+}
