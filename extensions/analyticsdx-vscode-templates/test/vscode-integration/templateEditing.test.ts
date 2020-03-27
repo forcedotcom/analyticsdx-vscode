@@ -412,6 +412,41 @@ describe('TemplateEditorManager', () => {
     // TODO: tests for definitionProvider, actionProvider, etc.
   }); // describe('configures template-info.json')
 
+  describe('configures adx-template-json base schema', () => {
+    beforeEach(closeAllEditors);
+    afterEach(closeAllEditors);
+
+    [
+      'dashboards/dashboard.json',
+      'externalFiles/schema.json',
+      'externalFiles/userXmd.json',
+      'lenses/lens.json',
+      'dataflows/dataflow.json',
+      'queries/query.json',
+      'datasets/userXmd.json',
+      'stories/story.json'
+    ].forEach(relpath => {
+      it(`on ${relpath}`, async () => {
+        const [doc, editor] = await openFile(uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', relpath));
+        // this should wait for the languageId to change
+        expect(doc.languageId, 'languageId').to.equal(TEMPLATE_JSON_LANG_ID);
+        // put in some json with comments (which adx-template-json-base-schema.json enables) and an intentional syntax
+        // error (to make sure the language server ran against this file)
+        await setDocumentText(
+          editor,
+          '{\n  /* multi-line comment */\n  error: "intentional syntax error"\n  // comment\n}'
+        );
+        // errors about comments will be code 521 (which we shouldn't see)
+        const filter = (d: vscode.Diagnostic) => d.source === TEMPLATE_JSON_LANG_ID || d.code === 521;
+        const diagnostics = (await waitForDiagnostics(doc.uri, d => d?.some(filter))).filter(filter);
+        if (diagnostics.length !== 1) {
+          expect.fail('Expected 1 error, got: ' + JSON.stringify(diagnostics, undefined, 2));
+        }
+        expect(diagnostics[0].message, 'error message').to.equal('Property keys must be doublequoted');
+      });
+    });
+  });
+
   describe('configures folderDefinition', () => {
     let tmpdir: vscode.Uri | undefined;
     beforeEach(async () => {

@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://schemas.salesforce.com/analytics/adx-template-json-base-schema.json",
+  "$comment": "All adx-template-json files will get this applied",
+  "allowComments": true
+}

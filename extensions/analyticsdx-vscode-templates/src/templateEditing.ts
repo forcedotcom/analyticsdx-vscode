@@ -249,6 +249,7 @@ interface ISchemaAssociations {
 export class TemplateEditingManager extends Disposable {
   private templateDirs = new Map<string, TemplateDirEditing>();
   private languageClient: TemplateJsonLanguageClient | undefined;
+  public readonly baseSchemaPath: vscode.Uri;
   public readonly templateInfoSchemaPath: vscode.Uri;
   public readonly folderSchemaPath: vscode.Uri;
   public readonly uiSchemaPath: vscode.Uri;
@@ -259,6 +260,7 @@ export class TemplateEditingManager extends Disposable {
 
   constructor(context: vscode.ExtensionContext, output?: vscode.OutputChannel) {
     super();
+    this.baseSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/adx-template-json-base-schema.json'));
     this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/template-info-schema.json'));
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
     this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/ui-schema.json'));
@@ -395,7 +397,10 @@ export class TemplateEditingManager extends Disposable {
         // TODO: get other associated files from the template-info.json
       }
     });
+    // this is a fixed name pattern so we can just do it once
     associations['**/template-info.json'] = [this.templateInfoSchemaPath.toString()];
+    // apply the base schema to all adx-template-json files (which is all json files in a template folder)
+    associations['**'] = [this.baseSchemaPath.toString()];
     return associations;
   }
 
