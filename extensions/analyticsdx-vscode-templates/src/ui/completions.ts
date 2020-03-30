@@ -61,7 +61,9 @@ export class UiVariableCompletionItemProviderDelegate implements JsonAttributeCo
             // put '(type) label' in the detail
             const typeNode = findNodeAtLocation(child.children[1], ['variableType', 'type']);
             let type =
-              typeNode?.type === 'string' && typeof typeNode.value && typeNode.value ? typeNode.value : 'StringType';
+              typeNode?.type === 'string' && typeof typeNode.value === 'string' && typeNode.value
+                ? typeNode.value
+                : 'StringType';
             if (type === 'ArrayType') {
               // try to unwrap to the array item type
               const itemsType = findNodeAtLocation(child.children[1], ['variableType', 'itemsType', 'type']);

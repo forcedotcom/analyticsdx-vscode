@@ -21,6 +21,7 @@ import {
   getCodeActions,
   getCompletionItems,
   getDefinitionLocations,
+  getHovers,
   getTemplateEditorManager,
   openFile,
   openFileAndWaitForDiagnostics,
@@ -909,6 +910,31 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
     });
 
+    it('hover text on variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
+      const [doc] = await openFile(uri, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+      const tree = parseTree(doc.getText());
+      const node = findNodeAtLocation(tree, ['pages', 0, 'variables', 3, 'name'])?.parent;
+      expect(node, 'pages[0].variables[3].name propNode').to.be.not.undefined;
+      const nameNode = node!.children?.[0];
+      expect(nameNode, 'nameNode').to.not.be.undefined;
+      let hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
+      expect(hovers, 'nameNode hovers').to.not.be.undefined;
+      // on the name field, it should just return the hover from the schema
+      expect(hovers.length, 'nameNode hovers.length').to.equal(1);
+
+      const valueNode = node!.children?.[1];
+      expect(valueNode, 'valueNode').to.not.be.undefined;
+      hovers = await getHovers(uri, doc.positionAt(valueNode!.offset));
+      expect(hovers, 'valueNode hovers').to.not.be.undefined;
+      // on the value field, it should have the schema hover and the hover from our provider
+      expect(hovers.length, 'valueNode hovers.length').to.equal(2);
+      if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('StringTypeVar') >= 0))) {
+        expect.fail("Expected at least one hover to contain 'StringTypeVar'");
+      }
+    });
+
     it('go to definition support for variable names', async () => {
       const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
       const [doc] = await openFile(uri, true);
@@ -1279,6 +1305,31 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
       expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
+    });
+
+    it('hover text on variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'variables.json');
+      const [doc] = await openFile(uri, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+      const tree = parseTree(doc.getText());
+      const node = findNodeAtLocation(tree, ['ObjectTypeVar'])?.parent;
+      expect(node, 'ObjectTypeVar propNode').to.be.not.undefined;
+      const nameNode = node!.children?.[0];
+      expect(nameNode, 'nameNode').to.not.be.undefined;
+      let hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
+      expect(hovers, 'nameNode hovers').to.not.be.undefined;
+      // on the name field, it should have the schema hover and the hover from our provider
+      expect(hovers.length, 'valueNode hovers.length').to.equal(2);
+      if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('ObjectTypeVar') >= 0))) {
+        expect.fail("Expected at least one hover to contain 'ObjectTypeVar'");
+      }
+
+      const valueNode = findNodeAtLocation(tree, ['ObjectTypeVar', 'label']);
+      expect(valueNode, 'ObjectTypeVar.label').to.not.be.undefined;
+      hovers = await getHovers(uri, doc.positionAt(valueNode!.offset));
+      expect(hovers, 'ObjectTypeVar.label hovers').to.not.be.undefined;
+      // on other fields, it should just have the hover from the schema descrption
+      expect(hovers.length, 'ObjectTypeVar.label hovers.length').to.equal(1);
     });
   }); // describe('configures variablesDefinition')
 

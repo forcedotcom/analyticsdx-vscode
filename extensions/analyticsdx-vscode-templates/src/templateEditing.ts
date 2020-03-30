@@ -41,7 +41,8 @@ import { CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
-  UiVariableDefinitionProvider
+  UiVariableDefinitionProvider,
+  UiVariableHoverProvider
 } from './ui';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
@@ -62,6 +63,7 @@ import {
   uriRelPath,
   uriStat
 } from './util/vscodeUtils';
+import { VariableHoverProvider } from './variables';
 
 function templateJsonFileFilter(s: string) {
   return jsonFileFilter(s) && s !== 'template-info.json';
@@ -158,6 +160,16 @@ export class TemplateDirEditing extends Disposable {
     return this._variablesDefinitionPath;
   }
 
+  /** Tell if the specified file uri corresponds to our variableDefinition path. */
+  public isVariablesDefinitionFile(file: vscode.Uri): boolean {
+    return (
+      isUriUnder(this.dir, file) &&
+      !!this.variablesDefinitionPath &&
+      isValidRelpath(this.variablesDefinitionPath) &&
+      isSameUri(uriRelPath(this.dir, this.variablesDefinitionPath), file)
+    );
+  }
+
   get rulesDefinitionPaths() {
     return this._rulesDefinitionPaths;
   }
@@ -229,7 +241,11 @@ export class TemplateDirEditing extends Disposable {
       // hookup quick fixes for variable names in ui.json's
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
         providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
-      })
+      }),
+      // hookup hover text
+      vscode.languages.registerHoverProvider(relatedFileSelector, new UiVariableHoverProvider(this)),
+      // REVIEWME: make a multi-proxy hover provider so there's only registration?
+      vscode.languages.registerHoverProvider(relatedFileSelector, new VariableHoverProvider(this))
     );
 
     return this;

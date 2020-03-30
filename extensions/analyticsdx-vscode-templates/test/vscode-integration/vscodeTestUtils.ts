@@ -394,6 +394,30 @@ export async function getCompletionItems(uri: vscode.Uri, position: vscode.Posit
   return result!;
 }
 
+export async function verifyCompletionsContain(
+  document: vscode.TextDocument,
+  position: vscode.Position,
+  ...expectedLabels: string[]
+): Promise<vscode.CompletionItem[]> {
+  const list = await getCompletionItems(document.uri, position);
+  const labels = list.items.map(item => item.label);
+  expect(labels, 'completion items').to.include.members(expectedLabels);
+  // also we shouldn't get any duplicate code completion items (which can come if something else, like the default
+  // json language service, is injecting extra stuff into our document type).
+  const dups: string[] = [];
+  list.items
+    .reduce((m, val) => m.set(val.label, (m.get(val.label) || 0) + 1), new Map<string, number>())
+    .forEach((num, label) => {
+      if (num >= 2) {
+        dups.push(label);
+      }
+    });
+  if (dups.length > 0) {
+    expect.fail('Found duplicate completion items: ' + dups.join(', '));
+  }
+  return list.items;
+}
+
 export async function getDefinitionLocations(uri: vscode.Uri, position: vscode.Position): Promise<vscode.Location[]> {
   const result = await vscode.commands.executeCommand<vscode.Location[]>(
     'vscode.executeDefinitionProvider',
@@ -418,26 +442,10 @@ export async function getCodeActions(uri: vscode.Uri, range: vscode.Range): Prom
   return result!;
 }
 
-export async function verifyCompletionsContain(
-  document: vscode.TextDocument,
-  position: vscode.Position,
-  ...expectedLabels: string[]
-): Promise<vscode.CompletionItem[]> {
-  const list = await getCompletionItems(document.uri, position);
-  const labels = list.items.map(item => item.label);
-  expect(labels, 'completion items').to.include.members(expectedLabels);
-  // also we shouldn't get any duplicate code completion items (which can come if something else, like the default
-  // json language service, is injecting extra stuff into our document type).
-  const dups: string[] = [];
-  list.items
-    .reduce((m, val) => m.set(val.label, (m.get(val.label) || 0) + 1), new Map<string, number>())
-    .forEach((num, label) => {
-      if (num >= 2) {
-        dups.push(label);
-      }
-    });
-  if (dups.length > 0) {
-    expect.fail('Found duplicate completion items: ' + dups.join(', '));
+export async function getHovers(uri: vscode.Uri, range: vscode.Position): Promise<vscode.Hover[]> {
+  const result = await vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', uri, range);
+  if (!result) {
+    expect.fail('Expected vscode.Hover[], got undefined');
   }
-  return list.items;
+  return result!;
 }
