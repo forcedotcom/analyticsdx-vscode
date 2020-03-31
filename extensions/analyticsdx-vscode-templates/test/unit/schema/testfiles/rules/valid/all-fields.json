@@ -61,6 +61,12 @@
           "type": "dashboard"
         },
         {
+          "type": "discoveryStories"
+        },
+        {
+          "type": "folder"
+        },
+        {
           "type": "lens"
         },
         {

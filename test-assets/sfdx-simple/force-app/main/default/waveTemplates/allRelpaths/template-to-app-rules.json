@@ -20,5 +20,16 @@
         }
       ]
     }
+  ],
+  "macros": [
+    {
+      "namespace": "ns",
+      "definitions": [
+        {
+          "name": "test_returns_code_completions",
+          "returns": ""
+        }
+      ]
+    }
   ]
 }

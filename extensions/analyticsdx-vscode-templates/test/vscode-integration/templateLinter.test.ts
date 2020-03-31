@@ -446,7 +446,7 @@ describe('TemplateLinterManager', () => {
       });
 
       // check for the ones complaining about non-relative or empty paths
-      ['releaseInfo.notesFile', 'extendedTypes.visualforcePages[0].file', 'imageFiles[0].file'].forEach(path => {
+      ['releaseInfo.notesFile', 'extendedTypes.discoveryStories[0].file', 'imageFiles[0].file'].forEach(path => {
         const d = map.get(path);
         expect(d, path + ' diagnostic missing').to.be.not.undefined;
         expect(d!.message, path + ' diagnostic message').to.equal('Value should be a path relative to this file');
@@ -518,6 +518,65 @@ describe('TemplateLinterManager', () => {
         templateUri,
         diagnostics => diagnostics && diagnostics.some(diagnosticFilter),
         'Diagnostic on variableDefinition should exist after deleting variables.json'
+      );
+    });
+
+    it('warns on folder.json in embeddedapp', async () => {
+      // create an embeddedapp template, with 1 page for 1 variable (without yet opening it)
+      [tmpdir] = await createTempTemplate(false, { show: false });
+      await writeTextToFile(uriRelPath(tmpdir, 'variables.json'), {
+        var1: {
+          variableType: {
+            type: 'StringType'
+          },
+          defaultValue: 'default value'
+        }
+      });
+      const uiUri = uriRelPath(tmpdir, 'ui.json');
+      await writeTextToFile(uiUri, {
+        pages: [
+          {
+            title: 'Page1',
+            variables: [
+              {
+                name: 'var1',
+                visibility: 'Visible'
+              }
+            ]
+          }
+        ]
+      });
+      const templateInfoUri = uriRelPath(tmpdir!, 'template-info.json');
+      await writeTextToFile(templateInfoUri, {
+        templateType: 'embeddedapp',
+        name: uriBasename(tmpdir),
+        label: 'Embedded app with ui.json, which should give a warning',
+        assetVersion: 49.0,
+        releaseInfo: {
+          templateVersion: '1.0'
+        },
+        variableDefinition: 'variables.json',
+        uiDefinition: 'ui.json'
+      });
+
+      // make sure we get the 1 warning on uiDefinition
+      const diagnosticFilter = (d: vscode.Diagnostic) =>
+        jsonpathFrom(d) === 'uiDefinition' && d.code === ERRORS.TMPL_EMBEDDED_APP_WITH_UI;
+      await openTemplateInfoAndWaitForDiagnostics(
+        templateInfoUri,
+        true,
+        d => d?.filter(diagnosticFilter).length === 1,
+        'Diagnostic on uiDefinition being used in an embeddedapp'
+      );
+
+      // now change the ui.json to have no pages
+      const [, uiEditor] = await openFile(uiUri);
+      await setDocumentText(uiEditor, { pages: [] });
+      // and the warning should go away
+      await waitForDiagnostics(
+        templateInfoUri,
+        d => d?.filter(diagnosticFilter).length === 0,
+        'Diagnostic on uiDefinition to go away'
       );
     });
   }); // describe('lints template-info.json')
@@ -751,29 +810,32 @@ describe('TemplateLinterManager', () => {
       await waitForDiagnostics(uiEditor.document.uri, d => !d || d.length === 0, 'ui.json warnings after edit');
     });
 
-    it('shows warnings on unsupported variable types on non-vfpage apex', async () => {
+    it('shows warnings on unsupported variable types in pages', async () => {
       // only look for diagnostics on page variables
       const varFilter = (d: vscode.Diagnostic) => /^pages\[\d\]\.variables\[/.test(jsonpathFrom(d) || '');
 
       const [doc] = await openFile(uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json'));
       const diagnostics = (
-        await waitForDiagnostics(doc.uri, d => d && d.filter(varFilter).length >= 3, 'initial diagnostics on ui.json')
+        await waitForDiagnostics(doc.uri, d => d && d.filter(varFilter).length >= 6, 'initial diagnostics on ui.json')
       )
         .filter(varFilter)
         .sort(sortDiagnostics);
-      if (diagnostics.length !== 3) {
-        expect.fail('Expected 3 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+      if (diagnostics.length !== 6) {
+        expect.fail('Expected 6 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
       }
-      // the 3 should be for these variable types
-      ['DateTimeType', 'ObjectType', 'DatasetAnyFieldType'].forEach((type, i) => {
-        const diagnostic = diagnostics[i];
-        expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
-        expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
-          `${type} variable '${type}Var' is not supported in non-visualForce pages`
-        );
-        expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE);
-        expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(`pages[0].variables[${i}].name`);
-      });
+      // each page's 1st 3 vars should have the warnings
+      for (let j = 0; j < 2; j++) {
+        ['DateTimeType', 'ObjectType', 'DatasetAnyFieldType'].forEach((type, k) => {
+          const i = j * 3 + k;
+          const diagnostic = diagnostics[i];
+          expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
+          expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
+            `${type} variable '${type}Var' is not supported in ui pages`
+          );
+          expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE);
+          expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(`pages[${j}].variables[${k}].name`);
+        });
+      }
     });
   }); // describe('lints ui.json')
 

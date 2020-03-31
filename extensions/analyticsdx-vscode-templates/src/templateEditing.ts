@@ -41,7 +41,8 @@ import { CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
-  UiVariableDefinitionProvider
+  UiVariableDefinitionProvider,
+  UiVariableHoverProvider
 } from './ui';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
 import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
@@ -62,6 +63,7 @@ import {
   uriRelPath,
   uriStat
 } from './util/vscodeUtils';
+import { VariableHoverProvider } from './variables';
 
 function templateJsonFileFilter(s: string) {
   return jsonFileFilter(s) && s !== 'template-info.json';
@@ -158,6 +160,16 @@ export class TemplateDirEditing extends Disposable {
     return this._variablesDefinitionPath;
   }
 
+  /** Tell if the specified file uri corresponds to our variableDefinition path. */
+  public isVariablesDefinitionFile(file: vscode.Uri): boolean {
+    return (
+      isUriUnder(this.dir, file) &&
+      !!this.variablesDefinitionPath &&
+      isValidRelpath(this.variablesDefinitionPath) &&
+      isSameUri(uriRelPath(this.dir, this.variablesDefinitionPath), file)
+    );
+  }
+
   get rulesDefinitionPaths() {
     return this._rulesDefinitionPaths;
   }
@@ -229,7 +241,11 @@ export class TemplateDirEditing extends Disposable {
       // hookup quick fixes for variable names in ui.json's
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
         providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
-      })
+      }),
+      // hookup hover text
+      vscode.languages.registerHoverProvider(relatedFileSelector, new UiVariableHoverProvider(this)),
+      // REVIEWME: make a multi-proxy hover provider so there's only registration?
+      vscode.languages.registerHoverProvider(relatedFileSelector, new VariableHoverProvider(this))
     );
 
     return this;
@@ -249,6 +265,7 @@ interface ISchemaAssociations {
 export class TemplateEditingManager extends Disposable {
   private templateDirs = new Map<string, TemplateDirEditing>();
   private languageClient: TemplateJsonLanguageClient | undefined;
+  public readonly baseSchemaPath: vscode.Uri;
   public readonly templateInfoSchemaPath: vscode.Uri;
   public readonly folderSchemaPath: vscode.Uri;
   public readonly uiSchemaPath: vscode.Uri;
@@ -259,6 +276,7 @@ export class TemplateEditingManager extends Disposable {
 
   constructor(context: vscode.ExtensionContext, output?: vscode.OutputChannel) {
     super();
+    this.baseSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/adx-template-json-base-schema.json'));
     this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/template-info-schema.json'));
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
     this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/ui-schema.json'));
@@ -395,7 +413,10 @@ export class TemplateEditingManager extends Disposable {
         // TODO: get other associated files from the template-info.json
       }
     });
+    // this is a fixed name pattern so we can just do it once
     associations['**/template-info.json'] = [this.templateInfoSchemaPath.toString()];
+    // apply the base schema to all adx-template-json files (which is all json files in a template folder)
+    associations['**'] = [this.baseSchemaPath.toString()];
     return associations;
   }
 

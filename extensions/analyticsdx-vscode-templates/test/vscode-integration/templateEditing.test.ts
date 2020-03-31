@@ -21,6 +21,7 @@ import {
   getCodeActions,
   getCompletionItems,
   getDefinitionLocations,
+  getHovers,
   getTemplateEditorManager,
   openFile,
   openFileAndWaitForDiagnostics,
@@ -411,6 +412,41 @@ describe('TemplateEditorManager', () => {
 
     // TODO: tests for definitionProvider, actionProvider, etc.
   }); // describe('configures template-info.json')
+
+  describe('configures adx-template-json base schema', () => {
+    beforeEach(closeAllEditors);
+    afterEach(closeAllEditors);
+
+    [
+      'dashboards/dashboard.json',
+      'externalFiles/schema.json',
+      'externalFiles/userXmd.json',
+      'lenses/lens.json',
+      'dataflows/dataflow.json',
+      'queries/query.json',
+      'datasets/userXmd.json',
+      'stories/story.json'
+    ].forEach(relpath => {
+      it(`on ${relpath}`, async () => {
+        const [doc, editor] = await openFile(uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', relpath));
+        // this should wait for the languageId to change
+        expect(doc.languageId, 'languageId').to.equal(TEMPLATE_JSON_LANG_ID);
+        // put in some json with comments (which adx-template-json-base-schema.json enables) and an intentional syntax
+        // error (to make sure the language server ran against this file)
+        await setDocumentText(
+          editor,
+          '{\n  /* multi-line comment */\n  error: "intentional syntax error"\n  // comment\n}'
+        );
+        // errors about comments will be code 521 (which we shouldn't see)
+        const filter = (d: vscode.Diagnostic) => d.source === TEMPLATE_JSON_LANG_ID || d.code === 521;
+        const diagnostics = (await waitForDiagnostics(doc.uri, d => d?.some(filter))).filter(filter);
+        if (diagnostics.length !== 1) {
+          expect.fail('Expected 1 error, got: ' + JSON.stringify(diagnostics, undefined, 2));
+        }
+        expect(diagnostics[0].message, 'error message').to.equal('Property keys must be doublequoted');
+      });
+    });
+  });
 
   describe('configures folderDefinition', () => {
     let tmpdir: vscode.Uri | undefined;
@@ -874,6 +910,31 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
     });
 
+    it('hover text on variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
+      const [doc] = await openFile(uri, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+      const tree = parseTree(doc.getText());
+      const node = findNodeAtLocation(tree, ['pages', 0, 'variables', 3, 'name'])?.parent;
+      expect(node, 'pages[0].variables[3].name propNode').to.be.not.undefined;
+      const nameNode = node!.children?.[0];
+      expect(nameNode, 'nameNode').to.not.be.undefined;
+      let hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
+      expect(hovers, 'nameNode hovers').to.not.be.undefined;
+      // on the name field, it should just return the hover from the schema
+      expect(hovers.length, 'nameNode hovers.length').to.equal(1);
+
+      const valueNode = node!.children?.[1];
+      expect(valueNode, 'valueNode').to.not.be.undefined;
+      hovers = await getHovers(uri, doc.positionAt(valueNode!.offset));
+      expect(hovers, 'valueNode hovers').to.not.be.undefined;
+      // on the value field, it should have the schema hover and the hover from our provider
+      expect(hovers.length, 'valueNode hovers.length').to.equal(2);
+      if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('StringTypeVar') >= 0))) {
+        expect.fail("Expected at least one hover to contain 'StringTypeVar'");
+      }
+    });
+
     it('go to definition support for variable names', async () => {
       const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'ui.json');
       const [doc] = await openFile(uri, true);
@@ -1245,6 +1306,31 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
     });
+
+    it('hover text on variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'variables.json');
+      const [doc] = await openFile(uri, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+      const tree = parseTree(doc.getText());
+      const node = findNodeAtLocation(tree, ['ObjectTypeVar'])?.parent;
+      expect(node, 'ObjectTypeVar propNode').to.be.not.undefined;
+      const nameNode = node!.children?.[0];
+      expect(nameNode, 'nameNode').to.not.be.undefined;
+      let hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
+      expect(hovers, 'nameNode hovers').to.not.be.undefined;
+      // on the name field, it should have the schema hover and the hover from our provider
+      expect(hovers.length, 'valueNode hovers.length').to.equal(2);
+      if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('ObjectTypeVar') >= 0))) {
+        expect.fail("Expected at least one hover to contain 'ObjectTypeVar'");
+      }
+
+      const valueNode = findNodeAtLocation(tree, ['ObjectTypeVar', 'label']);
+      expect(valueNode, 'ObjectTypeVar.label').to.not.be.undefined;
+      hovers = await getHovers(uri, doc.positionAt(valueNode!.offset));
+      expect(hovers, 'ObjectTypeVar.label hovers').to.not.be.undefined;
+      // on other fields, it should just have the hover from the schema descrption
+      expect(hovers.length, 'ObjectTypeVar.label hovers.length').to.equal(1);
+    });
   }); // describe('configures variablesDefinition')
 
   describe('configures rulesDefinitions', () => {
@@ -1289,7 +1375,18 @@ describe('TemplateEditorManager', () => {
       let node = findNodeAtLocation(tree, ['rules', 0, 'appliesTo', 0, 'type']);
       expect(node, 'rules[0].appliesTo[0].type').to.not.be.undefined;
       let position = doc.positionAt(node!.offset);
-      await verifyCompletionsContain(doc, position, '"*"', '"dashboard"', '"lens"', '"schema"', '"workflow"', '"xmd"');
+      await verifyCompletionsContain(
+        doc,
+        position,
+        '"*"',
+        '"dashboard"',
+        '"discoveryStories"',
+        '"folder"',
+        '"lens"',
+        '"schema"',
+        '"workflow"',
+        '"xmd"'
+      );
 
       // find the actions.action in the first rule to see if the enum works
       node = findNodeAtLocation(tree, ['rules', 0, 'actions', 0, 'action']);
@@ -1297,11 +1394,11 @@ describe('TemplateEditorManager', () => {
       position = doc.positionAt(node!.offset);
       await verifyCompletionsContain(doc, position, '"add"', '"delete"', '"eval"', '"put"', '"replace"', '"set"');
 
-      node = tree;
-      // this should be at the opening '{'
-      position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
-      // make sure it has the fields from the schema that aren't in the document
-      await verifyCompletionsContain(doc, position, 'macros');
+      // find the returns in the first macro definition, and make sure the examples and snippet works
+      node = findNodeAtLocation(tree, ['macros', 0, 'definitions', 0, 'returns']);
+      expect(node, 'macros[0].definitions[0].returns').to.not.be.undefined;
+      position = doc.positionAt(node!.offset);
+      await verifyCompletionsContain(doc, position, '""', 'true', 'false', 'null', '[]', '{}');
     });
 
     it('json-schema defaultSnippets', async () => {

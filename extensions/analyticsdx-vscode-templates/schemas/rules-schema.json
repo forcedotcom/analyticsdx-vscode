@@ -75,10 +75,12 @@
                     {
                       "type": "string",
                       "default": "*",
-                      "enum": ["*", "dashboard", "lens", "schema", "workflow", "xmd"],
+                      "enum": ["*", "dashboard", "discoveryStories", "folder", "lens", "schema", "workflow", "xmd"],
                       "enumDescriptions": [
                         "Match all types of files.",
                         "Match dashboard files.",
+                        "Match extendedTypes discoveryStories files.",
+                        "Match the folderDefinition file.",
                         "Match lens files.",
                         "Match externalFile schema files.",
                         "Match dataflow files.",
@@ -245,8 +247,15 @@
                   }
                 },
                 "returns": {
-                  "type": "string",
-                  "description": "Optional value to return from the macro definition, can use ${...} expressions."
+                  "type": ["string", "boolean", "integer", "number", "object", "array", "null"],
+                  "description": "Optional value to return from the macro definition, can use ${...} expressions.",
+                  "examples": [true, false, [], {}, null],
+                  "defaultSnippets": [
+                    {
+                      "label": "\"\"",
+                      "body": "${0}"
+                    }
+                  ]
                 }
               },
               "defaultSnippets": [
@@ -277,18 +286,23 @@
   },
   "definitions": {
     "condition": {
-      "type": ["string", "null"],
       "oneOf": [
         {
+          "type": "string",
           "pattern": "^\\${.+}$",
-          "patternErrorMessage": "Not a valid ${...} expression."
+          "patternErrorMessage": "Not a valid ${...} expression nor \"true\" nor \"false\"."
         },
         {
+          "type": "string",
           "enum": ["true", "false"]
         },
         {
+          "type": "string",
           "pattern": "^(T[Rr][Uu][Ee]|F[Aa][Ll][Ss][Ee])$",
           "$comment": "case-insensitive enum workaround"
+        },
+        {
+          "type": "null"
         }
       ]
     },

@@ -1,0 +1,37 @@
+{
+  "macros": [
+    {
+      "namespace": "validate_different_return_types",
+      "definitions": [
+        {
+          "name": "string",
+          "returns": "a string value"
+        },
+        {
+          "name": "number",
+          "returns": 42.0
+        },
+        {
+          "name": "boolean",
+          "returns": true
+        },
+        {
+          "name": "array",
+          "returns": ["one", 2, 3.0]
+        },
+        {
+          "name": "object",
+          "returns": {
+            "one": 1,
+            "two": "zwei",
+            "tres": false
+          }
+        },
+        {
+          "name": "null",
+          "returns": null
+        }
+      ]
+    }
+  ]
+}

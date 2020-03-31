@@ -88,11 +88,11 @@ describe('jsoncUtils', () => {
       storedQueries: [],
       imageFiles: [],
       extendedTypes: {
-        visualforcePages: [
+        discoveryStories: [
           {
             label: 'Test Something',
-            name: 'DBVisualforcePage',
-            file: 'visualforce/vf.apexp'
+            name: 'Test_Something',
+            file: 'stories/story.json'
           }
         ]
       },
@@ -274,7 +274,7 @@ describe('jsoncUtils', () => {
     });
 
     it('finds named array node', () => {
-      const nodes = matchJsonNodesAtPattern(object, ['extendedTypes', 'visualforcePages']);
+      const nodes = matchJsonNodesAtPattern(object, ['extendedTypes', 'discoveryStories']);
       expect(nodes.length, 'nodes.length').to.be.equals(1);
       expect(nodes[0].type, 'node.type').to.be.equals('array');
       expect(nodes[0].children!.length, 'node.children.length').to.be.equals(1);

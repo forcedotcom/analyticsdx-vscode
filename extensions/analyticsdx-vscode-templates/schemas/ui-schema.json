@@ -42,13 +42,13 @@
           },
           "vfPage": {
             "type": "object",
-            "description": "Specifies that a custom VisualForce page should be used for this set of variables. Make sure the Visualforce page can be accessed by users in the organization with the Manage Analytics Templated Apps user permission.",
+            "description": "Specifies that a custom Visualforce page should be used for this set of variables. Make sure the Visualforce page can be accessed by users in the organization with the Manage Analytics Templated Apps user permission.",
             "required": ["name"],
             "additionalProperties": false,
             "properties": {
               "name": {
                 "type": "string",
-                "description": "The name of VisualForce class to use.",
+                "description": "The name of Visualforce class to use.",
                 "$comment": "Empty or whitespace-only string is technically valid in the server (to mean no vfPage), but we should warn on it.",
                 "minLength": 1,
                 "pattern": "[^ \t\r\n\b\f]",
@@ -56,7 +56,7 @@
               },
               "namespace": {
                 "type": "string",
-                "description": "The namespace for the VisualForce class."
+                "description": "The namespace for the Visualforce class."
               }
             },
             "defaultSnippets": [

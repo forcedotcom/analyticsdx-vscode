@@ -84,7 +84,7 @@
     }
   ],
   "extendedTypes": {
-    "stories": [
+    "discoveryStories": [
       {
         "file": "name.json",
         "label": "name",

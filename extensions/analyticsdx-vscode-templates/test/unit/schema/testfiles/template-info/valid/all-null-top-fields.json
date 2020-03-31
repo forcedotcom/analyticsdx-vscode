@@ -3,6 +3,7 @@
   "templateType": null,
   "label": "AppForTemplate",
   "name": "AppForTemplate",
+  "namespace": null,
   "description": null,
   "assetVersion": 47.0,
   "variableDefinition": null,

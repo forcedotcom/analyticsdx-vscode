@@ -82,14 +82,7 @@
     }
   ],
   "extendedTypes": {
-    "type": [
-      {
-        "file": "name.json",
-        "label": "name",
-        "name": "name",
-        "error": "This should trigger a warning"
-      }
-    ]
+    "type": []
   },
   "icons": {
     "error": "This should trigger a warning",

@@ -2,6 +2,7 @@
   "templateType": "app",
   "label": "AppForTemplate",
   "name": "AppForTemplate",
+  "namespace": "some_namespace",
   "description": "Now with a description!!",
   "assetVersion": 47.0,
   "variableDefinition": "variables.json",
@@ -107,11 +108,11 @@
     }
   ],
   "extendedTypes": {
-    "visualforcePages": [
+    "discoveryStories": [
       {
-        "label": "Test Something",
-        "name": "DBVisualforcePage",
-        "file": "visualforce/vf.apexp",
+        "label": "Some Story",
+        "name": "Some_Story",
+        "file": "stories/story.json",
         "condition": "${Variables.Has_Product == 'Yes'}",
         "overwriteOnUpgrade": "Never"
       }
