@@ -37,5 +37,6 @@ shell.exec('npm run vscode:publish');
 // make the commit and tag and push
 shell.exec('git add "**/package.json" lerna.json SHA256.md');
 shell.exec(`git commit -m "Updates for Release ${nextVersion}"`);
+shell.exec('git push');
 shell.exec(`git tag -a ${tagName} -m "Release ${nextVersion}"`);
 shell.exec(`git push origin ${tagName}`);
