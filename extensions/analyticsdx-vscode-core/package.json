@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.1.0",
   "preview": true,
   "publisher": "salesforce",
   "name": "analyticsdx-vscode-core",
@@ -25,12 +25,12 @@
     "Other"
   ],
   "dependencies": {
-    "@salesforce/salesforcedx-utils-vscode": "46.3.0",
+    "@salesforce/salesforcedx-utils-vscode": "0.1.0",
     "tmp": "0.1.0",
     "vscode-extension-telemetry": "0.0.17"
   },
   "devDependencies": {
-    "@salesforce/analyticsdx-test-utils-vscode": "0.0.1",
+    "@salesforce/analyticsdx-test-utils-vscode": "0.1.0",
     "@types/chai": "^4.0.0",
     "@types/mocha": "7.0.1",
     "@types/node": "12.12.18",
