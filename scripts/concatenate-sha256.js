@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// This is designed to run from the top-level directory after a toplevel npm run vscode:sha256, which should be run
+// after the vsix packages have been created.
 const shell = require('shelljs');
 
 const packageVersion = JSON.parse(shell.cat('./lerna.json')).version;
@@ -18,7 +20,7 @@ make sure that their SHA values match the values in the list below.
 
 2. From a terminal, run:
 
-shasum -a 256 <location_of_the_downloaded_file>
+    \`shasum -a 256 <location_of_the_downloaded_file>\`
 
 3. Confirm that the SHA in your output matches the value in this list of SHAs.
 
@@ -35,6 +37,13 @@ VSIX.
 6. Install the verified VSIX file.
 `;
 
-const sha256 = shell.cat('./SHA256');
+// put the output into a markdown list
+const sha256 =
+  '   - ' +
+  shell
+    .cat('./SHA256')
+    .replace(/(\r?\n)/g, '$1   - ')
+    .replace(/   - (\r?\n)?$/, '');
+
 const content = HEADER + sha256 + FOOTER;
 shell.echo(content).to('./SHA256.md');

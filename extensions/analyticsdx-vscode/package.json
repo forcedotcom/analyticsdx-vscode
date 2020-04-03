@@ -28,7 +28,7 @@
     "clean": "shx rm -f analyticsdx-vscode-*.vsix",
     "vscode:prepublish": "npm prune --production",
     "vscode:package": "vsce package",
-    "vscode:sha256": "node ../../scripts/generate-sha256.js >> ../../SHA256",
+    "vscode:sha256": "node ../../scripts/generate-vsix-sha256.js >> ../../SHA256",
     "vscode:publish": "node ../../scripts/publish-vsix.js"
   },
   "categories": [

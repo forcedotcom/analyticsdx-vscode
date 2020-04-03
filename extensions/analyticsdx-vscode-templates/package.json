@@ -61,7 +61,7 @@
   "scripts": {
     "vscode:prepublish": "npm prune --production",
     "vscode:package": "vsce package",
-    "vscode:sha256": "node ../../scripts/generate-sha256.js >> ../../SHA256",
+    "vscode:sha256": "node ../../scripts/generate-vsix-sha256.js >> ../../SHA256",
     "vscode:publish": "node ../../scripts/publish-vsix.js",
     "compile": "tsc -p ./ && shx cp -R test/unit/schema/testfiles out/test/unit/schema",
     "lint": "tslint --project . --exclude '**/*.json'",

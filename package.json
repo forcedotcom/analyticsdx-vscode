@@ -33,15 +33,19 @@
     "test:unit": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:unit --if-present",
     "test:vscode-integration": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:vscode-integration --if-present",
     "test:vscode-insiders-integration": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:vscode-insiders-integration --if-present",
-    "vscode:package": "lerna exec --scope @salesforce/salesforcedx-utils-vscode -- npm prune --production && lerna run vscode:package --concurrency 1 && node scripts/reformat-with-prettier",
-    "vscode:sha256": "lerna run vscode:sha256 --concurrency 1",
-    "vscode:publish": "lerna run vscode:publish --concurrency 1",
     "watch": "lerna run --parallel watch",
     "eslint-check": "eslint --print-config .eslintrc.json | eslint-config-prettier-check",
     "reformat": "node scripts/reformat-with-prettier.js",
     "snyk:test": "lerna exec --bail=false --ignore analyticsdx-vscode -- snyk test --severity-threshold=medium --show-vulnerable-paths=false",
     "snyk:monitor": "lerna exec --bail=false --ignore analyticsdx-vscode -- snyk monitor --severity-threshold=medium --show-vulnerable-paths=false --org=vazexqi",
-    "aggregateJUnit": "node scripts/aggregate-junit-xml.js"
+    "aggregateJUnit": "node scripts/aggregate-junit-xml.js",
+    "vscode:package": "lerna exec --scope @salesforce/salesforcedx-utils-vscode -- npm prune --production && lerna run vscode:package --concurrency 1 && node scripts/reformat-with-prettier",
+    "vscode:sha256": "lerna run vscode:sha256 --concurrency 1",
+    "vscode:publish": "lerna run vscode:publish --concurrency 1",
+    "update-versions": "node scripts/update-versions.js",
+    "build-all-vsixs": "node scripts/build-all-vsixs.js",
+    "update-sha256": "node scripts/update-sha256.js",
+    "publish-all-vsixs": "node scripts/publish-all-vsixs.js"
   },
   "repository": {
     "type": "git",
