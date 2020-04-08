@@ -60,10 +60,10 @@ If you would like to suggest a feature, create a [feature request on GitHub](htt
 
 The Salesforce Analytics Extension Pack extension installs these extensions:
 
-- [Salesforce Analytics DX CLI Integration](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-core)  
-  This extension (`analyticsdx-vscode-core`) interacts with Analytics Plugin for Salesforce CLI to provide core functionality.
-- [Salesforce Analytics DX - App Templates](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-templates)  
-  This extension (`analyticsdx-vscode-templates`) provides editing features for Salesforce analytics application template source files.
+- [Salesforce Analytics CLI Integration](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-core)  
+  This extension (`salesforce.analyticsdx-vscode-core`) interacts with the Analytics Plugin for Salesforce CLI to provide core functionality.
+- [Salesforce Analytics - App Templates](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-templates)  
+  This extension (`salesforce.analyticsdx-vscode-templates`) provides editing features for Salesforce analytics application template source files.
 
 <!--
 

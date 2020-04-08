@@ -4,6 +4,8 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+
+import * as fs from 'fs';
 import { commands, ExtensionContext, workspace } from 'vscode';
 import { telemetryService } from './telemetry';
 
@@ -24,8 +26,20 @@ function sendTelemetryCommand(eventName: string, extensionName: string, properti
   }
 }
 
+let displayName = 'Salesforce Analytics CLI Integration';
+let version = '<unknown>';
+
 export function activate(context: ExtensionContext) {
   const extensionHRStart = process.hrtime();
+
+  const packageJson = context.asAbsolutePath('package.json');
+  try {
+    const json = JSON.parse(fs.readFileSync(packageJson).toString());
+    displayName = json.displayName || displayName;
+    version = json.version || version;
+  } catch (e) {
+    console.warn(`Unable to read ${packageJson}`, e);
+  }
 
   // if we have no workspace folders, exit
   if (!workspace.workspaceFolders) {
@@ -47,12 +61,12 @@ export function activate(context: ExtensionContext) {
     commands.registerCommand('analyticsdx.telemetry.send', sendTelemetryCommand)
   );
 
-  console.log('Analytics DX CLI Extension Activated');
+  console.log(`${displayName} v${version} extension activated`);
   // Notify telemetry that our extension is now active
   telemetryService.sendExtensionActivationEvent(extensionHRStart).catch();
 }
 
 export function deactivate() {
-  console.log('Analytics DX CLI Extension Dectivated');
+  console.log(`${displayName} v${version} extension dectivated`);
   telemetryService.sendExtensionDeactivationEvent().catch();
 }

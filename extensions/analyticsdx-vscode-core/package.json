@@ -3,7 +3,7 @@
   "preview": true,
   "publisher": "salesforce",
   "name": "analyticsdx-vscode-core",
-  "displayName": "Salesforce Analytics DX CLI Integration",
+  "displayName": "Salesforce Analytics CLI Integration",
   "description": "Provides integration with the Salesforce Analytics CLI",
   "qna": "https://github.com/forcedotcom/analyticsdx-vscode/issues",
   "bugs": {

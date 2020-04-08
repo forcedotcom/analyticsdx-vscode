@@ -83,7 +83,7 @@ If you make a new extension, you will need to edit `.vscode/launch.json`, e.g.:
 
 ```json
 {
-  "name": "Launch Salesforce Analytics DX VS Code Core Vscode-Integration Tests",
+  "name": "Launch Salesforce <extension-name> Vscode-Integration Tests",
   "type": "extensionHost",
   "request": "launch",
   "runtimeExecutable": "${execPath}",
