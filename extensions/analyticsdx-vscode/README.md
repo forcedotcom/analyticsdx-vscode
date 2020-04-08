@@ -5,8 +5,8 @@ isn't generally available unless or until Salesforce announces its general avail
 releases or public statements. We cannot guarantee general availability within any particular time frame or at all.
 Make your purchase decisions only on the basis of generally available products and features.**
 
-This extension pack includes tools for developing on the Salesforce Analytics platform. These tools provide features
-for setting up analytics projects and working with analytics application templates.
+This extension pack includes tools for developing on the Salesforce Analytics platform, including setting up analytics
+projects and working with analytics application templates.
 
 <!-- TODO: screenshot -->
 

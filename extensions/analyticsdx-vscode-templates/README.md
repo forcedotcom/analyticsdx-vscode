@@ -6,7 +6,7 @@ releases or public statements. We cannot guarantee general availability within a
 Make your purchase decisions only on the basis of generally available products and features.**
 
 This extension provides editing features for Salesforce analytics application template source files, including
-validation and code-completion suggestsions.
+validation, hover text, code-completion suggestions, quick fixes, and code navigation.
 
 **Do not install this extension directly. Install the complete [Salesforce Analytics Extension Pack](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode) instead.**
 
