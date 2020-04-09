@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { telemetryService } from './telemetry';
 import { TemplateEditingManager } from './templateEditing';
@@ -12,6 +13,8 @@ import { TemplateLinterManager } from './templateLinter';
 import { Logger } from './util/logger';
 import { isRunningInDevMode, uriDirname } from './util/vscodeUtils';
 
+let displayName = 'Salesforce Analytics - App Templates';
+let version = '<unknown';
 export type ExtensionType =
   | Readonly<{
       templateEditingManager: TemplateEditingManager;
@@ -29,9 +32,18 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
     return;
   }
 
+  const packageJson = context.asAbsolutePath('package.json');
+  try {
+    const json = JSON.parse(fs.readFileSync(packageJson).toString());
+    displayName = json.displayName || displayName;
+    version = json.version || version;
+  } catch (e) {
+    console.warn(`Unable to read ${packageJson}`, e);
+  }
+
   const config = vscode.workspace.getConfiguration('adx-templates');
   const output = config.get<boolean>('logging.enabled', false)
-    ? vscode.window.createOutputChannel('Analytics DX Templates')
+    ? vscode.window.createOutputChannel('Analytics - App Templates')
     : undefined;
   if (output) {
     context.subscriptions.push(output);
@@ -53,7 +65,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
   context.subscriptions.push(templateLinterManager.start());
 
   logger.log(
-    'Analytics DX Templates Extension Activated on ' +
+    `${displayName} v${version} extension activated on ` +
       vscode.workspace.workspaceFolders.map(f => f.uri.toString()).join(', ')
   );
   // Notify telemetry that our extension is now active
@@ -67,6 +79,6 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
 }
 
 export function deactivate() {
-  console.log('Analytics DX Templates Extension Dectivated');
+  console.log(`${displayName} v${version} extension dectivated`);
   telemetryService.sendExtensionDeactivationEvent().catch();
 }

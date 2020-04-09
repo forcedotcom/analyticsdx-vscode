@@ -3,7 +3,7 @@
   "preview": true,
   "publisher": "salesforce",
   "name": "analyticsdx-vscode-templates",
-  "displayName": "Salesforce Analytics DX - App Templates",
+  "displayName": "Salesforce Analytics - App Templates",
   "description": "Provides support for editing analytics application template files",
   "qna": "https://github.com/forcedotcom/analyticsdx-vscode/issues",
   "bugs": {
@@ -103,7 +103,7 @@
     ],
     "configuration": {
       "id": "adx-templates",
-      "title": "Salesforce Analytics DX Templates",
+      "title": "Salesforce Analytics - App Templates",
       "properties": {
         "adx-templates.logging.enabled": {
           "type": "boolean",
