@@ -137,6 +137,19 @@
           "when": "sfdx:project_opened"
         }
       ]
+    },
+    "configuration": {
+      "id": "adx-core",
+      "title": "Salesforce Analytics",
+      "properties": {
+        "adx-core.studio.path": {
+          "type": "string",
+          "description": "Specify the relative uri path to use when opening Analytics Studio",
+          "default": "/wave/wave.app",
+          "pattern": "^[^\\s].*",
+          "patternErrorMessage": "Value must not be empty and must not start with whitespace."
+        }
+      }
     }
   }
 }

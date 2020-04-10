@@ -14,8 +14,3 @@ export const ICONS = Object.freeze({
   App: '$(home)',
   Template: '$(versions)'
 });
-
-// paths to things in salesforce ui
-export const URI_PATHS = Object.freeze({
-  Studio: '/analytics/wave/wave.apexp'
-});

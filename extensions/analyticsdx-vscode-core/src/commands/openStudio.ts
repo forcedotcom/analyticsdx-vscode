@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { URI_PATHS } from '../constants';
+import * as vscode from 'vscode';
 import { nls } from '../messages';
 import {
   emptyParametersGatherer,
@@ -16,6 +16,15 @@ import {
 } from './commands';
 import { AppGatherer, AppMetadata } from './gatherers/appGatherer';
 
+export function baseStudioPath() {
+  return (
+    vscode.workspace
+      .getConfiguration()
+      .get<string>('adx-core.studio.path')
+      ?.trimLeft() || '/wave/wave.app'
+  );
+}
+
 // REVIEWME: just get the url from sfdx and open in a vscode WebViewPanel?
 class OpenStudioExecutor<T> extends SfdxCommandletExecutor<T> {
   constructor(private readonly hashgen?: (t: T) => string | undefined) {
@@ -23,9 +32,11 @@ class OpenStudioExecutor<T> extends SfdxCommandletExecutor<T> {
   }
 
   public build(data: T) {
-    let path = URI_PATHS.Studio;
+    let path = baseStudioPath();
     const hash = this.hashgen ? this.hashgen(data) : undefined;
     if (hash) {
+      // if they put a #hash in the path in the config, chop that off to put this hash on
+      path = path.replace(/#.*$/, '');
       path += '#' + hash;
     }
     return new SfdxCommandBuilder()
@@ -51,9 +62,7 @@ export async function openStudio() {
 const openAppCommandlet = new SfdxCommandlet(
   sfdxWorkspaceChecker,
   new AppGatherer(),
-  new OpenStudioExecutor<AppMetadata>(
-    app => 'application/' + encodeURIComponent(app.folderid) + '/edit'
-  )
+  new OpenStudioExecutor<AppMetadata>(app => 'application/' + encodeURIComponent(app.folderid) + '/edit')
 );
 
 export async function openAppInStudio() {
