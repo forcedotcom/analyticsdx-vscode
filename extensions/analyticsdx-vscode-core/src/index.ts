@@ -15,6 +15,7 @@ import {
   deleteApp,
   deleteTemplate,
   openAppInStudio,
+  openDataManager,
   openStudio,
   updateTemplate
 } from './commands';
@@ -53,6 +54,7 @@ export function activate(context: ExtensionContext) {
     commands.registerCommand('analyticsdx.app.delete', deleteApp),
     commands.registerCommand('analyticsdx.studio.open', openStudio),
     commands.registerCommand('analyticsdx.studio.open.app', openAppInStudio),
+    commands.registerCommand('analyticsdx.studio.open.dataManager', openDataManager),
     commands.registerCommand('analyticsdx.template.create', createTemplate),
     commands.registerCommand('analyticsdx.template.delete', deleteTemplate),
     commands.registerCommand('analyticsdx.template.update', updateTemplate),

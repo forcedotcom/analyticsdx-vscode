@@ -59,6 +59,16 @@ export async function openStudio() {
   await openStudioCommandlet.run();
 }
 
+const openDataManagerCommandlet = new SfdxCommandlet(
+  sfdxWorkspaceChecker,
+  emptyParametersGatherer,
+  new OpenStudioExecutor(() => 'dataManager')
+);
+
+export async function openDataManager() {
+  await openDataManagerCommandlet.run();
+}
+
 const openAppCommandlet = new SfdxCommandlet(
   sfdxWorkspaceChecker,
   new AppGatherer(),

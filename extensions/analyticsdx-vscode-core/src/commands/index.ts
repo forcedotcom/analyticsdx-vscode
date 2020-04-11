@@ -5,9 +5,9 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-export { createBlankApp } from './createApp';
-export { createTemplate } from './createTemplate';
-export { deleteApp } from './deleteApp';
-export { deleteTemplate } from './deleteTemplate';
-export { openAppInStudio, openStudio } from './openStudio';
-export { updateTemplate } from './updateTemplate';
+export * from './createApp';
+export * from './createTemplate';
+export * from './deleteApp';
+export * from './deleteTemplate';
+export * from './openStudio';
+export * from './updateTemplate';

@@ -94,6 +94,10 @@
         "title": "%analyticsdx_studio_open_app_label%"
       },
       {
+        "command": "analyticsdx.studio.open.dataManager",
+        "title": "%analyticsdx_studio_open_dataManager_label%"
+      },
+      {
         "command": "analyticsdx.template.create",
         "title": "%analyticsdx_template_create_label%"
       },
@@ -122,6 +126,10 @@
         },
         {
           "command": "analyticsdx.studio.open.app",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.studio.open.dataManager",
           "when": "sfdx:project_opened"
         },
         {
