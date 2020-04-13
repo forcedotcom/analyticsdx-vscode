@@ -689,16 +689,16 @@ describe('TemplateLinterManager', () => {
         "Cannot find variable 'badvar', did you mean 'var1'?"
       );
       expect(diagnostics[0].code, 'diagnostics[0].message').to.equal(ERRORS.UI_PAGE_UNKNOWN_VARIABLE);
-      expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name)').to.equal('badvar');
-      expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match)').to.equal('var1');
+      expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name').to.equal('badvar');
+      expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match').to.equal('var1');
 
       expect(diagnostics[1], 'diagnostics[1]').to.be.not.undefined;
       expect(diagnostics[1].message, 'diagnostics[1].message').to.equal(
         "Cannot find variable 'var2', did you mean 'var1'?"
       );
       expect(diagnostics[1].code, 'diagnostics[1].message').to.equal(ERRORS.UI_PAGE_UNKNOWN_VARIABLE);
-      expect(argsFrom(diagnostics[1])?.name, 'diagnostics[1].args.name)').to.equal('var2');
-      expect(argsFrom(diagnostics[1])?.match, 'diagnostics[1].args.name)').to.equal('var1');
+      expect(argsFrom(diagnostics[1])?.name, 'diagnostics[1].args.name').to.equal('var2');
+      expect(argsFrom(diagnostics[1])?.match, 'diagnostics[1].args.name').to.equal('var1');
 
       // now, change the 'badvar' ref to 'var1' in ui.json
       uiJson.pages[0].variables[0].name = 'var1';
@@ -707,7 +707,7 @@ describe('TemplateLinterManager', () => {
       diagnostics = (
         await waitForDiagnostics(
           uiEditor.document.uri,
-          d => d && d.length !== diagnostics.length,
+          d => d && d.length === 1,
           'Variable warnings after editing ui.json'
         )
       ).sort(sortDiagnostics);
@@ -720,8 +720,8 @@ describe('TemplateLinterManager', () => {
         "Cannot find variable 'var2', did you mean 'var1'?"
       );
       expect(diagnostics[0].code, 'diagnostics[0].message').to.equal(ERRORS.UI_PAGE_UNKNOWN_VARIABLE);
-      expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name)').to.equal('var2');
-      expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match)').to.equal('var1');
+      expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name').to.equal('var2');
+      expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match').to.equal('var1');
 
       // now, add the 'var2' variable to variables.json
       variablesJson.var2 = {
