@@ -27,7 +27,10 @@ export function baseStudioPath() {
 
 // REVIEWME: just get the url from sfdx and open in a vscode WebViewPanel?
 class OpenStudioExecutor<T> extends SfdxCommandletExecutor<T> {
-  constructor(private readonly hashgen?: (t: T) => string | undefined) {
+  constructor(
+    private readonly logName = 'analytics_open_studio',
+    private readonly hashgen?: (t: T) => string | undefined
+  ) {
     super();
   }
 
@@ -44,7 +47,7 @@ class OpenStudioExecutor<T> extends SfdxCommandletExecutor<T> {
       .withArg('force:org:open')
       .withArg('-p')
       .withArg(path)
-      .withLogName('analytics_open_studio')
+      .withLogName(this.logName)
       .build();
   }
 }
@@ -62,7 +65,7 @@ export async function openStudio() {
 const openDataManagerCommandlet = new SfdxCommandlet(
   sfdxWorkspaceChecker,
   emptyParametersGatherer,
-  new OpenStudioExecutor(() => 'dataManager')
+  new OpenStudioExecutor('analytics_open_dataManager', () => 'dataManager')
 );
 
 export async function openDataManager() {
@@ -72,7 +75,10 @@ export async function openDataManager() {
 const openAppCommandlet = new SfdxCommandlet(
   sfdxWorkspaceChecker,
   new AppGatherer(),
-  new OpenStudioExecutor<AppMetadata>(app => 'application/' + encodeURIComponent(app.folderid) + '/edit')
+  new OpenStudioExecutor<AppMetadata>(
+    'analytics_open_app_in_studio',
+    app => 'application/' + encodeURIComponent(app.folderid) + '/edit'
+  )
 );
 
 export async function openAppInStudio() {
