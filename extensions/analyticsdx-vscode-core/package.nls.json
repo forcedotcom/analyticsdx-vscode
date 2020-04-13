@@ -4,6 +4,7 @@
 
   "analyticsdx_studio_open_label": "SFDX: Open Analytics Studio",
   "analyticsdx_studio_open_app_label": "SFDX: Open App in Analytics Studio",
+  "analyticsdx_studio_open_dataManager_label": "SFDX: Open Analytics Data Manager",
 
   "analyticsdx_template_create_label": "SFDX: Create Analytics Template",
   "analyticsdx_template_delete_label": "SFDX: Delete Analytics Template",

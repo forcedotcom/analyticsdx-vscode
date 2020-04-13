@@ -94,6 +94,10 @@
         "title": "%analyticsdx_studio_open_app_label%"
       },
       {
+        "command": "analyticsdx.studio.open.dataManager",
+        "title": "%analyticsdx_studio_open_dataManager_label%"
+      },
+      {
         "command": "analyticsdx.template.create",
         "title": "%analyticsdx_template_create_label%"
       },
@@ -125,6 +129,10 @@
           "when": "sfdx:project_opened"
         },
         {
+          "command": "analyticsdx.studio.open.dataManager",
+          "when": "sfdx:project_opened"
+        },
+        {
           "command": "analyticsdx.template.create",
           "when": "sfdx:project_opened"
         },
@@ -137,6 +145,19 @@
           "when": "sfdx:project_opened"
         }
       ]
+    },
+    "configuration": {
+      "id": "adx-core",
+      "title": "Salesforce Analytics",
+      "properties": {
+        "adx-core.studio.path": {
+          "type": "string",
+          "description": "Specify the relative uri path to use when opening Analytics Studio",
+          "default": "/wave/wave.app",
+          "pattern": "^[^\\s].*",
+          "patternErrorMessage": "Value must not be empty and must not start with whitespace."
+        }
+      }
     }
   }
 }
