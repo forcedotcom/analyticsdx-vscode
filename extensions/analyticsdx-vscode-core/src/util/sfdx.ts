@@ -92,7 +92,7 @@ class InstallAdxExecutor extends SfdxCommandletExecutor<void> {
 // this should be the same as in package.json and test-assets/sfdx-simple/.vscode/settings.json
 // Note: since the display name in config UI is based on the config name (with no way override), it has to be like
 // this to get the 'CLI' part capitalized to match the description.
-const checkPluginPrefName = 'adx-core.CLI.checkForPlugin';
+const checkPluginPrefName = 'analyticsdx-vscode-core.CLI.checkForPlugin';
 
 // This will show the warning popup, and prompt to either install the plugin or disable the check (or you can close it)
 const installAdxCommandlet = new SfdxCommandlet(

@@ -14,9 +14,9 @@
     "editor.detectIndentation": false
   },
   // turn this check off for tests for now
-  "adx-core.CLI.checkForPlugin": false,
+  "analyticsdx-vscode-core.CLI.checkForPlugin": false,
   // configure logging for when tests are running
-  "adx-templates.logging.enabled": true,
-  "adx-templates.logging.console": true,
-  "adx-templates.logging.prefix": "Tests"
+  "analyticsdx-vscode-templates.logging.enabled": true,
+  "analyticsdx-vscode-templates.logging.console": true,
+  "analyticsdx-vscode-templates.logging.prefix": "Tests"
 }

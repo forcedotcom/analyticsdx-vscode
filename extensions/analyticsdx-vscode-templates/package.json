@@ -102,10 +102,9 @@
       }
     ],
     "configuration": {
-      "id": "adx-templates",
       "title": "Salesforce Analytics - App Templates",
       "properties": {
-        "adx-templates.logging.enabled": {
+        "analyticsdx-vscode-templates.logging.enabled": {
           "type": "boolean",
           "description": "Specifies whether the extension should log to an Output window. This can be helpful when reporting bugs. Requires a restart after changing.",
           "default": false

@@ -150,17 +150,16 @@
       ]
     },
     "configuration": {
-      "id": "adx-core",
       "title": "Salesforce Analytics",
       "properties": {
-        "adx-core.studio.path": {
+        "analyticsdx-vscode-core.studio.path": {
           "type": "string",
           "description": "%config_studio_path_desc%",
           "default": "/wave/wave.app",
           "pattern": "^[^\\s].*",
           "patternErrorMessage": "%config_studio_path_error%"
         },
-        "adx-core.CLI.checkForPlugin": {
+        "analyticsdx-vscode-core.CLI.checkForPlugin": {
           "type": "boolean",
           "description": "%config_check_sfdx_plugin_desc%",
           "default": true
