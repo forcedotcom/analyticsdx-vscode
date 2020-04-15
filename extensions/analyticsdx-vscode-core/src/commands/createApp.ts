@@ -5,7 +5,6 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { CommandExecution } from '@salesforce/salesforcedx-utils-vscode/out/src/cli';
 import * as fs from 'fs';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
@@ -13,6 +12,7 @@ import * as vscode from 'vscode';
 import { nls } from '../messages';
 import {
   CancelResponse,
+  CommandExecution,
   ContinueResponse,
   notificationService,
   ParametersGatherer,
@@ -34,11 +34,7 @@ class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
     cancellationTokenSource: vscode.CancellationTokenSource,
     cancellationToken: vscode.CancellationToken
   ) {
-    super.attachExecution(
-      execution,
-      cancellationTokenSource,
-      cancellationToken
-    );
+    super.attachExecution(execution, cancellationTokenSource, cancellationToken);
     // wait until the cli call is finished, and try to delete the tmp file
     execution.processExitSubject.subscribe(() => {
       // just let it run async, and we don't really care it fails -- node
@@ -58,11 +54,7 @@ class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
       // if that failed, show an error message to user
       if (err) {
         notificationService.showErrorMessage(
-          nls.localize(
-            'create_blank_app_cmd_tmp_file_error_text',
-            this.filepath,
-            err.message || err
-          )
+          nls.localize('create_blank_app_cmd_tmp_file_error_text', this.filepath, err.message || err)
         );
       } else {
         // success, run the cli
@@ -111,10 +103,6 @@ const mktempname: () => Promise<string> = promisify(callback => {
 });
 export async function createBlankApp() {
   const filepath = await mktempname();
-  const commandlet = new SfdxCommandlet(
-    sfdxWorkspaceChecker,
-    appNameGatherer,
-    new CreateBlankAppExecutor(filepath)
-  );
+  const commandlet = new SfdxCommandlet(sfdxWorkspaceChecker, appNameGatherer, new CreateBlankAppExecutor(filepath));
   await commandlet.run();
 }

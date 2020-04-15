@@ -4,7 +4,11 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+import * as vscode from 'vscode';
+import { ICONS } from '../../constants';
+import { nls } from '../../messages';
 import {
+  CancelResponse,
   ContinueResponse,
   emptyParametersGatherer,
   notificationService,
@@ -14,11 +18,6 @@ import {
   SfdxCommandletWithOutput,
   sfdxWorkspaceChecker
 } from '../commands';
-
-import { CancelResponse } from '@salesforce/salesforcedx-utils-vscode/out/src/types';
-import * as vscode from 'vscode';
-import { ICONS } from '../../constants';
-import { nls } from '../../messages';
 
 class TemplateListExecutor extends SfdxCommandletExecutorWithOutput<{}> {
   constructor(private readonly description: string) {
@@ -61,20 +60,12 @@ class TemplateQuickPickItem implements vscode.QuickPickItem {
 export class TemplateGatherer implements ParametersGatherer<TemplateMetadata> {
   constructor(
     private readonly filter?: (template: TemplateMetadata) => boolean,
-    private readonly noTemplatesMesg = nls.localize(
-      'template_gatherer_def_no_templates_message'
-    ),
-    private readonly placeholderMesg = nls.localize(
-      'template_gatherer_def_placeholder_message'
-    ),
-    private readonly fetchMesg = nls.localize(
-      'template_gatherer_def_fetch_message'
-    )
+    private readonly noTemplatesMesg = nls.localize('template_gatherer_def_no_templates_message'),
+    private readonly placeholderMesg = nls.localize('template_gatherer_def_placeholder_message'),
+    private readonly fetchMesg = nls.localize('template_gatherer_def_fetch_message')
   ) {}
 
-  public async gather(): Promise<
-    CancelResponse | ContinueResponse<TemplateMetadata>
-  > {
+  public async gather(): Promise<CancelResponse | ContinueResponse<TemplateMetadata>> {
     const templateListCommandlet = new SfdxCommandletWithOutput(
       sfdxWorkspaceChecker,
       emptyParametersGatherer,
@@ -97,8 +88,6 @@ export class TemplateGatherer implements ParametersGatherer<TemplateMetadata> {
       matchOnDescription: true,
       placeHolder: this.placeholderMesg
     });
-    return selection
-      ? { type: 'CONTINUE', data: selection.template }
-      : { type: 'CANCEL' };
+    return selection ? { type: 'CONTINUE', data: selection.template } : { type: 'CANCEL' };
   }
 }

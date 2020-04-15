@@ -1,4 +1,8 @@
 {
+  "config_studio_path_desc": "Specify the relative uri path to use when opening Analytics Studio",
+  "config_studio_path_error": "Value must not be empty and must not start with whitespace.",
+  "config_check_sfdx_plugin_desc": "Check for the Analytics Salesforce CLI plugin on startup",
+
   "analyticsdx_app_create_blank_label": "SFDX: Create Blank Analytics App",
   "analyticsdx_app_delete_label": "SFDX: Delete Analytics App",
 

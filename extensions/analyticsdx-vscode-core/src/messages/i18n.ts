@@ -24,10 +24,8 @@ export const messages = Object.freeze({
 
   // commands/createTemplate.ts
   create_template_cmd_message: 'Creating template from analytics app...',
-  create_template_cmd_no_templates_message:
-    'No un-templatized apps available in org.',
-  create_template_cmd_placeholder_message:
-    'Select an analytics app to create the template from...',
+  create_template_cmd_no_templates_message: 'No un-templatized apps available in org.',
+  create_template_cmd_placeholder_message: 'Select an analytics app to create the template from...',
 
   // commands/deleteApp.ts
   delete_app_cmd_message: 'Deleting analytics app...',
@@ -38,21 +36,16 @@ export const messages = Object.freeze({
   // commands/deleteTemplate.ts
   delete_template_cmd_message: 'Deleting analytics template...',
   delete_template_cmd_confirm_text: 'Delete the "%s" template?',
-  delete_template_cmd_no_templates_message:
-    'No templates available in org to delete',
-  delete_template_cmd_placeholder_message:
-    'Select an analytics app to delete...',
+  delete_template_cmd_no_templates_message: 'No templates available in org to delete',
+  delete_template_cmd_placeholder_message: 'Select an analytics app to delete...',
 
   // commands/openStudio.js
   open_studio_cmd_message: 'Opening Analytics Studio...',
 
   // commands/updateTemplate.ts
-  update_template_cmd_message:
-    'Updating analytics template from associated app...',
-  update_template_cmd_no_apps_message:
-    'No templates associated to an app available in org.',
-  update_template_cmd_placeholder_message:
-    'Select an analytics template to update from its app...',
+  update_template_cmd_message: 'Updating analytics template from associated app...',
+  update_template_cmd_no_apps_message: 'No templates associated to an app available in org.',
+  update_template_cmd_placeholder_message: 'Select an analytics template to update from its app...',
 
   // commands/gatherers/appGatherer.ts
   app_gatherer_def_no_apps_message: 'No matching apps available in org.',
@@ -60,11 +53,20 @@ export const messages = Object.freeze({
   app_gatherer_def_fetch_message: 'Fetching analytics apps...',
 
   // commands/gatherers/templateGatherer.ts
-  template_gatherer_def_no_templates_message:
-    'No matching templates available in org.',
-  template_gatherer_def_placeholder_message:
-    'Selected an analytics template...',
+  template_gatherer_def_no_templates_message: 'No matching templates available in org.',
+  template_gatherer_def_placeholder_message: 'Selected an analytics template...',
   template_gatherer_def_fetch_message: 'Fetching analytics templates...',
+
+  // utils/sfdx.ts
+  missing_analytics_sfdx_plugin_message:
+    'Analytics Salesforce CLI plugin is not installed. Some operations will not work without it.',
+  outofdate_analytics_sfdx_plugin_message:
+    'Your version of the Analytics Salesforce CLI plugin is less than the minimum required (%s). Some operations will not work.',
+  disable_analytics_sfdx_check_button: 'Disable Check',
+  install_analytics_sfdx_plugin_button: 'Install Plugin',
+  update_sfdx_plugins_button: 'Update Plugins',
+  install_analytics_sfdx_plugin_message: 'Installing Analytics Salesforce CLI plugin...',
+  update_sfdx_plugins_message: 'Updating Salesforce CLI plugins...',
 
   ok: 'Ok'
 });
