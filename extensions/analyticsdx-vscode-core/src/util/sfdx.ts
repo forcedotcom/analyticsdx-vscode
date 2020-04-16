@@ -12,6 +12,7 @@ import {
   CliCommandExecutor,
   CommandOutput,
   CommandResult,
+  ContinueResponse,
   emptyParametersGatherer,
   PreconditionChecker,
   SfdxCommandBuilder,
@@ -19,6 +20,7 @@ import {
   SfdxCommandletExecutor
 } from '../commands';
 import { nls } from '../messages';
+import { telemetryService } from '../telemetry';
 import { getRootWorkspacePath } from './rootWorkspace';
 
 export async function isSfdxInstalled(): Promise<boolean> {
@@ -74,6 +76,7 @@ class PromptingPreChecker implements PreconditionChecker {
     );
     if (selection === this.disableCheckButton) {
       vscode.workspace.getConfiguration().update(checkPluginPrefName, false, vscode.ConfigurationTarget.Workspace);
+      telemetryService.sendDisableSfdxPluginCheckEvent().catch(console.error);
     }
     return selection === this.okButton;
   }
@@ -86,6 +89,11 @@ class InstallAdxExecutor extends SfdxCommandletExecutor<void> {
       .withArg('plugins:install')
       .withArg('@salesforce/analytics')
       .build();
+  }
+
+  public execute(response: ContinueResponse<void>): void {
+    telemetryService.sendInstallAdxPluginEvent().catch(console.error);
+    super.execute(response);
   }
 }
 
@@ -113,6 +121,12 @@ class UpdateSfdxPluginsExecutor extends SfdxCommandletExecutor<void> {
       .withDescription(nls.localize('update_sfdx_plugins_message'))
       .withArg('plugins:update')
       .build();
+  }
+
+  public execute(response: ContinueResponse<void>): void {
+    // FIXME: get current version # in there, probabaly need to do a gather for that.
+    telemetryService.sendUpdateSfdxPluginsEvent(undefined, minAdxPluginVersion).catch(console.error);
+    super.execute(response);
   }
 }
 

@@ -8,10 +8,8 @@
 import * as util from 'util';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { telemetryService } from '.';
+import { EXTENSION_NAME } from '../constants';
 import { waitForDX } from '../dxsupport/waitForDX';
-
-const EXTENSION_NAME = 'analyticsdx-vscode-core';
 
 export class TelemetryService {
   private static instance: TelemetryService;
@@ -33,18 +31,18 @@ export class TelemetryService {
   public async setupVSCodeTelemetry() {
     // if its already set up
     if (this.reporter) {
-      return Promise.resolve(telemetryService);
+      return Promise.resolve(this);
     }
     if (!this.setup) {
       this.setup = waitForDX(true)
         .then((coreDependency: vscode.Extension<any>) => {
           coreDependency.exports.telemetryService.showTelemetryMessage();
 
-          telemetryService.initializeService(
+          this.initializeService(
             coreDependency.exports.telemetryService.getReporter(),
             coreDependency.exports.telemetryService.isTelemetryEnabled()
           );
-          return telemetryService;
+          return this;
         })
         .catch(err => {
           return undefined;
@@ -53,7 +51,7 @@ export class TelemetryService {
     return this.setup;
   }
 
-  public initializeService(reporter: TelemetryReporter, isTelemetryEnabled: boolean): void {
+  public initializeService(reporter: TelemetryReporter | undefined, isTelemetryEnabled: boolean): void {
     this.isTelemetryEnabled = isTelemetryEnabled;
     this.reporter = reporter;
   }
@@ -92,12 +90,37 @@ export class TelemetryService {
     }
   }
 
-  public async sendCommandEvent(commandName?: string): Promise<void> {
+  /** Called when the user chooses to install @salesforce/analytics from our popup on startup. */
+  public async sendInstallAdxPluginEvent(): Promise<void> {
     await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled && commandName) {
-      this.reporter.sendTelemetryEvent('commandExecution', {
+    if (this.reporter !== undefined && this.isTelemetryEnabled) {
+      this.reporter.sendTelemetryEvent('installAdxPlugin', {
+        extensionName: EXTENSION_NAME
+      });
+    }
+  }
+
+  /** Called when the user chooses to update the sfdx plugins (because @salesforce/analytics it out of date) from our
+   * popup on startup.
+   */
+  public async sendUpdateSfdxPluginsEvent(currentVersion: string | undefined, minVersion: string): Promise<void> {
+    await this.setupVSCodeTelemetry();
+    if (this.reporter !== undefined && this.isTelemetryEnabled) {
+      this.reporter.sendTelemetryEvent('updateSfdxPlugins', {
         extensionName: EXTENSION_NAME,
-        commandName
+        currentVersion: currentVersion || '',
+        minVersion
+      });
+    }
+  }
+
+  /** Called when the user choose to stop sfdx plugin checks from the our popup on startup. */
+  public async sendDisableSfdxPluginCheckEvent(currentVersion?: string): Promise<void> {
+    await this.setupVSCodeTelemetry();
+    if (this.reporter !== undefined && this.isTelemetryEnabled) {
+      this.reporter.sendTelemetryEvent('disableSfdxPluginCheck', {
+        extensionName: EXTENSION_NAME,
+        currentVersion: currentVersion || ''
       });
     }
   }

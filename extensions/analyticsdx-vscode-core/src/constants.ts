@@ -5,6 +5,8 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+export const EXTENSION_NAME = 'analyticsdx-vscode-core';
+
 // Constants for icon strings for analytics objects.
 // These should go into strings that are going to become vscode labels
 // (i.e. quick pick items, status bar items)
