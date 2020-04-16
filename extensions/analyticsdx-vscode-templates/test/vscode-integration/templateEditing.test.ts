@@ -59,27 +59,21 @@ describe('TemplateEditorManager', () => {
     });
 
     it('template-info.json opened', async () => {
-      const templateEditingManager = await getTemplateEditorManager();
-      expect(templateEditingManager.has(tmpdir!), `initial templateEditingManager.has(${tmpdir})`).to.be.false;
-
       // open the template-info.json in the create tmp folder
       const file = tmpdir!.with({ path: path.join(tmpdir!.path, 'template-info.json') });
       await openTemplateInfoAndWaitForDiagnostics(file);
       // make sure the template dir gets setup for editing
-      await waitForTemplateEditorManagerHas(templateEditingManager, tmpdir!, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), tmpdir!, true);
     });
 
     it('related file opened', async () => {
-      const templateEditingManager = await getTemplateEditorManager();
-      expect(templateEditingManager.has(tmpdir!), `initial templateEditingManager.has(${tmpdir})`).to.be.false;
-
       // create an empty folder.json in the template directory
       const file = tmpdir!.with({ path: path.join(tmpdir!.path, 'folder.json') });
       await writeEmptyJsonFile(file);
       // open that file
       await openFile(file);
       // make sure the template dir gets setup for editing
-      await waitForTemplateEditorManagerHas(templateEditingManager, tmpdir!, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), tmpdir!, true);
     });
   }); // describe('starts on')
 
