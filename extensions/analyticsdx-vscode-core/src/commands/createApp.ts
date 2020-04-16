@@ -64,13 +64,18 @@ class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
   }
 
   public build(data: string) {
-    return new SfdxCommandBuilder()
-      .withDescription(nls.localize('create_blank_app_cmd_message'))
-      .withArg('analytics:app:create')
-      .withArg('-f')
-      .withArg(this.filepath)
-      .withLogName('analytics_app_create_blank')
-      .build();
+    return (
+      new SfdxCommandBuilder()
+        .withDescription(nls.localize('create_blank_app_cmd_message'))
+        .withArg('analytics:app:create')
+        .withArg('-f')
+        .withArg(this.filepath)
+        // 0.15.0+ of the plugin waits for events by default, but we don't need that for an empty app -- it gets
+        // created immediately
+        .withArg('--async')
+        .withLogName('analytics_app_create_blank')
+        .build()
+    );
   }
 }
 
