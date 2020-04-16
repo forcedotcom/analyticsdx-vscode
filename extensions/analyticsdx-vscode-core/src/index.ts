@@ -19,7 +19,7 @@ import {
   openStudio,
   updateTemplate
 } from './commands';
-import { checkSfdxAnalyticsPlugin } from './util/sfdx';
+import { checkAnalyticsSfdxPlugin } from './util/sfdx';
 
 function sendTelemetryCommand(eventName: string, extensionName: string, properties?: Record<string, string>) {
   if (eventName && extensionName) {
@@ -64,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('analyticsdx.telemetry.send', sendTelemetryCommand)
   );
 
-  checkSfdxAnalyticsPlugin().catch(er => console.error('Failed to check for analytics sfdx plugin:', er));
+  checkAnalyticsSfdxPlugin().catch(er => console.error('Failed to check for analytics sfdx plugin:', er));
 
   console.log(`${displayName} v${version} extension activated`);
   // Notify telemetry that our extension is now active

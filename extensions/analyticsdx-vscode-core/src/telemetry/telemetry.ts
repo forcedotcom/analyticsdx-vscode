@@ -91,22 +91,25 @@ export class TelemetryService {
   }
 
   /** Called when the user chooses to install @salesforce/analytics from our popup on startup. */
-  public async sendInstallAdxPluginEvent(): Promise<void> {
+  public async sendInstallAnalyticsSfdxPluginEvent(): Promise<void> {
     await this.setupVSCodeTelemetry();
     if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent('installAdxPlugin', {
+      this.reporter.sendTelemetryEvent('installAnalyticsSfdxPlugin', {
         extensionName: EXTENSION_NAME
       });
     }
   }
 
-  /** Called when the user chooses to update the sfdx plugins (because @salesforce/analytics it out of date) from our
+  /** Called when the user chooses to update the @salesforce/analytics plugin (because it's out of date) from our
    * popup on startup.
    */
-  public async sendUpdateSfdxPluginsEvent(currentVersion: string | undefined, minVersion: string): Promise<void> {
+  public async sendUpdateAnalyticsSfdxPluginEvent(
+    currentVersion: string | undefined,
+    minVersion: string
+  ): Promise<void> {
     await this.setupVSCodeTelemetry();
     if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent('updateSfdxPlugins', {
+      this.reporter.sendTelemetryEvent('updateAnalyticsSfdxPlugin', {
         extensionName: EXTENSION_NAME,
         currentVersion: currentVersion || '',
         minVersion
@@ -115,10 +118,10 @@ export class TelemetryService {
   }
 
   /** Called when the user choose to stop sfdx plugin checks from the our popup on startup. */
-  public async sendDisableSfdxPluginCheckEvent(currentVersion?: string): Promise<void> {
+  public async sendDisableAnalyticsSfdxPluginCheckEvent(currentVersion: string | undefined): Promise<void> {
     await this.setupVSCodeTelemetry();
     if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent('disableSfdxPluginCheck', {
+      this.reporter.sendTelemetryEvent('disableAnalyticsSfdxPluginCheck', {
         extensionName: EXTENSION_NAME,
         currentVersion: currentVersion || ''
       });

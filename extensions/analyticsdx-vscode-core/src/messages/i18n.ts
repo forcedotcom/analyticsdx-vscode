@@ -61,12 +61,12 @@ export const messages = Object.freeze({
   missing_analytics_sfdx_plugin_message:
     'Analytics Salesforce CLI plugin is not installed. Some operations will not work without it.',
   outofdate_analytics_sfdx_plugin_message:
-    'Your version of the Analytics Salesforce CLI plugin is less than the minimum required (%s). Some operations will not work.',
+    'Your version of the Analytics Salesforce CLI plugin is older than the minimum required (%s). Some operations will not work.',
   disable_analytics_sfdx_check_button: 'Disable Check',
   install_analytics_sfdx_plugin_button: 'Install Plugin',
-  update_sfdx_plugins_button: 'Update Plugins',
   install_analytics_sfdx_plugin_message: 'Installing Analytics Salesforce CLI plugin...',
-  update_sfdx_plugins_message: 'Updating Salesforce CLI plugins...',
+  update_analytics_sfdx_plugin_button: 'Update Plugin',
+  update_analytics_sfdx_plugin_message: 'Updating Analytics Salesforce CLI plugin...',
 
   ok: 'Ok'
 });

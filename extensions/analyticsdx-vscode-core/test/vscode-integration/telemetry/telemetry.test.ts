@@ -75,39 +75,39 @@ describe('TelemetryService', () => {
     assert.calledWith(sendEvent, 'deactivationEvent', expectedData);
   });
 
-  it('should send correct data on sendInstallAdxPluginEvent', async () => {
+  it('should send correct data on sendInstallAnalyticsSfdxPluginEvent', async () => {
     const telemetryService = TelemetryService.getInstance();
     telemetryService.initializeService(reporter, true);
 
-    await telemetryService.sendInstallAdxPluginEvent();
+    await telemetryService.sendInstallAnalyticsSfdxPluginEvent();
     assert.calledOnce(sendEvent);
-    assert.calledWith(sendEvent, 'installAdxPlugin');
+    assert.calledWith(sendEvent, 'installAnalyticsSfdxPlugin');
   });
 
-  it('should send correct data on sendUpdateSfdxPluginsEvent', async () => {
+  it('should send correct data on sendUpdateAnalyticsSfdxPluginEvent', async () => {
     const telemetryService = TelemetryService.getInstance();
     telemetryService.initializeService(reporter, true);
 
-    await telemetryService.sendUpdateSfdxPluginsEvent(undefined, '2');
+    await telemetryService.sendUpdateAnalyticsSfdxPluginEvent('1', '2');
     assert.calledOnce(sendEvent);
     const expectedData = {
       extensionName: EXTENSION_NAME,
-      currentVersion: '',
+      currentVersion: '1',
       minVersion: '2'
     };
-    assert.calledWith(sendEvent, 'updateSfdxPlugins', expectedData);
+    assert.calledWith(sendEvent, 'updateAnalyticsSfdxPlugin', expectedData);
   });
 
-  it('should send correct data on sendDisableSfdxPluginCheckEvent', async () => {
+  it('should send correct data on sendDisableAnalyticsSfdxPluginCheckEvent', async () => {
     const telemetryService = TelemetryService.getInstance();
     telemetryService.initializeService(reporter, true);
 
-    await telemetryService.sendDisableSfdxPluginCheckEvent();
+    await telemetryService.sendDisableAnalyticsSfdxPluginCheckEvent(undefined);
     assert.calledOnce(sendEvent);
     const expectedData = {
       extensionName: EXTENSION_NAME,
       currentVersion: ''
     };
-    assert.calledWith(sendEvent, 'disableSfdxPluginCheck', expectedData);
+    assert.calledWith(sendEvent, 'disableAnalyticsSfdxPluginCheck', expectedData);
   });
 });
