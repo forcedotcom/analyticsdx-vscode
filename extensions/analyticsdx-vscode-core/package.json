@@ -131,11 +131,11 @@
         },
         {
           "command": "analyticsdx.studio.open.app",
-          "when": "sfdx:project_opened"
+          "when": "!isWeb && sfdx:project_opened"
         },
         {
           "command": "analyticsdx.studio.open.dataManager",
-          "when": "sfdx:project_opened"
+          "when": "!isWeb && sfdx:project_opened"
         },
         {
           "command": "analyticsdx.template.create",
