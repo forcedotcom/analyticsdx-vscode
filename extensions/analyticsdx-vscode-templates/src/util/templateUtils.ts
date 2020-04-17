@@ -14,7 +14,7 @@ import { uriBasename, uriDirname, uriStat } from './vscodeUtils';
  */
 export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.Uri | undefined> {
   if (uriBasename(file) === 'template-info.json') {
-    return file;
+    return vscode.workspace.getWorkspaceFolder(file) ? file : undefined;
   }
   let dir = uriDirname(file);
   // don't go out of the workspace
