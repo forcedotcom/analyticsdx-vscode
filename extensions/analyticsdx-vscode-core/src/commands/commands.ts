@@ -7,7 +7,9 @@
 import {
   CliCommandExecutor,
   Command,
+  CommandExecution,
   CommandOutput,
+  CommandResult,
   SfdxCommandBuilder
 } from '@salesforce/salesforcedx-utils-vscode/out/src/cli';
 import {
@@ -36,6 +38,9 @@ const {
 // make shared instances here that we can export for everything to use
 const sfdxWorkspaceChecker = new SfdxWorkspaceChecker();
 const emptyParametersGatherer = new EmptyParametersGatherer();
+const emptyPreChecker: PreconditionChecker = {
+  check: () => true
+};
 
 // FIXME: get something like this in the class in salesforce-vscode-core
 // this is basically a copy of SfdxCommandletExecutor and SfdxCommandletWithOutput
@@ -92,6 +97,7 @@ export class DeleteObjectPostChecker<T> implements PostconditionChecker<T> {
     return { type: 'CANCEL' };
   }
 }
+
 export class SfdxCommandletWithOutput<T> {
   private readonly prechecker: PreconditionChecker;
   private readonly postchecker: PostconditionChecker<T>;
@@ -111,7 +117,7 @@ export class SfdxCommandletWithOutput<T> {
   }
 
   public async run(): Promise<string> {
-    if (this.prechecker.check()) {
+    if (await this.prechecker.check()) {
       let inputs = await this.gatherer.gather();
       inputs = await this.postchecker.check(inputs);
       switch (inputs.type) {
@@ -129,16 +135,23 @@ export class SfdxCommandletWithOutput<T> {
   }
 }
 
-// re-export these things from the vscode-core api so our code can more easily use them
+// re-export these things so our code can more easily import them from one place
 export {
   emptyParametersGatherer,
+  emptyPreChecker,
   notificationService,
   sfdxWorkspaceChecker,
-  Command,
-  SfdxCommandBuilder,
   CancelResponse,
+  CliCommandExecutor,
+  Command,
+  CommandExecution,
+  CommandOutput,
+  CommandResult,
   ContinueResponse,
   ParametersGatherer,
+  PostconditionChecker,
+  PreconditionChecker,
+  SfdxCommandBuilder,
   SfdxCommandlet,
   SfdxCommandletExecutor
 };

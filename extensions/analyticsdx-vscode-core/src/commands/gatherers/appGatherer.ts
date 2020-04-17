@@ -4,7 +4,12 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+
+import * as vscode from 'vscode';
+import { ICONS } from '../../constants';
+import { nls } from '../../messages';
 import {
+  CancelResponse,
   ContinueResponse,
   emptyParametersGatherer,
   notificationService,
@@ -14,11 +19,6 @@ import {
   SfdxCommandletWithOutput,
   sfdxWorkspaceChecker
 } from '../commands';
-
-import { CancelResponse } from '@salesforce/salesforcedx-utils-vscode/out/src/types';
-import * as vscode from 'vscode';
-import { ICONS } from '../../constants';
-import { nls } from '../../messages';
 
 class AppListExecutor extends SfdxCommandletExecutorWithOutput<{}> {
   constructor(private readonly description: string) {
@@ -63,18 +63,12 @@ class AppQuickPickItem implements vscode.QuickPickItem {
 export class AppGatherer implements ParametersGatherer<AppMetadata> {
   constructor(
     private readonly filter?: (app: AppMetadata) => boolean,
-    private readonly noAppsMesg = nls.localize(
-      'app_gatherer_def_no_apps_message'
-    ),
-    private readonly placeholderMesg = nls.localize(
-      'app_gatherer_def_placeholder_message'
-    ),
+    private readonly noAppsMesg = nls.localize('app_gatherer_def_no_apps_message'),
+    private readonly placeholderMesg = nls.localize('app_gatherer_def_placeholder_message'),
     private readonly fetchMesg = nls.localize('app_gatherer_def_fetch_message')
   ) {}
 
-  public async gather(): Promise<
-    CancelResponse | ContinueResponse<AppMetadata>
-  > {
+  public async gather(): Promise<CancelResponse | ContinueResponse<AppMetadata>> {
     const appListCommandlet = new SfdxCommandletWithOutput(
       sfdxWorkspaceChecker,
       emptyParametersGatherer,
@@ -85,9 +79,7 @@ export class AppGatherer implements ParametersGatherer<AppMetadata> {
     const json = jsonStr && JSON.parse(jsonStr);
     let items: AppQuickPickItem[] = [];
     if (json && json.result && json.result.length > 0) {
-      items = (json.result as AppMetadata[])
-        .filter(this.filter || (() => true))
-        .map(app => new AppQuickPickItem(app));
+      items = (json.result as AppMetadata[]).filter(this.filter || (() => true)).map(app => new AppQuickPickItem(app));
     }
     if (items.length <= 0) {
       notificationService.showInformationMessage(this.noAppsMesg);
@@ -97,8 +89,6 @@ export class AppGatherer implements ParametersGatherer<AppMetadata> {
       matchOnDescription: true,
       placeHolder: this.placeholderMesg
     });
-    return selection
-      ? { type: 'CONTINUE', data: selection.app }
-      : { type: 'CANCEL' };
+    return selection ? { type: 'CONTINUE', data: selection.app } : { type: 'CANCEL' };
   }
 }

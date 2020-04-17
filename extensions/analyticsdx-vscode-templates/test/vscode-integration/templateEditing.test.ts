@@ -59,27 +59,21 @@ describe('TemplateEditorManager', () => {
     });
 
     it('template-info.json opened', async () => {
-      const templateEditingManager = await getTemplateEditorManager();
-      expect(templateEditingManager.has(tmpdir!), `initial templateEditingManager.has(${tmpdir})`).to.be.false;
-
       // open the template-info.json in the create tmp folder
       const file = tmpdir!.with({ path: path.join(tmpdir!.path, 'template-info.json') });
       await openTemplateInfoAndWaitForDiagnostics(file);
       // make sure the template dir gets setup for editing
-      await waitForTemplateEditorManagerHas(templateEditingManager, tmpdir!, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), tmpdir!, true);
     });
 
     it('related file opened', async () => {
-      const templateEditingManager = await getTemplateEditorManager();
-      expect(templateEditingManager.has(tmpdir!), `initial templateEditingManager.has(${tmpdir})`).to.be.false;
-
       // create an empty folder.json in the template directory
       const file = tmpdir!.with({ path: path.join(tmpdir!.path, 'folder.json') });
       await writeEmptyJsonFile(file);
       // open that file
       await openFile(file);
       // make sure the template dir gets setup for editing
-      await waitForTemplateEditorManagerHas(templateEditingManager, tmpdir!, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), tmpdir!, true);
     });
   }); // describe('starts on')
 
@@ -1054,8 +1048,11 @@ describe('TemplateEditorManager', () => {
       expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[0].variables[0].name');
       expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal('pages[0].variables[1].name');
 
-      // the 1st diagnostic should be for 'varname', which should have just the 2 quickfixes
-      let actions = await getCodeActions(uiEditor.document.uri, diagnostics[0].range);
+      // the 1st diagnostic should be for 'varname', which should have just the 2 quickfixes.
+      // Note: they seem to no longer be guarenteed to come in original insert order so sort them by title
+      let actions = (await getCodeActions(uiEditor.document.uri, diagnostics[0].range)).sort((a1, a2) =>
+        a1.title.localeCompare(a2.title)
+      );
       if (actions.length !== 2) {
         expect.fail('Expected 2 code actions, got: [' + actions.map(a => a.title).join(', ') + ']');
       }
