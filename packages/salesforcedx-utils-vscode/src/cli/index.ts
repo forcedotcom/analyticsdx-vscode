@@ -15,12 +15,7 @@ export interface Command {
   toCommand(): string;
 }
 
-export { CommandBuilder, SfdxCommandBuilder } from './commandBuilder';
-export {
-  CliCommandExecutor,
-  CliCommandExecution,
-  CommandExecution,
-  CompositeCliCommandExecutor,
-  GlobalCliEnvironment
-} from './commandExecutor';
-export { CommandOutput } from './commandOutput';
+export * from './commandBuilder';
+export * from './commandExecutor';
+export * from './commandOutput';
+export * from './commandResult';

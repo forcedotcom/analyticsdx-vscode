@@ -13,7 +13,10 @@
     // we need this off so we can test that templateEditing's formatting logic works right
     "editor.detectIndentation": false
   },
-  "adx-templates.logging.enabled": true,
-  "adx-templates.logging.console": true,
-  "adx-templates.logging.prefix": "Tests"
+  // turn this check off for tests for now
+  "analyticsdx-vscode-core.CLI.checkForPlugin": false,
+  // configure logging for when tests are running
+  "analyticsdx-vscode-templates.logging.enabled": true,
+  "analyticsdx-vscode-templates.logging.console": true,
+  "analyticsdx-vscode-templates.logging.prefix": "Tests"
 }

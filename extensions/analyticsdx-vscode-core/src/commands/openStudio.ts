@@ -22,7 +22,7 @@ export function baseStudioPath() {
   return (
     vscode.workspace
       .getConfiguration()
-      .get<string>('adx-core.studio.path')
+      .get<string>('analyticsdx-vscode-core.studio.path')
       ?.trimLeft() || '/wave/wave.app'
   );
 }

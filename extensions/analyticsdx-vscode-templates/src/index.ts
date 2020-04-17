@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
     console.warn(`Unable to read ${packageJson}`, e);
   }
 
-  const config = vscode.workspace.getConfiguration('adx-templates');
+  const config = vscode.workspace.getConfiguration('analyticsdx-vscode-templates');
   const output = config.get<boolean>('logging.enabled', false)
     ? vscode.window.createOutputChannel('Analytics - App Templates')
     : undefined;

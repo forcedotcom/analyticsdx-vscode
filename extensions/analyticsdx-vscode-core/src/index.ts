@@ -6,7 +6,7 @@
  */
 
 import * as fs from 'fs';
-import { commands, ExtensionContext, workspace } from 'vscode';
+import * as vscode from 'vscode';
 import { telemetryService } from './telemetry';
 
 import {
@@ -19,6 +19,7 @@ import {
   openStudio,
   updateTemplate
 } from './commands';
+import { checkAnalyticsSfdxPlugin } from './util/sfdx';
 
 function sendTelemetryCommand(eventName: string, extensionName: string, properties?: Record<string, string>) {
   if (eventName && extensionName) {
@@ -30,7 +31,7 @@ function sendTelemetryCommand(eventName: string, extensionName: string, properti
 let displayName = 'Salesforce Analytics CLI Integration';
 let version = '<unknown>';
 
-export function activate(context: ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {
   const extensionHRStart = process.hrtime();
 
   const packageJson = context.asAbsolutePath('package.json');
@@ -43,25 +44,27 @@ export function activate(context: ExtensionContext) {
   }
 
   // if we have no workspace folders, exit
-  if (!workspace.workspaceFolders) {
+  if (!vscode.workspace.workspaceFolders) {
     console.log('No workspace, exiting extension');
     return;
   }
 
   // register our commands, and set them up to cleanup correctly
   context.subscriptions.push(
-    commands.registerCommand('analyticsdx.app.create.blank', createBlankApp),
-    commands.registerCommand('analyticsdx.app.delete', deleteApp),
-    commands.registerCommand('analyticsdx.studio.open', openStudio),
-    commands.registerCommand('analyticsdx.studio.open.app', openAppInStudio),
-    commands.registerCommand('analyticsdx.studio.open.dataManager', openDataManager),
-    commands.registerCommand('analyticsdx.template.create', createTemplate),
-    commands.registerCommand('analyticsdx.template.delete', deleteTemplate),
-    commands.registerCommand('analyticsdx.template.update', updateTemplate),
+    vscode.commands.registerCommand('analyticsdx.app.create.blank', createBlankApp),
+    vscode.commands.registerCommand('analyticsdx.app.delete', deleteApp),
+    vscode.commands.registerCommand('analyticsdx.studio.open', openStudio),
+    vscode.commands.registerCommand('analyticsdx.studio.open.app', openAppInStudio),
+    vscode.commands.registerCommand('analyticsdx.studio.open.dataManager', openDataManager),
+    vscode.commands.registerCommand('analyticsdx.template.create', createTemplate),
+    vscode.commands.registerCommand('analyticsdx.template.delete', deleteTemplate),
+    vscode.commands.registerCommand('analyticsdx.template.update', updateTemplate),
     // Note: analyticsdx.telemetry.send is intentionally not listed in package.json; it's only for extension
     // code to call
-    commands.registerCommand('analyticsdx.telemetry.send', sendTelemetryCommand)
+    vscode.commands.registerCommand('analyticsdx.telemetry.send', sendTelemetryCommand)
   );
+
+  checkAnalyticsSfdxPlugin().catch(er => console.error('Failed to check for analytics sfdx plugin:', er));
 
   console.log(`${displayName} v${version} extension activated`);
   // Notify telemetry that our extension is now active
