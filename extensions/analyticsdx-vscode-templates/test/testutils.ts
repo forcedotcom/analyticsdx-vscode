@@ -25,7 +25,7 @@ import { promisify } from 'util';
  * @returns the return value from the matched call to the function.
  */
 export function waitFor<T>(
-  func: () => T,
+  func: () => T | Promise<T>,
   predicate: (val: T) => boolean | undefined,
   {
     pauseMs = 300,
@@ -42,10 +42,10 @@ export function waitFor<T>(
   return new Promise((resolve, reject) => {
     const start = new Date().getTime();
     // call the func and check against predicate, will schedule itself if it doesn't resolve/reject
-    function check() {
+    async function check() {
       let val: T | undefined;
       try {
-        val = func();
+        val = await func();
         if (predicate(val)) {
           resolve(val);
           return;
@@ -77,7 +77,7 @@ export function waitFor<T>(
       // schedule this to run again
       setTimeout(check, pauseMs);
     }
-    check();
+    check().catch(reject);
   });
 }
 
