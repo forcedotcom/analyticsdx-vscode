@@ -1,4 +1,4 @@
-## Contributing
+# Contributing
 
 Familiarize yourself with the codebase and by reading the various [contributing guides](contributing/), particularly:
 
@@ -18,14 +18,14 @@ Then,
 ## Branches
 
 - We work in `develop`.
-- Our released (aka. _production_) branch is `master`.
+- (TBD) Our released (aka. _production_) branch is `master`.
 - Our work happens in _topic_ branches (feature and/or bug-fix).
   - feature as well as bug-fix branches are based on `develop`
   - branches _should_ be kept up-to-date with `develop`
 
 ### Merging `develop` into `master`
 
-- When a development cycle finishes, the content of the `develop` branch will become the `master` branch
+- (TBD) When a development cycle finishes, the content of the `develop` branch will become the `master` branch
 
 ```
 $ git checkout master
