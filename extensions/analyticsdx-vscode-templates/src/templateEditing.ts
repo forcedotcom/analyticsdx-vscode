@@ -295,9 +295,7 @@ export class TemplateEditingManager extends Disposable {
   public start(): this {
     // listen for files being opened, to setup template editing if they're a template file
     this.disposables.push(vscode.workspace.onDidOpenTextDocument(doc => this.opened(doc)));
-    // start out custom json schema language services
-    this.languageClient = new TemplateJsonLanguageClient(() => this.getSchemaAssociations(), this.logger);
-    this.disposables.push(this.languageClient.start());
+
     // listen for template directories being deleted, we have to listen to everything since, if a parent directory
     // is deleted, you just get 1 callback for the parent directory, so we have to do some calculations to determine
     // if a template folder's folder (or higher) was deleted
@@ -308,6 +306,14 @@ export class TemplateEditingManager extends Disposable {
     vscode.workspace.textDocuments.forEach(doc => this.opened(doc));
 
     return this;
+  }
+
+  // start our language client and server, if it's not started yet
+  private startLanguageClient() {
+    if (!this.languageClient) {
+      this.languageClient = new TemplateJsonLanguageClient(() => this.getSchemaAssociations(), this.logger);
+      this.disposables.push(this.languageClient.start());
+    }
   }
 
   public has(dir: vscode.Uri): boolean {
@@ -354,9 +360,13 @@ export class TemplateEditingManager extends Disposable {
     if (templateInfoFile) {
       const dir = uriDirname(templateInfoFile);
       this.startEditing(dir);
-      // set documentLangId here on json files so it uses our language server
-      if (doc.languageId === 'json' || doc.languageId === 'jsonc') {
-        vscode.languages.setTextDocumentLanguage(doc, TEMPLATE_JSON_LANG_ID);
+      // if it's a json-ish file, be sure to start our language server
+      if (doc.languageId === 'json' || doc.languageId === 'jsonc' || doc.languageId === TEMPLATE_JSON_LANG_ID) {
+        this.startLanguageClient();
+        // and switch it to our our language id
+        if (doc.languageId !== TEMPLATE_JSON_LANG_ID) {
+          vscode.languages.setTextDocumentLanguage(doc, TEMPLATE_JSON_LANG_ID);
+        }
       }
     }
   }

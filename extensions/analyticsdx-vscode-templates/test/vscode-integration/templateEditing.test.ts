@@ -923,7 +923,11 @@ describe('TemplateEditorManager', () => {
 
       const valueNode = node!.children?.[1];
       expect(valueNode, 'valueNode').to.not.be.undefined;
-      hovers = await getHovers(uri, doc.positionAt(valueNode!.offset));
+      hovers = await waitFor(
+        () => getHovers(uri, doc.positionAt(valueNode!.offset)),
+        hovers => hovers.length >= 2,
+        { timeoutMessage: 'Timed out waiting for both hovers on valueNode' }
+      );
       expect(hovers, 'valueNode hovers').to.not.be.undefined;
       // on the value field, it should have the schema hover and the hover from our provider
       expect(hovers.length, 'valueNode hovers.length').to.equal(2);

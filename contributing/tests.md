@@ -7,15 +7,14 @@ describes them and gives pointers on how to run/debug them.
 
 The test types from most preferred to least preferred are:
 
-1. Unit Tests
-1. Vscode-integration Tests
-1. Integration Tests (TBD)
-1. System Tests (TBD)
+1. [Unit Tests](#unittests)
+1. [Vscode-integration Tests](#vscodetests)
+1. [Manual Tests](#manualtests)
 
 To run all tests, execute `npm run compile && npm run test` from the top-level
 folder.
 
-## Unit Tests
+## <a name="unittests">Unit Tests</a>
 
 For packages that don't have any dependencies on vscode, you would write such tests using Mocha and Chai as you normally
 would for NPM modules.
@@ -28,7 +27,7 @@ to see examples of how to configure code coverage reporting when running the tes
 These tests should not require a VS Code instance or a Salesforce server connection, and
 can be run directly using `npm run test:unit`.
 
-## VS Code Integration Tests
+## <a name="vscodetests">VS Code Integration Tests</a>
 
 VS Code provides its own special way to run tests that require access to the
 extension development host. Basically, it launches your test in another instance
@@ -45,15 +44,15 @@ While the test runner is highly configurable, there are certain assumptions that
 will help make writing the tests easier.
 
 1. Ensure that your tests go into the `test/vscode-integration` folder.
-1. Ensure that you have an index.ts file in the `test/vscode-integration` folder that follows what is
+1. Ensure that you have an `index.ts` file in the `test/vscode-integration` folder that follows what is
    in the standard configuration (copy from an existing one if you don't have it).
-1. Ensure that your test files are named like <something>.test.ts. The .test. in
-   the middle is essential
+1. Ensure that your test files are named like `<something>.test.ts`. The `.test.` in
+   the middle is required.
 1. Ensure that your .js test files are compiled into the `out/test/vscode-integration` directory.
 
 ### VSCode instance setup
 
-To your package.json, you should add scripts like:
+To your `package.json`, you should add scripts like:
 
 ```json
 {
@@ -76,8 +75,7 @@ such as `.npmignore` and `.vscodeignore`.
 
 ### Running interactively
 
-There are configurations already created for you at the top level
-`.vscode/launch.json` file.
+There are configurations already created for you at the top level `.vscode/launch.json` file.
 
 If you make a new extension, you will need to edit `.vscode/launch.json`, e.g.:
 
@@ -111,8 +109,8 @@ The args are:
 - `--extensionTestsPath` - This governs what tests are actually run. This must be an
   absolute path and cannot be a wildcard. This should be your extensions `out/test/vscode-integration` folder.
 
-For the `preLaunchTask`, this will also require a corresponding entry in .vscode/tasks.json to first compile and run setup-vscode-integration,
-e.g.:
+For the `preLaunchTask`, this will also require a corresponding entry in `.vscode/tasks.json` to first compile and
+run setup-vscode-integration, e.g.:
 
 ```json
 {
@@ -166,20 +164,38 @@ package.json scripts to run your vscode-integration tests in VS Code - Insiders.
 should look like:
 `"test:vscode-insiders-integration": "cross-env CODE_VERSION=insiders npm run test:vscode-integration"`
 
-## Test Results
+## <a name="manualtests">Manual Testing</a>
 
-Since some modules have a dependency on VSCode and others do not, the way the tests
-are ran for them are different. The ones without a dependency on VSCode will run mocha
-directly while the vscode-integration tests are run programmatically. In order to produce
-the junit and xunit files, we have to configure mocha to use mocha-multi-reporters
-and the mocha-junit-reporter packages. For the packages running mocha directly,
-they are configured by pointing the config file option to the top level mocha config file.
-For the vscode integration tests inside of the `test/vscode-integration` directory,
-the `testrunner.ts` file will set the reporters if they have not already been set.
+Some testing won't be possible or straight-foward to automate as above, including testing direct UI interaction or
+interactions with servers, and will require manual testing.
 
-### Uploading Test Results
+If the changes have already been published to the
+[marketplace](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode), then just either
+install or upgrade the extensions from within VS Code.
 
-In order to upload and store them into Appveyor, the `junit-custom.xml` files
-in each package are aggregated into a single folder and renamed to include the
-relevant package with `aggregate-junit-xml.js`. The appveyor config file is
-set to point to that directory to upload a zip with all the junit files.
+Otherwise, you can install the .vsix files from the GitHub build into VS Code:
+
+1. If you have the extensions already installed, either from .vsix files or the marketplace, you should uninstall them
+   first:
+
+   1. In VSCode, go to the Extensions tab (**View > Extensions** in the menu)
+   1. In the search bar there, enter **@installed analyticsdx-vscode**
+   1. For each extension found, click the small gear icon on it and select **Uninstall**
+   1. Exit VS Code
+   1. In the `.vscode/extensions` in your home directory, remove any `analyticsdx-vscode-*` directories:
+      1. On Mac/Linux, you can do: `rm -r ~/.vscode/extensions/salesforce.analyticsdx-vscode-*`
+      2. On Windows, you can do: `del /s/q %USERPROFILE%\.vscode\extensions\salesforce.analyticsdx-vscode-*`
+   1. Restart VS Code
+
+1. Go to the
+   [most recent successfull build](https://github.com/forcedotcom/analyticsdx-vscode/actions?workflow=Build+and+test) that
+   has the changes you want, find the `extensions` artifact and download it. It should be a zip file of the .vsix files
+   that are the various extensions.
+
+1. Unzip it and install each of the .vsix files; see
+   [here for instructions](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix).
+
+1. Restart VS Code and test things out.
+
+If you want to go back to the published extensions, you will need to uninstall the extensions as per step 1 before
+installing from the marketplace.

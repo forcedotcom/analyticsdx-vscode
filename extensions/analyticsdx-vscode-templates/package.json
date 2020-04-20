@@ -80,7 +80,9 @@
   "activationEvents": [
     "onLanguage:json",
     "onLanguage:jsonc",
-    "onLanguage:adx-template-json"
+    "onLanguage:adx-template-json",
+    "onLanguage:html",
+    "onLanguage:xml"
   ],
   "main": "./out/src",
   "contributes": {

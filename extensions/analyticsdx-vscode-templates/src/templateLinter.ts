@@ -892,9 +892,8 @@ export class TemplateLinterManager extends Disposable {
   }
 
   private async checkDocForQueuing(doc: vscode.TextDocument) {
-    const basename = uriBasename(doc.uri);
-    // if it's a template-info.json, add to the lint queue
-    if (basename === 'template-info.json') {
+    // if it's a template-info.json in the workspace, add to the lint queue
+    if (uriBasename(doc.uri) === 'template-info.json' && vscode.workspace.getWorkspaceFolder(doc.uri)) {
       this.queueTemplateInfo(doc);
     } else {
       // if it's in or under a template folder, open that template-info.json and queue it up
@@ -906,7 +905,7 @@ export class TemplateLinterManager extends Disposable {
   }
 
   private async uriCreated(uri: vscode.Uri) {
-    const templateInfoUri = uriBasename(uri) === 'template-info.json' ? uri : await findTemplateInfoFileFor(uri);
+    const templateInfoUri = await findTemplateInfoFileFor(uri);
     if (templateInfoUri) {
       // REVIEWME: only relint if the template is already open?
       this.queueTemplateInfo(await vscode.workspace.openTextDocument(templateInfoUri));
@@ -915,7 +914,7 @@ export class TemplateLinterManager extends Disposable {
 
   private async uriDeleted(uri: vscode.Uri) {
     // if a template-info.json was deleted, clear all of the diagnostics for it and all related files
-    if (uriBasename(uri) === 'template-info.json') {
+    if (uriBasename(uri) === 'template-info.json' && vscode.workspace.getWorkspaceFolder(uri)) {
       this.unqueueTemplateInfo(uri);
       this.setAllTemplateDiagnostics(uriDirname(uri));
     } else {
