@@ -17,9 +17,10 @@
  */
 export const messages = Object.freeze({
   // commands/createApp.ts
+  create_app_cmd_name_prompt: 'Enter app name',
+  create_app_cmd_empty_name_message: 'Name must not be empty',
+  create_app_cmd_message: 'Creating app from %s...',
   create_blank_app_cmd_message: 'Creating blank analytics app...',
-  create_blank_app_cmd_name_prompt: 'Enter app name',
-  create_blank_app_cmd_empty_name_message: 'Name must not be empty',
   create_blank_app_cmd_tmp_file_error_text: 'Unable to write %s: %s',
 
   // commands/createTemplate.ts

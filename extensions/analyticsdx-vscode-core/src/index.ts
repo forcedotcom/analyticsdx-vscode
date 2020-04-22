@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { telemetryService } from './telemetry';
 
 import {
+  createApp,
   createBlankApp,
   createTemplate,
   deleteApp,
@@ -52,6 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
   // register our commands, and set them up to cleanup correctly
   context.subscriptions.push(
     vscode.commands.registerCommand('analyticsdx.app.create.blank', createBlankApp),
+    vscode.commands.registerCommand('analyticsdx.app.create', createApp),
     vscode.commands.registerCommand('analyticsdx.app.delete', deleteApp),
     vscode.commands.registerCommand('analyticsdx.studio.open', openStudio),
     vscode.commands.registerCommand('analyticsdx.studio.open.app', openAppInStudio),

@@ -87,6 +87,10 @@
         "title": "%analyticsdx_app_create_blank_label%"
       },
       {
+        "command": "analyticsdx.app.create",
+        "title": "%analyticsdx_app_create_label%"
+      },
+      {
         "command": "analyticsdx.app.delete",
         "title": "%analyticsdx_app_delete_label%"
       },
@@ -119,6 +123,10 @@
       "commandPalette": [
         {
           "command": "analyticsdx.app.create.blank",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.app.create",
           "when": "sfdx:project_opened"
         },
         {
