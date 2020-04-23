@@ -13,10 +13,7 @@ import {
   SfdxCommandletExecutor,
   sfdxWorkspaceChecker
 } from './commands';
-import {
-  TemplateGatherer,
-  TemplateMetadata
-} from './gatherers/templateGatherer';
+import { TemplateGatherer, TemplateMetadata } from './gatherers/templateGatherer';
 
 class DeleteTemplateExecutor extends SfdxCommandletExecutor<TemplateMetadata> {
   public build(data: TemplateMetadata) {
@@ -41,7 +38,7 @@ const deleteTemplateCommandlet = new SfdxCommandlet(
   ),
   new DeleteTemplateExecutor(),
   new DeleteObjectPostChecker<TemplateMetadata>(template =>
-    nls.localize('delete_template_cmd_confirm_text', template.name)
+    nls.localize('delete_template_cmd_confirm_text', template.label || template.name)
   )
 );
 

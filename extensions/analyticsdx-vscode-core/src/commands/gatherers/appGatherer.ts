@@ -43,7 +43,7 @@ export type AppMetadata = {
   folderid: string;
   status: string;
   // but this is only there if it doesn't have an associated template yet
-  templateSourceId?: string;
+  templateSourceId?: string | null;
 };
 
 class AppQuickPickItem implements vscode.QuickPickItem {
@@ -55,8 +55,8 @@ class AppQuickPickItem implements vscode.QuickPickItem {
 
   get description() {
     // TODO: we don't get the app description currently from the cli's json
-    // but it's handy to put the id in there for dev folks, since you type-search on it
-    return '[id: ' + this.app.folderid + ']';
+    // but it's handy to put the id and name in there for dev folks, since you type-search on it
+    return `[id: ${this.app.folderid}` + (this.app.name !== this.app.label ? `, name: ${this.app.name}` : '') + ']';
   }
 }
 

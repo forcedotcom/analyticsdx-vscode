@@ -138,7 +138,7 @@ class TemplateAndNameGather implements ParametersGatherer<TemplateAndName> {
 class CreateAppExecutor extends SfdxCommandletExecutor<TemplateAndName> {
   public build(data: TemplateAndName) {
     return new SfdxCommandBuilder()
-      .withDescription(nls.localize('create_app_cmd_message', data.template.name))
+      .withDescription(nls.localize('create_app_cmd_message', data.template.label || data.template.name))
       .withArg('analytics:app:create')
       .withArg('--appname')
       .withArg(data.name)
