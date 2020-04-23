@@ -47,15 +47,15 @@ class TemplateQuickPickItem implements vscode.QuickPickItem {
   constructor(readonly template: TemplateMetadata) {}
 
   get label() {
-    return ICONS.Template + ' ' + (this.template.label || this.template.name);
+    return ICONS.Template + ' ' + ICONS.escape(this.template.label || this.template.name);
   }
 
   get description() {
     // TODO: we don't get the template description currently from the cli's json
     // but it's handy to put the id and name (if not same as label) in there for dev folks, since you type-search on it
     return (
-      `[id: ${this.template.templateid}` +
-      (this.template.name !== this.template.label ? `, name: ${this.template.name}` : '') +
+      `[id: ${ICONS.escape(this.template.templateid)}` +
+      (this.template.name !== this.template.label ? `, name: ${ICONS.escape(this.template.name)}` : '') +
       ']'
     );
   }

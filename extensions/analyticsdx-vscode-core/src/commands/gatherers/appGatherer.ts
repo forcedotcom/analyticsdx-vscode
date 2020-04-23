@@ -50,13 +50,17 @@ class AppQuickPickItem implements vscode.QuickPickItem {
   constructor(readonly app: AppMetadata) {}
 
   get label() {
-    return ICONS.App + ' ' + this.app.label;
+    return ICONS.App + ' ' + ICONS.escape(this.app.label || this.app.name);
   }
 
   get description() {
     // TODO: we don't get the app description currently from the cli's json
     // but it's handy to put the id and name in there for dev folks, since you type-search on it
-    return `[id: ${this.app.folderid}` + (this.app.name !== this.app.label ? `, name: ${this.app.name}` : '') + ']';
+    return (
+      `[id: ${ICONS.escape(this.app.folderid)}` +
+      (this.app.name !== this.app.label ? `, name: ${ICONS.escape(this.app.name)}` : '') +
+      ']'
+    );
   }
 }
 

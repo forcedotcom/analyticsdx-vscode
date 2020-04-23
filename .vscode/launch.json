@@ -70,6 +70,32 @@
       "internalConsoleOptions": "openOnSessionStart"
     },
     {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch analyticsdx-vscode-core Unit Tests",
+      "program": "${workspaceFolder}/extensions/analyticsdx-vscode-core/node_modules/.bin/nyc",
+      "cwd": "${workspaceFolder}/extensions/analyticsdx-vscode-core",
+      "args": [
+        "./node_modules/.bin/_mocha",
+        "--recursive",
+        "out/test/unit",
+        "--reporter",
+        "mocha-multi-reporters",
+        "--timeout",
+        "20000",
+        "--reporter",
+        "mocha-multi-reporters",
+        "--reporter-options",
+        "configFile=../../config/mochaUnitTestsConfig.json"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "outFiles": ["${workspaceFolder}/extensions/*/out/**/*.js"],
+      "preLaunchTask": "Compile",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch analyticsdx-vscode-templates VSCode-Integration Tests",
       "type": "extensionHost",
       "request": "launch",
