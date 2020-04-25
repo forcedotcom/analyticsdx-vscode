@@ -47,7 +47,7 @@ class TemplateQuickPickItem implements vscode.QuickPickItem {
   constructor(readonly template: TemplateMetadata) {}
 
   get label() {
-    return ICONS.Template + ' ' + ICONS.escape(this.template.label || this.template.name);
+    return `${ICONS.Template} ${ICONS.escape(this.template.label || this.template.name)}`;
   }
 
   get description() {

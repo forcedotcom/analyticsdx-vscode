@@ -50,7 +50,7 @@ class AppQuickPickItem implements vscode.QuickPickItem {
   constructor(readonly app: AppMetadata) {}
 
   get label() {
-    return ICONS.App + ' ' + ICONS.escape(this.app.label || this.app.name);
+    return `${ICONS.App} ${ICONS.escape(this.app.label || this.app.name)}`;
   }
 
   get description() {
