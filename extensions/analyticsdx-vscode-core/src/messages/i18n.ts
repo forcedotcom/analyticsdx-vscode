@@ -17,9 +17,10 @@
  */
 export const messages = Object.freeze({
   // commands/createApp.ts
+  create_app_cmd_name_prompt: 'Enter app name',
+  create_app_cmd_empty_name_message: 'Name must not be empty',
+  create_app_cmd_message: 'Creating app from %s...',
   create_blank_app_cmd_message: 'Creating blank analytics app...',
-  create_blank_app_cmd_name_prompt: 'Enter app name',
-  create_blank_app_cmd_empty_name_message: 'Name must not be empty',
   create_blank_app_cmd_tmp_file_error_text: 'Unable to write %s: %s',
 
   // commands/createTemplate.ts
@@ -37,7 +38,7 @@ export const messages = Object.freeze({
   delete_template_cmd_message: 'Deleting analytics template...',
   delete_template_cmd_confirm_text: 'Delete the "%s" template?',
   delete_template_cmd_no_templates_message: 'No templates available in org to delete',
-  delete_template_cmd_placeholder_message: 'Select an analytics app to delete...',
+  delete_template_cmd_placeholder_message: 'Select an analytics template to delete...',
 
   // commands/openStudio.js
   open_studio_cmd_message: 'Opening Analytics Studio...',
@@ -54,7 +55,7 @@ export const messages = Object.freeze({
 
   // commands/gatherers/templateGatherer.ts
   template_gatherer_def_no_templates_message: 'No matching templates available in org.',
-  template_gatherer_def_placeholder_message: 'Selected an analytics template...',
+  template_gatherer_def_placeholder_message: 'Select an analytics template...',
   template_gatherer_def_fetch_message: 'Fetching analytics templates...',
 
   // utils/sfdx.ts

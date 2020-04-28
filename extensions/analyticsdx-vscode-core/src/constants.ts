@@ -14,5 +14,12 @@ export const ICONS = Object.freeze({
   // See https://code.visualstudio.com/api/references/icons-in-labels
   // for the set of available octicon names available for labels in vscode
   App: '$(home)',
-  Template: '$(versions)'
+  Template: '$(versions)',
+
+  /** Escape any octicons references */
+  escape: (s: string | undefined) => {
+    // add a non-visible space between any $ and  ( so that vscode won't replace it, but it looks the same and the
+    // fuzzy search in vscode still seems to work ok
+    return s?.replace(/\$\(/g, '$\u200B(');
+  }
 });

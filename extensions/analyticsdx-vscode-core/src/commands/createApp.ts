@@ -21,6 +21,24 @@ import {
   SfdxCommandletExecutor,
   sfdxWorkspaceChecker
 } from './commands';
+import { TemplateGatherer, TemplateMetadata } from './gatherers/templateGatherer';
+
+class AppNameGatherer implements ParametersGatherer<string> {
+  public async gather(): Promise<CancelResponse | ContinueResponse<string>> {
+    const name = await vscode.window.showInputBox({
+      prompt: nls.localize('create_app_cmd_name_prompt'),
+      validateInput: input => {
+        if (!input || input.trim().length <= 0) {
+          return nls.localize('create_app_cmd_empty_name_message');
+        } else {
+          return undefined;
+        }
+      }
+    });
+    return name ? { type: 'CONTINUE', data: name.trim() } : { type: 'CANCEL' };
+  }
+}
+const appNameGatherer = new AppNameGatherer();
 
 // TODO: generalize the logic here to run something before and after running the cli cmd
 class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
@@ -64,37 +82,16 @@ class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
   }
 
   public build(data: string) {
-    return (
-      new SfdxCommandBuilder()
-        .withDescription(nls.localize('create_blank_app_cmd_message'))
-        .withArg('analytics:app:create')
-        .withArg('-f')
-        .withArg(this.filepath)
-        // 0.15.0+ of the plugin waits for events by default, but we don't need that for an empty app -- it gets
-        // created immediately
-        .withArg('--async')
-        .withLogName('analytics_app_create_blank')
-        .build()
-    );
+    return new SfdxCommandBuilder()
+      .withDescription(nls.localize('create_blank_app_cmd_message'))
+      .withArg('analytics:app:create')
+      .withArg('-f')
+      .withArg(this.filepath)
+      .withArg('--async')
+      .withLogName('analytics_app_create_blank')
+      .build();
   }
 }
-
-class AppNameGatherer implements ParametersGatherer<string> {
-  public async gather(): Promise<CancelResponse | ContinueResponse<string>> {
-    const name = await vscode.window.showInputBox({
-      prompt: nls.localize('create_blank_app_cmd_name_prompt'),
-      validateInput: input => {
-        if (!input || input.trim().length <= 0) {
-          return nls.localize('create_blank_app_cmd_empty_name_message');
-        } else {
-          return undefined;
-        }
-      }
-    });
-    return name ? { type: 'CONTINUE', data: name.trim() } : { type: 'CANCEL' };
-  }
-}
-const appNameGatherer = new AppNameGatherer();
 
 // async function to return a tmp file name for putting the app json into
 const mktempname: () => Promise<string> = promisify(callback => {
@@ -110,4 +107,53 @@ export async function createBlankApp() {
   const filepath = await mktempname();
   const commandlet = new SfdxCommandlet(sfdxWorkspaceChecker, appNameGatherer, new CreateBlankAppExecutor(filepath));
   await commandlet.run();
+}
+
+type TemplateAndName = {
+  template: TemplateMetadata;
+  name: string;
+};
+
+class TemplateAndNameGather implements ParametersGatherer<TemplateAndName> {
+  private readonly templateGatherer = new TemplateGatherer();
+  public async gather(): Promise<CancelResponse | ContinueResponse<TemplateAndName>> {
+    const template = await this.templateGatherer.gather();
+    if (template.type === 'CANCEL') {
+      return template;
+    }
+    const name = await appNameGatherer.gather();
+    if (name.type === 'CANCEL') {
+      return name;
+    }
+    return {
+      type: 'CONTINUE',
+      data: {
+        template: template.data,
+        name: name.data
+      }
+    };
+  }
+}
+
+class CreateAppExecutor extends SfdxCommandletExecutor<TemplateAndName> {
+  public build(data: TemplateAndName) {
+    return new SfdxCommandBuilder()
+      .withDescription(nls.localize('create_app_cmd_message', data.template.label || data.template.name))
+      .withArg('analytics:app:create')
+      .withArg('--appname')
+      .withArg(data.name)
+      .withArg('--templateid')
+      .withArg(data.template.templateid)
+      .withLogName('analytics_app_create')
+      .build();
+  }
+}
+
+const createAppCommandlet = new SfdxCommandlet(
+  sfdxWorkspaceChecker,
+  new TemplateAndNameGather(),
+  new CreateAppExecutor()
+);
+export function createApp() {
+  return createAppCommandlet.run();
 }
