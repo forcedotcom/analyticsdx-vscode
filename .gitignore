@@ -93,3 +93,6 @@ package-lock.json
 
 # vim swap files
 *.swp
+
+# output from 'npm run license-report'
+analyticsdx-vscode-license-report.csv
