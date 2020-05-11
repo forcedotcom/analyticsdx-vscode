@@ -133,7 +133,6 @@ describe('template-info-schema.json finds errors in', () => {
       'customAttributes[0].label',
       'templateDependencies[0].name',
       'apexCallback.name',
-      'apexCallback.namespace',
       'videos[0].purpose',
       'videos[0].id',
       'videos[0].linkType',
