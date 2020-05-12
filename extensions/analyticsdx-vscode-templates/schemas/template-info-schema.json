@@ -39,16 +39,16 @@
   },
   "properties": {
     "templateType": {
-      "description": "The type of asset for which this is a template. Defaults to 'app' if unspecified.",
+      "description": "The type of asset the template creates. Defaults to 'app'.",
       "default": "app",
       "oneOf": [
         {
           "type": "string",
           "enum": ["app", "dashboard", "embeddedapp"],
           "enumDescriptions": [
-            "Specify that this is an application template.",
-            "Specify that this is a dashboard template.",
-            "Specify that this is an embedded application template."
+            "Specify that the template creates an app.",
+            "Specify that the template creates a dashboard.",
+            "Specify that the template creates an embedded app."
           ]
         },
         {
@@ -63,10 +63,10 @@
     },
     "name": {
       "type": "string",
-      "description": "The unique developer name of the template. If this is changed, it creates a new template; if it is changed to an existing template devName, it overwrites the existing template.",
+      "description": "The unique developer name for the template. If changed, creates a new template. If changed to an existing template developer name, overwrites the template with that name.",
       "maxLength": 80,
       "pattern": "^(?!.*__)(?!.*_$)[A-Za-z][A-Za-z0-9_]*$",
-      "patternErrorMessage": "Value should start with an ascii letter, followed by letters, numbers, or underscores. It cannot contain consecutive underscores nor end in an underscore."
+      "patternErrorMessage": "Value should start with an ascii letter, followed by letters, numbers, or underscores. Cannot contain consecutive underscores or end in underscore."
     },
     "namespace": {
       "type": ["null", "string"],
@@ -80,12 +80,12 @@
     },
     "label": {
       "type": "string",
-      "description": "The template name that is visible to users.",
+      "description": "The template name visible to users.",
       "maxLength": 80
     },
     "description": {
       "type": ["null", "string"],
-      "description": "The template description to tell users about the asset they will be creating using the template.",
+      "description": "Describes the asset users create from the template.",
       "maxLength": 255,
       "defaultSnippets": [
         {
@@ -96,8 +96,8 @@
     },
     "assetIcon": {
       "type": ["null", "string"],
-      "deprecationMessage": "Deprecated - use 'icons.appBadge' instead.",
-      "description": "(Deprecated - use 'icons.appBadge' instead) Sets the app icon at creation. There are 20 app icons stored as .png files in Analytics, which are numbered 1-20. If not specified, system will use default icon 1.png for the app.",
+      "deprecationMessage": "Deprecated. Use 'icons.appBadge' instead.",
+      "description": "(Deprecated. Use 'icons.appBadge' instead.) Sets the app icon at creation. Analytics stores twenty app icon .png files numbered 1-20. Defaults to 'icon 1.png'.",
       "defaultSnippets": [
         {
           "label": "\"\"",
@@ -108,8 +108,8 @@
     "templateIcon": {
       "type": ["null", "string"],
       "default": "default.png",
-      "deprecationMessage": "Deprecated - use 'icons.templateBadge' instead.",
-      "description": "(Deprecated - use icons.templateBadge instead) Sets the template icon to display in the UI. If not specified, system will use default icon for the template (default.png). Currently, default.png is the only icon ISVs can use.",
+      "deprecationMessage": "Deprecated. Use 'icons.templateBadge' instead.",
+      "description": "(Deprecated. Use icons.templateBadge instead.) Sets the template icon to display in the UI. If not specified, system uses default icon for the template (default.png). Default.png is the only icon developers can use.",
       "defaultSnippets": [
         {
           "label": "\"\"",
@@ -119,30 +119,30 @@
     },
     "icons": {
       "type": ["null", "object"],
-      "description": "Specifies icons to display in the UI for the template.",
+      "description": "Specifies the icon to display in the UI for the template.",
       "examples": [{}],
       "additionalProperties": false,
       "properties": {
         "appBadge": {
           "$ref": "#/definitions/icon",
-          "description": "The icon for the created asset."
+          "description": "The icon representing the dashboard or app after it's created."
         },
         "templateBadge": {
           "$ref": "#/definitions/icon",
-          "description": "The icon for the template."
+          "description": "The template icon displayed in the template picker during app creation."
         },
         "templateDetail": {
           "$ref": "#/definitions/icon",
-          "deprecationMessage": "Deprecated - no longer used."
+          "deprecationMessage": "Deprecated. No longer used."
         },
         "templatePreviews": {
           "type": ["null", "array"],
           "minItems": 0,
           "examples": [[]],
-          "description": "Preview icons for the template.",
+          "description": "Template preview icons displayed in the template details window during app creation.",
           "items": {
             "$ref": "#/definitions/previewIcon",
-            "description": "Preview icon for the template."
+            "description": "Template preview icon."
           }
         }
       }
@@ -153,7 +153,7 @@
       "minimum": 39.0,
       "$comment": "multipleOf 1.0 will basically check that it's a whole number or ends in .0, to match what's currently supported",
       "multipleOf": 1.0,
-      "description": "This refers to the API version to use in processing Analytics assets (dashboards, datasets, XMDs, dataflows)."
+      "description": "The API version Analytics uses to process dashboards, datasets, XMDs, and dataflows."
     },
     "releaseInfo": {
       "type": "object",
@@ -163,12 +163,12 @@
       "properties": {
         "templateVersion": {
           "type": "string",
-          "description": "The version of the template, tracked for the upgrade process. Calling wave/templates PUT will automatically increment this number, but it can be changed manually as well. The format is ##.##, as a string.",
+          "description": "The template version, tracked for the upgrade process. A wave/templates PUT call automatically increments the number. Can also be changed manually. Format: ##.## as a string.",
           "pattern": "^[0-9]+\\.[0-9]+$"
         },
         "notesFile": {
           "type": ["null", "string"],
-          "description": "A template dev defined HTML file to describe new release details. Basic HTML formatting is supported, but not links or javascript. Defaults to using the template description as release notes if file is not specified.",
+          "description": "HTML file that describes a new template version. Supports basic HTML formatting, but not links or javascript. Defaults to template description if file is not specified.",
           "defaultSnippets": [
             {
               "label": "\"\"",
@@ -189,7 +189,7 @@
     },
     "rules": {
       "type": ["null", "array"],
-      "description": "Defines the rules files for converting to and from the template, loaded 1st to last and order matters for dependencies.",
+      "description": "Defines rules files for converting apps to and from the template. Loaded first to last. Order matters for dependencies.",
       "minItems": 0,
       "examples": [[]],
       "items": {
@@ -202,7 +202,7 @@
             "enum": ["templateToApp", "appToTemplate"],
             "enumDescriptions": [
               "Rules to apply when creating a new app from a template.",
-              "Rules to apply when updating the template from the master app ."
+              "Rules to apply when updating the template from the master app."
             ],
             "default": "templateToApp",
             "description": "The type of the rules file."
@@ -240,8 +240,8 @@
     },
     "ruleDefinition": {
       "type": ["null", "string"],
-      "deprecationMessage": "Deprecated - use a templateToApp rule instead.",
-      "description": "(Deprecated - use a templateToApp rule instead) Define a single templateToApp rules file for the template.",
+      "deprecationMessage": "Deprecated. Use a templateToApp rule instead.",
+      "description": "(Deprecated. Use a templateToApp rule instead.) Define a single templateToApp rules file for the template.",
       "defaultSnippets": [
         {
           "label": "\"\"",
@@ -287,11 +287,11 @@
       "properties": {
         "namespace": {
           "type": "string",
-          "description": "The SFDC namespace for the org."
+          "description": "The org's SFDC namespace."
         },
         "name": {
           "type": "string",
-          "description": "The name of the Apex class to be used."
+          "description": "The name of the Apex class to use."
         }
       },
       "$comment": "TODO: dynamically get the available classes from either the metadata or org browser",
@@ -321,15 +321,15 @@
           },
           "label": {
             "type": "string",
-            "description": "The dashboard label which MUST match the 'label' attribute in the dashboard file."
+            "description": "The dashboard label. Must match the 'label' attribute in the dashboard file."
           },
           "name": {
             "type": "string",
-            "description": "The dashboard name which MUST match the 'name' attribute in the dashboard file."
+            "description": "The dashboard name. Must match the 'name' attribute in the dashboard file."
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the dashboard will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the dashboard is created in the app. If not met, the dashboard is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -373,15 +373,15 @@
           },
           "label": {
             "type": "string",
-            "description": "The lens label which MUST match the 'label' attribute in the lens file."
+            "description": "The lens label. Must match the 'label' attribute in the lens file."
           },
           "name": {
             "type": "string",
-            "description": "The lens name which MUST match the 'name' attribute in the lens file."
+            "description": "The lens name. Must match the 'name' attribute in the lens file."
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the lens will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the lens is created in the app. If not met, the lens is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -425,15 +425,15 @@
           },
           "label": {
             "type": "string",
-            "description": "The dataflow label which MUST match the 'MasterLabel' attribute in the dataflow file."
+            "description": "The dataflow label. Must match the 'MasterLabel' attribute in the dataflow file."
           },
           "name": {
             "type": "string",
-            "description": "The dataflow name which MUST match the 'name' attribute in the dataflow file."
+            "description": "The dataflow name. Must match the 'name' attribute in the dataflow file."
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the dataflow will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the dataflow is created in the app. If not, the dataflow is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -479,15 +479,15 @@
           },
           "label": {
             "type": "string",
-            "description": "The recipe label which MUST match the 'label' attribute in the dashborecipeard file."
+            "description": "The recipe label. Must match the 'label' attribute in the dashborecipeard file."
           },
           "name": {
             "type": "string",
-            "description": "The recipe name which MUST match the 'name' attribute in the recipe file."
+            "description": "The recipe name. Must match the 'name' attribute in the recipe file."
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the recipe will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the recipe is created in the app. If not, the recipe is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -517,7 +517,7 @@
     },
     "externalFiles": {
       "type": ["null", "array"],
-      "description": "List of external files, CSV and descriptive files to be used in the template.",
+      "description": "List of external files, CSV, and descriptive files used in the template.",
       "minItems": 0,
       "examples": [[]],
       "items": {
@@ -537,17 +537,17 @@
           },
           "type": {
             "type": "string",
-            "description": "The type of the data in the extenral file. Currently, only 'CSV' is supported.",
+            "description": "The type of data in the external file. Only supports 'CSV'.",
             "enum": ["CSV"],
             "default": "CSV"
           },
           "name": {
             "type": "string",
-            "description": "The externalFile name, which ,iust match the 'name' attribute in the schema file."
+            "description": "The externalFile name. Must match the 'name' attribute in the schema file."
           },
           "schema": {
             "type": ["null", "string"],
-            "description": "Path to the schema file (describes the format of the data).",
+            "description": "Path to the schema file, which describes data format.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -557,7 +557,7 @@
           },
           "userXmd": {
             "type": ["null", "string"],
-            "description": "Path to the XMD file (describes the display format of the data).",
+            "description": "Path to the XMD file, which describes data display format.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -567,7 +567,7 @@
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the external file will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the external file is created in the app. If not, the external file is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -645,7 +645,7 @@
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the dataset will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the dataset is created in the app. If not met, the dataset is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -686,7 +686,7 @@
     },
     "imageFiles": {
       "type": ["null", "array"],
-      "description": "List of app images to be used in the template.",
+      "description": "List of app images used in the template.",
       "minItems": 0,
       "examples": [[]],
       "items": {
@@ -704,7 +704,7 @@
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the dataset will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the dataset [GREG: DO YOU MEAN IMAGE HERE OR DATASET?] is created in the app. If not, the [WHAT?] is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -744,7 +744,7 @@
     },
     "storedQueries": {
       "type": ["null", "array"],
-      "description": "List of storied queries to use in the template.",
+      "description": "List of stored queries to use in the template.",
       "minItems": 0,
       "examples": [[]],
       "doNotSuggest": true,
@@ -767,7 +767,7 @@
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the stored query will be created in the app; otherwise, it will not be created.",
+            "description": "If met, the stored query is created in the app. If not, the stored query is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -803,7 +803,7 @@
       "properties": {
         "discoveryStories": {
           "type": "array",
-          "description": "The list of named extended types",
+          "description": "List of named extended types.",
           "minItems": 0,
           "items": {
             "type": "object",
@@ -824,7 +824,7 @@
               },
               "condition": {
                 "type": ["null", "string"],
-                "description": "If this is met, then the extended type will be created in the app; otherwise, it will not be created.",
+                "description": "If met, the extended type is created in the app. If not, the extended type is not created.",
                 "defaultSnippets": [
                   {
                     "label": "\"\"",
@@ -856,17 +856,17 @@
     },
     "customAttributes": {
       "type": ["null", "array"],
-      "description": "Define custom meta data attributes for the template.",
+      "description": "Define custom metadata attributes for the template.",
       "minItems": 0,
       "examples": [[]],
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "description": "A custom meta data attribute for the template.",
+        "description": "Custom metadata attribute for the template.",
         "required": ["label"],
         "properties": {
           "label": {
-            "description": "Custom attribute display label",
+            "description": "Custom attribute display label.",
             "anyOf": [
               {
                 "type": "string"
@@ -875,10 +875,10 @@
                 "type": "string",
                 "enum": ["Features", "Salesforce Objects", "Publisher", "Industry"],
                 "enumDescriptions": [
-                  "List of features provided by this template",
-                  "List of salesforce objects this template uses.",
-                  "The publisher(s) of this template.",
-                  "The industries this template is for."
+                  "List of template features.",
+                  "List of Salesforce objects the template uses.",
+                  "Publisher(s) of the template.",
+                  "Industries this template is for."
                 ]
               }
             ]
@@ -904,7 +904,7 @@
     },
     "videos": {
       "type": ["null", "array"],
-      "description": "Associate online videos to the template.",
+      "description": "Associate videos with the template.",
       "minItems": 0,
       "examples": [[]],
       "doNotSuggest": true,
@@ -921,7 +921,7 @@
           },
           "id": {
             "type": "string",
-            "description": "Id of the video in the video provider (specified in linkType)"
+            "description": "ID of the video in the video provider specified in linkType."
           },
           "linkType": {
             "description": "The video provider.",
@@ -943,7 +943,7 @@
     },
     "tags": {
       "type": ["null", "array"],
-      "description": "Keywords to tag on this template.",
+      "description": "Keywords to tag for the template.",
       "minItems": 0,
       "examples": [[]],
       "items": {
@@ -958,7 +958,7 @@
     },
     "templateDependencies": {
       "type": ["null", "array"],
-      "description": "Other templates that this template depends upon. For each, an application will need to exist that was created from the dependent template.",
+      "description": "Templates that this template depends upon. For each, an app needs to exist that was created from the dependent template.",
       "minItems": 0,
       "examples": [[]],
       "items": {
@@ -982,7 +982,7 @@
           },
           "templateVersion": {
             "type": ["null", "string"],
-            "description": "The version matcher of the dependent template this template requires. You can optionally use =, >, >=, <, and <= at beginning.",
+            "description": "The version matcher of the dependent template this template requires. Optionally use =, >, >=, <, and <= at beginning.",
             "pattern": "^(=|>|>=|<|<=)?[0-9]+(\\.[0-9]+)?$",
             "defaultSnippets": [
               {
@@ -993,7 +993,7 @@
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If this is met, then the template dependency will be required and available in expressions.",
+            "description": "If met, the template dependency is required and available in expressions.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -1098,7 +1098,7 @@
       "pattern": "^\\$\\{.*\\}$"
     },
     "overwriteOnUpgrade": {
-      "description": "Controls how to handle this object when the template is upgraded.",
+      "description": "Controls how to handle the object when the template is upgraded.",
       "oneOf": [
         {
           "$ref": "#/definitions/elExpression",
@@ -1116,7 +1116,7 @@
           "enum": ["Always", "IfDifferent", "Never"],
           "enumDescriptions": [
             "Always overwrite this object on upgrade.",
-            "Overwrite this object on upgrade if it differs from the template's version.",
+            "Overwrite this object on upgrade if it differs from the template version.",
             "Never overwrite this object on upgrade."
           ]
         },
