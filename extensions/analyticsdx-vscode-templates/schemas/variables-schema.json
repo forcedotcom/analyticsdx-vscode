@@ -246,7 +246,7 @@
             },
             "strictValidation": {
               "type": "boolean",
-              "description": "Specifies if this performs strict validation of the fields values against the property definitions. Defaults to false.",
+              "description": "Specifies if this performs strict validation of fields values against property definitions. Defaults to false.",
               "default": false,
               "doNotSuggest": false
             }
