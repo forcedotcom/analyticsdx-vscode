@@ -26,7 +26,6 @@
       "properties": {
         "default": {
           "type": "object",
-          "description": "Default featured assets in an application created from this template. [GREG: NOT SURE WHAT THIS IS]",
           "required": [],
           "additionalProperties": false,
           "properties": {

@@ -166,7 +166,7 @@
             },
             "dataType": {
               "type": "string",
-              "description": "Required data type of underlying sObject field. [GREG: IS const CORRECT? sObjectFieldType?],"
+              "description": "Required data type of underlying sObject field.",
               "enum": [
                 "xsd:base64",
                 "xsd:boolean",
