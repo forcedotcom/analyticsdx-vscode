@@ -9,7 +9,7 @@
   "properties": {
     "constants": {
       "type": "array",
-      "description": "Set of constants to be defined, can be empty if no constants are needed",
+      "description": "Set of constants to be defined. Can be empty if template uses no constants.",
       "minItems": 0,
       "items": {
         "type": "object",
@@ -19,10 +19,10 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Unique name for the constant, can be referenced in rules as ${Constants.<name>}."
+            "description": "Unique name for the constant. Can be referenced in rules as ${Constants.<name>}."
           },
           "value": {
-            "description": "The value for the constant. This can be any primitive value or null, or can be or contain ${...} expressions"
+            "description": "The value for the constant. Can be any primitive value or null, or can be or contain ${...} expressions."
           }
         },
         "defaultSnippets": [
@@ -45,7 +45,7 @@
     },
     "rules": {
       "type": "array",
-      "description": "Set of rules for modifying json file structures, can be empty.",
+      "description": "Set of rules for modifying json file structures. Can be empty.",
       "minItems": 0,
       "items": {
         "type": "object",
@@ -58,26 +58,26 @@
             "minLength": 1
           },
           "condition": {
-            "description": "Controls whether this rule will run. Should be a ${...} expression against Variables and/or Constants that returns a boolean value, or 'true' or 'false'.",
+            "description": "Controls whether rule runs. Should be a ${...} expression against variables and/or constants. Expression must return a boolean value or 'true' or 'false'.",
             "$ref": "#/definitions/condition"
           },
           "appliesTo": {
             "type": "array",
-            "description": "Specifies what files this rule will apply to.",
+            "description": "Specifies files that rule applies to.",
             "minItems": 0,
             "items": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "type": {
-                  "description": "The type of file to match on.",
+                  "description": "The type of file for match.",
                   "oneOf": [
                     {
                       "type": "string",
                       "default": "*",
                       "enum": ["*", "dashboard", "discoveryStories", "folder", "lens", "schema", "workflow", "xmd"],
                       "enumDescriptions": [
-                        "Match all types of files.",
+                        "Match all file types.",
                         "Match dashboard files.",
                         "Match extendedTypes discoveryStories files.",
                         "Match the folderDefinition file.",
@@ -94,12 +94,12 @@
                 },
                 "name": {
                   "type": ["string", "null"],
-                  "description": "The name of the file to match, from the name in template-info.json. Can be * to match all names",
+                  "description": "The name of the file to match. From the name in template-info.json. Use * to match all names.",
                   "default": "*"
                 },
                 "label": {
                   "type": ["string", "null"],
-                  "description": "The label of the file to match, from the label in template-info.json. Can be * to match all labels",
+                  "description": "The label of the file to match. From the label in template-info.json. Use * to match all labels.",
                   "default": "*"
                 }
               },
@@ -146,7 +146,7 @@
     },
     "macros": {
       "type": "array",
-      "description": "Specifies macros that can be used as functions in ${...} expressions",
+      "description": "Specifies macros to use as functions in ${...} expressions.",
       "minItems": 0,
       "items": {
         "type": "object",
@@ -155,7 +155,7 @@
         "properties": {
           "namespace": {
             "type": "string",
-            "description": "A unique string identifier used to scope the collection of macro definitions. This is used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
+            "description": "A unique string identifier used to scope the collection of macro definitions. Use when referencing a macro definition in an expression, such as ${namespace:name()}.",
             "allOf": [
               {
                 "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
@@ -222,7 +222,7 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "A unique string identifier for this macro definition. This is used when referencing a macro definition in an expression, e.g. ${namespace:name()}",
+                  "description": "A unique string identifier for the macro definition. Use when referencing a macro definition in an expression, such as ${namespace:name()}.",
                   "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
                 },
                 "description": {
@@ -230,7 +230,7 @@
                 },
                 "parameters": {
                   "type": "array",
-                  "description": "Parameter names for the macro. These can be referenced as ${p.param_name} in expressions in the actions and return",
+                  "description": "Parameter names for the macro. Can be referenced as ${p.param_name} in expressions in the actions and returns [GREG: PLURAL?].",
                   "minItems": 0,
                   "maxItems": 10,
                   "items": {
@@ -240,7 +240,7 @@
                 },
                 "actions": {
                   "type": "array",
-                  "description": "Rule actions to execute in this macro",
+                  "description": "Rule actions to execute in the macro.",
                   "minItems": 0,
                   "items": {
                     "$ref": "#/definitions/action"
@@ -248,7 +248,7 @@
                 },
                 "returns": {
                   "type": ["string", "boolean", "integer", "number", "object", "array", "null"],
-                  "description": "Optional value to return from the macro definition, can use ${...} expressions.",
+                  "description": "Optional value to return from the macro definition. Can use ${...} expressions.",
                   "examples": [true, false, [], {}, null],
                   "defaultSnippets": [
                     {
@@ -328,12 +328,12 @@
           "type": "string"
         },
         "condition": {
-          "description": "Controls whether this action will run. Must be a ${...} expression against Variables and/or Constants that returns a boolean value, or 'true' or 'false'.",
+          "description": "Controls whether the action runs. Must be a ${...} expression against variables and/or constants. Expression must return a boolean value or 'true' or 'false'.",
           "$ref": "#/definitions/condition"
         },
         "path": {
           "type": "string",
-          "description": "JsonPath of the node to perform this action upon.",
+          "description": "Designates jsonPath of the node to perform the action on.",
           "minLength": 1,
           "examples": ["$.name"]
         },
@@ -347,11 +347,11 @@
           "properties": {
             "action": { "const": "add" },
             "value": {
-              "description": "The value to add. This can be any valid json type, including arrays and objects, and can contain ${...} expressions."
+              "description": "The value to add. Can be any valid json type, including arrays and objects, and can contain ${...} expressions."
             },
             "index": {
               "type": ["number", "integer"],
-              "description": "The 0-based index at which to add into the array. Use 0 to add to the start, leave unspecified to add to the end."
+              "description": "The 0-based index at which to add into the array [GREG: I THINK WE CAN DO BETTER, BUT CAN'T COME UP WITH ANYTHING. Use 0 to add to the start. Leave unspecified to add to the end."
             }
           },
           "required": ["value", "path"]
@@ -367,7 +367,7 @@
             "action": { "const": "eval" },
             "key": {
               "type": "string",
-              "description": "The name of a variable within the ${Rules.Eval} context to set to the return value of the exrepssion."
+              "description": "The name of a variable within the ${Rules.Eval} context to set to the return value of the expression."
             },
             "value": {
               "description": "The ${...} expression to evaluate."
@@ -393,11 +393,11 @@
             "action": { "const": "replace" },
             "key": {
               "type": "string",
-              "description": "The text to replace, can be a ${...} expression."
+              "description": "The text to replace. Can be a ${...} expression."
             },
             "value": {
               "type": "string",
-              "description": "The text to insert, can be a ${...} expression."
+              "description": "The text to insert. Can be a ${...} expression."
             }
           },
           "required": ["key", "value"]
