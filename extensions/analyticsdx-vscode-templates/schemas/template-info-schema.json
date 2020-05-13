@@ -283,7 +283,7 @@
       "type": "object",
       "description": "Registers an Apex class that runs on wizard load, app create, and app upgrade. The Apex class examines the org and sets variable values.",
       "additionalProperties": false,
-      "required": ["namespace", "name"],
+      "required": ["name"],
       "properties": {
         "namespace": {
           "type": "string",
@@ -299,8 +299,7 @@
         {
           "label": "New apexCallback",
           "body": {
-            "namespace": "${1:namespace}",
-            "name": "${2:name}"
+            "name": "${1:name}"
           }
         }
       ]
