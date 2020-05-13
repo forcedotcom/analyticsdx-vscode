@@ -20,13 +20,13 @@
     },
     "featuredAssets": {
       "type": "object",
-      "description": "Lists of featured assets in an application created from this template",
+      "description": "Sets the order in which to display dashboards in an app created from the template. If empty, dashboards appear in alphabetical order according to their label.",
       "required": [],
       "additionalProperties": false,
       "properties": {
         "default": {
           "type": "object",
-          "description": "Default featured assets in an application created from this template",
+          "description": "Default featured assets in an application created from this template. [GREG: NOT SURE WHAT THIS IS]",
           "required": [],
           "additionalProperties": false,
           "properties": {
