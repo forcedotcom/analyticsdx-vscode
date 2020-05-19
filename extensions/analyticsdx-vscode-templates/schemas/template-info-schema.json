@@ -478,7 +478,7 @@
           },
           "label": {
             "type": "string",
-            "description": "The recipe label. Must match the 'label' attribute in the dashborecipeard file."
+            "description": "The recipe label. Must match the 'label' attribute in the recipe file."
           },
           "name": {
             "type": "string",
