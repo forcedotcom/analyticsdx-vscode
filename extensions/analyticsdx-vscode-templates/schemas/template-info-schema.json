@@ -119,7 +119,7 @@
     },
     "icons": {
       "type": ["null", "object"],
-      "description": "Specifies the icon to display in the UI for the template.",
+      "description": "Specifies the icons to display in the UI for the template.",
       "examples": [{}],
       "additionalProperties": false,
       "properties": {
@@ -153,7 +153,7 @@
       "minimum": 39.0,
       "$comment": "multipleOf 1.0 will basically check that it's a whole number or ends in .0, to match what's currently supported",
       "multipleOf": 1.0,
-      "description": "The API version Analytics uses to process dashboards, datasets, XMDs, and dataflows."
+      "description": "The API version Analytics uses to process all app assets."
     },
     "releaseInfo": {
       "type": "object",
@@ -516,7 +516,7 @@
     },
     "externalFiles": {
       "type": ["null", "array"],
-      "description": "List of external files, CSV, and descriptive files used in the template.",
+      "description": "List of external CSV files used in the template.",
       "minItems": 0,
       "examples": [[]],
       "items": {
@@ -703,7 +703,7 @@
           },
           "condition": {
             "type": ["null", "string"],
-            "description": "If met, the dataset [GREG: DO YOU MEAN IMAGE HERE OR DATASET?] is created in the app. If not, the [WHAT?] is not created.",
+            "description": "If met, the image is created in the app. If not, the image is not created.",
             "defaultSnippets": [
               {
                 "label": "\"\"",
@@ -802,7 +802,7 @@
       "properties": {
         "discoveryStories": {
           "type": "array",
-          "description": "List of named extended types.",
+          "description": "List of discovery stories to use in the template.",
           "minItems": 0,
           "items": {
             "type": "object",
@@ -823,7 +823,7 @@
               },
               "condition": {
                 "type": ["null", "string"],
-                "description": "If met, the extended type is created in the app. If not, the extended type is not created.",
+                "description": "If met, the discovery story is created in the app. If not, the discovery story is not created.",
                 "defaultSnippets": [
                   {
                     "label": "\"\"",

@@ -230,7 +230,7 @@
                 },
                 "parameters": {
                   "type": "array",
-                  "description": "Parameter names for the macro. Can be referenced as ${p.param_name} in expressions in the actions and returns [GREG: PLURAL?].",
+                  "description": "Parameter names for the macro. Can be referenced as ${p.param_name} in expressions in the action and return.",
                   "minItems": 0,
                   "maxItems": 10,
                   "items": {
@@ -333,7 +333,7 @@
         },
         "path": {
           "type": "string",
-          "description": "Designates jsonPath of the node to perform the action on.",
+          "description": "Designates JSONPath of the node to perform the action on.",
           "minLength": 1,
           "examples": ["$.name"]
         },
@@ -347,11 +347,11 @@
           "properties": {
             "action": { "const": "add" },
             "value": {
-              "description": "The value to add. Can be any valid json type, including arrays and objects, and can contain ${...} expressions."
+              "description": "The value to add. Can be any valid JSON type, including arrays and objects, and can contain ${...} expressions."
             },
             "index": {
               "type": ["number", "integer"],
-              "description": "The 0-based index at which to add into the array [GREG: I THINK WE CAN DO BETTER, BUT CAN'T COME UP WITH ANYTHING. Use 0 to add to the start. Leave unspecified to add to the end."
+              "description": "The 0-based index at which to add into the array. Use 0 to add to the start. Leave unspecified to add to the end."
             }
           },
           "required": ["value", "path"]
@@ -383,7 +383,7 @@
               "description": "The key name to put into the object node."
             },
             "value": {
-              "description": "The value to put. This can be any valid json type, including arrays and objects, and can contain ${...} expressions."
+              "description": "The value to put. This can be any valid JSON type, including arrays and objects, and can contain ${...} expressions."
             }
           },
           "required": ["key", "value", "path"]
