@@ -11,7 +11,7 @@
     "pages": {
       "type": "array",
       "minItems": 0,
-      "description": "Configures the set of pages to show in the template wizrard for gathering the values for variables. The order in this list is the order they will be displayed.",
+      "description": "Configures pages to show in wizard for user selection of variables values. Displayed in UI in the order in which they're listed here.",
       "items": {
         "type": "object",
         "required": ["title"],
@@ -19,11 +19,11 @@
         "properties": {
           "title": {
             "type": "string",
-            "description": "Title to be displayed at the top of the page."
+            "description": "Title displayed at top of the page."
           },
           "condition": {
             "type": "string",
-            "description": "A {{...}} condition against Variables. The condition can use && and || to join expressions. If the condition evaluates to true, then the page will display; if the condition evaluates to false, the page will not display.",
+            "description": "A {{...}} condition against variables. Can use && and || to join expressions. If the condition evaluates to true, then the page displays. If the condition evaluates to false, the page does not display.",
             "pattern": "^{{.+}}$",
             "patternErrorMessage": "Must be a valid {{...}} expression.",
             "examples": [
@@ -38,17 +38,17 @@
           },
           "helpUrl": {
             "type": "string",
-            "description": "URL provided by template dev to additional content to help user with creating app."
+            "description": "Link to help for creating and using app."
           },
           "vfPage": {
             "type": "object",
-            "description": "Specifies that a custom Visualforce page should be used for this set of variables. Make sure the Visualforce page can be accessed by users in the organization with the Manage Analytics Templated Apps user permission.",
+            "description": "Specifies that this set of variables use a custom Visualforce page. Make sure the Visualforce page can be accessed by users with the Manage Analytics Templated Apps user permission.",
             "required": ["name"],
             "additionalProperties": false,
             "properties": {
               "name": {
                 "type": "string",
-                "description": "The name of Visualforce class to use.",
+                "description": "Name of Visualforce class.",
                 "$comment": "Empty or whitespace-only string is technically valid in the server (to mean no vfPage), but we should warn on it.",
                 "minLength": 1,
                 "pattern": "[^ \t\r\n\b\f]",
@@ -56,7 +56,7 @@
               },
               "namespace": {
                 "type": "string",
-                "description": "The namespace for the Visualforce class."
+                "description": "Namespace for the Visualforce class."
               }
             },
             "defaultSnippets": [
@@ -71,7 +71,7 @@
           },
           "variables": {
             "type": "array",
-            "description": "The variables this page covers. If not using a custom vfPage, the order here is the order the variables' UIs will be presented in the template wizard. If using a custom vfPage, these variables will be passed into the page.",
+            "description": "The variables this page covers. If not using a custom Visualforce page, displayed in UI in the order in which they're listed here. If using a custom Visualforce page, these variables are passed into the page.",
             "minItems": 0,
             "items": {
               "type": "object",
@@ -80,17 +80,17 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "Variable name, must match name of variable defined in variableDefinition file.",
+                  "description": "Variable name. Must match name of variable defined in variableDefinition file.",
                   "$comment": "The variableDefinition file's fields have to match this regex, so match it here, too.",
                   "pattern": "^[a-zA-Z_][a-zA-Z0-9_]+$"
                 },
                 "visibility": {
-                  "description": "Controls whether the variable should be visible. The value must one of 'Disabled', 'Hidden', or 'Visible', or a {{...}} expression against Variables that evaluates to one of those or true (Visible) or false (Hidden)",
+                  "description": "Controls if the variable is visible. Value must be 'Disabled', 'Hidden', 'Visible', or a {{...}} expression against variables that evaluates to one of those or true (Visible) or false (Hidden).",
                   "oneOf": [
                     {
                       "type": "string",
                       "pattern": "^{{.+}}$",
-                      "patternErrorMessage": "Value must one of 'Disabled', 'Hidden', or 'Visible', or a {{...}} expression.",
+                      "patternErrorMessage": "Value must be 'Disabled', 'Hidden', 'Visible', or a {{...}} expression.",
                       "examples": [
                         "{{Variables.booleanVariable}}",
                         "{{Variables.booleanVariable ? 'Visible' : 'Disabled'}}",
@@ -105,9 +105,9 @@
                       "default": "Visible",
                       "enum": ["Disabled", "Hidden", "Visible"],
                       "enumDescriptions": [
-                        "The variable will show as disabled",
-                        "The variable will be hidden.",
-                        "The variable will be visible."
+                        "The variable shows as disabled",
+                        "The variable is hidden.",
+                        "The variable is visible."
                       ]
                     },
                     {
@@ -175,7 +175,7 @@
     },
     "displayMessages": {
       "type": "array",
-      "description": "A custom display message to show on the application landing page. Currently only supports 1 display message.",
+      "description": "A text message to display on the app landing page. Supports only 1 display message.",
       "minItems": 0,
       "maxItems": 1,
       "items": {
@@ -185,12 +185,12 @@
         "properties": {
           "text": {
             "type": "string",
-            "description": "Text to display on the app creation landing page"
+            "description": "Text to display on the app creation landing page."
           },
           "location": {
             "type": "string",
             "enum": ["AppLandingPage"],
-            "description": "Location to display the text, currently only 'AppLandingPage' is supported."
+            "description": "Location to display the text. Supports only 'AppLandingPage'."
           }
         },
         "defaultSnippets": [
