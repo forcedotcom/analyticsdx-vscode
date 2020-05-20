@@ -20,7 +20,7 @@
     },
     "featuredAssets": {
       "type": "object",
-      "description": "Sets the order in which to display dashboards in an app created from the template. If empty, dashboards appear in alphabetical order according to their label.",
+      "description": "Determines the dashboards to feature, and the order in which to list them, in an app created from the template. If empty, app features all dashboards listed in alphabetical order according to label.",
       "required": [],
       "additionalProperties": false,
       "properties": {
@@ -31,6 +31,7 @@
           "properties": {
             "assets": {
               "type": "array",
+              "description": "List of dashboards to feature in the created app, in the order in which to list them.",
               "minItems": 0,
               "items": {
                 "type": "object",
@@ -40,7 +41,7 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "description": "Asset id"
+                    "description": "The id for the dashboard to feature. Use the the format ${App.Dashboards['Sales Analytics Home'].Id}."
                   },
                   "name": {
                     "type": ["string", "null"]
