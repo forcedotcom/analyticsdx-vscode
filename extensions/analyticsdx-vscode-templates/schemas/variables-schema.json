@@ -26,7 +26,7 @@
         },
         "excludeSelected": {
           "type": "boolean",
-          "description": "For a picker like SObjectType or SObjectFieldType, removes values already selected by user from the picker. Defaults to false.",
+          "description": "For a picker like SobjectType or SobjectFieldType, removes values already selected by user from the picker. Defaults to false.",
           "default": false
         },
         "excludes": {
