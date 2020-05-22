@@ -1,6 +1,6 @@
 # Do it all in one step
 
-Run `ANALYTICSDX_VSCODE_VERSION=<X.Y.Z> npm run publish-all-vsixs.js`. That will do all of the steps listed below.
+Run `ANALYTICSDX_VSCODE_VERSION=<X.Y.Z> npm run publish-all-vsixs`. That will do all of the steps listed below.
 
 # Individual steps
 
