@@ -19,7 +19,7 @@ Before you set up Salesforce Analytics Extensions for VS Code, make sure that yo
 - **Analytics Plugin for Salesforce CLI**  
   Be sure to [install the Analytics Plugin for the Salesforce CLI](https://help.salesforce.com/articleView?id=bi_cli_analytics_plugin_install.htm&type=5).
 - **Salesforce Extension Pack**
-  Find the Salesforce Extension Pack in the VS Code Extensions Marketplace, and install it. 
+  Install the [Salesforce Extension Pack] (https://marketplace.visualstudio.com/items?itemName=salesforce.salesforcedx-vscode)from the VS Code Extensions Marketplace. 
 - **A Salesforce DX project**  
   Open your Salesforce DX project in a directory that contains an `sfdx-project.json` file. Otherwise, some features won't work.  
   If you don't already have a Salesforce DX project, create one with the **SFDX: Create Project** command
