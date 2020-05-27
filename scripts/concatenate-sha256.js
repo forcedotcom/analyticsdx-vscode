@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+/*
+ * Copyright (c) 2020, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+
 // This is designed to run from the top-level directory after a toplevel npm run vscode:sha256, which should be run
 // after the vsix packages have been created.
 const shell = require('shelljs');
