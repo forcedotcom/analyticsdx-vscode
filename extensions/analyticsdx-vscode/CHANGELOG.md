@@ -1,3 +1,9 @@
+# 0.2.1
+
+## Fixed
+
+- Telemetry bug fix and README updates
+
 # 0.2.0
 
 ## Added

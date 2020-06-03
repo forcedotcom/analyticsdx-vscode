@@ -1,3 +1,9 @@
+# Update changelog
+
+Always update the [extensions/analyticsdx-vscode/CHANGELOG.md](../extensions/analyticsdx-vscode/CHANGELOG.md) with high
+level changes since the last version. Follow the existing formatting. This should be committed and pushed, either
+before or with the the version changes.
+
 # Do it all in one step
 
 Run `ANALYTICSDX_VSCODE_VERSION=<X.Y.Z> npm run publish-all-vsixs`. That will do all of the steps listed below.
@@ -37,5 +43,5 @@ won't immediately check it in.
 2. Login to the salesforce publisher: `./node_modules/.bin/vsce login salesforce` and enter your access token
 3. Run `npm run vscode:publish`
 
-After publishing, you will normally want to commit any of the updated files (at least SHA256.md) and generate
-a tag for the version, like `git tag vX.Y.Z -m "Release X.Y.Z" && git push origin vX.Y.Z`
+After publishing, you will normally want to commit and push any of the updated files (i.e. SHA256.md, lerna.json,
+package.json's) and generate a tag for the version, like `git tag vX.Y.Z -m "Release X.Y.Z" && git push origin vX.Y.Z`
