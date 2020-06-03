@@ -43,7 +43,13 @@ export async function isAnalyticsSfdxPluginInstalled(): Promise<boolean> {
   // if the plugin isn't installed
   const adxInstalledCmd = new SfdxCommandBuilder().withArg('analytics').withArg('--help');
   const execution = new CliCommandExecutor(adxInstalledCmd.build(), {
-    cwd: getRootWorkspacePath()
+    cwd: getRootWorkspacePath(),
+    env: {
+      // turn off any telemetry for this call, since we're just seeing if it's installed and not really using it
+      SFDX_DISABLE_TELEMETRY: 'true',
+      // this used to be the env to turn on off telemetry, just in case they have an old sfdx base install
+      SFDX_DISABLE_INSIGHTS: 'true'
+    }
   }).execute();
   try {
     const code = await new CommandResult().getExitCode(execution);
