@@ -114,6 +114,10 @@ describe('CommandExecutor tests', () => {
       expect(patchedOptions.env).to.have.property('key2');
       expect(patchedOptions.env!.key2).to.equal(testData.get('key2'));
       expect(patchedOptions.env).to.have.any.keys('PATH', 'Path', 'path');
+
+      // make sure SFDX_TOOL is always set
+      expect(patchedOptions.env).to.have.property('SFDX_TOOL');
+      expect(patchedOptions.env!.SFDX_TOOL).to.equal('salesforce-vscode-extensions');
     });
 
     it('patchEnv does not override exising var', async () => {
