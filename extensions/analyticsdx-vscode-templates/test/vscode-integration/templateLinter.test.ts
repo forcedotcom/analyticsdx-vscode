@@ -521,7 +521,7 @@ describe('TemplateLinterManager', () => {
       );
     });
 
-    it('warns on folder.json in embeddedapp', async () => {
+    it('warns on variables in ui.json in embeddedapp', async () => {
       // create an embeddedapp template, with 1 page for 1 variable (without yet opening it)
       [tmpdir] = await createTempTemplate(false, { show: false });
       await writeTextToFile(uriRelPath(tmpdir, 'variables.json'), {
@@ -577,6 +577,69 @@ describe('TemplateLinterManager', () => {
         templateInfoUri,
         d => d?.filter(diagnosticFilter).length === 0,
         'Diagnostic on uiDefinition to go away'
+      );
+    });
+
+    it('warns on missing shares in embeddedapp', async () => {
+      // create an embeddedapp template, with 1 page for 1 variable (without yet opening it)
+      [tmpdir] = await createTempTemplate(false, { show: false });
+      const templateInfoUri = uriRelPath(tmpdir!, 'template-info.json');
+      await writeTextToFile(templateInfoUri, {
+        templateType: 'embeddedapp',
+        name: uriBasename(tmpdir),
+        label: 'Embedded app with initially no shares in folder.json',
+        assetVersion: 49.0,
+        releaseInfo: {
+          templateVersion: '1.0'
+        },
+        // start off with folder.json missing
+        folderDefinition: 'folder.json'
+      });
+
+      // make sure we get the 1 warning on folderDefinitoin
+      const diagnosticFilter = (d: vscode.Diagnostic) =>
+        jsonpathFrom(d) === 'folderDefinition' && d.code === ERRORS.TMPL_EMBEDDED_APP_NO_SHARES;
+      await openTemplateInfoAndWaitForDiagnostics(
+        templateInfoUri,
+        true,
+        d => d?.filter(diagnosticFilter).length === 1,
+        'Diagnostic on non-existing folderDefinition in an embeddedapp'
+      );
+
+      // now create an empty folder.json
+      const folderUri = uriRelPath(tmpdir!, 'folder.json');
+      await writeTextToFile(folderUri, {});
+      const [, folderEditor] = await openFile(folderUri);
+      // and we should still have the diagnostic on folderDefinitoin
+      await waitForDiagnostics(
+        templateInfoUri,
+        d => d?.filter(diagnosticFilter).length === 1,
+        'Diagnostic on no shares in an embeddedapp'
+      );
+
+      // now set shares to an empty array
+      await setDocumentText(folderEditor, { shares: [] });
+      // and we should still have the diagnostic on folderDefinitoin
+      await waitForDiagnostics(
+        templateInfoUri,
+        d => d?.filter(diagnosticFilter).length === 1,
+        'Diagnostic on empty shares in an embeddedapp'
+      );
+
+      // now update it to have a share
+      await setDocumentText(folderEditor, {
+        shares: [
+          {
+            accessType: 'View',
+            shareType: 'Organization'
+          }
+        ]
+      });
+      // and the warning should go away
+      await waitForDiagnostics(
+        templateInfoUri,
+        d => d?.filter(diagnosticFilter).length === 0,
+        'Diagnostic on folderDefinition to go away'
       );
     });
   }); // describe('lints template-info.json')

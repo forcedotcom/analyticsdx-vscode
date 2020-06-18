@@ -105,6 +105,8 @@ export const ERRORS = Object.freeze({
   TMPL_TEMPLATEICON_AND_TEMPLATEBADGE: 'tmpl-10',
   /** An embeddedapp template has a ui.json with pages. */
   TMPL_EMBEDDED_APP_WITH_UI: 'tmpl-11',
+  /** An embeddedapp template is missing at least one share in the folderDefinition (or folderDefinition doesn't exist). */
+  TMPL_EMBEDDED_APP_NO_SHARES: 'tmpl-12',
 
   /** Regex in variable in variable excludes is missing closing / */
   VARS_REGEX_MISSING_SLASH: 'vars-1',

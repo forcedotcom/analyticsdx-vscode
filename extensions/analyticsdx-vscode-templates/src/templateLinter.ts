@@ -268,11 +268,10 @@ export class TemplateLinter {
     // start these up and let them run
     const p = Promise.all([
       // make sure each place that can have a relative path to a file has a valid one
-      // TODO: warn if they put the same relPath in twice in 2 different fields?
       ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path =>
         this.lintRelFilePath(this.templateInfoDoc, tree, path)
       ),
-      this.lintTemplateInfoEmbeddedAppNoUi(this.templateInfoDoc, tree)
+      this.lintTemplateInfoEmbeddedApp(this.templateInfoDoc, tree)
     ]);
     // while those are going, do these synchronous ones
     this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
@@ -292,9 +291,10 @@ export class TemplateLinter {
     await p;
   }
 
-  private async lintTemplateInfoEmbeddedAppNoUi(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
-    const [type] = findJsonPrimitiveAttributeValue(tree, 'templateType');
+  private async lintTemplateInfoEmbeddedApp(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
+    const [type, typeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
     if (type === 'embeddedapp') {
+      // make sure there's no ui pages specified
       const uiDefNode = findNodeAtLocation(tree, ['uiDefinition']);
       if (uiDefNode) {
         const { json: uiJson } = await this.loadTemplateRelPathJson(tree, uiDefNode);
@@ -307,6 +307,22 @@ export class TemplateLinter {
             uiDefNode.parent || uiDefNode
           );
         }
+      }
+
+      // make sure there's at least one share in the folder.json
+      let hasShare = false;
+      const folderDefNode = findNodeAtLocation(tree, ['folderDefinition']);
+      if (folderDefNode) {
+        const { json: folderJson } = await this.loadTemplateRelPathJson(tree, folderDefNode);
+        hasShare = !!folderJson && lengthJsonArrayAttributeValue(folderJson, 'shares')[0] >= 1;
+      }
+      if (!hasShare) {
+        this.addDiagnostic(
+          doc,
+          'Templates of type embeddedapp must have at least 1 share definition in the folderDefinition file',
+          ERRORS.TMPL_EMBEDDED_APP_NO_SHARES,
+          folderDefNode?.parent || folderDefNode || typeNode?.parent || typeNode
+        );
       }
     }
   }
