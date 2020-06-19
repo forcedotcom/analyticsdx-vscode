@@ -37,7 +37,7 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
-import { CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
+import { CreateFolderShareCodeActionProvider, CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
@@ -224,6 +224,10 @@ export class TemplateDirEditing extends Disposable {
       // and quick fixes for creating missing relative-path files
       vscode.languages.registerCodeActionsProvider(templateInfoSelector, new CreateRelPathFileCodeActionProvider(), {
         providedCodeActionKinds: CreateRelPathFileCodeActionProvider.providedCodeActionKinds
+      }),
+      // and quick fixes for embeddedapps w/o shares
+      vscode.languages.registerCodeActionsProvider(templateInfoSelector, new CreateFolderShareCodeActionProvider(), {
+        providedCodeActionKinds: CreateFolderShareCodeActionProvider.providedCodeActionKinds
       })
     );
 

@@ -56,7 +56,14 @@ function lengthJsonArrayAttributeValue(tree: JsonNode, ...pattern: JSONPath): [n
   return [nodes ? nodes.length : -1, node];
 }
 
-type JsonCacheValue = { readonly doc: vscode.TextDocument | undefined; readonly json: JsonNode | undefined };
+type JsonCacheValue = {
+  // uri will be set if the template-info field is set to a valid rel path (which may not exist or be valid json)
+  readonly uri: vscode.Uri | undefined;
+  // doc will set if the field's rel path can be opened
+  readonly doc: vscode.TextDocument | undefined;
+  // json will set if the field rel path file contains json
+  readonly json: JsonNode | undefined;
+};
 
 /** An object that can lint a template folder.
  * This currently does full lint only (no incremental) -- a second call to lint() will clear out any saved state
@@ -111,12 +118,12 @@ export class TemplateLinter {
         } catch (e) {
           // this can happen if the file doesn't exist or can't be opened, but lintRelFilePath should warn on that alraedy
         }
-        cacheValue = { doc, json };
+        cacheValue = { doc, uri, json };
         this.jsonCache.set(relpath, cacheValue);
       }
       return cacheValue;
     }
-    return { doc: undefined, json: undefined };
+    return { doc: undefined, uri: undefined, json: undefined };
   }
 
   private addDiagnostic(
@@ -312,8 +319,10 @@ export class TemplateLinter {
       // make sure there's at least one share in the folder.json
       let hasShare = false;
       const folderDefNode = findNodeAtLocation(tree, ['folderDefinition']);
+      let folderDefinitionUri: vscode.Uri | undefined;
       if (folderDefNode) {
-        const { json: folderJson } = await this.loadTemplateRelPathJson(tree, folderDefNode);
+        const { uri, json: folderJson } = await this.loadTemplateRelPathJson(tree, folderDefNode);
+        folderDefinitionUri = uri;
         hasShare = !!folderJson && lengthJsonArrayAttributeValue(folderJson, 'shares')[0] >= 1;
       }
       if (!hasShare) {
@@ -321,7 +330,12 @@ export class TemplateLinter {
           doc,
           'Templates of type embeddedapp must have at least 1 share definition in the folderDefinition file',
           ERRORS.TMPL_EMBEDDED_APP_NO_SHARES,
-          folderDefNode?.parent || folderDefNode || typeNode?.parent || typeNode
+          folderDefNode?.parent || folderDefNode || typeNode?.parent || typeNode,
+          {
+            args: {
+              folderDefinitionUri
+            }
+          }
         );
       }
     }

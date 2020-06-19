@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { ERRORS, LINTER_SOURCE_ID } from '../constants';
 import { quickFixUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
+import { jsonStringifyWithOptions } from '../util/jsoncUtils';
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
 import {
@@ -22,11 +23,11 @@ import {
 } from '../util/vscodeUtils';
 
 /** The default body for a new variable. */
-const DEFAULT_VARIABLE_JSON: any = {
+const DEFAULT_VARIABLE_JSON = Object.freeze({
   variableType: {
     type: 'StringType'
   }
-};
+});
 
 /** Provides quick fixes for unrecognized variable name errors in ui.json's. */
 export class UiVariableCodeActionProvider implements vscode.CodeActionProvider {
@@ -83,25 +84,29 @@ export class UiVariableCodeActionProvider implements vscode.CodeActionProvider {
       fix.edit.createFile(varUri);
       const variablesJson: any = {};
       variablesJson[name] = DEFAULT_VARIABLE_JSON;
-      fix.edit.insert(varUri, new vscode.Position(0, 0), JSON.stringify(variablesJson, undefined, 2));
+      fix.edit.insert(
+        varUri,
+        new vscode.Position(0, 0),
+        jsonStringifyWithOptions(variablesJson, getFormattingOptionsForEditor(findEditorForDocument(document)))
+      );
       return fix;
     } else {
       // variables file exists, read it
       const varDoc = await vscode.workspace.openTextDocument(varUri);
       const currentText = varDoc.getText();
+      const formattingOptions = getFormattingOptionsForEditor(
+        findEditorForDocument(varDoc) || findEditorForDocument(document)
+      );
       if (currentText.trim().length === 0) {
         // if the file is empty text, just set it directly
         const variablesJson: any = {};
         variablesJson[name] = DEFAULT_VARIABLE_JSON;
-        fix.edit.insert(varUri, new vscode.Position(0, 0), JSON.stringify(variablesJson, undefined, 2));
+        fix.edit.insert(varUri, new vscode.Position(0, 0), jsonStringifyWithOptions(variablesJson, formattingOptions));
         return fix;
       } else {
         // otherwise, try to squish the variable into the variables file
         // jsonModify should throw an Error if the current variables file cannot be edited to include the new var
         // (i.e. it's not a top-level {})
-        const formattingOptions = getFormattingOptionsForEditor(
-          findEditorForDocument(varDoc) || findEditorForDocument(document)
-        );
         const edits = jsonModify(currentText, [name], DEFAULT_VARIABLE_JSON, { formattingOptions });
         if (edits.length <= 0) {
           // nothing to do

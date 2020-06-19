@@ -11,8 +11,8 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { ERRORS, TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { jsonPathToString } from '../../src/util/jsoncUtils';
-import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
-import { waitFor } from '../testutils';
+import { argsFrom, jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
+import { jsoncParse, waitFor } from '../testutils';
 import {
   closeAllEditors,
   createTemplateWithRelatedFiles,
@@ -402,6 +402,62 @@ describe('TemplateEditorManager', () => {
       if (actions.length !== 0) {
         expect.fail('Expected 0 code actions for imageFile, got: [' + actions.map(a => a.title).join(', ') + ']');
       }
+    });
+
+    it('quick fix for missing shares for embeddedapp', async () => {
+      // make an embeddedapp template w/ a folder.json that has no shares specified
+      [tmpdir] = await createTemplateWithRelatedFiles({
+        field: 'folderDefinition',
+        path: 'folder.json',
+        initialJson: {}
+      });
+      const [doc, editor] = await openTemplateInfo(uriRelPath(tmpdir, 'template-info.json'), true);
+      await setDocumentText(editor, {
+        templateType: 'embeddedapp',
+        folderDefinition: 'folder.json'
+      });
+      // wait for the warning on folderDefinition about missing shares
+      const folderFilter = (d: vscode.Diagnostic) =>
+        jsonpathFrom(d) === 'folderDefinition' && d.code === ERRORS.TMPL_EMBEDDED_APP_NO_SHARES;
+      const [diagnostic] = (
+        await waitForDiagnostics(
+          doc!.uri,
+          d => d?.filter(folderFilter).length === 1,
+          'initial warning on folderDefinition'
+        )
+      ).filter(folderFilter);
+      // the folderDefinitionUri arg should be on the diagnostic
+      expect(argsFrom(diagnostic)?.folderDefinitionUri, 'folderDefinitionUri').to.not.be.undefined;
+
+      // look for the quick fix
+      const actions = await getCodeActions(doc!.uri, diagnostic.range);
+      if (actions.length !== 1) {
+        expect.fail('Expected 1 code action for folderDefinition, got: [' + actions.map(a => a.title).join(', ') + ']');
+      }
+      expect(actions[0].title, 'quick fix title').to.equals('Add default share to folder.json');
+      expect(actions[0].edit, 'quick fix.edit').to.not.be.undefined;
+      // run the quick fix's edit
+      if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+        expect.fail(`Quick fix '${actions[0].title}' failed`);
+      }
+      // that should fix the warning on folderDefinition
+      await waitForDiagnostics(
+        doc!.uri,
+        d => d?.filter(folderFilter).length === 0,
+        'no warnings on folderDefintion after quick fix'
+      );
+      // make sure the share got created in folder.json
+      const uri = uriRelPath(tmpdir, 'folder.json');
+      const folderDoc = await vscode.workspace.openTextDocument(uri);
+      const folderJson = jsoncParse(folderDoc.getText());
+      expect(folderJson, 'folder.json').to.not.be.undefined;
+      expect(folderJson.shares, '"shares" in folder.json').to.not.be.undefined;
+      expect(folderJson.shares, '"shares" in folder.json').to.have.deep.members([
+        {
+          accessType: 'View',
+          shareType: 'Organization'
+        }
+      ]);
     });
 
     // TODO: tests for definitionProvider, actionProvider, etc.

@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { getNodePath, JSONPath, Node as JsonNode } from 'jsonc-parser';
+import { FormattingOptions, getNodePath, JSONPath, Node as JsonNode } from 'jsonc-parser';
 
 /**
  * Return all nodes that match the path-patterns.
@@ -199,4 +199,22 @@ export function pathPartsAreEquals(a1: JSONPath, a2: JSONPath, len = a1.length) 
     }
   }
   return true;
+}
+
+/** Do a JSON.stringify, but obey the specified formatting options (for spaces vs. tabs).
+ */
+export function jsonStringifyWithOptions(
+  value: any,
+  formattingOptions: FormattingOptions | undefined,
+  replacer?: ((this: any, key: string, value: any) => any) | Array<number | string> | null
+): string;
+export function jsonStringifyWithOptions(
+  value: any,
+  formattingOptions: FormattingOptions | undefined,
+  replacer?: any
+): string {
+  const space = (formattingOptions?.insertSpaces === false ? '\t' : formattingOptions?.tabSize) || 2;
+  // REVIEWME: handle formattingOptions.eol? The vscode text editor and formatters already handle line endings based on
+  // other prefs so it's probably ok to skip that here.
+  return JSON.stringify(value, typeof replacer === 'function' || Array.isArray(replacer) ? replacer : undefined, space);
 }
