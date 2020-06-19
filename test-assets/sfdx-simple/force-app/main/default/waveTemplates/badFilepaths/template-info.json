@@ -10,6 +10,7 @@
   "variableDefinition": "missing-variables.json",
   "uiDefinition": "missing-ui.json",
   "folderDefinition": "missing-folder.json",
+  "autoInstallDefinition": "missing-auto-install.json",
   "ruleDefinition": "missing-rules-definition.json",
   "rules": [
     {

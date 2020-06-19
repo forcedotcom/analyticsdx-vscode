@@ -1,11 +1,12 @@
 {
-    "templateType": "app",
-    "name": "BadVariables",
-    "label": "Bad Variables in Pages",
-    "assetVersion": 47.0,
-    "releaseInfo": {
-        "templateVersion": "1.0"
-    },
-    "variableDefinition": "variables.json",
-    "uiDefinition": "ui.json"
+  "templateType": "app",
+  "name": "BadVariables",
+  "label": "Bad Variables in Pages",
+  "assetVersion": 47.0,
+  "releaseInfo": {
+    "templateVersion": "1.0"
+  },
+  "variableDefinition": "variables.json",
+  "uiDefinition": "ui.json",
+  "autoInstallDefinition": "auto-install.json"
 }

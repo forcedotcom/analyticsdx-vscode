@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://schemas.salesforce.com/analytics/templates/folder.json",
+  "title": "Salesforce Analytics Template Folder Definition",
+  "description": "",
+  "type": "object",
+  "allowComments": true,
+  "additionalProperties": false,
+  "required": ["configuration", "hooks"],
+  "properties": {
+    "hooks": {
+      "type": "array",
+      "description": "Hooks for when and how to auto-install an app from the template.",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of install hook. Only supports 'PackageInstall'.",
+            "enum": ["PackageInstall"],
+            "enumDescriptions": [
+              "Auto-install (or upgrade) an app when the template is installed as part of a package."
+            ]
+          },
+          "requestName": {
+            "type": ["string", "null"],
+            "description": "Optional name for the auto-install request."
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New hook",
+            "body": {
+              "type": "PackageInstall",
+              "requestName": "${0}"
+            }
+          }
+        ]
+      },
+      "defaultSnippets": [
+        {
+          "label": "New hooks",
+          "body": [
+            {
+              "type": "PackageInstall",
+              "requestName": "${0}"
+            }
+          ]
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "description": "Configuration for the auto-install request.",
+      "additionalProperties": false,
+      "required": ["appConfiguration"],
+      "properties": {
+        "appConfiguration": {
+          "type": "object",
+          "description": "Configuration for creating the app.",
+          "additionalProperties": false,
+          "properties": {
+            "failOnDuplicateNames": {
+              "type": ["boolean", "null"],
+              "description": "If true, app creation fails if an app or asset exists with the same name.",
+              "default": false
+            },
+            "autoShareWithLicensedUsers": {
+              "type": ["boolean", "null"],
+              "description": "If true, the app will be shared with licensed users. Only applies to embeddedapp templates.",
+              "default": false
+            },
+            "autoShareWithOriginator": {
+              "type": ["boolean", "null"],
+              "description": "If true, the app will be shared with the user who initialized the package install.",
+              "default": true
+            },
+            "deleteAppOnConstructionFailure": {
+              "type": ["boolean", "null"],
+              "description": "If true, the app will be deleted if the auto-install request fails due to a construction error. Does not apply to upgrading apps.",
+              "default": false
+            },
+            "values": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Variable values for the app. Names should match variables defined in the variableDefinition file."
+            }
+          }
+        },
+        "parentRequestIds": {
+          "type": "array",
+          "$comment": "Technically valid, but not normally used for package auto-install.",
+          "minItems": 0,
+          "doNotSuggest": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ import { findNodeAtLocation, JSONPath, parseTree } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { ERRORS, TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
-import { jsonPathToString } from '../../src/util/jsoncUtils';
+import { jsonPathToString, matchJsonNodeAtPattern } from '../../src/util/jsoncUtils';
 import { argsFrom, jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
 import { jsoncParse, waitFor } from '../testutils';
 import {
@@ -250,7 +250,7 @@ describe('TemplateEditorManager', () => {
     it('quick fix to remove deprecated icon fields', async () => {
       const [t, doc, editor] = await createTempTemplate(true);
       tmpdir = t;
-      await setDocumentText(editor!, {
+      await setDocumentText(editor, {
         assetIcon: '16.png',
         templateIcon: 'default.png',
         icons: {
@@ -266,17 +266,13 @@ describe('TemplateEditorManager', () => {
       const assetIconFilter = (d: vscode.Diagnostic) =>
         d.code === ERRORS.TMPL_ASSETICON_AND_APPBADGE && jsonpathFrom(d) === 'assetIcon';
       let diagnostics = (
-        await waitForDiagnostics(
-          doc!.uri,
-          d => d && d.filter(assetIconFilter).length === 1,
-          'initial warnings on assetIcon'
-        )
+        await waitForDiagnostics(doc.uri, d => d?.filter(assetIconFilter).length === 1, 'initial warnings on assetIcon')
       )
         .filter(assetIconFilter)
         .sort(sortDiagnostics);
       // look for the 'Remove assetIcon' quick fix on the first diagnostic
       expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('assetIcon');
-      let allActions = await getCodeActions(doc!.uri, diagnostics[0].range);
+      let allActions = await getCodeActions(doc.uri, diagnostics[0].range);
       let actions = allActions.filter(a => a.title.startsWith('Remove assetIcon'));
       if (actions.length !== 1) {
         expect.fail('Expected 1 remove action for assetIcon, got: [' + allActions.map(a => a.title).join(', ') + ']');
@@ -288,8 +284,8 @@ describe('TemplateEditorManager', () => {
       }
       // that should fix the assetIcon warning
       await waitForDiagnostics(
-        doc!.uri,
-        d => d && d.filter(assetIconFilter).length === 0,
+        doc.uri,
+        d => d?.filter(assetIconFilter).length === 0,
         'no warnings on assetIcon after quick fix'
       );
 
@@ -298,8 +294,8 @@ describe('TemplateEditorManager', () => {
         d.code === ERRORS.TMPL_TEMPLATEICON_AND_TEMPLATEBADGE && jsonpathFrom(d) === 'templateIcon';
       diagnostics = (
         await waitForDiagnostics(
-          doc!.uri,
-          d => d && d.filter(templateIconFilter).length === 1,
+          doc.uri,
+          d => d?.filter(templateIconFilter).length === 1,
           'initial warnings on templateIcon'
         )
       )
@@ -307,7 +303,7 @@ describe('TemplateEditorManager', () => {
         .sort(sortDiagnostics);
       // look for the 'Remove templateIcon' quick fix on the first diagnostic
       expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('templateIcon');
-      allActions = await getCodeActions(doc!.uri, diagnostics[0].range);
+      allActions = await getCodeActions(doc.uri, diagnostics[0].range);
       actions = allActions.filter(a => a.title.startsWith('Remove templateIcon'));
       if (actions.length !== 1) {
         expect.fail(
@@ -321,8 +317,8 @@ describe('TemplateEditorManager', () => {
       }
       // that should fix the templateIcon warning
       await waitForDiagnostics(
-        doc!.uri,
-        d => d && d.filter(templateIconFilter).length === 0,
+        doc.uri,
+        d => d?.filter(templateIconFilter).length === 0,
         'no warnings on templateIcon after quick fix'
       );
 
@@ -339,7 +335,7 @@ describe('TemplateEditorManager', () => {
     it('quick fix for missing relative path files', async () => {
       const [t, doc, editor] = await createTempTemplate(true);
       tmpdir = t;
-      await setDocumentText(editor!, {
+      await setDocumentText(editor, {
         folderDefinition: 'dir/folder.json',
         imageFiles: [
           {
@@ -353,13 +349,13 @@ describe('TemplateEditorManager', () => {
         jsonpathFrom(d) === 'folderDefinition' && d.code === ERRORS.TMPL_REL_PATH_NOT_EXIST;
       let [diagnostic] = (
         await waitForDiagnostics(
-          doc!.uri,
-          d => d && d.filter(folderFilter).length === 1,
+          doc.uri,
+          d => d?.filter(folderFilter).length === 1,
           'initial warning on folderDefinition'
         )
       ).filter(folderFilter);
       // look for the quick fix
-      let actions = await getCodeActions(doc!.uri, diagnostic.range);
+      let actions = await getCodeActions(doc.uri, diagnostic.range);
       if (actions.length !== 1) {
         expect.fail(
           'Expected 1 code actions for folderDefinition, got: [' + actions.map(a => a.title).join(', ') + ']'
@@ -373,8 +369,8 @@ describe('TemplateEditorManager', () => {
       }
       // that should fix the warning
       await waitForDiagnostics(
-        doc!.uri,
-        d => d && d.filter(folderFilter).length === 0,
+        doc.uri,
+        d => d?.filter(folderFilter).length === 0,
         'no warnings on folderDefintion after quick fix'
       );
       // make sure the file got created
@@ -391,14 +387,10 @@ describe('TemplateEditorManager', () => {
       const imageFilter = (d: vscode.Diagnostic) =>
         jsonpathFrom(d) === 'imageFiles[0].file' && d.code === ERRORS.TMPL_REL_PATH_NOT_EXIST;
       [diagnostic] = (
-        await waitForDiagnostics(
-          doc!.uri,
-          d => d && d.filter(imageFilter).length === 1,
-          'initial warning on imageFiles[0]'
-        )
+        await waitForDiagnostics(doc!.uri, d => d?.filter(imageFilter).length === 1, 'initial warning on imageFiles[0]')
       ).filter(imageFilter);
       // for paths pointing to files, there shouldn't be a quick fix
-      actions = await getCodeActions(doc!.uri, diagnostic.range);
+      actions = await getCodeActions(doc.uri, diagnostic.range);
       if (actions.length !== 0) {
         expect.fail('Expected 0 code actions for imageFile, got: [' + actions.map(a => a.title).join(', ') + ']');
       }
@@ -598,7 +590,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // but since it's not reference by the template-info.json, it should have no errors
-      await waitForDiagnostics(folderDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(folderDoc.uri, d => d?.length === 0);
 
       // now, write "folderDefinition": "folder.json" to the template-info.json
       await setDocumentText(
@@ -613,7 +605,7 @@ describe('TemplateEditorManager', () => {
       );
 
       // the folder.json should eventually end up with a diagnostic about the bad field
-      const diagnostics = await waitForDiagnostics(folderDoc.uri, d => d && d.length === 1);
+      const diagnostics = await waitForDiagnostics(folderDoc.uri, d => d?.length === 1);
       expect(diagnostics, 'diagnostics').to.not.be.undefined;
       if (diagnostics.length !== 1) {
         expect.fail(
@@ -637,7 +629,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // which should clear the warnings on folder.json since it's not a folder file anymore
-      await waitForDiagnostics(folderDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(folderDoc.uri, d => d?.length === 0);
     });
 
     it('without default json language services', async () => {
@@ -656,9 +648,8 @@ describe('TemplateEditorManager', () => {
         )
       );
       // that should give us a warning about folder.json not existing
-      await waitForDiagnostics(
-        templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'folderDefinition')
+      await waitForDiagnostics(templateUri, diagnostics =>
+        diagnostics?.some(d => jsonpathFrom(d) === 'folderDefinition')
       );
       // create a folder.json that has a comment and some bad json
       const folderUri = tmpdir.with({ path: path.join(tmpdir.path, 'folder.json') });
@@ -880,7 +871,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // but since it's not reference by the template-info.json, it should have no errors
-      await waitForDiagnostics(uiDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(uiDoc.uri, d => d?.length === 0);
 
       // now, write "uiDefinition": "ui.json" to the template-info.json
       await setDocumentText(
@@ -895,7 +886,7 @@ describe('TemplateEditorManager', () => {
       );
 
       // the ui.json should eventually end up with a diagnostic about the bad field
-      const diagnostics = await waitForDiagnostics(uiDoc.uri, d => d && d.length === 1);
+      const diagnostics = await waitForDiagnostics(uiDoc.uri, d => d?.length === 1);
       expect(diagnostics, 'diagnostics').to.not.be.undefined;
       if (diagnostics.length !== 1) {
         expect.fail(
@@ -919,7 +910,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // which should clear the warnings on ui.json since it's not a folder file anymore
-      await waitForDiagnostics(uiDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(uiDoc.uri, d => d?.length === 0);
     });
 
     it('without default json language services', async () => {
@@ -938,10 +929,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // that should give us a warning about ui.json not existing
-      await waitForDiagnostics(
-        templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'uiDefinition')
-      );
+      await waitForDiagnostics(templateUri, diagnostics => diagnostics?.some(d => jsonpathFrom(d) === 'uiDefinition'));
       // create a ui.json that has a comment and some bad json
       const uiUri = tmpdir.with({ path: path.join(tmpdir.path, 'ui.json') });
       await writeEmptyJsonFile(uiUri);
@@ -1290,7 +1278,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // but since it's not referenced by the template-info.json, it should have no errors
-      await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(variablesDoc.uri, d => d?.length === 0);
 
       // now, write "variableDefinition": "variables.json" to the template-info.json
       await setDocumentText(
@@ -1305,7 +1293,7 @@ describe('TemplateEditorManager', () => {
       );
 
       // the variables.json should eventually end up with a diagnostic about the bad field
-      const diagnostics = await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 1);
+      const diagnostics = await waitForDiagnostics(variablesDoc.uri, d => d?.length === 1);
       expect(diagnostics, 'diagnostics').to.not.be.undefined;
       if (diagnostics.length !== 1) {
         expect.fail(
@@ -1323,7 +1311,7 @@ describe('TemplateEditorManager', () => {
       // now, set variableDefinition to an empty value
       await setDocumentText(templateEditor, JSON.stringify({}, undefined, 2));
       // which should clear the warnings on variables.json since it's not a variables file anymore
-      await waitForDiagnostics(variablesDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(variablesDoc.uri, d => d?.length === 0);
     });
 
     it('without default json language services', async () => {
@@ -1342,9 +1330,8 @@ describe('TemplateEditorManager', () => {
         )
       );
       // that should give us a warning about variables.json not existing
-      await waitForDiagnostics(
-        templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'variableDefinition')
+      await waitForDiagnostics(templateUri, diagnostics =>
+        diagnostics?.some(d => jsonpathFrom(d) === 'variableDefinition')
       );
       // create a variables.json that has a comment and some bad json
       const variablesUri = tmpdir.with({ path: path.join(tmpdir.path, 'variables.json') });
@@ -1522,7 +1509,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // but since it's not referenced by the template-info.json, it should have no errors
-      await waitForDiagnostics(rulesDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(rulesDoc.uri, d => d?.length === 0);
 
       // now, write the reference to the rules.json in template-info.json
       await setDocumentText(
@@ -1542,7 +1529,7 @@ describe('TemplateEditorManager', () => {
       );
 
       // the rules.json should eventually end up with a diagnostic about the bad field
-      const diagnostics = await waitForDiagnostics(rulesDoc.uri, d => d && d.length === 1);
+      const diagnostics = await waitForDiagnostics(rulesDoc.uri, d => d?.length === 1);
       expect(diagnostics, 'diagnostics').to.not.be.undefined;
       if (diagnostics.length !== 1) {
         expect.fail(
@@ -1571,7 +1558,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // which should clear the warnings on ui.json since it's not a folder file anymore
-      await waitForDiagnostics(rulesDoc.uri, d => d && d.length === 0);
+      await waitForDiagnostics(rulesDoc.uri, d => d?.length === 0);
     });
 
     it('without default json language services', async () => {
@@ -1595,10 +1582,7 @@ describe('TemplateEditorManager', () => {
         )
       );
       // that should give us a warning about rules.json not existing
-      await waitForDiagnostics(
-        templateUri,
-        diagnostics => diagnostics && diagnostics.some(d => jsonpathFrom(d) === 'rules[0].file')
-      );
+      await waitForDiagnostics(templateUri, diagnostics => diagnostics?.some(d => jsonpathFrom(d) === 'rules[0].file'));
       // create a rules.json that has a comment and some bad json
       const rulesUri = tmpdir.with({ path: path.join(tmpdir.path, 'rules.json') });
       await writeEmptyJsonFile(rulesUri);
@@ -1620,6 +1604,325 @@ describe('TemplateEditorManager', () => {
       expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
     });
   }); // describe('configures rulesDefinitions')
+
+  describe('configures autoInstallDefinitions', () => {
+    let tmpdir: vscode.Uri | undefined;
+    beforeEach(async () => {
+      await closeAllEditors();
+      tmpdir = undefined;
+    });
+
+    afterEach(async () => {
+      await closeAllEditors();
+      // delete the temp folder if it got created
+      if (tmpdir && (await uriStat(tmpdir))) {
+        await vscode.workspace.fs.delete(tmpdir, { recursive: true, useTrash: false });
+      }
+      tmpdir = undefined;
+    });
+
+    it('json-schema diagnostics on open', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'auto-install.json');
+      const [diagnostics] = await openFileAndWaitForDiagnostics(uri);
+      expect(diagnostics, 'diagnostics').to.not.be.undefined;
+      if (diagnostics.length !== 1) {
+        expect.fail('Expect 1 diagnostic on ' + uri.toString() + ' got\n:' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      // make sure we got the error about the invalid field name
+      const diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic.message').to.matches(/Property (.+) is not allowed/);
+    });
+
+    it('json-schema defaultSnippets', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'auto-install.json');
+      const [, doc] = await openFileAndWaitForDiagnostics(uri);
+      const tree = parseTree(doc.getText());
+      expect(tree, 'json text').to.not.be.undefined;
+      // find the [ after hooks:
+      const node = findNodeAtLocation(tree, ['hooks']);
+      expect(node, 'hooks').to.not.be.undefined;
+      const scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
+      if (scan.ch !== '[') {
+        expect.fail("Expected to find '[' after '\"hooks\":'");
+      }
+      // go to just before it
+      let position = scan.end.translate({ characterDelta: -1 });
+      // that should give a snippet to create an array w/ a hook
+      await verifyCompletionsContain(doc, position, 'New hooks');
+
+      // go to just after the [ in "hooks"
+      position = scan.end.translate({ characterDelta: 1 });
+      // that should give a snippet for a new hook
+      await verifyCompletionsContain(doc, position, 'New hook');
+    });
+
+    it('on change of path value', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      // and auto-install.json with some content that would have schema errors
+      const autoInstallUri = tmpdir.with({ path: path.join(tmpdir.path, 'auto-install.json') });
+      await writeEmptyJsonFile(autoInstallUri);
+      const [autoInstallDoc, autoInstallEditor] = await openFile(autoInstallUri);
+      await setDocumentText(
+        autoInstallEditor,
+        JSON.stringify(
+          {
+            error: 'intentionally unknown error field for test to look for',
+            hooks: [],
+            configuration: {
+              appConfiguration: {}
+            }
+          },
+          undefined,
+          2
+        )
+      );
+      // but since it's not reference by the template-info.json, it should have no errors
+      await waitForDiagnostics(autoInstallDoc.uri, d => d?.length === 0);
+
+      // now, write "autoInstallDefinition": "auto-install.json" to the template-info.json
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            autoInstallDefinition: 'auto-install.json'
+          },
+          undefined,
+          2
+        )
+      );
+
+      // the auto-install.json should eventually end up with a diagnostic about the bad field
+      const diagnostics = await waitForDiagnostics(autoInstallDoc.uri, d => d?.length === 1);
+      expect(diagnostics, 'diagnostics').to.not.be.undefined;
+      if (diagnostics.length !== 1) {
+        expect.fail(
+          'Expect 1 diagnostic on ' +
+            autoInstallDoc.uri.toString() +
+            ' got\n:' +
+            JSON.stringify(diagnostics, undefined, 2)
+        );
+      }
+      // make sure we got the error about the invalid field name
+      const diagnostic = diagnostics[0];
+      expect(diagnostic, 'diagnostic').to.not.be.undefined;
+      expect(diagnostic.message, 'diagnostic.message').to.matches(/Property (.+) is not allowed/);
+
+      // now, set autoInstallDefinition to a filename that doesn't exist
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            autoInstallDefinition: 'doesnotexist.json'
+          },
+          undefined,
+          2
+        )
+      );
+      // which should clear the warnings on auto-install.json since it's not a folder file anymore
+      await waitForDiagnostics(autoInstallDoc.uri, d => d?.length === 0);
+    });
+
+    it('without default json language services', async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template
+      const templateUri = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
+      await setDocumentText(
+        templateEditor,
+        JSON.stringify(
+          {
+            autoInstallDefinition: 'auto-install.json'
+          },
+          undefined,
+          2
+        )
+      );
+      // that should give us a warning about auto-install.json not existing
+      await waitForDiagnostics(templateUri, diagnostics =>
+        diagnostics?.some(d => jsonpathFrom(d) === 'autoInstallDefinition')
+      );
+      // create a auto-install.json that has a comment and some bad json
+      const autoInstallUri = tmpdir.with({ path: path.join(tmpdir.path, 'auto-install.json') });
+      await writeEmptyJsonFile(autoInstallUri);
+      const [, autoInstallEditor] = await openFile(autoInstallUri);
+      await setDocumentText(
+        autoInstallEditor,
+        `{
+           // a comment here, with missing double-quotes below
+           hooks: [],
+           "configuration": {
+             "appConfiguration": {}
+           }
+         }`
+      );
+      // we should only get an error on the missing double quotes (and not on the json comment)
+      const diagnostics = await waitForDiagnostics(autoInstallUri);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected one diagnostic on auto-install.json, got: ' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic').to.not.be.undefined;
+      expect(diagnostics[0].message, 'diagnostic message').to.equal('Property keys must be doublequoted');
+      expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
+    });
+
+    it('hover text on variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'auto-install.json');
+      const [doc] = await openFile(uri, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+      const tree = parseTree(doc.getText());
+      const node = findNodeAtLocation(tree, ['configuration', 'appConfiguration', 'values', 'StringTypeVar'])?.parent;
+      expect(node, 'configuration.appConfiguration.values.StringTypeVar propNode').to.be.not.undefined;
+      const nameNode = node!.children?.[0];
+      expect(nameNode, 'nameNode').to.not.be.undefined;
+      const hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
+      expect(hovers, 'nameNode hovers').to.not.be.undefined;
+      // something (probably json lang services) puts an empty hover, so just make sure our variable hover shows up
+      if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('StringTypeVar') >= 0))) {
+        expect.fail("Expected a hover to contain 'StringTypeVar', got: " + JSON.stringify(hovers, undefined, 2));
+      }
+    });
+
+    it('go to definition support for variable names', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'auto-install.json');
+      const [doc] = await openFile(uri, true);
+      // we should see the 1 warnings about UnknownVar
+      await waitForDiagnostics(uri, d => d && d.length >= 1);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+      // should find a definition location for StringTypeVar
+      const root = parseTree(doc.getText());
+      let propNode = matchJsonNodeAtPattern(root, ['configuration', 'appConfiguration', 'values', 'StringTypeVar'])
+        ?.parent?.children?.[0];
+      expect(propNode, 'StringVar property node').to.not.be.undefined;
+      let position = doc.positionAt(propNode!.offset);
+      let locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
+      if (locations.length !== 1) {
+        expect.fail('Expected 1 location for StringTypeVar, got:\n' + JSON.stringify(locations, undefined, 2));
+      }
+      expect(locations[0].uri.path, 'location path').to.equal(uriRelPath(uriDirname(uri), 'variables.json').path);
+
+      // should not find a definition location for UnknownVar
+      propNode = matchJsonNodeAtPattern(root, ['configuration', 'appConfiguration', 'values', 'UnknownVar'])?.parent
+        ?.children?.[0];
+      position = doc.positionAt(propNode!.offset);
+      expect(propNode, 'StringVar property node').to.not.be.undefined;
+      expect(position, 'configuration.appConfinguration.values.UnknownVar').to.not.be.undefined;
+      locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
+      if (locations.length !== 0) {
+        expect.fail('Expected 0 locations for UnknownVar, got:\n' + JSON.stringify(locations, undefined, 2));
+      }
+    });
+
+    it('quick fixes on bad variable names', async () => {
+      const autoInstallJson = {
+        hooks: [],
+        configuration: {
+          appConfiguration: {
+            values: {
+              varname: 'a',
+              foo: 'b'
+            }
+          }
+        }
+      };
+      const [t, [autoInstallEditor, variablesEditor]] = await createTemplateWithRelatedFiles(
+        {
+          field: 'autoInstallDefinition',
+          path: 'auto-install.json',
+          initialJson: autoInstallJson
+        },
+        {
+          field: 'variableDefinition',
+          path: 'variables.json',
+          initialJson: {
+            varname1: {
+              variableType: {
+                type: 'StringType'
+              }
+            }
+          }
+        }
+      );
+      tmpdir = t;
+
+      // get the 2 expected diagnostics on the variables in auto-install.json
+      const diagnosticFilter = (d: vscode.Diagnostic) => d.code === ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE;
+      let diagnostics = (
+        await waitForDiagnostics(
+          autoInstallEditor.document.uri,
+          ds => ds?.filter(diagnosticFilter).length === 2,
+          'Initial 2 invalid variable warnings on auto-install.json'
+        )
+      )
+        .filter(diagnosticFilter)
+        .sort(sortDiagnostics);
+      // and there shouldn't be any warnings on variables.json
+      await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
+
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal(
+        'configuration.appConfiguration.values.varname'
+      );
+      expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal(
+        'configuration.appConfiguration.values.foo'
+      );
+
+      // the 1st diagnostic should be for 'varname', which should have just the 2 quickfixes.
+      // Note: they seem to no longer be guarenteed to come in original insert order so sort them by title
+      let actions = (await getCodeActions(autoInstallEditor.document.uri, diagnostics[0].range)).sort((a1, a2) =>
+        a1.title.localeCompare(a2.title)
+      );
+      if (actions.length !== 2) {
+        expect.fail('Expected 2 code actions, got: [' + actions.map(a => a.title).join(', ') + ']');
+      }
+      expect(actions[0].title, 'varname action[0].title').to.equals("Create variable 'varname'");
+      expect(actions[0].edit, 'varname action[0].edit').to.not.be.undefined;
+      expect(actions[1].title, 'varname action[1].title').to.equals("Switch to 'varname1'");
+      expect(actions[1].edit, 'varname action[1].edit').to.not.be.undefined;
+      // run the Switch to... quick action
+      if (!(await vscode.workspace.applyEdit(actions[1].edit!))) {
+        expect.fail(`Quick fix '${actions[1].title}' failed`);
+      }
+
+      // that should fix that diagnostic, leaving the one on 'foo'
+      diagnostics = (
+        await waitForDiagnostics(
+          autoInstallEditor.document.uri,
+          ds => ds?.filter(diagnosticFilter).length === 1,
+          '1 invalid variable warning on auto-install.json after first quick fix'
+        )
+      )
+        .filter(diagnosticFilter)
+        .sort(sortDiagnostics);
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal(
+        'configuration.appConfiguration.values.foo'
+      );
+      // and there should just be the Create variable quick fix for 'foo'
+      actions = await getCodeActions(autoInstallEditor.document.uri, diagnostics[0].range);
+      if (actions.length !== 1) {
+        expect.fail('Expected 1 code actions, got: [' + actions.map(a => a.title).join(', ') + ']');
+      }
+      expect(actions[0].title, 'varname action[0].title').to.equals("Create variable 'foo'");
+      expect(actions[0].edit, 'varname action[0].edit').to.not.be.undefined;
+      // run that Create variable... quick fix
+      if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+        expect.fail(`Quick fix '${actions[0].title}' failed`);
+      }
+      // which should fix the warning on auto-install.json
+      await waitForDiagnostics(autoInstallEditor.document.uri, ds => ds?.filter(diagnosticFilter).length === 0);
+      // and variables.json should be good, too
+      await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
+      // make sure the 'foo' variable go into variables.json
+      const variables = parseTree(variablesEditor.document.getText());
+      const fooNode = findNodeAtLocation(variables, ['foo']);
+      expect(fooNode, 'foo in variables.json').to.not.be.undefined;
+      // and that it's a {} object
+      expect(fooNode!.type, 'foo in variables.json type').to.equal('object');
+    });
+  }); // describe('configures autoInstallDefinitions');
 
   // TODO: tests for the other template files, once they're implemented
 });

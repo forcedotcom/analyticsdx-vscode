@@ -28,6 +28,7 @@ const definitionFilesPats = [
   ['variableDefinition'] as JSONPath,
   ['uiDefinition'],
   ['folderDefinition'],
+  ['autoInstallDefinition'],
   ['ruleDefinition'],
   ['rules', '*', 'file'],
   ['dashboards', '*', 'file'],
@@ -107,6 +108,13 @@ export const ERRORS = Object.freeze({
   TMPL_EMBEDDED_APP_WITH_UI: 'tmpl-11',
   /** An embeddedapp template is missing at least one share in the folderDefinition (or folderDefinition doesn't exist). */
   TMPL_EMBEDDED_APP_NO_SHARES: 'tmpl-12',
+  /** A non-app/embeddedapp template with autoInstallDefinition specified.  */
+  TMPL_NON_APP_WITH_AUTO_INSTALL: 'tmpl-13',
+  /** A template with autoInstallDefinition doesn't have a name in the folderDefinition (or folderDefinition doesn't exist) */
+  TMPL_AUTO_INSTALL_MISSING_FOLDER_NAME: 'tmpl-14',
+
+  /** Unknown variable in values in autoInstallDefinition. */
+  AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',
 
   /** Regex in variable in variable excludes is missing closing / */
   VARS_REGEX_MISSING_SLASH: 'vars-1',

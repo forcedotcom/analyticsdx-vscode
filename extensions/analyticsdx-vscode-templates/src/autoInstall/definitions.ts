@@ -11,28 +11,27 @@ import { TemplateDirEditing } from '../templateEditing';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefDefinitionProvider } from '../variables';
 
-/** Handle CMD+Click from a variable name in ui.json to the variable in variables.json. */
-export class UiVariableDefinitionProvider extends VariableRefDefinitionProvider {
+/** Handle CMD+Click from a variable name in auto-install.json to the variable in variables.json. */
+export class AutoInstallVariableDefinitionProvider extends VariableRefDefinitionProvider {
   constructor(templateEditing: TemplateDirEditing) {
     super(templateEditing);
   }
 
   public isSupportedDocument(document: vscode.TextDocument) {
-    // make sure that the template has a variableDefinition and it's in the uiDefinition file for the template
+    // make sure that the template has a variableDefinition and that it's in the autoInstallDefinition file for the template
     return (
       isValidRelpath(this.templateEditing.variablesDefinitionPath) &&
-      this.templateEditing.isUiDefinitionFile(document.uri)
+      this.templateEditing.isAutoInstallDefinitionFile(document.uri)
     );
   }
-
   public isSupportedLocation(location: Location): boolean {
     return (
-      // make sure it's in a non-empty string value
-      !location.isAtPropertyKey &&
-      location.previousNode?.type === 'string' &&
+      // make sure it's in a non-empty property name field
+      location.isAtPropertyKey &&
+      location.previousNode?.type === 'property' &&
       location.previousNode.value &&
       // and that it's in a variable name field
-      location.matches(['pages', '*', 'variables', '*', 'name'])
+      location.matches(['configuration', 'appConfiguration', 'values', '*'])
     );
   }
 }

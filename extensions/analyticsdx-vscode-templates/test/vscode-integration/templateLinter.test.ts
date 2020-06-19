@@ -190,12 +190,12 @@ describe('TemplateLinterManager', () => {
       const [t, , editor] = await createTempTemplate(true);
       tmpdir = t;
       const dirname = uriBasename(t);
-      await setDocumentText(editor!, {
+      await setDocumentText(editor, {
         name: 'NotTheFolderName'
       });
       const diagnosticFilter = (d: vscode.Diagnostic) => jsonpathFrom(d) === 'name';
       const diagnostics = (
-        await waitForDiagnostics(editor!.document.uri, d => d?.some(diagnosticFilter), 'initial name warning')
+        await waitForDiagnostics(editor.document.uri, d => d?.some(diagnosticFilter), 'initial name warning')
       ).filter(diagnosticFilter);
       if (diagnostics.length !== 1) {
         expect.fail('Expected 1 name diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
@@ -206,12 +206,12 @@ describe('TemplateLinterManager', () => {
       );
       expect(diagnostics[0].code, 'diagnostic code').to.be.equal(ERRORS.TMPL_NAME_MATCH_FOLDER_NAME);
       // fix the name
-      await setDocumentText(editor!, {
+      await setDocumentText(editor, {
         name: dirname
       });
       await waitForDiagnostics(
-        editor!.document.uri,
-        d => d && d.filter(diagnosticFilter).length === 0,
+        editor.document.uri,
+        d => d?.filter(diagnosticFilter).length === 0,
         'no name warning after fix'
       );
     });
@@ -219,12 +219,12 @@ describe('TemplateLinterManager', () => {
     it('shows warning on relpath pointing to template-info.json', async () => {
       const [t, , editor] = await createTempTemplate(true);
       tmpdir = t;
-      await setDocumentText(editor!, {
+      await setDocumentText(editor, {
         uiDefinition: 'template-info.json'
       });
       const diagnosticFilter = (d: vscode.Diagnostic) => jsonpathFrom(d) === 'uiDefinition';
       const diagnostics = (
-        await waitForDiagnostics(editor!.document.uri, d => d?.some(diagnosticFilter), 'initial uiDefinition warning')
+        await waitForDiagnostics(editor.document.uri, d => d?.some(diagnosticFilter), 'initial uiDefinition warning')
       ).filter(diagnosticFilter);
       if (diagnostics.length !== 1) {
         expect.fail('Expected 1 uiDefinition diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
@@ -238,10 +238,11 @@ describe('TemplateLinterManager', () => {
       const [t, , editor] = await createTempTemplate(true);
       tmpdir = t;
       await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
-      await setDocumentText(editor!, {
+      await setDocumentText(editor, {
         variableDefinition: 'file.json',
         uiDefinition: 'file.json',
         folderDefinition: 'file.json',
+        autoInstallDefinition: 'file.json',
         ruleDefinition: 'file.json',
         rules: [
           {
@@ -286,11 +287,12 @@ describe('TemplateLinterManager', () => {
           ]
         }
       });
-      const dupFilter = (d: vscode.Diagnostic) => d?.message === 'Duplicate usage of path file.json';
+      const dupFilter = (d: vscode.Diagnostic) => d.message === 'Duplicate usage of path file.json';
       const expectedPaths = [
         'variableDefinition',
         'uiDefinition',
         'folderDefinition',
+        'autoInstallDefinition',
         'ruleDefinition',
         'rules[0].file',
         'dashboards[0].file',
@@ -301,7 +303,7 @@ describe('TemplateLinterManager', () => {
       ];
       const diagnostics = (
         await waitForDiagnostics(
-          editor!.document.uri,
+          editor.document.uri,
           d => d && d.filter(dupFilter).length >= expectedPaths.length,
           'initial duplicate path warnings'
         )
@@ -367,7 +369,7 @@ describe('TemplateLinterManager', () => {
         ]
       });
       // make sure the ruleDefinition error goes away
-      await waitForDiagnostics(editor.document.uri, d => d && d.filter(errorFilter).length === 0);
+      await waitForDiagnostics(editor.document.uri, d => d?.filter(errorFilter).length === 0);
     });
 
     it('shows problems on having deprecated icons with new badges', async () => {
@@ -394,7 +396,7 @@ describe('TemplateLinterManager', () => {
         await openTemplateInfoAndWaitForDiagnostics(
           templateInfoUri,
           true,
-          d => d && d.filter(diagnosticsFilter).length === 2,
+          d => d?.filter(diagnosticsFilter).length === 2,
           'initial warnings on deprecated fields'
         )
       )[0]
@@ -420,13 +422,24 @@ describe('TemplateLinterManager', () => {
 
     it('shows file path problems on app template', async () => {
       const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics('badFilepaths');
-      // filter out the Deprecated warning on rulesDefinition for this test
-      const map = new Map(diagnostics.filter(d => !d.message.includes('Deprecated')).map(d => [jsonpathFrom(d), d]));
+      // only look for the bad rel path errors (there should be a deprecated message on ruleDefinition and a
+      // warning about missing folder name on autoInstallDefinition, but those are checked for elsewhere)
+      const map = new Map(
+        diagnostics
+          .filter(
+            d =>
+              d.code === ERRORS.TMPL_REL_PATH_NOT_EXIST ||
+              d.code === ERRORS.TMPL_INVALID_REL_PATH ||
+              d.code === ERRORS.TMPL_REL_PATH_NOT_FILE
+          )
+          .map(d => [jsonpathFrom(d), d])
+      );
       // there should be a warning for each these fields about the file not existing
       [
         'variableDefinition',
         'uiDefinition',
         'folderDefinition',
+        'autoInstallDefinition',
         'ruleDefinition',
         'rules[0].file',
         'rules[1].file',
@@ -497,7 +510,7 @@ describe('TemplateLinterManager', () => {
         d.message === 'Specified file does not exist in workspace';
       await waitForDiagnostics(
         templateUri,
-        diagnostics => diagnostics && diagnostics.length >= 1 && diagnostics.some(diagnosticFilter),
+        diagnostics => diagnostics?.some(diagnosticFilter),
         'Inital diagnostic on bad variableDefinition file'
       );
 
@@ -516,14 +529,14 @@ describe('TemplateLinterManager', () => {
       // and the diagnostic should come back
       await waitForDiagnostics(
         templateUri,
-        diagnostics => diagnostics && diagnostics.some(diagnosticFilter),
+        diagnostics => diagnostics?.some(diagnosticFilter),
         'Diagnostic on variableDefinition should exist after deleting variables.json'
       );
     });
 
     it('warns on variables in ui.json in embeddedapp', async () => {
       // create an embeddedapp template, with 1 page for 1 variable (without yet opening it)
-      [tmpdir] = await createTempTemplate(false, { show: false });
+      [tmpdir] = await createTempTemplate(false);
       await writeTextToFile(uriRelPath(tmpdir, 'variables.json'), {
         var1: {
           variableType: {
@@ -581,7 +594,7 @@ describe('TemplateLinterManager', () => {
     });
 
     it('warns on missing shares in embeddedapp', async () => {
-      // create an embeddedapp template, with 1 page for 1 variable (without yet opening it)
+      // create an embeddedapp template
       [tmpdir] = await createTempTemplate(false, { show: false });
       const templateInfoUri = uriRelPath(tmpdir!, 'template-info.json');
       await writeTextToFile(templateInfoUri, {
@@ -640,6 +653,176 @@ describe('TemplateLinterManager', () => {
         templateInfoUri,
         d => d?.filter(diagnosticFilter).length === 0,
         'Diagnostic on folderDefinition to go away'
+      );
+    });
+
+    it('warns on autoInstallDefinition on non-app template', async () => {
+      const [dir, doc, editor] = await createTempTemplate(true);
+      tmpdir = dir;
+      await writeTextToFile(uriRelPath(dir, 'auto-install.json'), {
+        hooks: [],
+        configuration: { appConfiguration: {} }
+      });
+      const filter = (d: vscode.Diagnostic) =>
+        d.code === ERRORS.TMPL_NON_APP_WITH_AUTO_INSTALL && jsonpathFrom(d) === 'autoInstallDefinition';
+      // start as an embedded app template
+      const templateJson = {
+        templateType: 'embeddedapp',
+        name: uriBasename(tmpdir),
+        label: 'Test autoInstallDefinition on different templateTypes',
+        assetVersion: 50.0,
+        releaseInfo: {
+          templateVersion: '1.0'
+        },
+        autoInstallDefinition: 'auto-install.json'
+      };
+      await setDocumentText(editor, templateJson);
+      // should have no warning
+      await waitForDiagnostics(
+        doc.uri,
+        d => d?.filter(filter).length === 0,
+        'No warnings on autoInstallDefinition for embeddedapp template'
+      );
+
+      // switch to dashboard template
+      templateJson.templateType = 'dashboard';
+      await setDocumentText(editor, templateJson);
+      // should have warning
+      const [d] = (
+        await waitForDiagnostics(
+          doc.uri,
+          d => d?.filter(filter).length === 1,
+          'Warnings on autoInstallDefinition for dashboard template'
+        )
+      ).filter(filter);
+      expect(d.relatedInformation, 'relatedInformation').to.not.be.undefined;
+      expect(d.relatedInformation!.length, 'relatedInformation.length').to.equal(1);
+      expect(d.relatedInformation![0], 'relatedInformation[0]').to.not.be.undefined;
+      expect(d.relatedInformation![0].location.uri.toString(), 'relatedInformation[0].location').to.equal(
+        doc.uri.toString()
+      );
+      expect(d.relatedInformation![0].message, 'relatedInformation[0].message').to.equal(
+        '"templateType" specification'
+      );
+
+      // switch to app
+      templateJson.templateType = 'app';
+      await setDocumentText(editor, templateJson);
+      // should have no warning
+      await waitForDiagnostics(
+        doc.uri,
+        d => d?.filter(filter).length === 0,
+        'No warnings on autoInstallDefinition for app template'
+      );
+
+      // switch to lens
+      templateJson.templateType = 'lens';
+      await setDocumentText(editor, templateJson);
+      // should have warning
+      await waitForDiagnostics(
+        doc.uri,
+        d => d?.filter(filter).length === 1,
+        'Warnings on autoInstallDefinition for lens template'
+      );
+
+      // switch to no templateType (app)
+      delete templateJson.templateType;
+      await setDocumentText(editor, templateJson);
+      // should have no warning
+      await waitForDiagnostics(
+        doc.uri,
+        d => d?.filter(filter).length === 0,
+        'No warnings on autoInstallDefinition for no templateType'
+      );
+    });
+
+    it('warns on autoInstallDefinition with no folder name', async () => {
+      const [dir, templateDoc, templateEditor] = await createTempTemplate(true);
+      tmpdir = dir;
+      await writeTextToFile(uriRelPath(dir, 'auto-install.json'), {
+        hooks: [],
+        configuration: { appConfiguration: {} }
+      });
+      const filter = (d: vscode.Diagnostic) =>
+        d.code === ERRORS.TMPL_AUTO_INSTALL_MISSING_FOLDER_NAME && jsonpathFrom(d) === 'autoInstallDefinition';
+      // start as an app template w/ no folder
+      const templateJson: any = {
+        templateType: 'app',
+        name: uriBasename(tmpdir),
+        label: 'Test for name in folder.json with autoInstallDefinition',
+        assetVersion: 50.0,
+        releaseInfo: {
+          templateVersion: '1.0'
+        },
+        autoInstallDefinition: 'auto-install.json'
+      };
+      await setDocumentText(templateEditor, templateJson);
+      // should have warning
+      let [d] = (
+        await waitForDiagnostics(
+          templateDoc.uri,
+          d => d?.filter(filter).length === 1,
+          'Warnings on autoInstallDefinition for no folderDefinition'
+        )
+      ).filter(filter);
+      // but no related info on the warning (since no folder.json)
+      expect(d.relatedInformation, 'relatedInformation').to.be.undefined;
+
+      // add folderDefiniton (but no folder.json yet)
+      templateJson.folderDefinition = 'folder.json';
+      await setDocumentText(templateEditor, templateJson);
+      // should still have warning
+      await waitForDiagnostics(
+        templateDoc.uri,
+        d => d?.filter(filter).length === 1,
+        'Warnings on autoInstallDefinition for no folder.json'
+      );
+      expect(d.relatedInformation, 'relatedInformation').to.be.undefined;
+
+      // create folder.json w/ a name
+      const folderUri = uriRelPath(tmpdir, 'folder.json');
+      await writeTextToFile(folderUri, { name: uriBasename(tmpdir) });
+      const [folderDoc, folderEditor] = await openFile(folderUri);
+      // should have no warning now
+      await waitForDiagnostics(
+        templateDoc.uri,
+        d => d?.filter(filter).length === 0,
+        'No warnings on autoInstallDefinition'
+      );
+
+      // empty name in folder.json
+      await setDocumentText(folderEditor, { name: '' });
+      // should have warning w/ relatedInfo to folder.json
+      [d] = (
+        await waitForDiagnostics(
+          templateDoc.uri,
+          d => d?.filter(filter).length === 1,
+          'Warnings on autoInstallDefinition for empty name in folder.json'
+        )
+      ).filter(filter);
+      expect(d.relatedInformation!.length, 'relatedInformation.length').to.equal(1);
+      expect(d.relatedInformation![0], 'relatedInformation[0]').to.not.be.undefined;
+      expect(d.relatedInformation![0].location.uri.toString(), 'relatedInformation[0].location').to.equal(
+        folderDoc.uri.toString()
+      );
+      expect(d.relatedInformation![0].message, 'relatedInformation[0].message').to.equal('folderDefinition file');
+
+      // invalid name in folder.json
+      await setDocumentText(folderEditor, { name: 42 });
+      // should have warning still
+      await waitForDiagnostics(
+        templateDoc.uri,
+        d => d?.filter(filter).length === 1,
+        'Warnings on autoInstallDefinition for no name in folder.json'
+      );
+
+      // missing name in folder.json
+      await setDocumentText(folderEditor, {});
+      // should have warning still
+      await waitForDiagnostics(
+        templateDoc.uri,
+        d => d?.filter(filter).length === 1,
+        'Warnings on autoInstallDefinition for no name in folder.json'
       );
     });
   }); // describe('lints template-info.json')
@@ -1680,4 +1863,22 @@ describe('TemplateLinterManager', () => {
       );
     });
   }); // describe('lints rules.json')
+
+  describe('lints auto-install.json', () => {
+    it('shows errors on unknown variable', async () => {
+      const [doc] = await openFile(uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'auto-install.json'));
+      const filter = (d: vscode.Diagnostic) => d.code === ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE;
+      const diagnostics = (
+        await waitForDiagnostics(doc.uri, diagnostics => diagnostics?.some(filter), 'Unknown variable diagnostics')
+      ).filter(filter);
+
+      // make sure we just get the one one UnknownVar
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 diagnostic, got: ' + JSON.stringify(diagnostics, undefined, 2));
+      }
+      expect(jsonpathFrom(diagnostics[0]), 'diagnostic jsonpath').to.equal(
+        'configuration.appConfiguration.values.UnknownVar'
+      );
+    });
+  }); // describe('lints auto-install.json')
 });

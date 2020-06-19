@@ -14,6 +14,7 @@
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "editor.rulers": [120],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.singleQuote": true,
   "prettier.printWidth": 120,
   "files.insertFinalNewline": true,
@@ -26,6 +27,14 @@
     {
       "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/folder.json"],
       "url": "/extensions/analyticsdx-vscode-templates/schemas/folder-schema.json"
+    },
+    {
+      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/auto-install/**/*.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/auto-install-schema.json"
+    },
+    {
+      "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/auto-install.json"],
+      "url": "/extensions/analyticsdx-vscode-templates/schemas/auto-install-schema.json"
     },
     {
       "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/rules/**/*.json"],
@@ -64,5 +73,9 @@
   "yaml.format.enable": false,
   "yaml.format.singleQuote": true,
   "yaml.format.printWidth": 120,
-  "json.format.enable": false
+  "json.format.enable": false,
+  // some json auto formatting wasn't happening in latest vscode without this setting, not sure why
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

@@ -11,18 +11,18 @@ import { TemplateDirEditing } from '../templateEditing';
 import { argsFrom } from '../util/vscodeUtils';
 import { VariableRefCodeActionProvider } from '../variables';
 
-/** Provides quick fixes for unrecognized variable name errors in ui.json's. */
-export class UiVariableCodeActionProvider extends VariableRefCodeActionProvider {
+/** Provides quick fixes for unrecognized variable name errors in auto-install.json's. */
+export class AutoInstallVariableCodeActionProvider extends VariableRefCodeActionProvider {
   constructor(template: TemplateDirEditing) {
     super(template);
   }
 
   protected isSupportedDocument(document: vscode.TextDocument) {
-    return this.template.isUiDefinitionFile(document.uri);
+    return this.template.isAutoInstallDefinitionFile(document.uri);
   }
 
   protected isSupportedDiagnostic(d: vscode.Diagnostic) {
-    if (d.source === LINTER_SOURCE_ID && d.code === ERRORS.UI_PAGE_UNKNOWN_VARIABLE) {
+    if (d.source === LINTER_SOURCE_ID && d.code === ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE) {
       const args = argsFrom(d);
       if (args) {
         return {

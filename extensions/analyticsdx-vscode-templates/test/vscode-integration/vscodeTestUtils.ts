@@ -244,22 +244,37 @@ export async function waitForDiagnostics(
   });
 }
 
+type CreateTempTemplateParams = { show?: boolean; includeName?: boolean };
 /** Create a temporary directory in waveTemplates/ and an empty template-info.json.
  * @param open true to open the template-info.json file
  * @param show true to open the editor on the template-info.json (if open == true); defaults to true
  * @param includeName true to set the name field in the template-info.json to the folder name; defaults to false
  * @param subdir optional sub directories paths under the temp directory, in which to create the template
- * @return the temp directory, and the document (if open == true) and the editor (if show == true).
+ * @return the temp directory, and the document (if open == true) and the editor (if also show == true).
  */
 export async function createTempTemplate(
+  open: false,
+  params?: CreateTempTemplateParams,
+  ...subdirs: string[]
+): Promise<[vscode.Uri, undefined, undefined]>;
+export async function createTempTemplate(
+  open: true,
+  params?: { show?: true; includeName?: boolean },
+  ...subdirs: string[]
+): Promise<[vscode.Uri, vscode.TextDocument, vscode.TextEditor]>;
+export async function createTempTemplate(
+  open: true,
+  params: { show: false; includeName?: boolean },
+  ...subdirs: string[]
+): Promise<[vscode.Uri, vscode.TextDocument, undefined]>;
+export async function createTempTemplate(
+  open: true,
+  params?: CreateTempTemplateParams,
+  ...subdirs: string[]
+): Promise<[vscode.Uri, vscode.TextDocument, vscode.TextEditor | undefined]>;
+export async function createTempTemplate(
   open: boolean,
-  {
-    show = true,
-    includeName = false
-  }: {
-    show?: boolean;
-    includeName?: boolean;
-  } = {},
+  { show = true, includeName = false }: CreateTempTemplateParams = {},
   ...subdirs: string[]
 ): Promise<[vscode.Uri, vscode.TextDocument | undefined, vscode.TextEditor | undefined]> {
   const basedir = uriFromTestRoot(waveTemplatesUriPath);

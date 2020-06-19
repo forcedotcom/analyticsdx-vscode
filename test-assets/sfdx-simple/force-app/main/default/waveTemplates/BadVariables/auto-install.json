@@ -1,0 +1,16 @@
+{
+  "hooks": [
+    {
+      "type": "PackageInstall"
+    }
+  ],
+  "configuration": {
+    "appConfiguration": {
+      "values": {
+        "StringTypeVar": "foo",
+        "StringArrayVar": ["bar"],
+        "UnknownVar": 42
+      }
+    }
+  }
+}

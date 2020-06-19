@@ -279,6 +279,17 @@
         }
       ]
     },
+    "autoInstallDefinition": {
+      "type": ["null", "string"],
+      "description": "(Currenly not publically available) Path to the auto install configuration file. Only available for app and embeddedapp templates.",
+      "doNotSuggest": true,
+      "defaultSnippets": [
+        {
+          "label": "\"\"",
+          "body": "${0}"
+        }
+      ]
+    },
     "apexCallback": {
       "type": "object",
       "description": "Registers an Apex class that runs on wizard load, app create, and app upgrade. The Apex class examines the org and sets variable values.",

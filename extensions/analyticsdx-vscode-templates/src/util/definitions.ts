@@ -10,23 +10,25 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { isValidRelpath } from './utils';
 
+/** Base class for providing definition support on fields in a json file. */
 export abstract class JsonAttributeDefinitionProvider implements vscode.DefinitionProvider {
   public provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Definition | vscode.DefinitionLink[]> {
-    const location = getLocation(document.getText(), document.offsetAt(position));
-    if (
-      (!token || !token.isCancellationRequested) &&
-      !location.isAtPropertyKey &&
-      this.isSupportedLocation(location, document, token)
-    ) {
-      return this.provideAttributeDefinition(location, document, position, token);
+    if (this.isSupportedDocument(document)) {
+      const location = getLocation(document.getText(), document.offsetAt(position));
+      if ((!token || !token.isCancellationRequested) && this.isSupportedLocation(location)) {
+        return this.provideAttributeDefinition(location, document, position, token);
+      }
     }
     return undefined;
   }
 
+  /** Provide the definition or definition links.
+   * Called if isSupportedDocument() and isSupportedLocation return true.
+   */
   public abstract provideAttributeDefinition(
     location: Location,
     document: vscode.TextDocument,
@@ -34,11 +36,17 @@ export abstract class JsonAttributeDefinitionProvider implements vscode.Definiti
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Definition | vscode.DefinitionLink[]>;
 
-  public abstract isSupportedLocation(
-    location: Location,
-    document: vscode.TextDocument,
-    token: vscode.CancellationToken
-  ): boolean;
+  /** Check if this provider supports the specified document.
+   * Defaults to return true; subclasses can override return false to avoid parsing the file.
+   */
+  public isSupportedDocument(document: vscode.TextDocument): boolean {
+    return true;
+  }
+
+  /** Check if the provider supports the specified location in the document.
+   * Called if isSupportedDocument() return true.
+   */
+  public abstract isSupportedLocation(location: Location): boolean;
 }
 
 export class JsonAttributeRelFilePathDefinitionProvider extends JsonAttributeDefinitionProvider {
@@ -62,12 +70,9 @@ export class JsonAttributeRelFilePathDefinitionProvider extends JsonAttributeDef
     }
   }
 
-  public isSupportedLocation(
-    location: Location,
-    document: vscode.TextDocument,
-    token: vscode.CancellationToken
-  ): boolean {
+  public isSupportedLocation(location: Location): boolean {
     return (
+      !location.isAtPropertyKey &&
       location.previousNode &&
       location.previousNode.type === 'string' &&
       location.previousNode.value &&

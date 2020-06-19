@@ -10,6 +10,7 @@
   "variableDefinition": "variables.json",
   "uiDefinition": "ui.json",
   "folderDefinition": "folder.json",
+  "autoInstallDefinition": "auto-install.json",
   "ruleDefinition": "rule-definition.json",
   "rules": [
     {
