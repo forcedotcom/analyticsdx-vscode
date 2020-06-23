@@ -17,7 +17,7 @@ import { quickFixUsedTelemetryCommand } from '../telemetry';
 import { findPropertyNodeFor, jsonPathToString, pathPartsAreEquals } from './jsoncUtils';
 import { findEditorForDocument, getFormattingOptionsForEditor, jsonEditsToWorkspaceEdit } from './vscodeUtils';
 
-// TODO: refactor this into a master (which does the parse) and delegates,
+// TODO: refactor this into a controller (which does the parse) and delegates,
 // to avoid parsing the json multiple times and to register only one action provider
 export class RemoveJsonPropertyCodeActionProvider implements vscode.CodeActionProvider {
   public static readonly providedCodeActionKinds = [vscode.CodeActionKind.QuickFix];

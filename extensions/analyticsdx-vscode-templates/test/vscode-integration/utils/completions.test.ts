@@ -8,11 +8,16 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { csvFileFilter, TEMPLATE_INFO } from '../../../src/constants';
-import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from '../../../src/util/completions';
+import {
+  JsonCompletionItemProvider,
+  JsonCompletionItemProviderDelegate,
+  newCompletionItem,
+  newRelativeFilepathDelegate
+} from '../../../src/util/completions';
 import { closeAllEditors, findPositionByJsonPath, openTemplateInfo } from '../vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
-describe('JsonAttributeCompletionItemProvider', () => {
+describe('JsonCompletionItemProvider', () => {
   let cancellationTokenSource: vscode.CancellationTokenSource;
 
   beforeEach(async () => {
@@ -31,10 +36,10 @@ describe('JsonAttributeCompletionItemProvider', () => {
     const [doc] = await openTemplateInfo('allRelpaths');
     const position = findPositionByJsonPath(doc, TEMPLATE_INFO.csvRelFilePathLocationPatterns[0]);
     expect(position, 'position').to.not.be.undefined;
-    const provider = new JsonAttributeCompletionItemProvider(
+    const provider = new JsonCompletionItemProvider(
       // locations that support *.csv fies:
       newRelativeFilepathDelegate({
-        supported: location => TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(location.matches),
+        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(l.matches),
         filter: csvFileFilter
       })
     );
@@ -61,9 +66,9 @@ describe('JsonAttributeCompletionItemProvider', () => {
     const position = findPositionByJsonPath(doc, TEMPLATE_INFO.csvRelFilePathLocationPatterns[0]);
     expect(position, 'position').to.not.be.undefined;
     // make a provider with a filter that will match no location
-    const provider = new JsonAttributeCompletionItemProvider(
+    const provider = new JsonCompletionItemProvider(
       newRelativeFilepathDelegate({
-        supported: location => false,
+        isSupportedLocation: () => false,
         filter: csvFileFilter
       })
     );
@@ -79,9 +84,9 @@ describe('JsonAttributeCompletionItemProvider', () => {
     const position = findPositionByJsonPath(doc, TEMPLATE_INFO.csvRelFilePathLocationPatterns[0]);
     expect(position, 'position').to.not.be.undefined;
     // make a provider with a filter that will match no files
-    const provider = new JsonAttributeCompletionItemProvider(
+    const provider = new JsonCompletionItemProvider(
       newRelativeFilepathDelegate({
-        supported: location => TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(location.matches),
+        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(l.matches),
         filter: () => false
       })
     );
@@ -93,5 +98,69 @@ describe('JsonAttributeCompletionItemProvider', () => {
     const items = list!.items;
     expect(items, 'items').to.not.be.undefined.and.not.be.null;
     expect(items, 'item').to.be.deep.equals([]);
+  });
+
+  it("doesn't leak across delegates by document", async () => {
+    // this one will always return items
+    const delegate1: JsonCompletionItemProviderDelegate = {
+      isSupportedDocument: () => true,
+      isSupportedLocation: () => true,
+      getItems: () => {
+        return [newCompletionItem('good')];
+      }
+    };
+    // this one should never match on document
+    const delegate2: JsonCompletionItemProviderDelegate = {
+      isSupportedDocument: () => false,
+      isSupportedLocation: () => true,
+      getItems: () => {
+        return [newCompletionItem('bad')];
+      }
+    };
+    const [doc] = await openTemplateInfo('allRelpaths');
+
+    const provider = new JsonCompletionItemProvider(delegate1, delegate2);
+    const items = (
+      await provider.provideCompletionItems(doc, new vscode.Position(0, 0), cancellationTokenSource.token, {
+        triggerKind: vscode.CompletionTriggerKind.Invoke
+      })
+    )?.items;
+    expect(items, 'items').to.not.be.undefined;
+    if (items!.length !== 1) {
+      expect.fail('Expected 1 completion item, got: ' + items!.map(c => c.label).join(', '));
+    }
+    expect(items![0].label, 'item label').to.equal('"good"');
+  });
+
+  it("doesn't leak across delegates by location", async () => {
+    // this one will always return items
+    const delegate1: JsonCompletionItemProviderDelegate = {
+      isSupportedDocument: () => true,
+      isSupportedLocation: () => true,
+      getItems: () => {
+        return [newCompletionItem('good')];
+      }
+    };
+    // this one should never match on location
+    const delegate2: JsonCompletionItemProviderDelegate = {
+      isSupportedDocument: () => true,
+      isSupportedLocation: () => false,
+      getItems: () => {
+        return [newCompletionItem('bad')];
+      }
+    };
+    const [doc] = await openTemplateInfo('allRelpaths');
+
+    const provider = new JsonCompletionItemProvider(delegate1, delegate2);
+    const items = (
+      await provider.provideCompletionItems(doc, new vscode.Position(0, 0), cancellationTokenSource.token, {
+        triggerKind: vscode.CompletionTriggerKind.Invoke
+      })
+    )?.items;
+    expect(items, 'items').to.not.be.undefined;
+    if (items!.length !== 1) {
+      expect.fail('Expected 1 completion item, got: ' + items!.map(c => c.label).join(', '));
+    }
+    expect(items![0].label, 'item label').to.equal('"good"');
   });
 });
