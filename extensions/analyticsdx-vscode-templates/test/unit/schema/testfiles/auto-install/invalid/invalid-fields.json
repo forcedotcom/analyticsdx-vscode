@@ -1,0 +1,24 @@
+{
+  "error": "This should trigger a warning",
+  "hooks": [
+    {
+      "type": "PackageInstall",
+      "error": "This should trigger a warning"
+    }
+  ],
+  "configuration": {
+    "error": "This should trigger a warning",
+    "appConfiguration": {
+      "error": "This should trigger a warning",
+      "failOnDuplicateNames": false,
+      "autoShareWithLicensedUsers": true,
+      "autoShareWithOriginator": true,
+      "deleteAppOnConstructionFailure": true,
+      "values": {
+        "value1": "testString",
+        "value2": false
+      }
+    },
+    "parentRequestIds": ["one", "two", "three"]
+  }
+}

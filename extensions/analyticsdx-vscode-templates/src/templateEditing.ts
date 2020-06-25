@@ -29,6 +29,11 @@ import {
   TransportKind
 } from 'vscode-languageclient';
 import {
+  AutoInstallVariableCodeActionProvider,
+  AutoInstallVariableDefinitionProvider,
+  AutoInstallVariableHoverProvider
+} from './autoInstall';
+import {
   csvFileFilter,
   htmlFileFilter,
   imageFileFilter,
@@ -37,7 +42,7 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { telemetryService } from './telemetry';
-import { CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
+import { CreateFolderShareCodeActionProvider, CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
@@ -75,6 +80,7 @@ export class TemplateDirEditing extends Disposable {
   public readonly key: string;
 
   private _folderDefinitionPath: string | undefined;
+  private _autoInstallDefinitionPath: string | undefined;
   private _uiDefinitionPath: string | undefined;
   private _variablesDefinitionPath: string | undefined;
   private _rulesDefinitionPaths: Set<string> | undefined;
@@ -112,6 +118,12 @@ export class TemplateDirEditing extends Disposable {
       updated = true;
     }
 
+    path = this.getRelFilePathFromAttr(tree, 'autoInstallDefinition');
+    if (path !== this._autoInstallDefinitionPath) {
+      this._autoInstallDefinitionPath = path;
+      updated = true;
+    }
+
     path = this.getRelFilePathFromAttr(tree, 'uiDefinition');
     if (path !== this._uiDefinitionPath) {
       this._uiDefinitionPath = path;
@@ -140,6 +152,19 @@ export class TemplateDirEditing extends Disposable {
 
   get folderDefinitionPath() {
     return this._folderDefinitionPath;
+  }
+
+  get autoInstallDefinitionPath() {
+    return this._autoInstallDefinitionPath;
+  }
+  /** Tell if the specified file uri corresponds to our autoInstallDefinition path. */
+  public isAutoInstallDefinitionFile(file: vscode.Uri): boolean {
+    return (
+      isUriUnder(this.dir, file) &&
+      !!this.autoInstallDefinitionPath &&
+      isValidRelpath(this.autoInstallDefinitionPath) &&
+      isSameUri(uriRelPath(this.dir, this.autoInstallDefinitionPath), file)
+    );
   }
 
   get uiDefinitionPath() {
@@ -224,6 +249,10 @@ export class TemplateDirEditing extends Disposable {
       // and quick fixes for creating missing relative-path files
       vscode.languages.registerCodeActionsProvider(templateInfoSelector, new CreateRelPathFileCodeActionProvider(), {
         providedCodeActionKinds: CreateRelPathFileCodeActionProvider.providedCodeActionKinds
+      }),
+      // and quick fixes for embeddedapps w/o shares
+      vscode.languages.registerCodeActionsProvider(templateInfoSelector, new CreateFolderShareCodeActionProvider(), {
+        providedCodeActionKinds: CreateFolderShareCodeActionProvider.providedCodeActionKinds
       })
     );
 
@@ -231,21 +260,36 @@ export class TemplateDirEditing extends Disposable {
     const relatedFileSelector = createRelPathDocumentSelector(this.dir, '**', '*.json');
 
     this.disposables.push(
-      // hookup Go To Definition from variable name in ui.json to variable.json
+      // hookup Go To Definition from variable name in ui.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new UiVariableDefinitionProvider(this)),
+      // hookup Go To Definition from varaibles name in auto-install.json to variables.json
+      vscode.languages.registerDefinitionProvider(relatedFileSelector, new AutoInstallVariableDefinitionProvider(this)),
+
       // hookup code-completion for variables names in page in ui.json's
       vscode.languages.registerCompletionItemProvider(
         relatedFileSelector,
         new JsonAttributeCompletionItemProvider(new UiVariableCompletionItemProviderDelegate(this))
       ),
+
       // hookup quick fixes for variable names in ui.json's
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
         providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
       }),
+
+      // hookup quick fixes for variable names in auto-install.json's
+      vscode.languages.registerCodeActionsProvider(
+        relatedFileSelector,
+        new AutoInstallVariableCodeActionProvider(this),
+        {
+          providedCodeActionKinds: AutoInstallVariableCodeActionProvider.providedCodeActionKinds
+        }
+      ),
+
       // hookup hover text
       vscode.languages.registerHoverProvider(relatedFileSelector, new UiVariableHoverProvider(this)),
       // REVIEWME: make a multi-proxy hover provider so there's only registration?
-      vscode.languages.registerHoverProvider(relatedFileSelector, new VariableHoverProvider(this))
+      vscode.languages.registerHoverProvider(relatedFileSelector, new VariableHoverProvider(this)),
+      vscode.languages.registerHoverProvider(relatedFileSelector, new AutoInstallVariableHoverProvider(this))
     );
 
     return this;
@@ -268,6 +312,7 @@ export class TemplateEditingManager extends Disposable {
   public readonly baseSchemaPath: vscode.Uri;
   public readonly templateInfoSchemaPath: vscode.Uri;
   public readonly folderSchemaPath: vscode.Uri;
+  public readonly autoInstallSchemaPath: vscode.Uri;
   public readonly uiSchemaPath: vscode.Uri;
   public readonly variablesSchemaPath: vscode.Uri;
   public readonly rulesSchemaPath: vscode.Uri;
@@ -279,6 +324,7 @@ export class TemplateEditingManager extends Disposable {
     this.baseSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/adx-template-json-base-schema.json'));
     this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/template-info-schema.json'));
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
+    this.autoInstallSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/auto-install-schema.json'));
     this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/ui-schema.json'));
     this.variablesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/variables-schema.json'));
     this.rulesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/rules-schema.json'));
@@ -405,6 +451,13 @@ export class TemplateEditingManager extends Disposable {
           this.folderSchemaPath,
           editing.dir,
           editing.folderDefinitionPath
+        );
+
+        this.addRelpathSchemaAssociation(
+          associations,
+          this.autoInstallSchemaPath,
+          editing.dir,
+          editing.autoInstallDefinitionPath
         );
 
         this.addRelpathSchemaAssociation(associations, this.uiSchemaPath, editing.dir, editing.uiDefinitionPath);

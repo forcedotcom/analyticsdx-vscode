@@ -30,6 +30,19 @@ suites.push(
 );
 
 suites.push(
+  import('../../../schemas/auto-install-schema.json').then(schema =>
+    generateJsonSchemaValidFilesTestSuite(
+      schema,
+      'auto-install-schema.json',
+      __dirname,
+      'testfiles',
+      'auto-install',
+      'valid'
+    )
+  )
+);
+
+suites.push(
   import('../../../schemas/rules-schema.json').then(schema =>
     generateJsonSchemaValidFilesTestSuite(schema, 'rules-schema.json', __dirname, 'testfiles', 'rules', 'valid')
   )

@@ -56,7 +56,14 @@ function lengthJsonArrayAttributeValue(tree: JsonNode, ...pattern: JSONPath): [n
   return [nodes ? nodes.length : -1, node];
 }
 
-type JsonCacheValue = { readonly doc: vscode.TextDocument | undefined; readonly json: JsonNode | undefined };
+type JsonCacheValue = {
+  // uri will be set if the template-info field is set to a valid rel path (which may not exist or be valid json)
+  readonly uri: vscode.Uri | undefined;
+  // doc will set if the field's rel path can be opened
+  readonly doc: vscode.TextDocument | undefined;
+  // json will set if the field rel path file contains json
+  readonly json: JsonNode | undefined;
+};
 
 /** An object that can lint a template folder.
  * This currently does full lint only (no incremental) -- a second call to lint() will clear out any saved state
@@ -111,12 +118,37 @@ export class TemplateLinter {
         } catch (e) {
           // this can happen if the file doesn't exist or can't be opened, but lintRelFilePath should warn on that alraedy
         }
-        cacheValue = { doc, json };
+        cacheValue = { doc, uri, json };
         this.jsonCache.set(relpath, cacheValue);
       }
       return cacheValue;
     }
-    return { doc: undefined, json: undefined };
+    return { doc: undefined, uri: undefined, json: undefined };
+  }
+
+  /** Load the variableDefinition file and return a map of variableName -> variableType, or undefined if
+   * variablesDefinition isn't specified or can't be read.
+   */
+  private async loadVariableTypesForTemplate(templateInfo: JsonNode): Promise<Record<string, string> | undefined> {
+    const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
+    if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
+      const variableTypes: Record<string, string> = {};
+      varJson.children.forEach(prop => {
+        if (
+          prop.type === 'property' &&
+          prop.children &&
+          // child[0] is the variable name, child[1] is the variable definition
+          prop.children[0] &&
+          prop.children[0].type === 'string' &&
+          prop.children[0].value
+        ) {
+          const name = prop.children[0].value as string;
+          const [type] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'type');
+          variableTypes[name] = typeof type === 'string' && type ? type : 'StringType';
+        }
+      });
+      return variableTypes;
+    }
   }
 
   private addDiagnostic(
@@ -254,6 +286,7 @@ export class TemplateLinter {
       // 2. make the scans fully async through worker_threads or similar
       await Promise.all([
         this.lintTemplateInfo(tree),
+        this.lintAutoInstall(tree),
         this.lintVariables(tree),
         this.lintUi(tree),
         this.lintRules(tree)
@@ -268,11 +301,11 @@ export class TemplateLinter {
     // start these up and let them run
     const p = Promise.all([
       // make sure each place that can have a relative path to a file has a valid one
-      // TODO: warn if they put the same relPath in twice in 2 different fields?
       ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path =>
         this.lintRelFilePath(this.templateInfoDoc, tree, path)
       ),
-      this.lintTemplateInfoEmbeddedAppNoUi(this.templateInfoDoc, tree)
+      this.lintTemplateInfoEmbeddedApp(this.templateInfoDoc, tree),
+      this.lintTemplateInfoAutoInstallDefinition(this.templateInfoDoc, tree)
     ]);
     // while those are going, do these synchronous ones
     this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
@@ -292,9 +325,10 @@ export class TemplateLinter {
     await p;
   }
 
-  private async lintTemplateInfoEmbeddedAppNoUi(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
-    const [type] = findJsonPrimitiveAttributeValue(tree, 'templateType');
+  private async lintTemplateInfoEmbeddedApp(doc: vscode.TextDocument, tree: JsonNode): Promise<void> {
+    const [type, typeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
     if (type === 'embeddedapp') {
+      // make sure there's no ui pages specified
       const uiDefNode = findNodeAtLocation(tree, ['uiDefinition']);
       if (uiDefNode) {
         const { json: uiJson } = await this.loadTemplateRelPathJson(tree, uiDefNode);
@@ -308,11 +342,34 @@ export class TemplateLinter {
           );
         }
       }
+
+      // make sure there's at least one share in the folder.json
+      let hasShare = false;
+      const folderDefNode = findNodeAtLocation(tree, ['folderDefinition']);
+      let folderDefinitionUri: vscode.Uri | undefined;
+      if (folderDefNode) {
+        const { uri, json: folderJson } = await this.loadTemplateRelPathJson(tree, folderDefNode);
+        folderDefinitionUri = uri;
+        hasShare = !!folderJson && lengthJsonArrayAttributeValue(folderJson, 'shares')[0] >= 1;
+      }
+      if (!hasShare) {
+        this.addDiagnostic(
+          doc,
+          'Templates of type embeddedapp must have at least 1 share definition in the folderDefinition file',
+          ERRORS.TMPL_EMBEDDED_APP_NO_SHARES,
+          folderDefNode?.parent || folderDefNode || typeNode?.parent || typeNode,
+          {
+            args: {
+              folderDefinitionUri
+            }
+          }
+        );
+      }
     }
   }
 
   private lintTemplateInfoDevName(doc: vscode.TextDocument, tree: JsonNode) {
-    const [name, nodeName] = findJsonPrimitiveAttributeValue(tree, 'name');
+    const [name, nameNode] = findJsonPrimitiveAttributeValue(tree, 'name');
     if (name && typeof name === 'string') {
       // name has to match the template's folder name
       const dirname = path.basename(path.dirname(doc.uri.path));
@@ -321,8 +378,57 @@ export class TemplateLinter {
           doc,
           `Template name must match the template folder name '${dirname}'`,
           ERRORS.TMPL_NAME_MATCH_FOLDER_NAME,
-          nodeName
+          nameNode
         );
+      }
+    }
+  }
+
+  private async lintTemplateInfoAutoInstallDefinition(doc: vscode.TextDocument, tree: JsonNode) {
+    // if they have autoInstallDefinition specified
+    const [autoInstallDef, autoInstallDefNode] = findJsonPrimitiveAttributeValue(tree, 'autoInstallDefinition');
+    if (autoInstallDefNode && typeof autoInstallDef === 'string') {
+      const [templateType, templateTypeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
+      // only app and embeddedapp templates can specify an autoInstallDefinition
+      if (templateTypeNode && templateType !== 'app' && templateType !== 'embeddedapp') {
+        this.addDiagnostic(
+          doc,
+          "Only 'app' and 'embeddedapp' templates can use an 'autoInstallDefinition'",
+          ERRORS.TMPL_NON_APP_WITH_AUTO_INSTALL,
+          autoInstallDefNode.parent || autoInstallDefNode
+        ).relatedInformation = [
+          new vscode.DiagnosticRelatedInformation(
+            new vscode.Location(doc.uri, rangeForNode(templateTypeNode, doc)),
+            '"templateType" specification'
+          )
+        ];
+      } else {
+        // it's an app or embedded app w/ autoInstallDefinition, so folder.json needs to have a name in it
+        const { uri: folderUri, doc: folderDoc, json: folderJson } = await this.loadTemplateRelPathJson(tree, [
+          'folderDefinition'
+        ]);
+        let hasName = false;
+        if (folderJson) {
+          const [name] = findJsonPrimitiveAttributeValue(folderJson, 'name');
+          hasName = name && typeof name === 'string';
+        }
+
+        if (!hasName) {
+          const d = this.addDiagnostic(
+            doc,
+            "'name' is required in folderDefinition file when using autoInstallDefinition",
+            ERRORS.TMPL_AUTO_INSTALL_MISSING_FOLDER_NAME,
+            autoInstallDefNode.parent || autoInstallDefNode
+          );
+          if (folderUri && folderDoc) {
+            d.relatedInformation = [
+              new vscode.DiagnosticRelatedInformation(
+                new vscode.Location(folderUri, new vscode.Position(0, 0)),
+                'folderDefinition file'
+              )
+            ];
+          }
+        }
       }
     }
   }
@@ -481,6 +587,53 @@ export class TemplateLinter {
       }
     });
     return all;
+  }
+
+  private async lintAutoInstall(templateInfo: JsonNode): Promise<void> {
+    const { doc, json: autoInstall } = await this.loadTemplateRelPathJson(templateInfo, ['autoInstallDefinition']);
+    if (doc && autoInstall) {
+      await this.lintAutoInstallAppConfigurationValues(templateInfo, doc, autoInstall);
+    }
+  }
+
+  private async lintAutoInstallAppConfigurationValues(
+    templateInfo: JsonNode,
+    doc: vscode.TextDocument,
+    autoInstall: JsonNode
+  ): Promise<void> {
+    const valuesNode = matchJsonNodeAtPattern(autoInstall, ['configuration', 'appConfiguration', 'values']);
+    // if there's values specified, load the variableDefinition file and make sure they line up
+    if (valuesNode && valuesNode.children && valuesNode.children.length > 0) {
+      const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
+      const fuzzySearch = fuzzySearcher({
+        // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
+        [Symbol.iterator]: () =>
+          Object.keys(variableTypes)
+            // also, only include valid variable names in the fuzzy search
+            .filter(isValidVariableName)
+            [Symbol.iterator]()
+      });
+      valuesNode.children.forEach(valueNode => {
+        const nameNode = valueNode.children?.[0];
+        if (nameNode && nameNode.type === 'string' && typeof nameNode.value === 'string') {
+          const name = nameNode.value;
+          if (!variableTypes[name]) {
+            let mesg = `Cannot find variable '${name}'`;
+            // see if there's a variable w/ a similar name
+            const [match] = fuzzySearch(name);
+            const args: Record<string, any> = { name };
+            if (match && match.length > 0) {
+              args.match = match;
+              mesg += `, did you mean '${match}'?`;
+            }
+            this.addDiagnostic(doc, mesg, ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE, nameNode, { args });
+          }
+        }
+      });
+    }
+
+    // TODO: if variableDefinition has variable w/o a defaultValue and no apexCallback specified, and
+    // if that variable isn't specified in the autoInstall values, we should warn on that
   }
 
   private async lintVariables(templateInfo: JsonNode): Promise<void> {
@@ -648,25 +801,7 @@ export class TemplateLinter {
 
   private async lintUiCheckVariables(templateInfo: JsonNode, uiDoc: vscode.TextDocument, ui: JsonNode) {
     // find all the variable names & types in the variables file
-    const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
-    const variableTypes: Record<string, string> = {};
-    if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
-      varJson.children.forEach(prop => {
-        if (
-          prop.type === 'property' &&
-          prop.children &&
-          // child[0] is the variable name, child[1] is the variable definition
-          prop.children[0] &&
-          prop.children[0].type === 'string' &&
-          prop.children[0].value
-        ) {
-          const name = prop.children[0].value as string;
-          const [type] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'type');
-          variableTypes[name] = typeof type === 'string' && type ? type : 'StringType';
-        }
-      });
-    }
-
+    const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
     // go through the ui pages
     const pages = findNodeAtLocation(ui, ['pages']);
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {

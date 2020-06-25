@@ -10,6 +10,7 @@ import { JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser'
 import {
   findPropertyNodeFor,
   jsonPathToString,
+  jsonStringifyWithOptions,
   matchJsonNodeAtPattern,
   matchJsonNodesAtPattern,
   pathPartsAreEquals
@@ -579,6 +580,50 @@ describe('jsoncUtils', () => {
       const nodePath = ['icons'] as JSONPath;
       expect(pathPartsAreEquals(['icons', 'templateBadge'], nodePath)).to.be.false;
       expect(pathPartsAreEquals(nodePath, ['icons', 'templateBadge'], 2)).to.be.false;
+    });
+  });
+
+  describe('jsonStringifyWithOptions()', () => {
+    const o = {
+      a: 'b',
+      c: [{ d: 'e' }]
+    };
+
+    it('works for no options', () => {
+      const s = jsonStringifyWithOptions(o, undefined);
+      expect(s, 'json').to.equal(JSON.stringify(o, undefined, 2));
+    });
+
+    it('works for empty options', () => {
+      const s = jsonStringifyWithOptions(o, {});
+      expect(s, 'json').to.equal(JSON.stringify(o, undefined, 2));
+    });
+
+    it('works for spaces', () => {
+      const s = jsonStringifyWithOptions(o, { insertSpaces: true, tabSize: 3 });
+      expect(s, 'json').to.equal(JSON.stringify(o, undefined, 3));
+    });
+
+    it('works for tabs', () => {
+      const s = jsonStringifyWithOptions(o, { insertSpaces: false, tabSize: 6 });
+      expect(s, 'json').to.equal(JSON.stringify(o, undefined, '\t'));
+    });
+
+    it('works with replacer function', () => {
+      const replacer = (key: string, value: any) => {
+        if (key === 'a') {
+          return 'z';
+        }
+        return value;
+      };
+      const s = jsonStringifyWithOptions(o, undefined, replacer);
+      expect(s, 'json').to.equal(JSON.stringify(o, replacer, 2));
+    });
+
+    it('works with replacer array', () => {
+      const replacer = ['a']; // only keep 'a'
+      const s = jsonStringifyWithOptions(o, undefined, replacer);
+      expect(s, 'json').to.equal(JSON.stringify(o, replacer, 2));
     });
   });
 });

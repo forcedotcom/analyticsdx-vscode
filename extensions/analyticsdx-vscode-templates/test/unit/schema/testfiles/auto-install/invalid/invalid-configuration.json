@@ -1,0 +1,8 @@
+{
+  "hooks": [
+    {
+      "type": "PackageInstall"
+    }
+  ],
+  "configuration": {}
+}

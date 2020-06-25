@@ -10,21 +10,21 @@ import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
 import { VariableRefHoverProvider } from '../variables';
 
-/** Get hover text for a variable from the name in a page in a ui.json file. */
-export class UiVariableHoverProvider extends VariableRefHoverProvider {
+/** Get hover text for a variable name in the appConfiguration.values of an auto-install.json. */
+export class AutoInstallVariableHoverProvider extends VariableRefHoverProvider {
   constructor(templateEditing: TemplateDirEditing) {
     super(templateEditing);
   }
 
   protected isSupportedDocument(document: vscode.TextDocument) {
-    return this.templateEditing.isUiDefinitionFile(document.uri);
+    return this.templateEditing.isAutoInstallDefinitionFile(document.uri);
   }
 
   protected isSupportedLocation(location: Location) {
     return (
-      !location.isAtPropertyKey &&
-      location.previousNode?.type === 'string' &&
-      location.matches(['pages', '*', 'variables', '*', 'name'])
+      location.isAtPropertyKey &&
+      location.previousNode?.type === 'property' &&
+      location.matches(['configuration', 'appConfiguration', 'values', '*'])
     );
   }
 }

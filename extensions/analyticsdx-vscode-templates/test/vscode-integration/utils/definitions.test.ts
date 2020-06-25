@@ -37,6 +37,7 @@ describe('JsonAttributeRelFilePathDefinitionProvider', () => {
       [['variableDefinition'] as JSONPath, 'variables.json'],
       [['uiDefinition'], 'ui.json'],
       [['folderDefinition'], 'folder.json'],
+      [['autoInstallDefinition'], 'auto-install.json'],
       [['ruleDefinition'], 'rule-definition.json'],
       [['rules', 0, 'file'], 'template-to-app-rules.json'],
       [['rules', 1, 'file'], 'app-to-template-rules.json'],

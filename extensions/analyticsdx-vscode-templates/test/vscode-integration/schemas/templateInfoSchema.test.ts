@@ -151,6 +151,7 @@ describe('template-info-schema.json hookup', () => {
       assetIcon: null,
       templateIcon: null,
       folderDefinition: null,
+      autoInstallDefinition: null,
       releaseInfo: {
         notesFile: null
       },
@@ -272,6 +273,7 @@ describe('template-info-schema.json hookup', () => {
       { jsonpath: ['assetIcon'], completions: ['""'] },
       { jsonpath: ['templateIcon'], completions: ['""'] },
       { jsonpath: ['folderDefinition'], completions: ['""'] },
+      { jsonpath: ['autoInstallDefinition'], completions: ['""'] },
       { jsonpath: ['releaseInfo', 'notesFile'], completions: ['""'] },
       { jsonpath: ['rules'], completions: ['[]', 'New rules'] },
       { jsonpath: ['externalFiles'], completions: ['[]'] },
