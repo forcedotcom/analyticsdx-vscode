@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import { ERRORS, TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../src/constants';
 import { jsonPathToString, matchJsonNodeAtPattern } from '../../src/util/jsoncUtils';
 import { argsFrom, jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../src/util/vscodeUtils';
+import { NEW_VARIABLE_SNIPPETS } from '../../src/variables';
 import { jsoncParse, waitFor } from '../testutils';
 import {
   closeAllEditors,
@@ -1378,6 +1379,42 @@ describe('TemplateEditorManager', () => {
       // on other fields, it should just have the hover from the schema descrption
       expect(hovers.length, 'ObjectTypeVar.label hovers.length').to.equal(1);
     });
+
+    it('code completion snippets for new variables', async () => {
+      const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'variables.json');
+      const [doc] = await openFile(uri, true);
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+      const tree = parseTree(doc.getText());
+      expect(tree.type, 'root json type').to.equal('object');
+      // this shold right after the opening { (and before any of the existing variable defs)
+      let position = doc.positionAt(tree.offset).translate(0, 1);
+      let completions = await verifyCompletionsContain(doc, position, ...NEW_VARIABLE_SNIPPETS.map(s => s.label));
+      if (completions.length !== NEW_VARIABLE_SNIPPETS.length) {
+        expect.fail(
+          `Expected ${NEW_VARIABLE_SNIPPETS.length} completions, got: ` + completions.map(c => c.label).join(', ')
+        );
+      }
+      completions.forEach(c => {
+        expect(c.kind, `${c.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
+        expect(c.insertText, `${c.label} insertText`).to.be.instanceOf(vscode.SnippetString);
+      });
+
+      // make sure the snippets don't show up elsewhere, like in a variable def body
+      const node = findNodeAtLocation(tree, ['StringTypeVar']);
+      expect(node, 'StringTypeVar node').to.not.be.undefined;
+      position = doc.positionAt(node!.offset);
+      completions = (await getCompletionItems(doc.uri, position)).items;
+      if (completions.some(c => NEW_VARIABLE_SNIPPETS.some(s => s.label === c.label))) {
+        expect.fail('Found new variable completion item in ' + completions.map(c => c.label).join(', '));
+      }
+      // or in a variable name
+      expect(node!.parent, 'StringTypeVar whole property node').to.not.be.undefined;
+      position = doc.positionAt(node!.parent!.offset);
+      completions = (await getCompletionItems(doc.uri, position)).items;
+      if (completions.some(c => NEW_VARIABLE_SNIPPETS.some(s => s.label === c.label))) {
+        expect.fail('Found new variable completion item in ' + completions.map(c => c.label).join(', '));
+      }
+    });
   }); // describe('configures variablesDefinition')
 
   describe('configures rulesDefinitions', () => {
@@ -1921,6 +1958,127 @@ describe('TemplateEditorManager', () => {
       expect(fooNode, 'foo in variables.json').to.not.be.undefined;
       // and that it's a {} object
       expect(fooNode!.type, 'foo in variables.json type').to.equal('object');
+    });
+
+    it('code completions in appConfiguration.values', async () => {
+      const [t, [autoInstallEditor, variablesEditor]] = await createTemplateWithRelatedFiles(
+        {
+          field: 'autoInstallDefinition',
+          path: 'auto-install.json',
+          initialJson: {
+            hooks: [],
+            configuration: {
+              appConfiguration: {
+                values: {}
+              }
+            }
+          }
+        },
+        {
+          field: 'variableDefinition',
+          path: 'variables.json',
+          initialJson: {
+            stringvar: {
+              description: 'stringvar description',
+              variableType: {
+                type: 'StringType'
+              }
+            },
+            arrayvar: {
+              label: 'Array label',
+              variableType: {
+                type: 'ArrayType',
+                itemsType: {
+                  type: 'NumberType'
+                }
+              }
+            }
+          }
+        }
+      );
+      tmpdir = t;
+
+      // there shouldn't be any warnings on auto-install.json and variables.json
+      await waitForDiagnostics(autoInstallEditor.document.uri, d => d?.length === 0);
+      await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
+      // and editing should be setup
+      await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), tmpdir, true);
+
+      let autoInstallJson = parseTree(autoInstallEditor.document.getText());
+      expect(autoInstallJson, 'autoInstallJson').to.not.be.undefined;
+      const valuesNode = matchJsonNodeAtPattern(autoInstallJson, ['configuration', 'appConfiguration', 'values']);
+      expect(valuesNode, 'values node').to.not.be.undefined;
+      // this should be right at the { after "values":
+      let position = autoInstallEditor.document.positionAt(valuesNode!.offset).translate(0, 1);
+      // make sure we get the completions for each variable to insert a full property
+      let completions = (
+        await verifyCompletionsContain(autoInstallEditor.document, position, '"arrayvar"', '"stringvar"')
+      ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+      if (completions.length !== 2) {
+        expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
+      }
+      expect(completions[0].kind, 'arrayvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+      expect(completions[0].detail, 'arrayvar.detail').to.equal('(NumberType[]) Array label');
+      expect(completions[0].documentation, 'arrayvar.documentation').to.be.undefined;
+      expect(completions[0].insertText, 'arrayvar.insertText').to.be.instanceOf(vscode.SnippetString);
+      expect(completions[0].range, 'arrayvar.range').to.be.instanceOf(vscode.Range);
+      expect(completions[1].kind, 'stringvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+      expect(completions[1].detail, 'stringvar.detail').to.equal('(StringType)');
+      expect(completions[1].documentation, 'stringvar.documentation').to.equals('stringvar description');
+      expect(completions[1].insertText, 'stringvar.insertText').to.be.instanceOf(vscode.SnippetString);
+      expect(completions[1].range, 'stringvar.range').to.be.instanceOf(vscode.Range);
+
+      // apply the arrayvar completion to add "arrayvar" to the values
+      if (
+        !(await autoInstallEditor.insertSnippet(
+          completions[0].insertText as vscode.SnippetString,
+          completions[0]!.range as vscode.Range
+        ))
+      ) {
+        expect.fail(`Failed to apply completion item "${completions[0].label}"`);
+      }
+      // make sure still no diagnostics on auto-install.json
+      await waitForDiagnostics(autoInstallEditor.document.uri, d => d?.length === 0);
+
+      // re-parse and make sure arrayvar is in the appConfiguration.values
+      autoInstallJson = parseTree(autoInstallEditor.document.getText());
+      expect(autoInstallJson, 'autoInstallJson').to.not.be.undefined;
+      const varNode = matchJsonNodeAtPattern(autoInstallJson, [
+        'configuration',
+        'appConfiguration',
+        'values',
+        'arrayvar'
+      ]);
+      expect(varNode, 'arrayvar node').to.not.be.undefined;
+      // make the value of arrayvar is an empty array
+      expect(varNode?.parent?.children?.[1], 'arrayvar value node').to.not.be.undefined;
+      expect(varNode?.parent?.children?.[1].type, 'arrayvar value node type').to.equal('array');
+      expect(varNode?.parent?.children?.[1].children?.length, 'arrayvar value node # children').to.equal(0);
+
+      // this should be right at the first " in "arrayvar": []
+      position = autoInstallEditor.document.positionAt(varNode!.parent!.children![0].offset);
+      completions = (
+        await verifyCompletionsContain(autoInstallEditor.document, position, '"arrayvar"', '"stringvar"')
+      ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+      if (completions.length !== 2) {
+        expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
+      }
+      // we should now get Variable code completions that should just replace the "arrayvar" part
+      expect(completions[0].kind, 'arrayvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+      expect(completions[0].insertText, 'arrayvar.insertText').to.equal('"arrayvar"');
+      expect(completions[1].kind, 'stringvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+      expect(completions[1].insertText, 'stringvar.insertText').to.equal('"stringvar"');
+
+      // also, make sure that other completions items (like the New variable snippet items from
+      // NewVariableCompletionItemProviderDelegate) don't bleed over
+      position = autoInstallEditor.document.positionAt(autoInstallJson.offset).translate(0, 1);
+      completions = (await getCompletionItems(autoInstallEditor.document.uri, position)).items;
+      if (completions.some(c => NEW_VARIABLE_SNIPPETS.some(s => c.label === s.label))) {
+        expect.fail(
+          'New variable completions items should not be in root completions: ' +
+            completions.map(c => c.label).join(', ')
+        );
+      }
     });
   }); // describe('configures autoInstallDefinitions');
 

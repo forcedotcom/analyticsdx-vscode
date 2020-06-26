@@ -6,5 +6,6 @@
  */
 
 export * from './actions';
+export * from './completions';
 export * from './definitions';
 export * from './hover';

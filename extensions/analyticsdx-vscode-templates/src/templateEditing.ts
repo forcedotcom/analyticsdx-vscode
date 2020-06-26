@@ -30,6 +30,7 @@ import {
 } from 'vscode-languageclient';
 import {
   AutoInstallVariableCodeActionProvider,
+  AutoInstallVariableCompletionItemProviderDelegate,
   AutoInstallVariableDefinitionProvider,
   AutoInstallVariableHoverProvider
 } from './autoInstall';
@@ -50,7 +51,7 @@ import {
   UiVariableHoverProvider
 } from './ui';
 import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
-import { JsonAttributeCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
+import { JsonCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
 import { matchJsonNodesAtPattern } from './util/jsoncUtils';
@@ -68,7 +69,7 @@ import {
   uriRelPath,
   uriStat
 } from './util/vscodeUtils';
-import { VariableHoverProvider } from './variables';
+import { NewVariableCompletionItemProviderDelegate, VariableHoverProvider } from './variables';
 
 function templateJsonFileFilter(s: string) {
   return jsonFileFilter(s) && s !== 'template-info.json';
@@ -207,25 +208,25 @@ export class TemplateDirEditing extends Disposable {
   public start(): this {
     const templateInfoSelector = createRelPathDocumentSelector(this.dir, 'template-info.json');
     // hook up additional code-completions for template-info.json
-    const fileCompleter = new JsonAttributeCompletionItemProvider(
+    const fileCompleter = new JsonCompletionItemProvider(
       // locations that support *.json fies:
       newRelativeFilepathDelegate({
-        supported: location => TEMPLATE_INFO.jsonRelFilePathLocationPatterns.some(location.matches),
+        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.jsonRelFilePathLocationPatterns.some(l.matches),
         filter: templateJsonFileFilter
       }),
       // attributes that should have html paths
       newRelativeFilepathDelegate({
-        supported: location => TEMPLATE_INFO.htmlRelFilePathLocationPatterns.some(location.matches),
+        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.htmlRelFilePathLocationPatterns.some(l.matches),
         filter: htmlFileFilter
       }),
       // attribute that should point to images
       newRelativeFilepathDelegate({
-        supported: location => TEMPLATE_INFO.imageRelFilePathLocationPatterns.some(location.matches),
+        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.imageRelFilePathLocationPatterns.some(l.matches),
         filter: imageFileFilter
       }),
       // the file in externalFiles should be a .csv
       newRelativeFilepathDelegate({
-        supported: location => TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(location.matches),
+        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(l.matches),
         filter: csvFileFilter
       })
     );
@@ -265,10 +266,16 @@ export class TemplateDirEditing extends Disposable {
       // hookup Go To Definition from varaibles name in auto-install.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new AutoInstallVariableDefinitionProvider(this)),
 
-      // hookup code-completion for variables names in page in ui.json's
       vscode.languages.registerCompletionItemProvider(
         relatedFileSelector,
-        new JsonAttributeCompletionItemProvider(new UiVariableCompletionItemProviderDelegate(this))
+        new JsonCompletionItemProvider(
+          // hookup code-completion for variables names in page in ui.json's
+          new UiVariableCompletionItemProviderDelegate(this),
+          // hoookup compeltions for variables in appConfiguration.values
+          new AutoInstallVariableCompletionItemProviderDelegate(this),
+          // hookup completions for new variable definitions in variables.json's
+          new NewVariableCompletionItemProviderDelegate(this)
+        )
       ),
 
       // hookup quick fixes for variable names in ui.json's

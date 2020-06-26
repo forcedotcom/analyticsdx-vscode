@@ -58,20 +58,20 @@
           "type": "string",
           "description": "Variable type.",
           "enum": [
+            "ArrayType",
             "BooleanType",
-            "StringType",
-            "NumberType",
-            "SobjectType",
-            "SobjectFieldType",
-            "DateTimeType",
-            "DatasetType",
+            "ConnectorType",
+            "DatasetAnyFieldType",
+            "DatasetDateType",
             "DatasetDimensionType",
             "DatasetMeasureType",
-            "DatasetDateType",
-            "DatasetAnyFieldType",
-            "ArrayType",
+            "DatasetType",
+            "DateTimeType",
+            "NumberType",
             "ObjectType",
-            "ConnectorType"
+            "SobjectType",
+            "SobjectFieldType",
+            "StringType"
           ]
         },
         "enums": {

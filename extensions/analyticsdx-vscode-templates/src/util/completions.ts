@@ -36,20 +36,22 @@ export function newFilepathCompletionItem(
   return newCompletionItem(path, range, vscode.CompletionItemKind.File, path, insertText);
 }
 
-type InsertInfo = { range?: vscode.Range; startText?: string; endText?: string };
-
-type SupportsLocationFunction = (
-  location: Location,
-  document: vscode.TextDocument,
-  token: vscode.CancellationToken,
-  context: vscode.CompletionContext
-) => boolean;
+type SupportsDocumentFunction = (document: vscode.TextDocument, context: vscode.CompletionContext) => boolean;
+type SupportsLocationFunction = (location: Location, context: vscode.CompletionContext) => boolean;
 
 /**
- * A delegate to JsonAttributeCompletionItemProvider, to support handling sets of attribute-paths -> completion sets
+ * A delegate to JsonCompletionItemProvider, to support handling sets of attribute-paths -> completion sets
  * in a constructor.
  */
-export type JsonAttributeCompletionItemProviderDelegate = {
+export type JsonCompletionItemProviderDelegate = {
+  /**
+   * Tell if the specified document is valid for this delegate.
+   * If undefined, then this can potentially support any document.
+   * @param document the json document.
+   * @param context code completion context.
+   */
+  isSupportedDocument?: SupportsDocumentFunction;
+
   /**
    * Tell if the specified attribute location is valid for this delegate.
    * If undefined, then this can potentially support any attribute location.
@@ -58,13 +60,16 @@ export type JsonAttributeCompletionItemProviderDelegate = {
    * @param token code completion cancellation token.
    * @param context code completion context.
    */
-  supported?: SupportsLocationFunction;
+  isSupportedLocation?: SupportsLocationFunction;
 
   /**
    * Compute the potential completion items for the attribute location.
-   * The insertText on the items should not include the outer json-attributes double-quotes; those will be
-   * included automatically if needed by the location.
-   * This should only be called if {@link JsonAttributeCompletionItemProviderDelegate#supported} is undefined or return true.
+   * If the insertText on an item is not a vscode.SnippetString, then the label and insertText should not include the outer
+   * json-attributes double-quotes -- those will be included automatically if needed by the location.
+   * If the insertText is a vscode.SnippetText, the label and insertText be used as-is (so it should deal with adding
+   * double-quotes appropriately).
+   * This should only be called if {@link JsonCompletionItemProviderDelegate#supported} and
+   * {@link JsonCompletionItemProviderDelegate#supported} are both undefined or both return true.
    * @param range the computed insert range (undefined to use the default vscode range for insertion)
    * @param location the location in the json; this will be at an attribute value position, use location.path to check the attribute path.
    * @param document the json document.
@@ -72,7 +77,7 @@ export type JsonAttributeCompletionItemProviderDelegate = {
    * @param context code completion context.
    * @returns the set of completion items (or undefined or empty if the attribute is not supported).
    */
-  items: (
+  getItems: (
     range: vscode.Range | undefined,
     location: Location,
     document: vscode.TextDocument,
@@ -87,14 +92,17 @@ export type JsonAttributeCompletionItemProviderDelegate = {
  * @param delegate the delegate functions to use.
  */
 export function newRelativeFilepathDelegate(delegate: {
+  /** Tell if the specific document is supported, or undefined to support any document */
+  isSupportedDocument?: SupportsDocumentFunction;
   /** Tell if the specific json attribute location is supported, or undefined to support any attribute */
-  supported?: SupportsLocationFunction;
+  isSupportedLocation?: SupportsLocationFunction;
   /** The filepath filter, to control the document-dir-relative paths to include */
   filter?: (relpath: string, document: vscode.TextDocument, location: Location) => boolean;
-}): JsonAttributeCompletionItemProviderDelegate {
+}): JsonCompletionItemProviderDelegate {
   return {
-    supported: delegate.supported,
-    items: async (
+    isSupportedDocument: delegate.isSupportedDocument,
+    isSupportedLocation: delegate.isSupportedLocation,
+    getItems: async (
       range: vscode.Range | undefined,
       location: Location,
       document: vscode.TextDocument,
@@ -120,18 +128,13 @@ export function newRelativeFilepathDelegate(delegate: {
 
 /**
  * Handle doing appropriate json attribute completion text replacements.
- *
- * The implementation here will use the delegates to compute the completion items.
- * Subclasses can override {@link #isSupportedAttributeLocation} and {@link #provideAttributeCompletionItems} to
- * as needed, to either not use the delegate pattern or at augment it; those methods should be override symmetrically.
- *
- * In general, you should initialize only 1 item provider to run against a file at a time, to avoid parsing
+ * In general, you should initialize only 1 item provider to run against a file matcher at a time, to avoid parsing
  * the json multiple times in different provider instances.
  */
-export class JsonAttributeCompletionItemProvider implements vscode.CompletionItemProvider {
-  protected delegates: JsonAttributeCompletionItemProviderDelegate[];
+export class JsonCompletionItemProvider implements vscode.CompletionItemProvider {
+  private delegates: JsonCompletionItemProviderDelegate[];
 
-  constructor(...delegates: JsonAttributeCompletionItemProviderDelegate[]) {
+  constructor(...delegates: JsonCompletionItemProviderDelegate[]) {
     this.delegates = delegates || [];
   }
 
@@ -141,22 +144,22 @@ export class JsonAttributeCompletionItemProvider implements vscode.CompletionIte
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): vscode.ProviderResult<vscode.CompletionList> {
-    const location = getLocation(document.getText(), document.offsetAt(position));
-    if (
-      (!token || !token.isCancellationRequested) &&
-      !location.isAtPropertyKey &&
-      this.isSupportedAttributeLocation(location, document, token, context)
-    ) {
-      const info = this.computeInsertInfo(location, document, position, token, context);
-      if (info && (!token || !token.isCancellationRequested)) {
-        const results = this.provideAttributeCompletionItems(info.range, location, document, token, context);
-        // if we don't need to pre/append text or no matches, just return that
-        if ((!info.startText && !info.endText) || !results) {
-          return results;
-        } else {
-          // otherwise, update the insertTexts in the items to return
+    let delegates = this.delegatesByDocument(this.delegates, document, context);
+    if (delegates.length > 0) {
+      const location = getLocation(document.getText(), document.offsetAt(position));
+      if (!token || !token.isCancellationRequested) {
+        delegates = this.delegatesByLocation(delegates, location, context);
+        if (delegates.length > 0) {
+          const results = this.provideDelegateCompletionItems(
+            delegates,
+            document.getWordRangeAtPosition(position) || new vscode.Range(position, position),
+            location,
+            document,
+            token,
+            context
+          );
           return Promise.resolve(results).then(items => {
-            return wrapItemsTexts(items, info.startText, info.endText);
+            return wrapItemsTexts(items, '"', '"');
           });
         }
       }
@@ -164,18 +167,8 @@ export class JsonAttributeCompletionItemProvider implements vscode.CompletionIte
     return undefined;
   }
 
-  /**
-   * Compute the potential completion items for the attribute location.
-   * The insertText on the items should not include the outer json-attributes double-quotes; those will be
-   * included automatically if needed by the location.
-   * @param range the computed insert range (undefined to use the default vscode range for insertion)
-   * @param location the location in the json; this will be at an attribute value position, use location.path to check the attribute path.
-   * @param document the json document.
-   * @param token code completion cancellation token.
-   * @param context code completion context.
-   * @returns the set of completion items (or undefined or empty if the attribute is not supported).
-   */
-  public provideAttributeCompletionItems(
+  private provideDelegateCompletionItems(
+    delegates: JsonCompletionItemProviderDelegate[],
     range: vscode.Range | undefined,
     location: Location,
     document: vscode.TextDocument,
@@ -184,100 +177,64 @@ export class JsonAttributeCompletionItemProvider implements vscode.CompletionIte
   ): vscode.ProviderResult<vscode.CompletionList> {
     let all = Promise.resolve(new vscode.CompletionList([], false));
 
-    this.delegates.forEach(delegate => {
-      if (!delegate.supported || delegate.supported(location, document, token, context)) {
-        const results = delegate.items(range, location, document, token, context);
-        if (results) {
-          // if we got results from the delegate, add those to the outer list
-          all = all.then(list => {
-            return Promise.resolve(results).then(items => {
-              if (items) {
-                if (items instanceof vscode.CompletionList) {
-                  list.items.push(...items.items);
-                  list.isIncomplete = list.isIncomplete || items.isIncomplete;
-                } else {
-                  // CompletionItem[]
-                  list.items.push(...items);
-                }
+    delegates.forEach(delegate => {
+      const results = delegate.getItems(range, location, document, token, context);
+      if (results) {
+        // if we got results from the delegate, add those to the outer list
+        all = all.then(list => {
+          return Promise.resolve(results).then(items => {
+            if (items) {
+              if (items instanceof vscode.CompletionList) {
+                list.items.push(...items.items);
+                list.isIncomplete = list.isIncomplete || items.isIncomplete;
+              } else {
+                // CompletionItem[]
+                list.items.push(...items);
               }
-              return list;
-            });
+            }
+            return list;
           });
-        }
+        });
       }
     });
     return all;
   }
 
-  /**
-   * Tell if the specified attribute location is valid for the provider.
-   * Subclasses can override here to if they want to fail-fast.
-   * @param location the location in the json; this will be at an attribute value position, use location.path to check the attribute path.
-   * @param document the json document.
-   * @param token code completion cancellation token.
-   * @param context code completion context.
-   */
-  public isSupportedAttributeLocation(
-    location: Location,
+  private delegatesByDocument(
+    delegates: JsonCompletionItemProviderDelegate[],
     document: vscode.TextDocument,
-    token: vscode.CancellationToken,
     context: vscode.CompletionContext
-  ): boolean {
-    // check if any of the delegates say they support the location
-    return this.delegates.some(
-      delegate => !delegate.supported || delegate.supported(location, document, token, context)
+  ) {
+    return delegates.filter(
+      delegate => !delegate.isSupportedDocument || delegate.isSupportedDocument(document, context)
     );
   }
 
-  /** Compute the appropriate insert information range for the attribute and location and cursor position.
-   * Subclases can override the default behavior here, particularly if they want to detect and intra-attribute-value
-   * code completions (i.e. not replacing the whole attribute).
-   * @param location the location in the json; this will be at an attribute value position, use location.path to check the attribute path.
-   * @param document the json document.
-   * @param token code completion cancellation token.
-   * @param context code completion context.
-   * @return the insert range, or undefined for the default vscode code-completion behavior, and any pre/postfix
-   *         insertion text (typically quotes).
-   */
-  public computeInsertInfo(
+  private delegatesByLocation(
+    delegates: JsonCompletionItemProviderDelegate[],
     location: Location,
-    document: vscode.TextDocument,
-    position: vscode.Position,
-    token: vscode.CancellationToken,
     context: vscode.CompletionContext
-  ): InsertInfo {
-    // by default, use the json-editor's word boundary at the position (which will typically be from the start
-    // double-quote to the end double-quote); when we do that, it includes replacing the quotes, so we need to
-    // have the generated item include the quotes for everything to work like folks expect it (and with how all
-    // of the other json code-completing seems to work).
-    return {
-      range: document.getWordRangeAtPosition(position) || new vscode.Range(position, position),
-      startText: '"',
-      endText: '"'
-    };
+  ) {
+    return delegates.filter(
+      delegate => !delegate.isSupportedLocation || delegate.isSupportedLocation(location, context)
+    );
   }
 }
 
 function wrapItemText(item: vscode.CompletionItem, startText?: string, endText?: string): vscode.CompletionItem {
-  if (startText) {
-    if (item.insertText) {
-      if (item.insertText instanceof vscode.SnippetString) {
-        item.insertText.value = startText + (item.insertText.value || '');
-      } else {
+  if (!(item.insertText instanceof vscode.SnippetString)) {
+    if (startText) {
+      if (item.insertText) {
         item.insertText = startText + item.insertText;
       }
+      item.label = startText + (item.label || '');
     }
-    item.label = startText + (item.label || '');
-  }
-  if (endText) {
-    if (item.insertText) {
-      if (item.insertText instanceof vscode.SnippetString) {
-        item.insertText.value = (item.insertText.value || '') + endText;
-      } else {
+    if (endText) {
+      if (item.insertText) {
         item.insertText = item.insertText + endText;
       }
+      item.label = (item.label || '') + endText;
     }
-    item.label = (item.label || '') + endText;
   }
 
   return item;
@@ -288,7 +245,7 @@ function wrapItemsTexts<T extends vscode.CompletionItem[] | vscode.CompletionLis
   startText?: string,
   endText?: string
 ): T {
-  if (!items) {
+  if (!items || (!startText && !endText)) {
     return items;
   }
   if (items instanceof vscode.CompletionList) {
