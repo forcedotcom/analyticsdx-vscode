@@ -19,7 +19,7 @@ Before you set up Salesforce Analytics Extensions for VS Code, make sure that yo
 - **Analytics Plugin for Salesforce CLI**  
   Be sure to [install the Analytics Plugin for the Salesforce CLI](https://help.salesforce.com/articleView?id=bi_cli_analytics_plugin_install.htm&type=5).
 - **Salesforce Extension Pack**  
-  Install the [Salesforce Extension Pack](https://marketplace.visualstudio.com/items?itemName=salesforce.salesforcedx-vscode) from the VS Code Extensions Marketplace. 
+  Install the [Salesforce Extension Pack](https://marketplace.visualstudio.com/items?itemName=salesforce.salesforcedx-vscode) from the VS Code Extensions Marketplace.
 - **A Salesforce DX project**  
   Open your Salesforce DX project in a directory that contains an `sfdx-project.json` file. Otherwise, some features won't work.  
   If you don't already have a Salesforce DX project, create one with the **SFDX: Create Project** command
@@ -36,27 +36,18 @@ Before you set up Salesforce Analytics Extensions for VS Code, make sure that yo
 
 **TBD**
 
+-->
+
 ## Open Source
 
-- [GitHub Repository](https://github.com/forcedotcom/analyticsdx-vscode)
-- [Project Boards](https://github.com/forcedotcom/analyticsdx-vscode/projects)
 - [Issues](https://github.com/forcedotcom/analyticsdx-vscode/issues)
-
--->
+- [Project Boards](https://github.com/forcedotcom/analyticsdx-vscode/projects)
+- [GitHub Repository](https://github.com/forcedotcom/analyticsdx-vscode)
 
 ## Bugs and Feedback
 
-To report a bug with this extension or suggest a feature, please open an [issue on GitHub](https://github.com/forcedotcom/sfdx-analytics/issues/new).
-Please include your OS and version, Visual Studio Code version, Salesforce Extensions for Visual Studio
-Code version, SFDX CLI version (as per `sfdx version`), SFDX CLI plugins' versions (as per `sfdx plugins --core`), and
-steps to reproduce.
-
-<!--
-
-To report issues with Salesforce Analytics Extensions for VS Code, open a [bug on GitHub](https://github.com/forcedotcom/analyticsdx-vscode/issues/new?template=Bug_report.md).
+To report issues with the Salesforce Analytics Extensions for VS Code, open a [bug on GitHub](https://github.com/forcedotcom/analyticsdx-vscode/issues/new?template=Bug_report.md).
 If you would like to suggest a feature, create a [feature request on GitHub](https://github.com/forcedotcom/analyticsdx-vscode/issues/new?template=Feature_request.md).
-
--->
 
 ## Included Extensions
 
@@ -67,12 +58,8 @@ The Salesforce Analytics Extension Pack extension installs these extensions:
 - [Salesforce Analytics - App Templates](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-templates)  
   This extension (`salesforce.analyticsdx-vscode-templates`) provides editing features for Salesforce analytics application template source files.
 
-<!--
-
 ---
 
-TBD: SHA256
+Currently, Visual Studio Code extensions are not signed or verified on the Microsoft Visual Studio Code Marketplace. Salesforce provides the Secure Hash Algorithm (SHA) of each extension that we publish. Consult [Manually Verify the analyticsdx-vscode Extensions' Authenticity](https://github.com/forcedotcom/analyticsdx-vscode/blob/develop/SHA256.md) to learn how to verify the extensions.
 
 ---
-
--->

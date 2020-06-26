@@ -8,7 +8,8 @@ NOTICE: While GitHub is the preferred channel for reporting issues/feedback, thi
 -->
 
 <!--
-FOR BUGS RELATED TO THE SALEFORCE CLI, please use this repository: https://github.com/forcedotcom/cli-packages
+FOR BUGS RELATED TO THE SALEFORCE VSCODE EXTENSIONS, please use this repository: https://github.com/forcedotcom/salesforcedx-vscode/issues
+FOR BUGS RELATED TO THE SALEFORCE CLI, please use this repository: https://github.com/forcedotcom/cli/issues
 -->
 
 ### Summary
@@ -34,10 +35,18 @@ _Feel free to attach a screenshot_.
 
 **VS Code Version**:
 
-**ADX VS Code Version**:
+_From **About Visual Studio Code** in VS Code_
 
-**SFDX VS Code Version**:
+**Salesforce Analytics VS Code Extensions Version**:
 
-**SFDX CLI Version**:
+_Available from **View > Extensions** in VS Code_
+
+**Salesforce VS Code Extensions Version**:
+
+_Available from **View > Extensions** in VS Code_
+
+**SFDX CLI and Plugins Versions**:
+
+_Include the output from running: `sfdx version` and `sfdx plugins --core`_
 
 **OS and version**:
