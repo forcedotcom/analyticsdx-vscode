@@ -18,23 +18,9 @@ Then,
 ## Branches
 
 - We work in `develop`.
-- (TBD) Our released (aka. _production_) branch is `master`.
 - Our work happens in _topic_ branches (feature and/or bug-fix).
   - feature as well as bug-fix branches are based on `develop`
   - branches _should_ be kept up-to-date with `develop`
-
-### Merging `develop` into `master`
-
-- (TBD) When a development cycle finishes, the content of the `develop` branch will become the `master` branch
-
-```
-$ git checkout master
-$ git reset --hard develop
-$
-$ # Using a custom commit message for the merge below
-$ git merge -m 'Merge -s our (where _ours_ is develop) releasing stream x.y.z.' -s ours origin/master
-$ git push origin master
-```
 
 ## Pull Requests
 

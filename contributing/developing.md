@@ -37,9 +37,8 @@ The scripts/ directory contains js scripts used for the build and running tests.
 
 You would only do this once after you cloned the repository.
 
-1.  We develop on the `develop` branch and release from the `master` branch. At
-    this point, unless you are working on releasing, you should do a `git checkout develop` and `git pull` to get the
-    latest code, and create your working branch (`git checkout -b your-name`)
+1.  We develop on the `develop` branch. At this point, you should do a `git checkout develop` and `git pull` to get the
+    latest code, and create your working branch (`git checkout -b your-name/branch-name`)
 1.  `npm install` to bring in all the top-level dependencies. Because of the
     `postinstall` script, this also runs `npm run bootstrap` for you
     automatically the first time.

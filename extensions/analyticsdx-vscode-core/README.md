@@ -20,17 +20,8 @@ orgs.
 
 ## Bugs and Feedback
 
-To report a bug with this extension or suggest a feature, please open an [issue on GitHub](https://github.com/forcedotcom/sfdx-analytics/issues/new).
-Please include your OS and version, Visual Studio Code version, Salesforce Extensions for Visual Studio
-Code version, SFDX CLI version (as per `sfdx version`), SFDX CLI plugins' versions (as per `sfdx plugins --core`), and
-steps to reproduce.
-
-<!--
-
-To report issues with Salesforce Analytics Extensions for VS Code, open a [bug on GitHub](https://github.com/forcedotcom/analyticsdx-vscode/issues/new?template=Bug_report.md).
+To report issues with the Salesforce Analytics Extensions for VS Code, open a [bug on GitHub](https://github.com/forcedotcom/analyticsdx-vscode/issues/new?template=Bug_report.md).
 If you would like to suggest a feature, create a [feature request on GitHub](https://github.com/forcedotcom/analyticsdx-vscode/issues/new?template=Feature_request.md).
-
--->
 
 ## Resources
 
@@ -39,12 +30,8 @@ If you would like to suggest a feature, create a [feature request on GitHub](htt
 - Doc: [Analytics Plugin for the Salesforce CLI Guide](https://help.salesforce.com/articleView?id=bi_cli_analytics_plugin.htm&type=5)
 - Doc: [Analytics Plugin for the Salesforce CLI Command Reference](https://help.salesforce.com/articleView?id=bi_cli_analytics_plugin_command_reference.htm&type=5)
 
-<!--
-
 ---
 
-**TBD** SHA256
+Currently, Visual Studio Code extensions are not signed or verified on the Microsoft Visual Studio Code Marketplace. Salesforce provides the Secure Hash Algorithm (SHA) of each extension that we publish. Consult [Manually Verify the analyticsdx-vscode Extensions' Authenticity](https://github.com/forcedotcom/analyticsdx-vscode/blob/develop/SHA256.md) to learn how to verify the extensions.
 
 ---
-
--->

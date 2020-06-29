@@ -23,7 +23,7 @@ make sure that their SHA values match the values in the list below.
    following the instructions at
    https://code.visualstudio.com/docs/editor/extension-gallery#_common-questions.
    For example, download,
-   https://salesforce.gallery.vsassets.io/_apis/public/gallery/publisher/salesforce/extension/analtyicsdx-vscode-core/${packageVersion}/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage.
+   https://salesforce.gallery.vsassets.io/_apis/public/gallery/publisher/salesforce/extension/analyticsdx-vscode-core/${packageVersion}/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage.
 
 2. From a terminal, run:
 
