@@ -1,3 +1,10 @@
+# 0.3.0
+
+## Added
+
+- Code-completions for adding new variables in variableDefinition files in templates.
+- More validation and quick fixes around embedded apps templates.
+
 # 0.2.1
 
 ## Fixed
