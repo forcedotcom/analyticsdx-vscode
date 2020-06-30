@@ -19,6 +19,7 @@ import {
   DocumentRangeFormattingParams,
   DocumentRangeFormattingRequest,
   ErrorAction,
+  InitializeError,
   LanguageClient,
   LanguageClientOptions,
   Message,
@@ -316,6 +317,8 @@ interface ISchemaAssociations {
 export class TemplateEditingManager extends Disposable {
   private templateDirs = new Map<string, TemplateDirEditing>();
   private languageClient: TemplateJsonLanguageClient | undefined;
+
+  private readonly extensionPath: string;
   public readonly baseSchemaPath: vscode.Uri;
   public readonly templateInfoSchemaPath: vscode.Uri;
   public readonly folderSchemaPath: vscode.Uri;
@@ -328,6 +331,7 @@ export class TemplateEditingManager extends Disposable {
 
   constructor(context: vscode.ExtensionContext, output?: vscode.OutputChannel) {
     super();
+    this.extensionPath = context.extensionPath;
     this.baseSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/adx-template-json-base-schema.json'));
     this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/template-info-schema.json'));
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
@@ -364,7 +368,9 @@ export class TemplateEditingManager extends Disposable {
   // start our language client and server, if it's not started yet
   private startLanguageClient() {
     if (!this.languageClient) {
-      this.languageClient = new TemplateJsonLanguageClient(() => this.getSchemaAssociations(), this.logger);
+      this.languageClient = new TemplateJsonLanguageClient(this.extensionPath, this.logger, () =>
+        this.getSchemaAssociations()
+      );
       this.disposables.push(this.languageClient.start());
     }
   }
@@ -512,12 +518,11 @@ export class TemplateEditingManager extends Disposable {
 }
 
 /* Custom json language server and client stuff.
- * This is mostly borrowed from the json-language-features client code
+ * This is mostly based off of the json-language-features client code
  * (https://github.com/microsoft/vscode/blob/master/extensions/json-language-features/client/src/jsonMain.ts).
  * Because there is no public api to dynamically associate a json-schema to a file, we need to do it ourselves.
- * This will start a json-language-server (using the json-language-features extension already included in the
- * VSCode installation), but will configure a custom language client, where we can dynamically send up
- * file -> json-schema associations for the various file paths specified in a template-info.json.
+ * This will start a vscode-json-languageserver, but will configure a custom language client, where we can dynamically
+ * send up file -> json-schema associations for the various file paths specified in a template-info.json.
  * This is bound to the adx-template-json languageId, so it shouldn't interfer with regular json files.
  */
 namespace VSCodeContentRequest {
@@ -577,13 +582,19 @@ class TemplateJsonLanguageClient extends Disposable {
   private languageClient: LanguageClient | undefined;
   private clientReady = false;
 
-  private langOutputChannel: PrefixingOutputChannel;
+  private readonly langOutputChannel: PrefixingOutputChannel;
 
   /** Constructor.
+   * @param extensionPath the base path of this template extension, used to be find vscode-json-languageserver
+   * @param logger a logger for log messages, this will be wrapped
    * @param getSchemaAssociations supplier of the file->json-schema associations, this will be invoked when
    *        then language server and client is ready, as well as from updateSchemaAssociations().
    */
-  constructor(private readonly getSchemaAssociations: () => ISchemaAssociations, logger: Logger) {
+  constructor(
+    private readonly extensionPath: string,
+    logger: Logger,
+    private readonly getSchemaAssociations: () => ISchemaAssociations
+  ) {
     super();
     this.langOutputChannel = new PrefixingOutputChannel(logger, 'JSON Language Server');
   }
@@ -599,22 +610,20 @@ class TemplateJsonLanguageClient extends Disposable {
   }
 
   public start(): this {
-    // find the json extension included in the vscode installation
-    const jsonExt = vscode.extensions.getExtension('vscode.json-language-features');
-    if (!jsonExt) {
-      this.langOutputChannel.appendLine(
-        'Failed to find vscode.json-language-features extension, some template editing features will be unavailable.'
-      );
+    // find the vscode-json-languageserver module's main js module
+    const serverPath = fspath.join(this.extensionPath, 'node_modules', 'vscode-json-languageserver');
+    const serverMain = this.readJSONFile(fspath.join(serverPath, 'package.json')).main;
+    const serverModule = fspath.join(serverPath, serverMain);
+    // serverModule should then be like '.../out/jsonServerMain', so the actual file will be jsonServerMain.js -- make
+    // sure it exists, since we will not get an relevant error message on the callbacks if it doesn't
+    if (!fs.existsSync(serverModule + '.js') && !fs.existsSync(serverModule)) {
+      this.langOutputChannel.appendLine(`vscode-json-languageserver main module unavailable: ${serverModule}`);
+      this.langOutputChannel.appendLine('Some template editing features will be unavailable');
       vscode.window.showWarningMessage(
-        'Failed to find vscode.json-language-features extension, some template editing features will be unavailable.'
+        'Failed to load vscode-json-languageserver module, some template editing features will be unavailable.'
       );
       return this;
     }
-    const extPath = jsonExt.extensionPath;
-    // find the server module's main dir
-    const serverPath = fspath.join(extPath, 'server');
-    const serverMain = this.readJSONFile(fspath.join(serverPath, 'package.json')).main;
-    const serverModule = fspath.join(serverPath, serverMain);
 
     const serverOptions: ServerOptions = {
       run: { module: serverModule, transport: TransportKind.ipc },
@@ -632,13 +641,17 @@ class TemplateJsonLanguageClient extends Disposable {
       documentSelector,
       outputChannel: this.langOutputChannel,
       traceOutputChannel: this.langOutputChannel,
+      initializationFailedHandler: (error: ResponseError<InitializeError> | Error | any) => {
+        this.langOutputChannel.appendLine('Initialization failed: ' + (error.message || error));
+        return false;
+      },
       errorHandler: {
         error: (error: Error, message: Message, count: number) => {
-          this.langOutputChannel.appendLine(`error (#${count}): ${error}`);
+          this.langOutputChannel.appendLine(`Error (#${count}): ${error.message}`);
           return ErrorAction.Continue;
         },
         closed: () => {
-          this.langOutputChannel.appendLine('closed connection');
+          this.langOutputChannel.appendLine('Connection closed');
           return CloseAction.DoNotRestart;
         }
       },
@@ -647,7 +660,8 @@ class TemplateJsonLanguageClient extends Disposable {
         // language server only loads file-URI. Fetching schemas with other protocols ('http'...) are made on the client.
         handledSchemaProtocols: ['file'],
         // don't provide a default formatter, we'll wire it up ourselves so we can configure the options
-        provideFormatter: false
+        provideFormatter: false,
+        customCapabilities: { rangeFormatting: { editLimit: 1000 } }
       },
       synchronize: {
         configurationSection: ['http'],
@@ -698,7 +712,7 @@ class TemplateJsonLanguageClient extends Disposable {
     };
 
     this.clientReady = false;
-    this.langOutputChannel.appendLine('Starting language server and client...');
+    this.langOutputChannel.appendLine(`Starting language server from ${serverModule}`);
     const hrstart = process.hrtime();
     const client = new LanguageClient(
       TEMPLATE_JSON_LANG_ID,
@@ -706,14 +720,18 @@ class TemplateJsonLanguageClient extends Disposable {
       serverOptions,
       clientOptions
     );
-    // for now, turn off proposed features from the vscode proposed api -- this fails with our version of the
-    // vscode-languageclient and the current version of vscode, and we're not relying on this right now
-    // REVIEWME: figure out if/how to turn on json proposed language features?
-    //client.registerProposedFeatures();
+    try {
+      client.registerProposedFeatures();
+    } catch (e) {
+      // don't fail the startup if it fails, just warn in the output channel
+      this.langOutputChannel.appendLine('Unable to register proposed language features: ' + (e.message || e));
+      if (e instanceof Error && e.stack) {
+        this.langOutputChannel.appendLine(e.stack);
+      }
+    }
 
+    // start the client & server
     this.disposables.push(client.start());
-
-    // tslint:disable-next-line: no-floating-promises
     client
       .onReady()
       .then(() => {
@@ -764,7 +782,7 @@ class TemplateJsonLanguageClient extends Disposable {
           })
         );
 
-        // initialize the schema associations (normally will be empty)
+        // initialize the schema associations
         client.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations());
 
         // manually register / deregister format provider based on the json.format.enable config, and the
@@ -814,7 +832,7 @@ class TemplateJsonLanguageClient extends Disposable {
         );
       })
       .catch(e => {
-        this.langOutputChannel.appendLine('Failed to start language client or server: ' + e);
+        this.langOutputChannel.appendLine('Failed to start language client or server: ' + (e.message || e));
         if (e instanceof Error && e.stack) {
           this.langOutputChannel.appendLine(e.stack);
         }
