@@ -119,6 +119,19 @@ export function waitForTemplateLinterManagerIsQuiet(
   );
 }
 
+/** Utility function to sort diagnostics by their start position in the file. */
+export function sortDiagnostics(d1: vscode.Diagnostic, d2: vscode.Diagnostic) {
+  let i = d1.range.start.line - d2.range.start.line;
+  if (i !== 0) {
+    return i;
+  }
+  i = d1.range.start.character - d2.range.start.character;
+  if (i !== 0) {
+    return i;
+  }
+  return d1.message.localeCompare(d2.message);
+}
+
 export async function openFile(uri: vscode.Uri, show?: true): Promise<[vscode.TextDocument, vscode.TextEditor]>;
 export async function openFile(uri: vscode.Uri, show: false): Promise<[vscode.TextDocument, undefined]>;
 export async function openFile(
