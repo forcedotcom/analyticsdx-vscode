@@ -1,3 +1,9 @@
+# 0.3.1
+
+## Fixed
+
+- Fixed analytics json language services to work in vscode 1.47+
+
 # 0.3.0
 
 ## Added
