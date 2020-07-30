@@ -295,7 +295,7 @@ export class TemplateDirEditing extends Disposable {
 
       // hookup hover text
       vscode.languages.registerHoverProvider(relatedFileSelector, new UiVariableHoverProvider(this)),
-      // REVIEWME: make a multi-proxy hover provider so there's only registration?
+      // REVIEWME: make a multi-proxy hover provider so there's only 1 registration?
       vscode.languages.registerHoverProvider(relatedFileSelector, new VariableHoverProvider(this)),
       vscode.languages.registerHoverProvider(relatedFileSelector, new AutoInstallVariableHoverProvider(this))
     );

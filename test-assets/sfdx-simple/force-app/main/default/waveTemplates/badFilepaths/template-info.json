@@ -49,7 +49,14 @@
     {
       "label": "missing-dataflow",
       "name": "missing-dataflow",
-      "file": "dashboards/missing-dataflow.json"
+      "file": "dataflows/missing-dataflow.json"
+    }
+  ],
+  "recipes": [
+    {
+      "label": "missing-recipe",
+      "name": "missing-recipe",
+      "file": "recipes/missing-recipe.json"
     }
   ],
   "storedQueries": [

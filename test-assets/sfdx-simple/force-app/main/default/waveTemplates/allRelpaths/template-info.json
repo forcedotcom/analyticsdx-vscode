@@ -52,6 +52,13 @@
       "file": "dataflows/dataflow.json"
     }
   ],
+  "recipes": [
+    {
+      "label": "recipe",
+      "name": "recipe",
+      "file": "recipes/recipe.json"
+    }
+  ],
   "storedQueries": [
     {
       "file": "queries/query.json",

@@ -72,6 +72,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
       '"discoveryStories"',
       '"folder"',
       '"lens"',
+      '"recipe"',
       '"schema"',
       '"workflow"',
       '"xmd"'

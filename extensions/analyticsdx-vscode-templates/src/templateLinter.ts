@@ -459,13 +459,15 @@ export class TemplateLinter {
       switch (templateType ? templateType.toLocaleLowerCase() : 'app') {
         case 'app':
         case 'embeddedapp': {
-          // for app templates, it needs to have at least 1 dashboard, dataset, or dataflow specified,
+          // for app templates, it needs to have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified,
           // so accumulate the total of each (handling the -1 meaning no node) and the property nodes for each
           // empty array field
           const { count, nodes } = [
             { data: lengthJsonArrayAttributeValue(tree, 'dashboards'), name: 'dashboards' },
-            { data: lengthJsonArrayAttributeValue(tree, 'datasetFiles'), name: 'datasets' },
-            { data: lengthJsonArrayAttributeValue(tree, 'eltDataflows'), name: 'dataflows' }
+            { data: lengthJsonArrayAttributeValue(tree, 'eltDataflows'), name: 'dataflows' },
+            { data: lengthJsonArrayAttributeValue(tree, 'externalFiles'), name: 'externalFiles' },
+            { data: lengthJsonArrayAttributeValue(tree, 'lenses'), name: 'lenses' },
+            { data: lengthJsonArrayAttributeValue(tree, 'recipes'), name: 'recipes' }
           ].reduce(
             (all, { data, name }) => {
               if (data[0] > 0) {
@@ -482,7 +484,7 @@ export class TemplateLinter {
           if (count <= 0) {
             const diagnostic = this.addDiagnostic(
               doc,
-              'App templates must have at least 1 dashboard, dataflow, or dataset specified',
+              'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified',
               ERRORS.TMPL_APP_MISSING_OBJECTS,
               // put the warning on the "templateType": "app" property
               templateTypeNode && templateTypeNode.parent

@@ -2,7 +2,7 @@
   "templateType": "app",
   "label": "Empty required App",
   "name": "Empty_required",
-  "description": "For linter.test.ts, an app template with empty dashboards, eltDataflows, and datasetFiles",
+  "description": "For linter.test.ts, an app template with empty lenses, dashboards, eltDataflows, externalFiles, and recipes",
   "assetVersion": 46.0,
   "rules": [
     {
@@ -13,8 +13,9 @@
   "releaseInfo": {
     "templateVersion": "1.1"
   },
-  "externalFiles": [],
+  "lenses": [],
   "dashboards": [],
   "eltDataflows": [],
-  "datasetFiles": []
+  "externalFiles": [],
+  "recipes": []
 }
