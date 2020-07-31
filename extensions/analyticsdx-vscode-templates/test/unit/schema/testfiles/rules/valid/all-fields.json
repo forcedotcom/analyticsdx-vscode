@@ -64,6 +64,9 @@
           "type": "discoveryStories"
         },
         {
+          "type": "predictiveScoring"
+        },
+        {
           "type": "folder"
         },
         {

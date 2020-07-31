@@ -51,6 +51,7 @@ describe('JsonAttributeRelFilePathDefinitionProvider', () => {
       [['recipes', 0, 'file'], 'recipes/recipe.json'],
       [['datasetFiles', 0, 'userXmd'], 'datasets/userXmd.json'],
       [['extendedTypes', 'discoveryStories', 0, 'file'], 'stories/story.json'],
+      [['extendedTypes', 'predictiveScoring', 0, 'file'], 'predictions/prediction.json'],
       [['imageFiles', 0, 'file'], 'images/image.png']
     ]);
 

@@ -79,6 +79,13 @@
         "name": "dot-dot-story",
         "file": "../stories/dot-dot-story.json"
       }
+    ],
+    "predictiveScoring": [
+      {
+        "file": "predictions/missing-prediction.json",
+        "label": "missing-prediction",
+        "name": "missing-prediction"
+      }
     ]
   },
   "imageFiles": [

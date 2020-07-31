@@ -441,7 +441,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'lenses[0].file',
       'dashboards[0].file',
       'eltDataflows[0].file',
-      'recipes[0].file'
+      'recipes[0].file',
+      'extendedTypes.predictiveScoring[0].file'
     ].forEach(path => {
       const d = map.get(path);
       expect(d, path + ' diagnostic missing').to.be.not.undefined;

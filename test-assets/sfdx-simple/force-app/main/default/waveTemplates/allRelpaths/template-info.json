@@ -79,6 +79,13 @@
         "name": "story",
         "file": "stories/story.json"
       }
+    ],
+    "predictiveScoring": [
+      {
+        "file": "predictions/prediction.json",
+        "label": "prediction",
+        "name": "prediction"
+      }
     ]
   },
   "imageFiles": [

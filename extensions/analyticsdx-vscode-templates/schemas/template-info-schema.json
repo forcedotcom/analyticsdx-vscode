@@ -822,15 +822,15 @@
             "properties": {
               "file": {
                 "type": "string",
-                "description": "Path to the extended type file."
+                "description": "Path to the discovery story file."
               },
               "label": {
                 "type": "string",
-                "description": "The extended type label."
+                "description": "The discovery story label."
               },
               "name": {
                 "type": "string",
-                "description": "The extended type name."
+                "description": "The discovery story name."
               },
               "condition": {
                 "type": ["null", "string"],
@@ -853,6 +853,59 @@
             "defaultSnippets": [
               {
                 "label": "New discoveryStory",
+                "body": {
+                  "file": "${1:name}.json",
+                  "label": "${1}",
+                  "name": "${1}"
+                }
+              }
+            ]
+          }
+        },
+        "predictiveScoring": {
+          "type": "array",
+          "description": "List of prediction definitions to use in the template.",
+          "minItems": 0,
+          "$comment": "Allow to be specified, but don't include in code completions until fully released.",
+          "doNotSuggest": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["file", "label"],
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Path to the prediction definition file."
+              },
+              "label": {
+                "type": "string",
+                "description": "The prediction definition label."
+              },
+              "name": {
+                "type": "string",
+                "description": "The prediction definition name."
+              },
+              "condition": {
+                "type": ["null", "string"],
+                "description": "If met, the prediction is created and run in the app. If not, the prediction is not created.",
+                "defaultSnippets": [
+                  {
+                    "label": "\"\"",
+                    "body": "${0}"
+                  },
+                  {
+                    "label": "${...} expression",
+                    "body": "${Variables.${1:varname}}"
+                  }
+                ]
+              },
+              "overwriteOnUpgrade": {
+                "$ref": "#/definitions/overwriteOnUpgrade"
+              }
+            },
+            "defaultSnippets": [
+              {
+                "label": "New predictiveScoring",
                 "body": {
                   "file": "${1:name}.json",
                   "label": "${1}",

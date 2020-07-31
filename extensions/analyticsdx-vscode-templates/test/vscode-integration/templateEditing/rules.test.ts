@@ -70,6 +70,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
       '"*"',
       '"dashboard"',
       '"discoveryStories"',
+      '"predictiveScoring"',
       '"folder"',
       '"lens"',
       '"recipe"',
