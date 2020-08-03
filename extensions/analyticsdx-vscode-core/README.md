@@ -10,14 +10,6 @@ orgs.
 
 **Do not install this extension directly. Install the complete [Salesforce Analytics Extension Pack](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode) instead.**
 
-<!--
-
-## Documentation
-
-**TBD**
-
--->
-
 ## Bugs and Feedback
 
 To report issues with the Salesforce Analytics Extensions for VS Code, open a [bug on GitHub](https://github.com/forcedotcom/analyticsdx-vscode/issues/new?template=Bug_report.md).
@@ -27,7 +19,7 @@ If you would like to suggest a feature, create a [feature request on GitHub](htt
 
 - Trailhead: [Get Started with Salesforce DX](https://trailhead.salesforce.com/trails/sfdx_get_started)
 - Doc: [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev)
-- Doc: [Analytics Plugin for the Salesforce CLI Guide](https://help.salesforce.com/articleView?id=bi_cli_analytics_plugin.htm&type=5)
+- Doc: [Analytics Plugin for the Salesforce CLI Guide](https://help.salesforce.com/articleView?id=bi_dev_tools_cli_analytics_plugin.htm&type=5)
 - Doc: [Analytics Plugin for the Salesforce CLI Command Reference](https://help.salesforce.com/articleView?id=bi_cli_analytics_plugin_command_reference.htm&type=5)
 
 ---

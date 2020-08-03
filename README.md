@@ -19,7 +19,8 @@ Currently, this repository contains source for the following extensions:
 
 - **[analyticsdx-vscode-core](extensions/analyticsdx-vscode-core/README.md)**  
   [This extension](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-core) interacts
-  with the Salesforce CLI Analytics Plugin to provide analytics commands.  
+  with the [Salesforce CLI Analytics Plugin](https://help.salesforce.com/articleView?id=bi_dev_tools_cli_analytics_plugin.htm&type=5)
+  to provide analytics commands.  
   ![Installs](https://img.shields.io/visual-studio-marketplace/i/salesforce.analyticsdx-vscode-core) ![Downloads](https://img.shields.io/visual-studio-marketplace/d/salesforce.analyticsdx-vscode-core)
 
 - **[analyticsdx-vscode-templates](extensions/analyticsdx-vscode-templates/README.md)**  
