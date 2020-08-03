@@ -1,8 +1,7 @@
 # Salesforce Analytics Extensions for VS Code
 
-<a href="https://github.com/forcedotcom/analyticsdx-vscode/actions?workflow=Build+and+test">
-   <img alt="Build status" src="https://github.com/forcedotcom/analyticsdx-vscode/workflows/Build%20and%20test/badge.svg">
-</a>
+[![Build Status](https://github.com/forcedotcom/analyticsdx-vscode/workflows/Build%20and%20test/badge.svg)](https://github.com/forcedotcom/analyticsdx-vscode/actions?workflow=Build+and+test)
+
 <!-- TODO: badges for security and code coverage when we hook those up -->
 
 ## Introduction
@@ -13,16 +12,22 @@ projects and working with analytics application templates.
 
 Currently, this repository contains source for the following extensions:
 
-- [analyticsdx-vscode](extensions/analyticsdx-vscode/README.md)  
+- **[analyticsdx-vscode](extensions/analyticsdx-vscode/README.md)**  
   [A top-level extension pack](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode) that
-  automatically installs the following extensions for you.
-- [analyticsdx-vscode-core](extensions/analyticsdx-vscode-core/README.md)  
+  automatically installs the following extensions for you.  
+  ![Installs](https://img.shields.io/visual-studio-marketplace/i/salesforce.analyticsdx-vscode) ![Downloads](https://img.shields.io/visual-studio-marketplace/d/salesforce.analyticsdx-vscode)
+
+- **[analyticsdx-vscode-core](extensions/analyticsdx-vscode-core/README.md)**  
   [This extension](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-core) interacts
-  with the Salesforce CLI Analytics Plugin to provide analytics commands.
-- [analyticsdx-vscode-templates](extensions/analyticsdx-vscode-templates/README.md)  
+  with the [Salesforce CLI Analytics Plugin](https://help.salesforce.com/articleView?id=bi_dev_tools_cli_analytics_plugin.htm&type=5)
+  to provide analytics commands.  
+  ![Installs](https://img.shields.io/visual-studio-marketplace/i/salesforce.analyticsdx-vscode-core) ![Downloads](https://img.shields.io/visual-studio-marketplace/d/salesforce.analyticsdx-vscode-core)
+
+- **[analyticsdx-vscode-templates](extensions/analyticsdx-vscode-templates/README.md)**  
   [This extension](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode-templates) provides
   editing features for Salesforce analytics application template source files, including validation, hover text,
-  code-completion suggestions, quick fixes, and code navigation.
+  code-completion suggestions, quick fixes, and code navigation.  
+  ![Installs](https://img.shields.io/visual-studio-marketplace/i/salesforce.analyticsdx-vscode-templates) ![Downloads](https://img.shields.io/visual-studio-marketplace/d/salesforce.analyticsdx-vscode-templates)
 
 ## Be an Efficient Salesforce Developer with VS Code
 
