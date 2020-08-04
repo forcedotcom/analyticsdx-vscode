@@ -118,16 +118,16 @@ describe('template-info-schema.json hookup', () => {
     });
 
     // verify the other nested ones
-    it('extendedTypes', async () => {
-      await testCompletions(
-        '{\n  "extendedTypes": {\n    "discoveryStories": []\n  }\n}',
-        '[',
-        2,
-        'New discoveryStory'
-      );
+    [
+      ['discoveryStories', 'discoveryStory'],
+      ['predictiveScoring', 'predictiveScoring']
+    ].forEach(([name, completionName]) => {
+      it(`extendedTypes.${name}`, async () => {
+        await testCompletions(`{\n  "extendedTypes": {\n    "${name}": []\n  }\n}`, '[', 2, `New ${completionName}`);
+      });
     });
     ['appBadge', 'templateBadge', 'templateDetail'].forEach(name => {
-      it('icons.' + name, async () => {
+      it(`icons.${name}`, async () => {
         await testCompletions(`{\n  "icons": {\n    "${name}": \n  }\n}`, ':', 2, 'New icon');
       });
     });
@@ -214,6 +214,12 @@ describe('template-info-schema.json hookup', () => {
       ],
       extendedTypes: {
         discoveryStories: [
+          {
+            condition: null,
+            overwriteOnUpgrade: null
+          }
+        ],
+        predictiveScoring: [
           {
             condition: null,
             overwriteOnUpgrade: null
@@ -311,6 +317,11 @@ describe('template-info-schema.json hookup', () => {
       { jsonpath: ['extendedTypes', 'discoveryStories', 0, 'condition'], completions: ['""', '${...} expression'] },
       {
         jsonpath: ['extendedTypes', 'discoveryStories', 0, 'overwriteOnUpgrade'],
+        completions: ['${...} expression']
+      },
+      { jsonpath: ['extendedTypes', 'predictiveScoring', 0, 'condition'], completions: ['""', '${...} expression'] },
+      {
+        jsonpath: ['extendedTypes', 'predictiveScoring', 0, 'overwriteOnUpgrade'],
         completions: ['${...} expression']
       },
       { jsonpath: ['icons'], completions: ['{}'] },

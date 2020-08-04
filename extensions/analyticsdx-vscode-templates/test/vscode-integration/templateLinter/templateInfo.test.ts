@@ -100,11 +100,12 @@ describe('TemplateLinterManager lints template-info.json', () => {
     );
     // should just be the 1 warning
     const map = new Map(diagnostics.map(d => [jsonpathFrom(d), d]));
-    // there should be a diagnostic on the templateType field for not having a dashboard, dataflow, or dataset
+    // there should be a diagnostic on the templateType field for the missing fields
     const d = map.get('templateType');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
+    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, or dataset specified'
+      'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified'
     );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // on the missing fields, there shouldn't be any relatedInformations
@@ -117,19 +118,20 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('shows empty arrays problem on app template', async () => {
     const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics('Empty_required');
     const map = new Map(diagnostics.map(d => [jsonpathFrom(d), d]));
-    // there should be a diagnostic on the templateType field for not having the fields
+    // there should be a diagnostic on the templateType field for not having values
     const d = map.get('templateType');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
+    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, or dataset specified'
+      'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified'
     );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    // there should be related information for dashboards, datasets, and dataflows being empty
+    // there should be related information for each field being empty
     expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;
-    if (d!.relatedInformation!.length !== 3) {
-      expect.fail('Expected 3 relatedInformation, got ' + JSON.stringify(d!.relatedInformation, undefined, 2));
+    if (d!.relatedInformation!.length !== 5) {
+      expect.fail('Expected 5 relatedInformation, got ' + JSON.stringify(d!.relatedInformation, undefined, 2));
     }
-    ['dashboards', 'datasets', 'dataflows'].forEach(name => {
+    ['dashboards', 'dataflows', 'externalFiles', 'lenses', 'recipes'].forEach(name => {
       expect(
         d!.relatedInformation!.some(ri => ri.message === `Empty ${name} array`),
         name + ' related information'
@@ -146,25 +148,31 @@ describe('TemplateLinterManager lints template-info.json', () => {
     // since the file doesn't have templateType, there should be a diagnostic on the root object for not having the fields
     const d = map.get('');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
+    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, or dataset specified'
+      'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified'
     );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    // there should be relatedInformations for dashboards and datasets
+    // there should be relatedInformations for dashboards, externalFiles, and lenses
     expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;
-    if (d!.relatedInformation!.length !== 2) {
+    if (d!.relatedInformation!.length !== 3) {
       expect.fail('Expected 2 relatedInformation, got ' + JSON.stringify(d!.relatedInformation, undefined, 2));
     }
-    ['dashboards', 'datasets'].forEach(name => {
+    ['dashboards', 'externalFiles', 'lenses'].forEach(name => {
       expect(
         d!.relatedInformation!.some(ri => ri.message === `Empty ${name} array`),
         name + ' related information to exist'
       ).to.be.true;
     });
-    // but not for this dataflows (since it's missing in the json)
+    // but not for this dataflows and recipes (since they're missing in the json)
     expect(
       d!.relatedInformation!.some(ri => ri.message === 'Empty dataflows array'),
       'dataflows related information to exist'
+    ).to.be.false;
+
+    expect(
+      d!.relatedInformation!.some(ri => ri.message === 'Empty recipes array'),
+      'recipes related information to exist'
     ).to.be.false;
 
     // there could also be a json-schema diagnostic that eltDataflows is missing, so don't failOnUnexpected()
@@ -432,7 +440,9 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'externalFiles[0].userXmd',
       'lenses[0].file',
       'dashboards[0].file',
-      'eltDataflows[0].file'
+      'eltDataflows[0].file',
+      'recipes[0].file',
+      'extendedTypes.predictiveScoring[0].file'
     ].forEach(path => {
       const d = map.get(path);
       expect(d, path + ' diagnostic missing').to.be.not.undefined;

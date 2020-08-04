@@ -12,7 +12,8 @@
   "externalFiles": [{}],
   "datasetFiles": [{}],
   "extendedTypes": {
-    "discoveryStories": [{}]
+    "discoveryStories": [{}],
+    "predictiveScoring": [{}]
   },
   "imageFiles": [{}],
   "storedQueries": [{}],

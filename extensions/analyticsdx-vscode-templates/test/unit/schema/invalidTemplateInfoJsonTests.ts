@@ -122,6 +122,8 @@ describe('template-info-schema.json finds errors in', () => {
       'datasetFiles[0].name',
       'extendedTypes.discoveryStories[0].file',
       'extendedTypes.discoveryStories[0].label',
+      'extendedTypes.predictiveScoring[0].file',
+      'extendedTypes.predictiveScoring[0].label',
       'imageFiles[0].name',
       'imageFiles[0].file',
       'storedQueries[0].file',

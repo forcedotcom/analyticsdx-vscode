@@ -64,10 +64,16 @@
           "type": "discoveryStories"
         },
         {
+          "type": "predictiveScoring"
+        },
+        {
           "type": "folder"
         },
         {
           "type": "lens"
+        },
+        {
+          "type": "recipe"
         },
         {
           "type": "schema"

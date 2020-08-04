@@ -35,7 +35,8 @@ const definitionFilesPats = [
   ['lenses', '*', 'file'],
   ['eltDataflows', '*', 'file'],
   ['storedQueries', '*', 'file'],
-  ['extendedTypes', '*', '*', 'file']
+  ['extendedTypes', '*', '*', 'file'],
+  ['recipes', '*', 'file']
 ];
 const jsonPats = [
   ...definitionFilesPats,

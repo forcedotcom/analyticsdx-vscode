@@ -21,6 +21,7 @@ describe('templateUtils', () => {
       'template-info.json',
       'file-that-doesnot-exist.json',
       'dashboards/dashboard.json',
+      'recipes/recipe.json',
       'images/image.png',
       'dir-not-exist/file-not-exist.json'
     ].forEach(path => {

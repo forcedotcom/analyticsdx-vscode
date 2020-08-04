@@ -75,13 +75,26 @@
                     {
                       "type": "string",
                       "default": "*",
-                      "enum": ["*", "dashboard", "discoveryStories", "folder", "lens", "schema", "workflow", "xmd"],
+                      "enum": [
+                        "*",
+                        "dashboard",
+                        "discoveryStories",
+                        "folder",
+                        "lens",
+                        "predictiveScoring",
+                        "recipe",
+                        "schema",
+                        "workflow",
+                        "xmd"
+                      ],
                       "enumDescriptions": [
                         "Match all file types.",
                         "Match dashboard files.",
-                        "Match extendedTypes discoveryStories files.",
+                        "Match discoveryStory files.",
                         "Match the folderDefinition file.",
                         "Match lens files.",
+                        "Match predictiveScoring files.",
+                        "Match recipe files.",
                         "Match externalFile schema files.",
                         "Match dataflow files.",
                         "Match dataset or externalFile xmd files."

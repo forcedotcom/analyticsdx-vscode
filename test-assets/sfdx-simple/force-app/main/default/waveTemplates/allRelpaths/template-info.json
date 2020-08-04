@@ -52,6 +52,13 @@
       "file": "dataflows/dataflow.json"
     }
   ],
+  "recipes": [
+    {
+      "label": "recipe",
+      "name": "recipe",
+      "file": "recipes/recipe.json"
+    }
+  ],
   "storedQueries": [
     {
       "file": "queries/query.json",
@@ -71,6 +78,13 @@
         "label": "story",
         "name": "story",
         "file": "stories/story.json"
+      }
+    ],
+    "predictiveScoring": [
+      {
+        "file": "predictions/prediction.json",
+        "label": "prediction",
+        "name": "prediction"
       }
     ]
   },
