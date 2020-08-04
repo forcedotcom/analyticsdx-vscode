@@ -281,7 +281,7 @@
     },
     "autoInstallDefinition": {
       "type": ["null", "string"],
-      "description": "Path to the auto install configuration file. Only available for app and embeddedapp templates. Available in Winter '21 release.",
+      "description": "Path to the auto install configuration file. Only available for app and embeddedapp template types. Available in Winter '21 release.",
       "defaultSnippets": [
         {
           "label": "\"\"",
