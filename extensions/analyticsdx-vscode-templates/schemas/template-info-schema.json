@@ -281,8 +281,7 @@
     },
     "autoInstallDefinition": {
       "type": ["null", "string"],
-      "description": "(Currenly not publically available) Path to the auto install configuration file. Only available for app and embeddedapp templates.",
-      "doNotSuggest": true,
+      "description": "Path to the auto install configuration file. Only available for app and embeddedapp templates. Available in Winter '21 release.",
       "defaultSnippets": [
         {
           "label": "\"\"",
