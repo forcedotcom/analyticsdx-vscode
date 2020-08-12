@@ -1,5 +1,5 @@
 {
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "salesforce",
   "name": "@salesforce/analyticsdx-test-utils-vscode",
   "displayName": "ADX Test Utilities for VS Code",
