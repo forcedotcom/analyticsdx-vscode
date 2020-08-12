@@ -1,8 +1,14 @@
+# 0.4.0
+
+## Added
+
+- Updates for template features in Winter '21 release.
+
 # 0.3.1
 
 ## Fixed
 
-- Fixed analytics json language services to work in vscode 1.47+
+- Fixed analytics json language services to work in vscode 1.47+.
 
 # 0.3.0
 
@@ -15,7 +21,7 @@
 
 ## Fixed
 
-- Telemetry bug fix and README updates
+- Telemetry bug fix and README updates.
 
 # 0.2.0
 
