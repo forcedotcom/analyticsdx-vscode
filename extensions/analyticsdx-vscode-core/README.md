@@ -19,8 +19,8 @@ If you would like to suggest a feature, create a [feature request on GitHub](htt
 
 - Trailhead: [Get Started with Salesforce DX](https://trailhead.salesforce.com/trails/sfdx_get_started)
 - Doc: [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev)
-- Doc: [Analytics Plugin for the Salesforce CLI Guide](https://help.salesforce.com/articleView?id=bi_dev_tools_cli_analytics_plugin.htm&type=5)
-- Doc: [Analytics Plugin for the Salesforce CLI Command Reference](https://help.salesforce.com/articleView?id=bi_cli_analytics_plugin_command_reference.htm&type=5)
+- Doc: [Analytics Plugin for the Salesforce CLI Guide](http://sfdc.co/adx_cli_help)
+- Doc: [Analytics Plugin for the Salesforce CLI Command Reference](http://sfdc.co/adx_cli_reference)
 
 ---
 
