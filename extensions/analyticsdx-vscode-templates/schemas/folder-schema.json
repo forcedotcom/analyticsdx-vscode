@@ -19,7 +19,7 @@
       "type": ["string", "null"]
     },
     "featuredAssets": {
-      "type": "object",
+      "type": ["object", "null"],
       "description": "Determines the dashboards to feature, and the order in which to list them, in an app created from the template. If empty, app features all dashboards listed in alphabetical order according to label.",
       "required": [],
       "additionalProperties": false,
@@ -86,7 +86,7 @@
       ]
     },
     "shares": {
-      "type": "array",
+      "type": ["array", "null"],
       "minItems": 0,
       "items": {
         "type": "object",
