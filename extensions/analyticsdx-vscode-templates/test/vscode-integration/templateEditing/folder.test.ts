@@ -89,8 +89,19 @@ describe('TemplateEditorManager configures folderDefinition', () => {
       expect.fail("Expected to find '{' after '\"featuredAssets\":'");
     }
     let position = scan.end.translate({ characterDelta: -1 });
-    // that should give a snippet to fill out the whole featuresAssets
-    await verifyCompletionsContain(doc, position, 'New featuredAssets');
+    // that should give an option for null and  a snippet to fill out the whole featuresAssets
+    await verifyCompletionsContain(doc, position, 'New featuredAssets', 'null');
+
+    // go before after the [ in "shares"
+    node = findNodeAtLocation(tree, ['shares']);
+    expect(node, 'shares').to.not.be.undefined;
+    scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
+    if (scan.ch !== '[') {
+      expect.fail("Expected to find '[' after '\"shares\":'");
+    }
+    position = scan.end.translate({ characterDelta: -1 });
+    // that should give an option for null and a snippet for a new share
+    await verifyCompletionsContain(doc, position, 'New share', 'null');
 
     // go right after the [ in "shares"
     node = findNodeAtLocation(tree, ['shares']);
@@ -100,7 +111,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
       expect.fail("Expected to find '[' after '\"shares\":'");
     }
     position = scan.end.translate({ characterDelta: 1 });
-    // that should give a snippet for default
+    // that should give a snippet for a new share
     await verifyCompletionsContain(doc, position, 'New share');
     // REVIEWME: we could test for 'New featuresAsset' and 'New shares', but this is enough to make sure the
     // json schema association is there
