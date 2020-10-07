@@ -60,7 +60,7 @@
     "compile": "tsc -p ./",
     "lint": "tslint --project .",
     "watch": "tsc -watch -p .",
-    "clean": "shx rm -rf .vscode-test && shx rm -rf node_modules && shx rm -rf out && shx rm -rf coverage && shx rm -rf .nyc_output && shx rm -f analyticsdx-vscode-core-*.vsix && shx rm -f junit-custom-vscodeIntegrationTests.xml xunit-vscodeIntegrationTests.xml",
+    "clean": "shx rm -rf .vscode-test && shx rm -rf node_modules && shx rm -rf out && shx rm -rf coverage && shx rm -rf .nyc_output && shx rm -f analyticsdx-vscode-core-*.vsix && shx rm -f junit-custom-vscodeIntegrationTests.xml",
     "pretest": "npm run compile",
     "test": "npm run test:unit && npm run test:vscode-integration",
     "test:unit": "./node_modules/.bin/nyc ./node_modules/.bin/_mocha --recursive out/test/unit --reporter mocha-multi-reporters --timeout 20000 --reporter mocha-multi-reporters --reporter-options configFile=../../config/mochaUnitTestsConfig.json",

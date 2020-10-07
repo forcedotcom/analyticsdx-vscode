@@ -32,7 +32,6 @@ let mocha = new Mocha({
 
 function configure(mochaOpts: any): void {
   if (mochaOpts.reporter == null) {
-    // default to 'mocha-multi-reporters' (to get xunit.xml result)
     mochaOpts.reporter = 'mocha-multi-reporters';
   }
   if (!mochaOpts.reporterOptions) {
@@ -43,14 +42,11 @@ function configure(mochaOpts: any): void {
       xmlPath = paths.normalize(paths.join(process.cwd(), '..', '..'));
     }
     mochaOpts.reporterOptions = {
-      reporterEnabled: 'mocha-junit-reporter, xunit, spec',
+      reporterEnabled: 'mocha-junit-reporter, spec',
       mochaJunitReporterReporterOptions: {
         mochaFile: xmlPath
           ? paths.join(xmlPath, 'junit-custom-vscodeIntegrationTests.xml')
           : 'junit-custom-vscodeIntegrationTests.xml'
-      },
-      xunitReporterOptions: {
-        output: xmlPath ? paths.join(xmlPath, 'xunit-vscodeIntegrationTests.xml') : 'xunit-vscodeIntegrationTests.xml'
       }
     };
   }
@@ -88,54 +84,44 @@ function run(testsRoot: any, clb: any): any {
   }
 
   // Glob test files
-  glob(
-    '**/**.test.js',
-    { cwd: testsRoot },
-    (error, files): any => {
-      if (error) {
-        console.error('An error occured: ' + error);
-        return clb(error);
-      }
-      try {
-        // Fill into Mocha
-        files.forEach(
-          (f): Mocha => {
-            return mocha.addFile(paths.join(testsRoot, f));
-          }
-        );
-        // Run the tests
-        let failureCount = 0;
-
-        mocha
-          .run((failures: any) => {
-            process.on('exit', () => {
-              console.log(`Existing test process, code should be ${failureCount}`);
-              process.exit(failures); // exit with non-zero status if there were failures
-            });
-          })
-          .on(
-            'fail',
-            (test: any, err: any): void => {
-              console.log(`Failure in test '${test}': ${err}`);
-              failureCount++;
-            }
-          )
-          .on(
-            'end',
-            (): void => {
-              console.log(`Tests ended with ${failureCount} failure(s)`);
-              clb(undefined, failureCount);
-              if (!isNullOrUndefined(coverageRunner)) {
-                coverageRunner.reportCoverage();
-              }
-            }
-          );
-      } catch (error) {
-        console.error('An error occured: ', error);
-        return clb(error);
-      }
+  glob('**/**.test.js', { cwd: testsRoot }, (error, files): any => {
+    if (error) {
+      console.error('An error occured: ' + error);
+      return clb(error);
     }
-  );
+    try {
+      // Fill into Mocha
+      files.forEach(
+        (f): Mocha => {
+          return mocha.addFile(paths.join(testsRoot, f));
+        }
+      );
+      // Run the tests
+      let failureCount = 0;
+
+      mocha
+        .run((failures: any) => {
+          process.on('exit', () => {
+            console.log(`Existing test process, code should be ${failureCount}`);
+            process.exit(failures); // exit with non-zero status if there were failures
+          });
+        })
+        .on('fail', (test: any, err: any): void => {
+          console.log(`Failure in test '${test}': ${err}`);
+          failureCount++;
+        })
+        .on('end', (): void => {
+          console.log(`Tests ended with ${failureCount} failure(s)`);
+          clb(undefined, failureCount);
+          if (!isNullOrUndefined(coverageRunner)) {
+            coverageRunner.reportCoverage();
+          }
+        });
+    } catch (error) {
+      console.error('An error occured: ', error);
+      return clb(error);
+    }
+  });
 }
 exports.run = run;
 
