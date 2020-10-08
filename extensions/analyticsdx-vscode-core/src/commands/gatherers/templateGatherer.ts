@@ -19,17 +19,31 @@ import {
   sfdxWorkspaceChecker
 } from '../commands';
 
+type TemplateListExecutorOptions = { includeEmbedded?: boolean; includeSfdc?: boolean };
 class TemplateListExecutor extends SfdxCommandletExecutorWithOutput<{}> {
-  constructor(private readonly description: string) {
+  private readonly includeEmbedded: boolean;
+  private readonly includeSfdc: boolean;
+  constructor(
+    private readonly description: string,
+    { includeEmbedded = false, includeSfdc = false }: TemplateListExecutorOptions = {}
+  ) {
     super();
+    this.includeEmbedded = includeEmbedded;
+    this.includeSfdc = includeSfdc;
   }
   public build(data: {}) {
-    return new SfdxCommandBuilder()
+    let builder = new SfdxCommandBuilder()
       .withDescription(this.description)
-      .withArg('analytics:template:list')
-      .withArg('--json')
       .withLogName('analytics_template_list')
-      .build();
+      .withArg('analytics:template:list')
+      .withArg('--json');
+    if (this.includeEmbedded) {
+      builder = builder.withArg('-e');
+    }
+    if (this.includeSfdc) {
+      builder = builder.withArg('-a');
+    }
+    return builder.build();
   }
 }
 
@@ -39,6 +53,7 @@ export type TemplateMetadata = {
   // could be missing in older sfdx plugin versions
   label?: string;
   templateid: string;
+  templatetype: 'app' | 'embeddedapp' | 'dashboard' | 'lens' | string;
   folderid: string | null;
   namespace?: string | null;
 };
@@ -61,19 +76,41 @@ class TemplateQuickPickItem implements vscode.QuickPickItem {
   }
 }
 
+type TemplateFilter = (template: TemplateMetadata) => boolean;
+type TemplateGatherOptions = TemplateListExecutorOptions & {
+  filter?: TemplateFilter;
+  noTemplatesMesg?: string;
+  placeholderMesg?: string;
+  fetchMesg?: string;
+};
 export class TemplateGatherer implements ParametersGatherer<TemplateMetadata> {
-  constructor(
-    private readonly filter?: (template: TemplateMetadata) => boolean,
-    private readonly noTemplatesMesg = nls.localize('template_gatherer_def_no_templates_message'),
-    private readonly placeholderMesg = nls.localize('template_gatherer_def_placeholder_message'),
-    private readonly fetchMesg = nls.localize('template_gatherer_def_fetch_message')
-  ) {}
+  private readonly filter?: TemplateFilter;
+  private readonly includeEmbedded: boolean;
+  private readonly includeSfdc: boolean;
+  private noTemplatesMesg: string;
+  private placeholderMesg: string;
+  private fetchMesg: string;
+  constructor({
+    filter,
+    includeEmbedded = false,
+    includeSfdc = false,
+    noTemplatesMesg = nls.localize('template_gatherer_def_no_templates_message'),
+    placeholderMesg = nls.localize('template_gatherer_def_placeholder_message'),
+    fetchMesg = nls.localize('template_gatherer_def_fetch_message')
+  }: TemplateGatherOptions = {}) {
+    this.filter = filter;
+    this.includeEmbedded = includeEmbedded;
+    this.includeSfdc = includeSfdc;
+    this.noTemplatesMesg = noTemplatesMesg;
+    this.placeholderMesg = placeholderMesg;
+    this.fetchMesg = fetchMesg;
+  }
 
   public async gather(): Promise<CancelResponse | ContinueResponse<TemplateMetadata>> {
     const templateListCommandlet = new SfdxCommandletWithOutput(
       sfdxWorkspaceChecker,
       emptyParametersGatherer,
-      new TemplateListExecutor(this.fetchMesg)
+      new TemplateListExecutor(this.fetchMesg, { includeEmbedded: this.includeEmbedded, includeSfdc: this.includeSfdc })
     );
     const jsonStr = await templateListCommandlet.run();
     // TODO: handle bad json

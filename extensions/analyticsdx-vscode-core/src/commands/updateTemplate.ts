@@ -27,12 +27,13 @@ class UpdateTemplateExecutor extends SfdxCommandletExecutor<TemplateMetadata> {
 
 const updateTemplateCommandlet = new SfdxCommandlet(
   sfdxWorkspaceChecker,
-  // only show templates that have an associated app
-  new TemplateGatherer(
-    template => !!template.folderid,
-    nls.localize('update_template_cmd_no_apps_message'),
-    nls.localize('update_template_cmd_placeholder_message')
-  ),
+  new TemplateGatherer({
+    // only show templates that have an associated app
+    filter: template => !!template.folderid,
+    includeEmbedded: true,
+    noTemplatesMesg: nls.localize('update_template_cmd_no_apps_message'),
+    placeholderMesg: nls.localize('update_template_cmd_placeholder_message')
+  }),
   new UpdateTemplateExecutor()
 );
 

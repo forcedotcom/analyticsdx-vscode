@@ -115,7 +115,10 @@ type TemplateAndName = {
 };
 
 class TemplateAndNameGather implements ParametersGatherer<TemplateAndName> {
-  private readonly templateGatherer = new TemplateGatherer();
+  private readonly templateGatherer = new TemplateGatherer({
+    // sfdx analytics:app:create only works for 'app' templates
+    filter: template => template.templatetype === 'app'
+  });
   public async gather(): Promise<CancelResponse | ContinueResponse<TemplateAndName>> {
     const template = await this.templateGatherer.gather();
     if (template.type === 'CANCEL') {
