@@ -27,8 +27,9 @@ import { getRootWorkspacePath } from './rootWorkspace';
 const pluginName = '@salesforce/analytics';
 
 // The minumum version of the @salesforce/analytics plugins our extensions require for everything to work right.
-// The sfdx call in createApp() needs 0.19.0
-const minAdxPluginVersion = '0.19.0';
+// The -e arg for analytics:template:list is new in 0.22.0 (it also requires Winter '21 v50.0 release to actually
+// include the embeddedapp templates in the output, but it at least doesn't fail on Summer '20 v49.0)
+const minAdxPluginVersion = '0.22.0';
 
 export async function isSfdxInstalled(): Promise<boolean> {
   try {

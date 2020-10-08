@@ -30,12 +30,13 @@ class DeleteTemplateExecutor extends SfdxCommandletExecutor<TemplateMetadata> {
 
 const deleteTemplateCommandlet = new SfdxCommandlet(
   sfdxWorkspaceChecker,
-  new TemplateGatherer(
+  new TemplateGatherer({
     // you can only delete templates that don't have an associated app
-    template => !template.folderid,
-    nls.localize('delete_template_cmd_no_templates_message'),
-    nls.localize('delete_template_cmd_placeholder_message')
-  ),
+    filter: template => !template.folderid,
+    includeEmbedded: true,
+    noTemplatesMesg: nls.localize('delete_template_cmd_no_templates_message'),
+    placeholderMesg: nls.localize('delete_template_cmd_placeholder_message')
+  }),
   new DeleteTemplateExecutor(),
   new DeleteObjectPostChecker<TemplateMetadata>(template =>
     nls.localize('delete_template_cmd_confirm_text', template.label || template.name)
