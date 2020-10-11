@@ -45,8 +45,13 @@ export const messages = Object.freeze({
 
   // commands/updateTemplate.ts
   update_template_cmd_message: 'Updating analytics template from associated app...',
-  update_template_cmd_no_apps_message: 'No templates associated to an app available in org.',
+  update_template_cmd_no_templates_message: 'No templates associated to an app available in org.',
   update_template_cmd_placeholder_message: 'Select an analytics template to update from its app...',
+  update_template_from_app_cmd_message: 'Updating analytics template from app...',
+  update_template_from_app_cmd_no_templates_message: 'No templates available in org.',
+  update_template_from_app_cmd_placeholder_message: 'Select an analytics template to update...',
+  update_template_from_app_cmd_no_apps_message: 'No apps created from the template available in the org.',
+  update_template_from_app_cmd_current_app_details: 'Current Associated App',
 
   // commands/gatherers/appGatherer.ts
   app_gatherer_def_no_apps_message: 'No matching apps available in org.',

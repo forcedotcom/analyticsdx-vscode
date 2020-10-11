@@ -80,7 +80,8 @@
     "onCommand:analyticsdx.telemetry.send",
     "onCommand:analyticsdx.template.create",
     "onCommand:analyticsdx.template.delete",
-    "onCommand:analyticsdx.template.udpate"
+    "onCommand:analyticsdx.template.udpate",
+    "onCommand:analyticsdx.template.updateFromApp"
   ],
   "main": "./out/src",
   "contributes": {
@@ -120,6 +121,10 @@
       {
         "command": "analyticsdx.template.update",
         "title": "%analyticsdx_template_update_label%"
+      },
+      {
+        "command": "analyticsdx.template.updateFromApp",
+        "title": "%analyticsdx_template_update_from_app_label%"
       }
     ],
     "menus": {
@@ -158,6 +163,10 @@
         },
         {
           "command": "analyticsdx.template.update",
+          "when": "sfdx:project_opened"
+        },
+        {
+          "command": "analyticsdx.template.updateFromApp",
           "when": "sfdx:project_opened"
         }
       ]

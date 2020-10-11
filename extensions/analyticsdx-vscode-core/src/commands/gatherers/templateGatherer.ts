@@ -58,7 +58,7 @@ export type TemplateMetadata = {
   namespace?: string | null;
 };
 
-class TemplateQuickPickItem implements vscode.QuickPickItem {
+export class TemplateQuickPickItem implements vscode.QuickPickItem {
   constructor(readonly template: TemplateMetadata) {}
 
   get label() {
@@ -77,7 +77,7 @@ class TemplateQuickPickItem implements vscode.QuickPickItem {
 }
 
 type TemplateFilter = (template: TemplateMetadata) => boolean;
-type TemplateGatherOptions = TemplateListExecutorOptions & {
+export type TemplateGatherOptions = TemplateListExecutorOptions & {
   filter?: TemplateFilter;
   noTemplatesMesg?: string;
   placeholderMesg?: string;
@@ -106,7 +106,7 @@ export class TemplateGatherer implements ParametersGatherer<TemplateMetadata> {
     this.fetchMesg = fetchMesg;
   }
 
-  public async gather(): Promise<CancelResponse | ContinueResponse<TemplateMetadata>> {
+  public async loadQuickPickItems(): Promise<TemplateQuickPickItem[]> {
     const templateListCommandlet = new SfdxCommandletWithOutput(
       sfdxWorkspaceChecker,
       emptyParametersGatherer,
@@ -121,6 +121,11 @@ export class TemplateGatherer implements ParametersGatherer<TemplateMetadata> {
         .filter(this.filter || (() => true))
         .map(template => new TemplateQuickPickItem(template));
     }
+    return items;
+  }
+
+  public async gather(): Promise<CancelResponse | ContinueResponse<TemplateMetadata>> {
+    const items = await this.loadQuickPickItems();
     if (items.length <= 0) {
       notificationService.showInformationMessage(this.noTemplatesMesg);
       return { type: 'CANCEL' };
