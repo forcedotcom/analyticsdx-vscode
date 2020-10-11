@@ -6,12 +6,7 @@
  */
 
 import { nls } from '../messages';
-import {
-  SfdxCommandBuilder,
-  SfdxCommandlet,
-  SfdxCommandletExecutor,
-  sfdxWorkspaceChecker
-} from './commands';
+import { SfdxCommandBuilder, SfdxCommandlet, SfdxCommandletExecutor, sfdxWorkspaceChecker } from './commands';
 import { AppGatherer, AppMetadata } from './gatherers/appGatherer';
 
 class CreateTemplateExecutor extends SfdxCommandletExecutor<AppMetadata> {

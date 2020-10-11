@@ -18,7 +18,8 @@ import {
   openAppInStudio,
   openDataManager,
   openStudio,
-  updateTemplate
+  updateTemplate,
+  updateTemplateFromApp
 } from './commands';
 import { checkAnalyticsSfdxPlugin } from './util/sfdx';
 
@@ -61,6 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('analyticsdx.template.create', createTemplate),
     vscode.commands.registerCommand('analyticsdx.template.delete', deleteTemplate),
     vscode.commands.registerCommand('analyticsdx.template.update', updateTemplate),
+    vscode.commands.registerCommand('analyticsdx.template.updateFromApp', updateTemplateFromApp),
     // Note: analyticsdx.telemetry.send is intentionally not listed in package.json; it's only for extension
     // code to call
     vscode.commands.registerCommand('analyticsdx.telemetry.send', sendTelemetryCommand)

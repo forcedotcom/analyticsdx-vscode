@@ -46,7 +46,9 @@ export type AppMetadata = {
   templateSourceId?: string | null;
 };
 
-class AppQuickPickItem implements vscode.QuickPickItem {
+export class AppQuickPickItem implements vscode.QuickPickItem {
+  public detail: string | undefined;
+
   constructor(readonly app: AppMetadata) {}
 
   get label() {
@@ -72,7 +74,7 @@ export class AppGatherer implements ParametersGatherer<AppMetadata> {
     private readonly fetchMesg = nls.localize('app_gatherer_def_fetch_message')
   ) {}
 
-  public async gather(): Promise<CancelResponse | ContinueResponse<AppMetadata>> {
+  public async loadQuickPickItems(): Promise<AppQuickPickItem[]> {
     const appListCommandlet = new SfdxCommandletWithOutput(
       sfdxWorkspaceChecker,
       emptyParametersGatherer,
@@ -85,6 +87,11 @@ export class AppGatherer implements ParametersGatherer<AppMetadata> {
     if (json && json.result && json.result.length > 0) {
       items = (json.result as AppMetadata[]).filter(this.filter || (() => true)).map(app => new AppQuickPickItem(app));
     }
+    return items;
+  }
+
+  public async gather(): Promise<CancelResponse | ContinueResponse<AppMetadata>> {
+    const items = await this.loadQuickPickItems();
     if (items.length <= 0) {
       notificationService.showInformationMessage(this.noAppsMesg);
       return { type: 'CANCEL' };
