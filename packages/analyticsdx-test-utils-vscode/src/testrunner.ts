@@ -107,7 +107,9 @@ function run(testsRoot: any, clb: any): any {
           });
         })
         .on('fail', (test: any, err: any): void => {
-          console.log(`Failure in test '${test}': ${err}`);
+          const testName =
+            (test.parent && test.parent.fullTitle ? test.parent.fullTitle() + ' ' : '') + (test.title || test);
+          console.log(`Failure in test '${testName}': ${err}`);
           failureCount++;
         })
         .on('end', (): void => {
