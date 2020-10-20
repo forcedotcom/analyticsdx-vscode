@@ -47,7 +47,7 @@ const emptyPreChecker: PreconditionChecker = {
 // from there, just changing it to use a CommandOutput and return a Promise<string>
 // with the stdout -- this could pretty easily be added as an option to the code in
 // core
-export class SfdxCommandletExecutorWithOutput<T> extends SfdxCommandletExecutor<T> {
+export abstract class SfdxCommandletExecutorWithOutput<T> extends SfdxCommandletExecutor<T> {
   public execute(response: ContinueResponse<T>): Promise<string> {
     const startTime = process.hrtime();
     const cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -62,6 +62,8 @@ export class SfdxCommandletExecutorWithOutput<T> extends SfdxCommandletExecutor<
     this.attachExecution(execution, cancellationTokenSource, cancellationToken);
     return new CommandOutput().getCmdResult(execution);
   }
+
+  public abstract build(data: T): Command;
 }
 
 export class EmptyPostChecker implements PostconditionChecker<any> {

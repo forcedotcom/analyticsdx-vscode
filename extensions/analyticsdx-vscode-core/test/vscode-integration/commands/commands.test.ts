@@ -6,12 +6,51 @@
  */
 
 import { expect } from 'chai';
-import { ContinueResponse, EmptyPostChecker } from '../../../src/commands/commands';
+import {
+  Command,
+  ContinueResponse,
+  EmptyPostChecker,
+  SfdxCommandBuilder,
+  SfdxCommandletExecutorWithOutput
+} from '../../../src/commands/commands';
+import childProcess = require('child_process');
+
+class TestExecutorWithOutput extends SfdxCommandletExecutorWithOutput<string> {
+  public build(data: string): Command {
+    return new SfdxCommandBuilder().withArg(data).build();
+  }
+}
 
 describe('Command Utilities', () => {
-  describe.skip('SfdxCommandletExecutorWithOutput', async () => {
-    it.skip('Returns command output', () => {
-      // TODO: implement
+  describe('SfdxCommandletExecutorWithOutput', async () => {
+    const mockSpawnLib = require('mock-spawn');
+    let origSpawn: any;
+    let mockSpawn: any;
+    beforeEach(() => {
+      origSpawn = childProcess.spawn;
+      mockSpawn = mockSpawnLib();
+      childProcess.spawn = mockSpawn;
+    });
+
+    afterEach(() => {
+      childProcess.spawn = origSpawn;
+    });
+
+    it('Returns command output', async () => {
+      const expectedOutput = JSON.stringify(
+        {
+          status: 0,
+          result: {
+            name: 'value'
+          }
+        },
+        undefined,
+        2
+      );
+      mockSpawn.setDefault(mockSpawn.simple(0, expectedOutput));
+      const cmd = new TestExecutorWithOutput();
+      const output = await cmd.execute({ type: 'CONTINUE', data: 'inputvalue' });
+      expect(output).to.equal(expectedOutput);
     });
   });
 
