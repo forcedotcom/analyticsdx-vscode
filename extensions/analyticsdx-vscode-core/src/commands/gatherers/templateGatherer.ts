@@ -7,11 +7,11 @@
 import * as vscode from 'vscode';
 import { ICONS } from '../../constants';
 import { nls } from '../../messages';
+import { showQuickPick } from '../../util/quickpick';
 import {
   CancelResponse,
   ContinueResponse,
   emptyParametersGatherer,
-  notificationService,
   ParametersGatherer,
   SfdxCommandBuilder,
   SfdxCommandletExecutorWithOutput,
@@ -125,12 +125,9 @@ export class TemplateGatherer implements ParametersGatherer<TemplateMetadata> {
   }
 
   public async gather(): Promise<CancelResponse | ContinueResponse<TemplateMetadata>> {
-    const items = await this.loadQuickPickItems();
-    if (items.length <= 0) {
-      notificationService.showInformationMessage(this.noTemplatesMesg);
-      return { type: 'CANCEL' };
-    }
-    const selection = await vscode.window.showQuickPick(items, {
+    const selection = await showQuickPick(this.loadQuickPickItems(), {
+      noItemsMesg: this.noTemplatesMesg,
+      loadingMesg: this.fetchMesg,
       matchOnDescription: true,
       placeHolder: this.placeholderMesg
     });

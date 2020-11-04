@@ -4,12 +4,11 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import * as vscode from 'vscode';
 import { nls } from '../messages';
+import { showQuickPick } from '../util/quickpick';
 import {
   CancelResponse,
   ContinueResponse,
-  notificationService,
   SfdxCommandBuilder,
   SfdxCommandlet,
   SfdxCommandletExecutor,
@@ -76,18 +75,16 @@ class TemplateAndFolderGatherer extends TemplateGatherer {
         matchingAppItems.push(item);
       }
     }
-    if (!currentAppItem && matchingAppItems.length <= 0) {
-      // TODO: add an option to create a new app from the template and use that as the source app
-      notificationService.showInformationMessage(nls.localize('update_template_from_app_cmd_no_apps_message'));
-      return { type: 'CANCEL' };
-    }
+
+    // TODO: add an option to create a new app from the template and use that as the source app
 
     // put the template's current app first in the list so it's the default selection
     if (currentAppItem) {
       currentAppItem.detail = nls.localize('update_template_from_app_cmd_current_app_details');
       matchingAppItems.unshift(currentAppItem);
     }
-    const appResponse = await vscode.window.showQuickPick(matchingAppItems, {
+    const appResponse = await showQuickPick(matchingAppItems, {
+      noItemsMesg: nls.localize('update_template_from_app_cmd_no_apps_message'),
       matchOnDescription: true,
       placeHolder: nls.localize('app_gatherer_def_placeholder_message'),
       matchOnDetail: true

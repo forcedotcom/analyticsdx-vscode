@@ -8,11 +8,11 @@
 import * as vscode from 'vscode';
 import { ICONS } from '../../constants';
 import { nls } from '../../messages';
+import { showQuickPick } from '../../util/quickpick';
 import {
   CancelResponse,
   ContinueResponse,
   emptyParametersGatherer,
-  notificationService,
   ParametersGatherer,
   SfdxCommandBuilder,
   SfdxCommandletExecutorWithOutput,
@@ -91,12 +91,9 @@ export class AppGatherer implements ParametersGatherer<AppMetadata> {
   }
 
   public async gather(): Promise<CancelResponse | ContinueResponse<AppMetadata>> {
-    const items = await this.loadQuickPickItems();
-    if (items.length <= 0) {
-      notificationService.showInformationMessage(this.noAppsMesg);
-      return { type: 'CANCEL' };
-    }
-    const selection = await vscode.window.showQuickPick(items, {
+    const selection = await showQuickPick(this.loadQuickPickItems(), {
+      noItemsMesg: this.noAppsMesg,
+      loadingMesg: this.fetchMesg,
       matchOnDescription: true,
       placeHolder: this.placeholderMesg
     });
