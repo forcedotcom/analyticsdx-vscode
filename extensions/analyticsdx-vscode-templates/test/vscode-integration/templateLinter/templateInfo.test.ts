@@ -270,11 +270,18 @@ describe('TemplateLinterManager lints template-info.json', () => {
         }
       ],
       extendedTypes: {
-        stories: [
+        discoveryStories: [
           {
             file: 'file.json',
             label: 'story',
             name: 'story'
+          }
+        ],
+        predictiveScoring: [
+          {
+            file: 'file.json',
+            label: 'prediction',
+            name: 'prediction'
           }
         ]
       }
@@ -291,7 +298,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'lenses[0].file',
       'eltDataflows[0].file',
       'storedQueries[0].file',
-      'extendedTypes.stories[0].file'
+      'extendedTypes.discoveryStories[0].file',
+      'extendedTypes.predictiveScoring[0].file'
     ];
     const diagnostics = (
       await waitForDiagnostics(
@@ -310,6 +318,59 @@ describe('TemplateLinterManager lints template-info.json', () => {
       expect(d.relatedInformation!.length, `${jsonpathFrom(d)} diagnostic.relatedInformation.length`).to.equal(
         expectedPaths.length - 1
       );
+    });
+  });
+
+  it('shows warning on duplicate asset labels', async () => {
+    const [t, , editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+    await setDocumentText(editor, {
+      dashboards: [{ label: 'dashboard' }, { label: 'dashboard' }],
+      lenses: [{ label: 'lens' }, { label: 'lens' }],
+      eltDataflows: [{ label: 'dataflow' }, { label: 'dataflow' }],
+      recipes: [{ label: 'recipe' }, { label: 'recipe' }],
+      datasetFiles: [{ label: 'dataset' }, { label: 'dataset' }],
+      storedQueries: [{ label: 'stored-query' }, { label: 'stored-query' }],
+      extendedTypes: {
+        discoveryStories: [{ label: 'story' }, { label: 'story' }],
+        predictiveScoring: [{ label: 'prediction' }, { label: 'prediction' }]
+      }
+    });
+    const dupFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_DUPLICATE_LABEL;
+    const expectedPaths = [
+      'dashboards[0].label',
+      'dashboards[1].label',
+      'lenses[0].label',
+      'lenses[1].label',
+      'eltDataflows[0].label',
+      'eltDataflows[1].label',
+      'recipes[0].label',
+      'recipes[1].label',
+      'datasetFiles[0].label',
+      'datasetFiles[1].label',
+      'storedQueries[0].label',
+      'storedQueries[1].label',
+      'extendedTypes.discoveryStories[0].label',
+      'extendedTypes.discoveryStories[1].label',
+      'extendedTypes.predictiveScoring[0].label',
+      'extendedTypes.predictiveScoring[1].label'
+    ];
+    const diagnostics = (
+      await waitForDiagnostics(
+        editor.document.uri,
+        d => d && d.filter(dupFilter).length >= expectedPaths.length,
+        'initial duplicate path warnings'
+      )
+    ).filter(dupFilter);
+    if (diagnostics.length !== expectedPaths.length) {
+      expect.fail(`Expected ${expectedPaths.length} diagnostics, got:\n` + JSON.stringify(diagnostics, undefined, 2));
+    }
+    expect(diagnostics.map(d => jsonpathFrom(d), 'diagnostic jsonpaths')).to.include.members(expectedPaths);
+    diagnostics.forEach(d => {
+      expect(d.severity, `${jsonpathFrom(d)} diagnotic.severity`).to.equal(vscode.DiagnosticSeverity.Warning);
+      expect(d.relatedInformation, `${jsonpathFrom(d)} diagnostic.relatedInformation`).to.not.be.undefined;
+      expect(d.relatedInformation!.length, `${jsonpathFrom(d)} diagnostic.relatedInformation.length`).to.equal(1);
     });
   });
 

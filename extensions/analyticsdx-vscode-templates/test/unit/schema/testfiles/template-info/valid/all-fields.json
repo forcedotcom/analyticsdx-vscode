@@ -117,6 +117,15 @@
         "condition": "${Variables.Has_Product == 'Yes'}",
         "overwriteOnUpgrade": "Never"
       }
+    ],
+    "predictiveScoring": [
+      {
+        "file": "prediction.json",
+        "label": "Some Prediction",
+        "name": "some_prediction",
+        "condition": "${Variables.Has_Predictions}",
+        "overwriteOnUpgrade": "${Variables.RerunOnUpgrade == 'Yes' ? 'Always' : 'IfDifferent'}"
+      }
     ]
   },
   "icons": {
