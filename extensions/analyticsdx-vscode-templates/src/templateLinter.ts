@@ -319,6 +319,7 @@ export class TemplateLinter {
     this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
     this.lintTemplateInfoIcons(this.templateInfoDoc, tree);
+
     // make sure no 2+ relpath fields point to the same definition file (since that will be mess up our schema associations)
     const templateInfoSource = [{ doc: this.templateInfoDoc, nodes: tree }];
     this.lintUniqueValues(
@@ -327,7 +328,38 @@ export class TemplateLinter {
       relpath => `Duplicate usage of path ${relpath}`,
       ERRORS.TMPL_DUPLICATE_REL_PATH
     );
+
+    // make sure there aren't duplicate names amongst the various related files
+    // note: some of these with duplicate names (e.g. dashboards, lens) will fail to upload.
+    // some of these will upload and work with a duplicate name (e.g. imageFiles), but all-but-the-first asset with
+    // same name will end up with a different name (e.g. "name1", "name2") which means other code looking for the asset
+    // by name will only find the first one, so we're going to warn on those, too.
+    [
+      // dashboards and lens are stored in the same place, so they have to have unique names amongst each other
+      {
+        type: 'dashboard or lens',
+        path: [['dashboards', '*', 'name'] as JSONPath, ['lenses', '*', 'name']]
+      },
+      { type: 'dataflow', path: ['eltDataflows', '*', 'name'] as JSONPath },
+      { type: 'recipe', path: ['recipes', '*', 'name'] },
+      { type: 'dataset', path: ['datasetFiles', '*', 'name'] },
+      { type: 'external file', path: ['externalFiles', '*', 'name'] },
+      { type: 'storedQuery', path: ['storedQueries', '*', 'name'] },
+      { type: 'discoveryStory', path: ['extendedTypes', 'discoveryStories', '*', 'name'] },
+      { type: 'prediction', path: ['extendedTypes', 'predictiveScoring', '*', 'name'] },
+      { type: 'image file', path: ['imageFiles', '*', 'name'] }
+    ].forEach(({ type, path }) =>
+      this.lintUniqueValues(
+        templateInfoSource,
+        path,
+        label => `Duplicate ${type} name '${label}'`,
+        ERRORS.TMPL_DUPLICATE_NAME
+      )
+    );
+
     // make sure there aren't duplicate labels amongst the various related files that support labels
+    // note: these will generally upload just fine, but the various ${App.Dashboard['label...']} expressions and other
+    // operations that key on label will only find one of the assets, so we're going to warn on these
     [
       { type: 'dashboard', path: ['dashboards', '*', 'label'] as JSONPath },
       { type: 'lens', path: ['lenses', '*', 'label'] },

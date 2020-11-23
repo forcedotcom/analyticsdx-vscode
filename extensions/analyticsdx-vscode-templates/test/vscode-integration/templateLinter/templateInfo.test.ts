@@ -321,6 +321,70 @@ describe('TemplateLinterManager lints template-info.json', () => {
     });
   });
 
+  it('shows warning on duplicate asset names', async () => {
+    const [t, , editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+    await setDocumentText(editor, {
+      dashboards: [{ name: 'dashboard' }, { name: 'dashboard' }, { name: 'lens' }],
+      lenses: [{ name: 'lens' }, { name: 'lens' }, { name: 'dashboard' }],
+      eltDataflows: [{ name: 'dataflow' }, { name: 'dataflow' }],
+      recipes: [{ name: 'recipe' }, { name: 'recipe' }],
+      datasetFiles: [{ name: 'dataset' }, { name: 'dataset' }],
+      externalFiles: [{ name: 'file' }, { name: 'file' }],
+      storedQueries: [{ name: 'stored-query' }, { name: 'stored-query' }],
+      extendedTypes: {
+        discoveryStories: [{ name: 'story' }, { name: 'story' }],
+        predictiveScoring: [{ name: 'prediction' }, { name: 'prediction' }]
+      },
+      imageFiles: [{ name: 'image' }, { name: 'image' }]
+    });
+    const dupFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_DUPLICATE_NAME;
+    const expectedPaths = [
+      'dashboards[0].name',
+      'dashboards[1].name',
+      'dashboards[2].name',
+      'lenses[0].name',
+      'lenses[1].name',
+      'lenses[2].name',
+      'eltDataflows[0].name',
+      'eltDataflows[1].name',
+      'recipes[0].name',
+      'recipes[1].name',
+      'datasetFiles[0].name',
+      'datasetFiles[1].name',
+      'externalFiles[0].name',
+      'externalFiles[1].name',
+      'storedQueries[0].name',
+      'storedQueries[1].name',
+      'extendedTypes.discoveryStories[0].name',
+      'extendedTypes.discoveryStories[1].name',
+      'extendedTypes.predictiveScoring[0].name',
+      'extendedTypes.predictiveScoring[1].name',
+      'imageFiles[0].name',
+      'imageFiles[1].name'
+    ];
+    const diagnostics = (
+      await waitForDiagnostics(
+        editor.document.uri,
+        d => d && d.filter(dupFilter).length >= expectedPaths.length,
+        'initial duplicate name warnings'
+      )
+    ).filter(dupFilter);
+    if (diagnostics.length !== expectedPaths.length) {
+      expect.fail(`Expected ${expectedPaths.length} diagnostics, got:\n` + JSON.stringify(diagnostics, undefined, 2));
+    }
+    expect(diagnostics.map(d => jsonpathFrom(d), 'diagnostic jsonpaths')).to.include.members(expectedPaths);
+    diagnostics.forEach(d => {
+      const jsonpath = jsonpathFrom(d);
+      expect(d.severity, `${jsonpath} diagnotic.severity`).to.equal(vscode.DiagnosticSeverity.Warning);
+      expect(d.relatedInformation, `${jsonpath} diagnostic.relatedInformation`).to.not.be.undefined;
+      expect(d.relatedInformation!.length, `${jsonpath} diagnostic.relatedInformation.length`).to.equal(
+        jsonpath?.startsWith('dashboard') || jsonpath?.startsWith('lenses') ? 2 : 1
+      );
+    });
+  });
+
   it('shows warning on duplicate asset labels', async () => {
     const [t, , editor] = await createTempTemplate(true);
     tmpdir = t;
@@ -360,7 +424,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       await waitForDiagnostics(
         editor.document.uri,
         d => d && d.filter(dupFilter).length >= expectedPaths.length,
-        'initial duplicate path warnings'
+        'initial duplicate label warnings'
       )
     ).filter(dupFilter);
     if (diagnostics.length !== expectedPaths.length) {
