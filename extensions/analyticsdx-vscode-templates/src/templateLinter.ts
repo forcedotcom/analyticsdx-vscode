@@ -196,21 +196,28 @@ export class TemplateLinter {
    * @param jsonpathOrPaths the path or paths to the value nodes(s) in the json
    * @param message the message for a diagnostic for each duplicate value node, can be a string or function
    * @param code the error code
-   * @param relatedMessage if specified, relatedInformation for each other found value will be added to the diagnostics,
-   *        with this message
-   * @param computeValue if specified, a function to compute the value from the matched node; can return undefined to
+   * @param relatedMessage relatedInformation for each other found value will be added to the diagnostics
+   *        with this message; defaults to 'Other usage', pass in undefined to not include on diagnostics
+   * @param computeValue a function to compute the value from the matched node; can return undefined to
    *        ignore the node, defaults to the string value of the node
+   * @param severity the diagnonstic severity to use, default to warning
    */
   private lintUniqueValues(
     sources: Array<{ doc: vscode.TextDocument; nodes: JsonNode | JsonNode[] }>,
     jsonpathOrPaths: JSONPath | readonly JSONPath[],
     message: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
     code: string,
-    relatedMessage?: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string),
-    computeValue: (node: JsonNode, doc: vscode.TextDocument) => string | undefined = node => {
-      return node.type === 'string' && typeof node.value === 'string' ? node.value : undefined;
-    },
-    severity = vscode.DiagnosticSeverity.Warning
+    {
+      relatedMessage = 'Other usage',
+      computeValue = node => {
+        return node.type === 'string' && typeof node.value === 'string' ? node.value : undefined;
+      },
+      severity = vscode.DiagnosticSeverity.Warning
+    }: {
+      relatedMessage?: string | ((value: string, doc: vscode.TextDocument, node: JsonNode) => string);
+      computeValue?: (node: JsonNode, doc: vscode.TextDocument) => string | undefined;
+      severity?: vscode.DiagnosticSeverity;
+    } = {}
   ) {
     // value -> list of doc+node's w/ that value
     const values = new Map<string, Array<{ doc: vscode.TextDocument; node: JsonNode }>>();
@@ -312,13 +319,63 @@ export class TemplateLinter {
     this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
     this.lintTemplateInfoIcons(this.templateInfoDoc, tree);
+
     // make sure no 2+ relpath fields point to the same definition file (since that will be mess up our schema associations)
+    const templateInfoSource = [{ doc: this.templateInfoDoc, nodes: tree }];
     this.lintUniqueValues(
-      [{ doc: this.templateInfoDoc, nodes: tree }],
+      templateInfoSource,
       TEMPLATE_INFO.definitionFilePathLocationPatterns,
       relpath => `Duplicate usage of path ${relpath}`,
-      ERRORS.TMPL_DUPLICATE_REL_PATH,
-      'Other usage'
+      ERRORS.TMPL_DUPLICATE_REL_PATH
+    );
+
+    // make sure there aren't duplicate names amongst the various related files
+    // note: some of these with duplicate names (e.g. dashboards, lens) will fail to upload.
+    // some of these will upload and work with a duplicate name (e.g. imageFiles), but all-but-the-first asset with
+    // same name will end up with a different name (e.g. "name1", "name2") which means other code looking for the asset
+    // by name will only find the first one, so we're going to warn on those, too.
+    [
+      // dashboards and lens are stored in the same place, so they have to have unique names amongst each other
+      {
+        type: 'dashboard or lens',
+        path: [['dashboards', '*', 'name'] as JSONPath, ['lenses', '*', 'name']]
+      },
+      { type: 'dataflow', path: ['eltDataflows', '*', 'name'] as JSONPath },
+      { type: 'recipe', path: ['recipes', '*', 'name'] },
+      { type: 'dataset', path: ['datasetFiles', '*', 'name'] },
+      { type: 'external file', path: ['externalFiles', '*', 'name'] },
+      { type: 'storedQuery', path: ['storedQueries', '*', 'name'] },
+      { type: 'discoveryStory', path: ['extendedTypes', 'discoveryStories', '*', 'name'] },
+      { type: 'prediction', path: ['extendedTypes', 'predictiveScoring', '*', 'name'] },
+      { type: 'image file', path: ['imageFiles', '*', 'name'] }
+    ].forEach(({ type, path }) =>
+      this.lintUniqueValues(
+        templateInfoSource,
+        path,
+        label => `Duplicate ${type} name '${label}'`,
+        ERRORS.TMPL_DUPLICATE_NAME
+      )
+    );
+
+    // make sure there aren't duplicate labels amongst the various related files that support labels
+    // note: these will generally upload just fine, but the various ${App.Dashboard['label...']} expressions and other
+    // operations that key on label will only find one of the assets, so we're going to warn on these
+    [
+      { type: 'dashboard', path: ['dashboards', '*', 'label'] as JSONPath },
+      { type: 'lens', path: ['lenses', '*', 'label'] },
+      { type: 'dataflow', path: ['eltDataflows', '*', 'label'] },
+      { type: 'recipe', path: ['recipes', '*', 'label'] },
+      { type: 'dataset', path: ['datasetFiles', '*', 'label'] },
+      { type: 'storedQuery', path: ['storedQueries', '*', 'label'] },
+      { type: 'discoveryStory', path: ['extendedTypes', 'discoveryStories', '*', 'label'] },
+      { type: 'prediction', path: ['extendedTypes', 'predictiveScoring', '*', 'label'] }
+    ].forEach(({ type, path }) =>
+      this.lintUniqueValues(
+        templateInfoSource,
+        path,
+        label => `Duplicate ${type} label '${label}'`,
+        ERRORS.TMPL_DUPLICATE_LABEL
+      )
     );
 
     // wait for the async ones
@@ -895,8 +952,7 @@ export class TemplateLinter {
       sources,
       ['constants', '*', 'name'],
       name => `Duplicate constant '${name}'`,
-      ERRORS.RULES_DUPLICATE_CONSTANT,
-      'Other usage'
+      ERRORS.RULES_DUPLICATE_CONSTANT
     );
     // make sure the rules' names are unique
     this.lintUniqueValues(
@@ -904,9 +960,9 @@ export class TemplateLinter {
       ['rules', '*', 'name'],
       name => `Duplicate rule name '${name}'`,
       ERRORS.RULES_DUPLICATE_RULE_NAME,
-      'Other usage',
-      undefined,
-      vscode.DiagnosticSeverity.Hint
+      {
+        severity: vscode.DiagnosticSeverity.Hint
+      }
     );
     // make sure macro namespace:name is unique
     this.lintUniqueValues(
@@ -914,26 +970,27 @@ export class TemplateLinter {
       ['macros', '*', 'definitions', '*', 'name'],
       name => `Duplicate macro '${name}'`,
       ERRORS.RULES_DUPLICATE_MACRO,
-      'Other usage',
-      // compute namespace:name from the name value json node
-      name => {
-        // REVIEWME: should we skip name's or namespace's that don't match the schema regex?
-        // The server runtime doesn't, although the rules won't validate in the server if the name/ns don't match
-        // the regex so the macros wouldn't even be there to run.
-        // Let's do this for now, so you get both the dup warning and the regex warnings
-        if (name.type === 'string' && typeof name.value === 'string' && name.value) {
-          // find the ancestor macro, via the parent chain:
-          // "name": <name> -> the definition {} -> the definitions [] ->
-          // "definitions": [] -> the macro {}
-          const macro = name.parent?.parent?.parent?.parent?.parent;
-          if (macro) {
-            const ns = findNodeAtLocation(macro, ['namespace']);
-            if (ns && ns.type === 'string' && typeof ns.value === 'string' && ns.value) {
-              return ns.value + ':' + name.value;
+      {
+        // compute namespace:name from the name value json node
+        computeValue: name => {
+          // REVIEWME: should we skip name's or namespace's that don't match the schema regex?
+          // The server runtime doesn't, although the rules won't validate in the server if the name/ns don't match
+          // the regex so the macros wouldn't even be there to run.
+          // Let's do this for now, so you get both the dup warning and the regex warnings
+          if (name.type === 'string' && typeof name.value === 'string' && name.value) {
+            // find the ancestor macro, via the parent chain:
+            // "name": <name> -> the definition {} -> the definitions [] ->
+            // "definitions": [] -> the macro {}
+            const macro = name.parent?.parent?.parent?.parent?.parent;
+            if (macro) {
+              const ns = findNodeAtLocation(macro, ['namespace']);
+              if (ns && ns.type === 'string' && typeof ns.value === 'string' && ns.value) {
+                return ns.value + ':' + name.value;
+              }
             }
           }
+          return undefined;
         }
-        return undefined;
       }
     );
 

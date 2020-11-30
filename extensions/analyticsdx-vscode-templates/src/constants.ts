@@ -113,6 +113,10 @@ export const ERRORS = Object.freeze({
   TMPL_NON_APP_WITH_AUTO_INSTALL: 'tmpl-13',
   /** A template with autoInstallDefinition doesn't have a name in the folderDefinition (or folderDefinition doesn't exist) */
   TMPL_AUTO_INSTALL_MISSING_FOLDER_NAME: 'tmpl-14',
+  /** Duplicate name in a set of template assets */
+  TMPL_DUPLICATE_NAME: 'tmpl-15',
+  /** Duplicate label in a set of template assets */
+  TMPL_DUPLICATE_LABEL: 'tmpl-16',
 
   /** Unknown variable in values in autoInstallDefinition. */
   AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',

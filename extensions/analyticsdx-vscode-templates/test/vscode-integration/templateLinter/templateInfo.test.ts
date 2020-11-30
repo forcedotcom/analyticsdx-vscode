@@ -270,11 +270,18 @@ describe('TemplateLinterManager lints template-info.json', () => {
         }
       ],
       extendedTypes: {
-        stories: [
+        discoveryStories: [
           {
             file: 'file.json',
             label: 'story',
             name: 'story'
+          }
+        ],
+        predictiveScoring: [
+          {
+            file: 'file.json',
+            label: 'prediction',
+            name: 'prediction'
           }
         ]
       }
@@ -291,7 +298,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'lenses[0].file',
       'eltDataflows[0].file',
       'storedQueries[0].file',
-      'extendedTypes.stories[0].file'
+      'extendedTypes.discoveryStories[0].file',
+      'extendedTypes.predictiveScoring[0].file'
     ];
     const diagnostics = (
       await waitForDiagnostics(
@@ -310,6 +318,123 @@ describe('TemplateLinterManager lints template-info.json', () => {
       expect(d.relatedInformation!.length, `${jsonpathFrom(d)} diagnostic.relatedInformation.length`).to.equal(
         expectedPaths.length - 1
       );
+    });
+  });
+
+  it('shows warning on duplicate asset names', async () => {
+    const [t, , editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+    await setDocumentText(editor, {
+      dashboards: [{ name: 'dashboard' }, { name: 'dashboard' }, { name: 'lens' }],
+      lenses: [{ name: 'lens' }, { name: 'lens' }, { name: 'dashboard' }],
+      eltDataflows: [{ name: 'dataflow' }, { name: 'dataflow' }],
+      recipes: [{ name: 'recipe' }, { name: 'recipe' }],
+      datasetFiles: [{ name: 'dataset' }, { name: 'dataset' }],
+      externalFiles: [{ name: 'file' }, { name: 'file' }],
+      storedQueries: [{ name: 'stored-query' }, { name: 'stored-query' }],
+      extendedTypes: {
+        discoveryStories: [{ name: 'story' }, { name: 'story' }],
+        predictiveScoring: [{ name: 'prediction' }, { name: 'prediction' }]
+      },
+      imageFiles: [{ name: 'image' }, { name: 'image' }]
+    });
+    const dupFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_DUPLICATE_NAME;
+    const expectedPaths = [
+      'dashboards[0].name',
+      'dashboards[1].name',
+      'dashboards[2].name',
+      'lenses[0].name',
+      'lenses[1].name',
+      'lenses[2].name',
+      'eltDataflows[0].name',
+      'eltDataflows[1].name',
+      'recipes[0].name',
+      'recipes[1].name',
+      'datasetFiles[0].name',
+      'datasetFiles[1].name',
+      'externalFiles[0].name',
+      'externalFiles[1].name',
+      'storedQueries[0].name',
+      'storedQueries[1].name',
+      'extendedTypes.discoveryStories[0].name',
+      'extendedTypes.discoveryStories[1].name',
+      'extendedTypes.predictiveScoring[0].name',
+      'extendedTypes.predictiveScoring[1].name',
+      'imageFiles[0].name',
+      'imageFiles[1].name'
+    ];
+    const diagnostics = (
+      await waitForDiagnostics(
+        editor.document.uri,
+        d => d && d.filter(dupFilter).length >= expectedPaths.length,
+        'initial duplicate name warnings'
+      )
+    ).filter(dupFilter);
+    if (diagnostics.length !== expectedPaths.length) {
+      expect.fail(`Expected ${expectedPaths.length} diagnostics, got:\n` + JSON.stringify(diagnostics, undefined, 2));
+    }
+    expect(diagnostics.map(d => jsonpathFrom(d), 'diagnostic jsonpaths')).to.include.members(expectedPaths);
+    diagnostics.forEach(d => {
+      const jsonpath = jsonpathFrom(d);
+      expect(d.severity, `${jsonpath} diagnotic.severity`).to.equal(vscode.DiagnosticSeverity.Warning);
+      expect(d.relatedInformation, `${jsonpath} diagnostic.relatedInformation`).to.not.be.undefined;
+      expect(d.relatedInformation!.length, `${jsonpath} diagnostic.relatedInformation.length`).to.equal(
+        jsonpath?.startsWith('dashboard') || jsonpath?.startsWith('lenses') ? 2 : 1
+      );
+    });
+  });
+
+  it('shows warning on duplicate asset labels', async () => {
+    const [t, , editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+    await setDocumentText(editor, {
+      dashboards: [{ label: 'dashboard' }, { label: 'dashboard' }],
+      lenses: [{ label: 'lens' }, { label: 'lens' }],
+      eltDataflows: [{ label: 'dataflow' }, { label: 'dataflow' }],
+      recipes: [{ label: 'recipe' }, { label: 'recipe' }],
+      datasetFiles: [{ label: 'dataset' }, { label: 'dataset' }],
+      storedQueries: [{ label: 'stored-query' }, { label: 'stored-query' }],
+      extendedTypes: {
+        discoveryStories: [{ label: 'story' }, { label: 'story' }],
+        predictiveScoring: [{ label: 'prediction' }, { label: 'prediction' }]
+      }
+    });
+    const dupFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_DUPLICATE_LABEL;
+    const expectedPaths = [
+      'dashboards[0].label',
+      'dashboards[1].label',
+      'lenses[0].label',
+      'lenses[1].label',
+      'eltDataflows[0].label',
+      'eltDataflows[1].label',
+      'recipes[0].label',
+      'recipes[1].label',
+      'datasetFiles[0].label',
+      'datasetFiles[1].label',
+      'storedQueries[0].label',
+      'storedQueries[1].label',
+      'extendedTypes.discoveryStories[0].label',
+      'extendedTypes.discoveryStories[1].label',
+      'extendedTypes.predictiveScoring[0].label',
+      'extendedTypes.predictiveScoring[1].label'
+    ];
+    const diagnostics = (
+      await waitForDiagnostics(
+        editor.document.uri,
+        d => d && d.filter(dupFilter).length >= expectedPaths.length,
+        'initial duplicate label warnings'
+      )
+    ).filter(dupFilter);
+    if (diagnostics.length !== expectedPaths.length) {
+      expect.fail(`Expected ${expectedPaths.length} diagnostics, got:\n` + JSON.stringify(diagnostics, undefined, 2));
+    }
+    expect(diagnostics.map(d => jsonpathFrom(d), 'diagnostic jsonpaths')).to.include.members(expectedPaths);
+    diagnostics.forEach(d => {
+      expect(d.severity, `${jsonpathFrom(d)} diagnotic.severity`).to.equal(vscode.DiagnosticSeverity.Warning);
+      expect(d.relatedInformation, `${jsonpathFrom(d)} diagnostic.relatedInformation`).to.not.be.undefined;
+      expect(d.relatedInformation!.length, `${jsonpathFrom(d)} diagnostic.relatedInformation.length`).to.equal(1);
     });
   });
 
