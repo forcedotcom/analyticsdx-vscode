@@ -1,6 +1,6 @@
 # Salesforce Analytics Extensions for VS Code
 
-[![Build Status](https://github.com/forcedotcom/analyticsdx-vscode/workflows/Build%20and%20test/badge.svg)](https://github.com/forcedotcom/analyticsdx-vscode/actions?workflow=Build+and+test)
+[![Build Status](https://github.com/forcedotcom/analyticsdx-vscode/workflows/Build%20and%20test/badge.svg)](https://github.com/forcedotcom/analyticsdx-vscode/actions?query=workflow%3A%22Build+and+test%22+branch%3Adevelop)
 
 <!-- TODO: badges for security and code coverage when we hook those up -->
 

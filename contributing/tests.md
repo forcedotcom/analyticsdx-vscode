@@ -188,7 +188,7 @@ Otherwise, you can install the .vsix files from the GitHub build into VS Code:
    1. Restart VS Code
 
 1. Go to the
-   [most recent successfull build](https://github.com/forcedotcom/analyticsdx-vscode/actions?workflow=Build+and+test) that
+   [most recent build](https://github.com/forcedotcom/analyticsdx-vscode/actions?query=workflow%3A%22Build+and+test%22+branch%3Adevelop) that
    has the changes you want, find the `extensions` artifact and download it. It should be a zip file of the .vsix files
    that are the various extensions.
 
