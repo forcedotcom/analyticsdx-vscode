@@ -84,12 +84,12 @@ export type TemplateGatherOptions = TemplateListExecutorOptions & {
   fetchMesg?: string;
 };
 export class TemplateGatherer implements ParametersGatherer<TemplateMetadata> {
-  private readonly filter?: TemplateFilter;
-  private readonly includeEmbedded: boolean;
-  private readonly includeSfdc: boolean;
-  private noTemplatesMesg: string;
-  private placeholderMesg: string;
-  private fetchMesg: string;
+  protected readonly filter?: TemplateFilter;
+  protected readonly includeEmbedded: boolean;
+  protected readonly includeSfdc: boolean;
+  protected noTemplatesMesg: string;
+  protected placeholderMesg: string;
+  protected fetchMesg: string;
   constructor({
     filter,
     includeEmbedded = false,

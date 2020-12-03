@@ -38,15 +38,47 @@ class UpdateTemplateExecutor extends SfdxCommandletExecutor<TemplateMetadata> {
   }
 }
 
+class TemplateWithFolderGatherer extends TemplateGatherer {
+  constructor() {
+    super({
+      // only show templates that have an associated app specified (which might not exist)
+      filter: template => !!template.folderid,
+      includeEmbedded: true,
+      noTemplatesMesg: nls.localize('update_template_cmd_no_templates_message'),
+      placeholderMesg: nls.localize('update_template_cmd_placeholder_message')
+    });
+  }
+
+  public async gather(): Promise<CancelResponse | ContinueResponse<TemplateMetadata>> {
+    // get all the templates that have an app and all the apps that have a templateSourceId, at the same time,
+    // keep this a promise (no await) so that we can pass it as-is to showQuickPick() to get the loading spinner
+    const templates = Promise.all([
+      super.loadQuickPickItems(),
+      // convert the apps to a map of folderid->templateid
+      new AppGatherer(app => !!app.templateSourceId)
+        .loadQuickPickItems()
+        .then(allApps =>
+          allApps.reduce(
+            (apps, appItem) => apps.set(appItem.app.folderid, appItem.app.templateSourceId!),
+            new Map<string, string>()
+          )
+        )
+    ])
+      // only include templates whose folderid matches an existing app id whose templateSourceId matches the templateid
+      .then(([templates, apps]) => templates.filter(t => apps.get(t.template.folderid!) === t.template.templateid));
+
+    const pick = await showQuickPick(templates, {
+      noItemsMesg: this.noTemplatesMesg,
+      placeHolder: this.placeholderMesg,
+      loadingMesg: this.fetchMesg
+    });
+    return pick ? { type: 'CONTINUE', data: pick.template } : { type: 'CANCEL' };
+  }
+}
+
 const updateTemplateCommandlet = new SfdxCommandlet(
   sfdxWorkspaceChecker,
-  new TemplateGatherer({
-    // only show templates that have an associated app
-    filter: template => !!template.folderid,
-    includeEmbedded: true,
-    noTemplatesMesg: nls.localize('update_template_cmd_no_templates_message'),
-    placeholderMesg: nls.localize('update_template_cmd_placeholder_message')
-  }),
+  new TemplateWithFolderGatherer(),
   new UpdateTemplateExecutor(nls.localize('update_template_cmd_message'))
 );
 
