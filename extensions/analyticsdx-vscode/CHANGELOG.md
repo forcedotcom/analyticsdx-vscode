@@ -1,3 +1,19 @@
+# 0.5.0
+
+## Added
+
+- Show warnings on duplicate asset names and labels in templates.
+- Support **SFDX: Open App in Analytics Studio** and **SFDX: Open Analytics Data Manager** commands when running in
+  Remote Development mode.
+- Add **SFDX: Update Analytics Template From App** command.
+- Support embedded app templates in commands.
+
+## Fixed
+
+- Fix **SFDX: Update Template** to correctly not show templates that were decoupled from their source app.
+- Show loading and no available items messages in template and app pickers from commands.
+- Support nulls in folder.json in templates.
+
 # 0.4.0
 
 ## Added
