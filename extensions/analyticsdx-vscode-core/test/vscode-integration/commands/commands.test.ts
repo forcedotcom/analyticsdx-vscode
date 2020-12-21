@@ -6,6 +6,7 @@
  */
 
 import { expect } from 'chai';
+import childProcess = require('child_process');
 import {
   Command,
   ContinueResponse,
@@ -13,7 +14,6 @@ import {
   SfdxCommandBuilder,
   SfdxCommandletExecutorWithOutput
 } from '../../../src/commands/commands';
-import childProcess = require('child_process');
 
 class TestExecutorWithOutput extends SfdxCommandletExecutorWithOutput<string> {
   public build(data: string): Command {

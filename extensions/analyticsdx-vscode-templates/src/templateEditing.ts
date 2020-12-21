@@ -526,13 +526,13 @@ export class TemplateEditingManager extends Disposable {
  * This is bound to the adx-template-json languageId, so it shouldn't interfer with regular json files.
  */
 namespace VSCodeContentRequest {
-  export const type: RequestType<string, string, any, any> = new RequestType('vscode/content');
+  export const type: RequestType<string, string, any> = new RequestType('vscode/content');
 }
 namespace SchemaContentChangeNotification {
-  export const type: NotificationType<string, any> = new NotificationType('json/schemaContent');
+  export const type: NotificationType<string> = new NotificationType('json/schemaContent');
 }
 namespace SchemaAssociationNotification {
-  export const type: NotificationType<ISchemaAssociations, any> = new NotificationType('json/schemaAssociations');
+  export const type: NotificationType<ISchemaAssociations> = new NotificationType('json/schemaAssociations');
 }
 
 function getFormattingOptions(orig: vscode.FormattingOptions): vscode.FormattingOptions {
@@ -806,12 +806,18 @@ class TemplateJsonLanguageClient extends Disposable {
                   range: client.code2ProtocolConverter.asRange(range),
                   options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options))
                 };
-                return client
-                  .sendRequest(DocumentRangeFormattingRequest.type, params, token)
-                  .then(client.protocol2CodeConverter.asTextEdits, error => {
+                return client.sendRequest(DocumentRangeFormattingRequest.type, params, token).then(
+                  edits => {
+                    if (Array.isArray(edits)) {
+                      return client.protocol2CodeConverter.asTextEdits(edits);
+                    }
+                    return [];
+                  },
+                  error => {
                     client.logFailedRequest(DocumentRangeFormattingRequest.type, error);
                     return Promise.resolve([]);
-                  });
+                  }
+                );
               }
             });
           }

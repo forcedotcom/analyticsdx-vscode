@@ -11,6 +11,7 @@
     "semicolon": [true, "always", "ignore-bound-class-methods"],
     "no-shadowed-variable": false,
     "no-unnecessary-initializer": false,
-    "comment-format": [true]
+    "comment-format": [true],
+    "array-type": [true, "array-simple"]
   }
 }

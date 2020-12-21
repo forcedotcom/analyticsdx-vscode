@@ -40,7 +40,7 @@ won't immediately check it in.
 ## Pushing .vsix's to Visual Studio Marketplace
 
 1. Get an access token from your marketplace account.
-2. Login to the salesforce publisher: `./node_modules/.bin/vsce login salesforce` and enter your access token
+2. Login to the salesforce publisher: `npx vsce login salesforce` and enter your access token
 3. Run `npm run vscode:publish`
 
 After publishing, you will normally want to commit and push any of the updated files (i.e. SHA256.md, lerna.json,

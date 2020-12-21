@@ -786,7 +786,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       d.code === ERRORS.TMPL_NON_APP_WITH_AUTO_INSTALL && jsonpathFrom(d) === 'autoInstallDefinition';
     // start as an embedded app template
     const templateJson = {
-      templateType: 'embeddedapp',
+      templateType: 'embeddedapp' as string | undefined,
       name: uriBasename(tmpdir),
       label: 'Test autoInstallDefinition on different templateTypes',
       assetVersion: 50.0,
