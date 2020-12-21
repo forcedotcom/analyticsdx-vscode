@@ -16,16 +16,10 @@ export async function waitForDX(activate: boolean = false) {
       const dosetup = () => {
         let success = false;
         try {
-          const coreDependency = vscode.extensions.getExtension(
-            'salesforce.salesforcedx-vscode-core'
-          );
+          const coreDependency = vscode.extensions.getExtension('salesforce.salesforcedx-vscode-core');
           if (coreDependency && !coreDependency.isActive && activate) {
             return coreDependency.activate().then(api => {
-              resolve(
-                vscode.extensions.getExtension(
-                  'salesforce.salesforcedx-vscode-core'
-                )
-              );
+              resolve(vscode.extensions.getExtension('salesforce.salesforcedx-vscode-core')!);
             });
           }
           if (coreDependency && coreDependency.exports) {
@@ -37,8 +31,7 @@ export async function waitForDX(activate: boolean = false) {
         }
         if (!success) {
           if (new Date().getTime() > expires) {
-            const msg =
-              'salesforce.salesforcedx-vscode-core not installed or activated, some features unavailable';
+            const msg = 'salesforce.salesforcedx-vscode-core not installed or activated, some features unavailable';
             console.log(msg);
             reject(msg);
           } else {

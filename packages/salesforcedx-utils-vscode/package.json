@@ -31,7 +31,7 @@
     "request-light": "0.2.4",
     "shx": "0.3.2",
     "source-map-support": "^0.5.16",
-    "typescript": "3.7.5"
+    "typescript": "4.1.3"
   },
   "scripts": {
     "compile": "webpack",
