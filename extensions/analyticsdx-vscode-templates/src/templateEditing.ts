@@ -20,15 +20,13 @@ import {
   DocumentRangeFormattingRequest,
   ErrorAction,
   InitializeError,
-  LanguageClient,
   LanguageClientOptions,
   Message,
   NotificationType,
   RequestType,
-  ResponseError,
-  ServerOptions,
-  TransportKind
+  ResponseError
 } from 'vscode-languageclient';
+import { LanguageClient, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import {
   AutoInstallVariableCodeActionProvider,
   AutoInstallVariableCompletionItemProviderDelegate,
@@ -804,7 +802,8 @@ class TemplateJsonLanguageClient extends Disposable {
                 const params: DocumentRangeFormattingParams = {
                   textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
                   range: client.code2ProtocolConverter.asRange(range),
-                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options))
+                  // FIXME: read and send in FileFormattingOptions
+                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options), {})
                 };
                 return client.sendRequest(DocumentRangeFormattingRequest.type, params, token).then(
                   edits => {
@@ -814,7 +813,7 @@ class TemplateJsonLanguageClient extends Disposable {
                     return [];
                   },
                   error => {
-                    client.logFailedRequest(DocumentRangeFormattingRequest.type, error);
+                    client.handleFailedRequest(DocumentRangeFormattingRequest.type, error, []);
                     return Promise.resolve([]);
                   }
                 );
