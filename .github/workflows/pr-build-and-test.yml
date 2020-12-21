@@ -6,49 +6,49 @@ on:
       - develop
 
 jobs:
-  pr-build:
-    runs-on: ubuntu-latest
+  # pr-build:
+  #   runs-on: ubuntu-latest
 
-    timeout-minutes: 15
+  #   timeout-minutes: 15
 
-    steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js 12.4.0
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12.4.0'
-      - name: Build
-        run: |
-          npm install
-          npm run compile
-          npm run lint
-      - name: Tests
-        # start X virtual frame buffer so tests can do ui
-        run: |
-          sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
-          DISPLAY=:10 npm test
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: Use Node.js 12.4.0
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: '12.4.0'
+  #     - name: Build
+  #       run: |
+  #         npm install
+  #         npm run compile
+  #         npm run lint
+  #     - name: Tests
+  #       # start X virtual frame buffer so tests can do ui
+  #       run: |
+  #         sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
+  #         DISPLAY=:10 npm test
 
-  pr-build-insiders:
-    runs-on: ubuntu-latest
+  # pr-build-insiders:
+  #   runs-on: ubuntu-latest
 
-    timeout-minutes: 15
-    continue-on-error: true
+  #   timeout-minutes: 15
+  #   continue-on-error: true
 
-    steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js 12.4.0
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12.4.0'
-      - name: Build
-        run: |
-          npm install
-          npm run compile
-      - name: Tests
-        # start X virtual frame buffer so tests can do ui
-        run: |
-          sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
-          DISPLAY=:10 npm run test:vscode-insiders-integration
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: Use Node.js 12.4.0
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: '12.4.0'
+  #     - name: Build
+  #       run: |
+  #         npm install
+  #         npm run compile
+  #     - name: Tests
+  #       # start X virtual frame buffer so tests can do ui
+  #       run: |
+  #         sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
+  #         DISPLAY=:10 npm run test:vscode-insiders-integration
 
   # include a windows build job in PRs since mostly folks are developing on linux or mac, so
   # we might not catch windows-specific failures locally as much
@@ -63,11 +63,24 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '12.4.0'
+      - name: Desktop Screenshot Before Build
+        uses: OrbitalOwen/desktop-screenshot-action@0.1
+        with:
+          file-name: 'windows-desktop-before-build.jpg'
       - name: Build
         # Note: npm run lint fails silently on windows for some reason, but we really only need
         # to run it in one job anyways
         run: |
           npm install
           npm run compile
+      - name: Desktop Screenshot Before Tests
+        uses: OrbitalOwen/desktop-screenshot-action@0.1
+        with:
+          file-name: 'windows-desktop-before-tests.jpg'
       - name: Tests
         run: npm test
+        continue-on-error: true
+      - name: Desktop Screenshot After Tests
+        uses: OrbitalOwen/desktop-screenshot-action@0.1
+        with:
+          file-name: 'windows-desktop-after-tests.jpg'
