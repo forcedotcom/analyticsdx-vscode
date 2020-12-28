@@ -6,14 +6,7 @@
  */
 
 import { expect } from 'chai';
-import {
-  fuzzySearcher,
-  isSameUriPath,
-  isUriPathUnder,
-  isValidRelpath,
-  isWhitespaceChar,
-  matchesFileExtension
-} from '../../../src/util/utils';
+import { isSameUriPath, isUriPathUnder, isWhitespaceChar, matchesFileExtension } from '../../../src/util/utils';
 
 // tslint:disable: no-unused-expression
 describe('utils', () => {
@@ -91,29 +84,6 @@ describe('utils', () => {
     });
   });
 
-  describe('isValidRelPath()', () => {
-    ['relpath.html', 'dir/file.html', 'dir1/dir2/', './dir/foo'].forEach(path => {
-      it(`matches '${path}'`, () => {
-        expect(isValidRelpath(path)).to.be.true;
-      });
-    });
-
-    [
-      '/path.html',
-      '../file.html',
-      'dir/../file',
-      'dir/../../../../../../../../../etc/passwd',
-      'dir/..',
-      '',
-      null,
-      undefined
-    ].forEach(path => {
-      it(`doesn't match ${JSON.stringify(path)}`, () => {
-        expect(isValidRelpath(path)).to.be.false;
-      });
-    });
-  });
-
   describe('matchesFileExtension()', () => {
     ['foo.txt', 'dir/file.Txt', '/tmp/dir1/file.txt', 'C:\\Progra~1\\dir\\File.TXT'].forEach(path => {
       it(`single extension pattern matches ${path}`, () => {
@@ -131,64 +101,6 @@ describe('utils', () => {
       it(`mulitple extension patterns don't match ${path}`, () => {
         expect(matchesFileExtension(path, 'htm', 'html')).to.be.false;
       });
-    });
-  });
-
-  describe('fuzzySearch()', () => {
-    let array = ['one', 'two', 'three'];
-    let arrayLike: ArrayLike<string> = Object.freeze({
-      length: array.length,
-      0: array[0],
-      1: array[1],
-      2: array[2]
-    });
-    // make sure everything works for each ArrayLike thing the method supports
-    [
-      [array, 'an array'],
-      [arrayLike, 'an ArrayLike'],
-      [new Set(array), 'a Set']
-    ].forEach(([values, description]) => {
-      it(`matches one from ${description}`, () => {
-        const fuzz = fuzzySearcher(values);
-        expect(fuzz('on')).has.members(['one']);
-        const [match] = fuzz('tw');
-        expect(match, 'destructured match').to.not.be.undefined;
-        expect(match).to.equal('two');
-      });
-
-      it(`matches multiple from ${description}`, () => {
-        const fuzz = fuzzySearcher(values, { limit: 2 });
-        expect(fuzz('on')).has.members(['one', 'two']);
-        expect(fuzz('t')).has.members(['two', 'three']);
-      });
-
-      it(`doesn't match from ${description}`, () => {
-        const fuzz = fuzzySearcher(values);
-        expect(fuzz('z')).has.members([]);
-        const [match] = fuzz('z');
-        expect(match, 'destructured match').to.be.undefined;
-      });
-    });
-
-    array = [];
-    arrayLike = Object.freeze({ length: 0 });
-    [
-      [array, 'array'],
-      [arrayLike, 'ArrayLike'],
-      [new Set<string>(), 'Set']
-    ].forEach(([values, description]) => {
-      it(`doesn't match on empty ${description}`, () => {
-        const fuzz = fuzzySearcher(values);
-        expect(fuzz('z')).has.members([]);
-      });
-    });
-
-    it("doesn't error on big pattern", () => {
-      const fuzz = fuzzySearcher(['one', 'two', 'three']);
-      let pattern = '012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
-      pattern += pattern;
-      // really just make sure it doesn't throw an error
-      expect(fuzz(pattern)).has.members([]);
     });
   });
 });

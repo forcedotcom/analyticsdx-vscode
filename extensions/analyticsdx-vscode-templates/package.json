@@ -26,7 +26,7 @@
   ],
   "dependencies": {
     "@salesforce/salesforcedx-utils-vscode": "0.5.0",
-    "fuse.js": "3.4.6",
+    "analyticsdx-template-lint": "0.5.0",
     "jsonc-parser": "2.1.0",
     "lodash.isequal": "4.5.0",
     "request-light": "0.2.4",

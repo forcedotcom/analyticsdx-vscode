@@ -270,7 +270,11 @@ class CoverageRunner {
     const reportTypes = self.options.reports instanceof Array ? self.options.reports : ['lcov'];
     reporter.addAll(reportTypes);
     reporter.write(remappedCollector, true, () => {
-      console.log(`reports written to ${reportingDir}`);
+      try {
+        // when running in vscode, sometimes this console.log will happen after the output pipe has been closed at
+        // the end of the tests and will throw an error, which we don't really care about
+        console.log(`reports written to ${reportingDir}`);
+      } catch (ignore) {}
     });
   }
 }
