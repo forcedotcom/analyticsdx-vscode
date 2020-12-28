@@ -49,6 +49,32 @@
       }
     },
     {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch analyticsdx-template-lint Unit Tests",
+      "program": "${workspaceFolder}/packages/analyticsdx-template-lint/node_modules/.bin/nyc",
+      "cwd": "${workspaceFolder}/packages/analyticsdx-template-lint",
+      "args": [
+        "./node_modules/.bin/_mocha",
+        "--recursive",
+        "out/test/unit",
+        "--reporter",
+        "mocha-multi-reporters",
+        "--timeout",
+        "20000",
+        "--reporter",
+        "mocha-multi-reporters",
+        "--reporter-options",
+        "configFile=../../config/mochaUnitTestsConfig.json"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "outFiles": ["${workspaceFolder}/packages/analyticsdx-template-lint/out/**/*.js"],
+      "preLaunchTask": "Compile",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch analyticsdx-vscode-core VSCode-Integration Tests",
       "type": "extensionHost",
       "request": "launch",

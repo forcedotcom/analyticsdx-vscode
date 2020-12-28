@@ -6,7 +6,7 @@
  */
 
 import { expect } from 'chai';
-import { csvFileFilter, ERRORS, htmlFileFilter, imageFileFilter, jsonFileFilter } from '../../../src/constants';
+import { csvFileFilter, htmlFileFilter, imageFileFilter, jsonFileFilter } from '../../../src/constants';
 
 // tslint:disable: no-unused-expression
 describe('constants', () => {
@@ -46,35 +46,6 @@ describe('constants', () => {
       it(`matches ${path}`, () => {
         expect(jsonFileFilter(path)).to.be.true;
       });
-    });
-  });
-
-  describe('ERRORS', () => {
-    it('has no duplicate error codes', () => {
-      // errorCode -> [fieldNames with that value]
-      const dups = Object.keys(ERRORS).reduce((map, errorName) => {
-        const errorCode = (ERRORS as Record<string, string>)[errorName];
-        const names = map.get(errorCode) || [];
-        names.push(errorName);
-        map.set(errorCode, names);
-        return map;
-      }, new Map<string, string[]>());
-      // delete non-duplicate codes
-      dups.forEach((names, code) => {
-        if (names.length <= 1) {
-          dups.delete(code);
-        }
-      });
-      if (dups.size >= 1) {
-        let mesg = '';
-        dups.forEach((names, code) => {
-          if (mesg.length > 0) {
-            mesg += ', ';
-          }
-          mesg += `'${code}' -> [${names.join(', ')}]`;
-        });
-        expect.fail(`Found duplicate error code(s) reference by more than one field: ${mesg}`);
-      }
     });
   });
 });

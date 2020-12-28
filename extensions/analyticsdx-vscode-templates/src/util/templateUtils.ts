@@ -9,6 +9,8 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { uriBasename, uriDirname, uriStat } from './vscodeUtils';
 
+export { isValidVariableName } from 'analyticsdx-template-lint';
+
 /** Traverse up from the file until you find the template-info.json, without leaving the vscode workspace folders.
  * @return the file uri, or undefined if not found (i.e. file is not part of a template)
  */
@@ -31,9 +33,4 @@ export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.
     }
   }
   return undefined;
-}
-
-const varNameRegex = /^[a-zA-Z_][a-zA-Z0-9_]+$/;
-export function isValidVariableName(name: string): boolean {
-  return varNameRegex.test(name);
 }

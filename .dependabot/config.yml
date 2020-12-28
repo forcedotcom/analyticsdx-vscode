@@ -10,7 +10,7 @@ update_configs:
       - 'smithgp'
     allowed_updates:
       - match:
-          update_type: "security" 
+          update_type: 'security'
 
   - package_manager: 'javascript'
     directory: '/packages/analyticsdx-test-utils-vscode'
@@ -19,7 +19,16 @@ update_configs:
       - 'smithgp'
     allowed_updates:
       - match:
-          update_type: "security" 
+          update_type: 'security'
+
+  - package_manager: 'javascript'
+    directory: '/packages/analyticsdx-template-lint'
+    update_schedule: 'live'
+    default_reviewers:
+      - 'smithgp'
+    allowed_updates:
+      - match:
+          update_type: 'security'
 
   - package_manager: 'javascript'
     directory: '/packages/salesforcedx-utils-vscode'
@@ -28,7 +37,7 @@ update_configs:
       - 'smithgp'
     allowed_updates:
       - match:
-          update_type: "security" 
+          update_type: 'security'
 
   - package_manager: 'javascript'
     directory: '/extensions/analyticsdx-vscode'
@@ -37,7 +46,7 @@ update_configs:
       - 'smithgp'
     allowed_updates:
       - match:
-          update_type: "security" 
+          update_type: 'security'
 
   - package_manager: 'javascript'
     directory: '/extensions/analyticsdx-vscode-core'
@@ -46,7 +55,7 @@ update_configs:
       - 'smithgp'
     allowed_updates:
       - match:
-          update_type: "security" 
+          update_type: 'security'
 
   - package_manager: 'javascript'
     directory: '/extensions/analyticsdx-vscode-templates'
@@ -55,4 +64,4 @@ update_configs:
       - 'smithgp'
     allowed_updates:
       - match:
-          update_type: "security" 
+          update_type: 'security'
