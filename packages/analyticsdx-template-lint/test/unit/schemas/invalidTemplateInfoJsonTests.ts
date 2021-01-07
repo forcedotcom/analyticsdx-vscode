@@ -6,7 +6,7 @@
  */
 
 import * as path from 'path';
-import * as schema from '../../../schemas/template-info-schema.json';
+import { schemas } from '../../../src/schemas';
 import { createRelPathValidateFn } from '../../testutils';
 
 // Note: VSCode doesn't use Ajv for it's json schema, so the errors we get here won't exactly line up with
@@ -14,7 +14,10 @@ import { createRelPathValidateFn } from '../../testutils';
 // Also, the deprecationMessage's in the schema is only supported in VSCode, so we won't see those errors here
 // either
 describe('template-info-schema.json finds errors in', () => {
-  const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'template-info', 'invalid'));
+  const validate = createRelPathValidateFn(
+    schemas.templateInfo,
+    path.join(__dirname, 'testfiles', 'template-info', 'invalid')
+  );
 
   it('empty.json', async () => {
     const errors = await validate('empty.json');

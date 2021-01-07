@@ -8,4 +8,9 @@
 export * from './constants';
 export * from './filelinter';
 export * from './linter';
+export * from './schemas';
 export * from './utils';
+
+// Note: this is intentionally not re-exporting FileTemplateValidator, since that requires an optional
+// dependency on vscode-json-languageservice; users with that installed can import it directly from
+// 'analytics-template-lint/validator'

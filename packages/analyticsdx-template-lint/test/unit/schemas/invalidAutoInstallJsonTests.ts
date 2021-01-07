@@ -6,11 +6,14 @@
  */
 
 import * as path from 'path';
-import * as schema from '../../../schemas/auto-install-schema.json';
+import { schemas } from '../../../src/schemas';
 import { createRelPathValidateFn } from '../../testutils';
 
 describe('auto-install-schema.json finds errors in', () => {
-  const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'auto-install', 'invalid'));
+  const validate = createRelPathValidateFn(
+    schemas.autoInstall,
+    path.join(__dirname, 'testfiles', 'auto-install', 'invalid')
+  );
 
   it('invalid-fields.json', async () => {
     const errors = await validate('invalid-fields.json');

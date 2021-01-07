@@ -177,7 +177,7 @@ export abstract class TemplateLinter<
 
   /** Open the text document for the value of the specified field and parse it, with caching.
    */
-  private async loadTemplateRelPathJson(
+  protected async loadTemplateRelPathJson(
     templateInfo: JsonNode,
     jsonpathOrNode: JSONPath | JsonNode
   ): Promise<JsonCacheValue<Uri, Document>> {
@@ -207,7 +207,7 @@ export abstract class TemplateLinter<
   /** Load the variableDefinition file and return a map of variableName -> variableType, or undefined if
    * variablesDefinition isn't specified or can't be read.
    */
-  private async loadVariableTypesForTemplate(templateInfo: JsonNode): Promise<Record<string, string> | undefined> {
+  protected async loadVariableTypesForTemplate(templateInfo: JsonNode): Promise<Record<string, string> | undefined> {
     const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
     if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
       const variableTypes: Record<string, string> = {};
@@ -265,7 +265,7 @@ export abstract class TemplateLinter<
    *        with this message; defaults to 'Other usage', pass in undefined to not include on diagnostics
    * @param computeValue a function to compute the value from the matched node; can return undefined to
    *        ignore the node, defaults to the string value of the node
-   * @param severity the diagnonstic severity to use, default to warning
+   * @param severity the diagnostic severity to use, default to warning
    */
   private lintUniqueValues(
     sources: Array<{ doc: Document; nodes: JsonNode | JsonNode[] }>,

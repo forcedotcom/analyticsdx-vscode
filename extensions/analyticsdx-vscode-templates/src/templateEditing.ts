@@ -332,13 +332,15 @@ export class TemplateEditingManager extends Disposable {
   constructor(context: vscode.ExtensionContext, output?: vscode.OutputChannel) {
     super();
     this.extensionPath = context.extensionPath;
-    this.baseSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/adx-template-json-base-schema.json'));
-    this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/template-info-schema.json'));
-    this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/folder-schema.json'));
-    this.autoInstallSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/auto-install-schema.json'));
-    this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/ui-schema.json'));
-    this.variablesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/variables-schema.json'));
-    this.rulesSchemaPath = vscode.Uri.file(context.asAbsolutePath('schemas/rules-schema.json'));
+    const schemasPath = 'node_modules/analyticsdx-template-lint/out/src/schemas';
+    // TODO: warn if any of the schemas are missing
+    this.baseSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/adx-template-json-base-schema.json`));
+    this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/template-info-schema.json`));
+    this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/folder-schema.json`));
+    this.autoInstallSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/auto-install-schema.json`));
+    this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/ui-schema.json`));
+    this.variablesSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/variables-schema.json`));
+    this.rulesSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/rules-schema.json`));
     this.logger = Logger.from(output);
   }
 
@@ -703,6 +705,9 @@ class TemplateJsonLanguageClient extends Disposable {
           uriStat(uri)
             .then(stat => {
               if (stat) {
+                // json schema diagnostics seem to come through w/ no source, so set it to the language (which json
+                // format diagnostics do)
+                diagnostics.forEach(d => d.source ??= TEMPLATE_JSON_LANG_ID);
                 next(uri, diagnostics);
               }
             })
