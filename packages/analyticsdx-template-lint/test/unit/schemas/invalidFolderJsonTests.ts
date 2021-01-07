@@ -6,11 +6,11 @@
  */
 
 import * as path from 'path';
-import * as schema from '../../../schemas/folder-schema.json';
+import { schemas } from '../../../src/schemas';
 import { createRelPathValidateFn } from '../../testutils';
 
 describe('folder-schema.json finds errors in', () => {
-  const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'folder', 'invalid'));
+  const validate = createRelPathValidateFn(schemas.folder, path.join(__dirname, 'testfiles', 'folder', 'invalid'));
 
   it('invalid-enums.json', async () => {
     const errors = await validate('invalid-enums.json');

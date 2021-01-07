@@ -1,1 +1,9 @@
-{}
+{
+  // single-line comment
+  /*
+   * multi-line comment
+   */
+  "error": "intentional error for tests to look for",
+  "constants": [],
+  "rules": []
+}

@@ -9,6 +9,10 @@ import { JSONPath } from 'jsonc-parser';
 
 /** Diagnostic source id for errors from TemplateLinter. */
 export const LINTER_SOURCE_ID = 'adx-template';
+/** Diagnostic source id for json format issues. */
+export const JSON_SOURCE_ID = 'json';
+/** Diagnostic source id for json schema issues. */
+export const JSON_SCHEMA_SOURCE_ID = 'json-schema';
 
 const definitionFilesPats = [
   ['variableDefinition'] as JSONPath,

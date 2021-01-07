@@ -6,11 +6,14 @@
  */
 
 import * as path from 'path';
-import * as schema from '../../../schemas/variables-schema.json';
+import { schemas } from '../../../src/schemas';
 import { createRelPathValidateFn } from '../../testutils';
 
 describe('variables-schema.json finds errors in', () => {
-  const validate = createRelPathValidateFn(schema, path.join(__dirname, 'testfiles', 'variables', 'invalid'));
+  const validate = createRelPathValidateFn(
+    schemas.variables,
+    path.join(__dirname, 'testfiles', 'variables', 'invalid')
+  );
 
   it('invalid-enums.json', async () => {
     const errors = await validate('invalid-enums.json');

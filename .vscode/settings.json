@@ -21,52 +21,56 @@
   "json.schemas": [
     // hookup our json-schemas to local test files
     {
-      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/folder/**/*.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/folder-schema.json"
+      "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/folder/**/*.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/folder-schema.json"
     },
     {
       "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/folder.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/folder-schema.json"
+      "url": "/packages/analyticsdx-template-lint/src/schemas/folder-schema.json"
     },
     {
-      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/auto-install/**/*.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/auto-install-schema.json"
+      "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/auto-install/**/*.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/auto-install-schema.json"
     },
     {
       "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/auto-install.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/auto-install-schema.json"
+      "url": "/packages/analyticsdx-template-lint/src/schemas/auto-install-schema.json"
     },
     {
-      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/rules/**/*.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/rules-schema.json"
+      "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/rules/**/*.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/rules-schema.json"
     },
     {
       "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/*-rules.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/rules-schema.json"
+      "url": "/packages/analyticsdx-template-lint/src/schemas/rules-schema.json"
     },
     {
-      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/ui/**/*.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/ui-schema.json"
+      "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/rule-definition.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/rules-schema.json"
+    },
+    {
+      "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/ui/**/*.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/ui-schema.json"
     },
     {
       "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/ui.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/ui-schema.json"
+      "url": "/packages/analyticsdx-template-lint/src/schemas/ui-schema.json"
     },
     {
-      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/variables/**/*.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/variables-schema.json"
+      "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/variables/**/*.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/variables-schema.json"
     },
     {
       "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/variables.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/variables-schema.json"
+      "url": "/packages/analyticsdx-template-lint/src/schemas/variables-schema.json"
     },
     {
-      "fileMatch": ["/extensions/analyticsdx-vscode-templates/test/unit/schema/testfiles/template-info/**/*.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/template-info-schema.json"
+      "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/template-info/**/*.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/template-info-schema.json"
     },
     {
       "fileMatch": ["/**/template-info.json"],
-      "url": "/extensions/analyticsdx-vscode-templates/schemas/template-info-schema.json"
+      "url": "/packages/analyticsdx-template-lint/src/schemas/template-info-schema.json"
     }
   ],
   // make sure prettier is formatting yaml and json files
