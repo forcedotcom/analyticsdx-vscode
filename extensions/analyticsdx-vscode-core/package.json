@@ -67,7 +67,9 @@
     "test:unit": "./node_modules/.bin/nyc ./node_modules/.bin/_mocha --recursive out/test/unit --reporter mocha-multi-reporters --timeout 20000 --reporter mocha-multi-reporters --reporter-options configFile=../../config/mochaUnitTestsConfig.json",
     "setup-vscode-integration": "node ../../scripts/link-vscode-integration-dependency analyticsdx-vscode-core && node ../../scripts/download-vscode-for-tests && node ../../scripts/install-vsix-dependency salesforce.salesforcedx-vscode-core",
     "test:vscode-integration": "npm run setup-vscode-integration && node ../../scripts/run-vscode-integration-tests",
-    "test:vscode-insiders-integration": "cross-env CODE_VERSION=insiders npm run test:vscode-integration"
+    "test:vscode-insiders-integration": "cross-env CODE_VERSION=insiders npm run test:vscode-integration",
+    "setup-vsix-integration": "node ../../scripts/download-vscode-for-tests && node ../../scripts/install-vsix-dependency salesforce.salesforcedx-vscode-core ./*.vsix ../analyticsdx-vscode-templates/*.vsix  ../analyticsdx-vscode/*.vsix",
+    "test:vsix-integration": "npm run setup-vsix-integration && node ../../scripts/run-vscode-integration-tests"
   },
   "extensionDependencies": [
     "salesforce.salesforcedx-vscode-core"

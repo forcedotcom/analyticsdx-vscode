@@ -50,6 +50,29 @@ jobs:
           sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
           DISPLAY=:10 npm run test:vscode-insiders-integration
 
+  # have a build job that builds the .vsix files and runs the vscode-integration tests against them,
+  pr-build-vsixs:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js 12.4.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.4.0'
+      - name: Build
+        # do --ignore-scripts so it skips the bootstrap in the extensions/, since test:vsix-integration runs
+        # a git clean and a bootstrap to build the vsix's
+        run: |
+          npm install --ignore-scripts
+      - name: Tests
+        # start X virtual frame buffer so tests can do ui
+        run: |
+          sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
+          DISPLAY=:10 npm run test:vsix-integration
+
   # include a windows build job in PRs since mostly folks are developing on linux or mac, so
   # we might not catch windows-specific failures locally as much
   pr-build-windows:

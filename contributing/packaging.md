@@ -15,7 +15,7 @@ Run `ANALYTICSDX_VSCODE_VERSION=<X.Y.Z> npm run publish-all-vsixs`. That will do
 If you want to update the version of the extensions, run `ANALYTICSDX_VSCODE_VERSION=<X.Y.Z> npm run update-versions`.
 This will update the appropriate files, but won't immediately check them in.
 
-## Packaging as .vsix
+## <a name="build-all-vsixs">Packaging as .vsix</a>
 
 Normally, just run `npm run build-all-vsixs`.
 
