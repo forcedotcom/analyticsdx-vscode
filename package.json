@@ -36,6 +36,7 @@
     "test:unit": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:unit --if-present",
     "test:vscode-integration": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:vscode-integration --if-present",
     "test:vscode-insiders-integration": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:vscode-insiders-integration --if-present",
+    "test:vsix-integration": "npm run build-all-vsixs && npm run bootstrap && npm run compile && lerna exec --concurrency 1 --stream --bail=false -- npm run test:vsix-integration --if-present",
     "watch": "lerna run --parallel watch",
     "eslint-check": "eslint --print-config .eslintrc.json | eslint-config-prettier-check",
     "reformat": "node scripts/reformat-with-prettier.js",

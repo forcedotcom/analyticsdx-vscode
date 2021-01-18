@@ -6,12 +6,11 @@ on:
       - develop
 
 jobs:
-  # The main build job is the only one that should build the extensions,
-  # and we really only need to run lint on one job so we'll do it here
+  # We really only need to run lint on one job so we'll do it here
   build:
     runs-on: macos-latest
 
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v1
@@ -26,25 +25,6 @@ jobs:
           npm run lint
       - name: Tests
         run: npm test
-      - name: Clean and prep for packaging
-        run: |
-          npm run clean
-          npm install
-      - name: Compile for packaging
-        run: npm run compile
-        env:
-          NODE_ENV: production
-      - name: Package extensions
-        run: |
-          npm run vscode:package
-          # upload-artifact doesn't support globs, so put them in a single folder
-          mkdir dist-extensions
-          find . -name '*.vsix' -type f -exec mv {} dist-extensions \;
-      - name: Upload extensions
-        uses: actions/upload-artifact@v1
-        with:
-          name: extensions
-          path: dist-extensions
 
   build-linux:
     runs-on: ubuntu-latest
@@ -67,11 +47,44 @@ jobs:
           sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
           DISPLAY=:10 npm test
 
+  # have a build job that builds the .vsix files and runs the vscode-integration tests against them, then
+  # make the extensions available off github
+  build-vsixs:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js 12.4.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.4.0'
+      - name: Build
+        # do --ignore-scripts so it skips the bootstrap in the extensions/, since test:vsix-integration runs
+        # a git clean and a bootstrap to build the vsix's
+        run: |
+          npm install --ignore-scripts
+      - name: Tests
+        # start X virtual frame buffer so tests can do ui
+        run: |
+          sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
+          DISPLAY=:10 npm run test:vsix-integration
+      - name: Package extensions
+        # upload-artifact doesn't support globs, so put them in a single folder
+        run: |
+          mkdir dist-extensions
+          find . -name '*.vsix' -type f -exec mv {} dist-extensions \;
+      - name: Upload extensions
+        uses: actions/upload-artifact@v1
+        with:
+          name: extensions
+          path: dist-extensions
+
   build-insiders:
     runs-on: ubuntu-latest
 
     timeout-minutes: 15
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v1
@@ -92,7 +105,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
 
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v1

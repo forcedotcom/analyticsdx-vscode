@@ -54,10 +54,18 @@ if (process.platform === 'linux') {
 // We always invoke this script with 'node install-vsix-dependency arg ...'
 // so position2 is where the first argument is
 for (let arg = 2; arg < process.argv.length; arg++) {
+  let result;
   if (process.platform === 'win32') {
     // Windows Powershell doesn't like the single quotes around the executable
-    shell.exec(`${executable} --extensions-dir ${extensionsDir} --install-extension ${process.argv[arg]}`);
+    result = shell.exec(
+      `${executable} --extensions-dir ${extensionsDir} --install-extension ${process.argv[arg]} --force`
+    );
   } else {
-    shell.exec(`'${executable}' --extensions-dir ${extensionsDir} --install-extension ${process.argv[arg]}`);
+    result = shell.exec(
+      `'${executable}' --extensions-dir ${extensionsDir} --install-extension ${process.argv[arg]} --force`
+    );
+  }
+  if (result.code !== 0) {
+    process.exit(result.code);
   }
 }

@@ -20,7 +20,7 @@ checkNodeVersion();
 shell.exec('git clean -xfd -e node_modules');
 
 // this will do a an install in each package & extension
-shell.exec('npm install');
+shell.exec('npm run bootstrap');
 
 // do a production compile
 const prodEnv = Object.assign({}, process.env);

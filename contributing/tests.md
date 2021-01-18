@@ -164,6 +164,23 @@ package.json scripts to run your vscode-integration tests in VS Code - Insiders.
 should look like:
 `"test:vscode-insiders-integration": "cross-env CODE_VERSION=insiders npm run test:vscode-integration"`
 
+### Running the tests against the generated .vsix's
+
+The methods above run the test against the extensions source folders. To run the tests against the generated
+.vsix bundles, you can run `npm run test:vsix-integration` from the top-level folder. This will do a
+[`build-all-vsixs`](packaging.md#build-all-vsixs) first, then a regular build, then run `test:vsix-integrations` in
+the extensions. (Note: `build-all-vsixes` will do a `git clean` and delete any untracked files, so don't have
+any uncommitted or unstashed work when you run it.)
+
+In the extension source folders, you can reuse the `download-vscode-for-tests` and `install-vsix-dependency` scripts to
+setup the test vscode instance to point to the generated .vsix files, and the `run-vscode-integration-tests` script to
+then run the same vscode integration tests, with script entries in the package.json like:
+
+```json
+"setup-vsix-integration": "node ../../scripts/download-vscode-for-tests && node ../../scripts/install-vsix-dependency salesforce.salesforcedx-vscode-core ../analyticsdx-vscode-core/*.vsix ./*.vsix ./analyticsdx-vscode/*.vsix",
+"test:vsix-integration": "npm run setup-vsix-integration && node ../../scripts/run-vscode-integration-tests"
+```
+
 ## <a name="manualtests">Manual Testing</a>
 
 Some testing won't be possible or straight-foward to automate as above, including testing direct UI interaction or
