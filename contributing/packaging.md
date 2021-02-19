@@ -23,7 +23,7 @@ This will:
 
 1. `git clean -xfe node_modules` to do do a full clean of the repo.
 2. `npm install` to install all the dependencies and to symlink interdependent local modules.
-3. `NODE_ENV=product npm run compile` to compile all the TypeScript files for production.
+3. `NODE_ENV=production npm run compile` to compile all the TypeScript files for production.
 4. `npm run vscode:package` packages _each_ extension as a .vsix.
 
 **At this stage, it is possible to share the .vsix directly for manual installation.**
