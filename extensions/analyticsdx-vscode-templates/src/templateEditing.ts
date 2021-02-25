@@ -20,15 +20,13 @@ import {
   DocumentRangeFormattingRequest,
   ErrorAction,
   InitializeError,
-  LanguageClient,
   LanguageClientOptions,
   Message,
   NotificationType,
   RequestType,
-  ResponseError,
-  ServerOptions,
-  TransportKind
+  ResponseError
 } from 'vscode-languageclient';
+import { LanguageClient, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import {
   AutoInstallVariableCodeActionProvider,
   AutoInstallVariableCompletionItemProviderDelegate,
@@ -669,21 +667,21 @@ class TemplateJsonLanguageClient extends Disposable {
         configurationSection: ['http'],
         fileEvents: vscode.workspace.createFileSystemWatcher('**/*.json')
       },
-      uriConverters: {
-        // Workaround for https://github.com/Microsoft/vscode-languageserver-node/issues/105 on windows
-        code2Protocol: (value: vscode.Uri) => {
-          if (/^win32/.test(process.platform)) {
-            // The *first* : is also being encoded which is not the standard for URI on Windows
-            // Here we transform it back to the standard way
-            return value.toString().replace('%3A', ':');
-          } else {
-            return value.toString();
-          }
-        },
-        protocol2Code: (value: string) => {
-          return vscode.Uri.parse(value);
-        }
-      },
+      // uriConverters: {
+      //   // Workaround for https://github.com/Microsoft/vscode-languageserver-node/issues/105 on windows
+      //   code2Protocol: (value: vscode.Uri) => {
+      //     if (/^win32/.test(process.platform)) {
+      //       // The *first* : is also being encoded which is not the standard for URI on Windows
+      //       // Here we transform it back to the standard way
+      //       return value.toString().replace('%3A', ':');
+      //     } else {
+      //       return value.toString();
+      //     }
+      //   },
+      //   protocol2Code: (value: string) => {
+      //     return vscode.Uri.parse(value);
+      //   }
+      // },
       middleware: {
         workspace: {
           // if the configuration changes (from configurationSection above), send those to the language server
@@ -809,7 +807,8 @@ class TemplateJsonLanguageClient extends Disposable {
                 const params: DocumentRangeFormattingParams = {
                   textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
                   range: client.code2ProtocolConverter.asRange(range),
-                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options))
+                  // FIXME: read and send in FileFormattingOptions
+                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options), {})
                 };
                 return client.sendRequest(DocumentRangeFormattingRequest.type, params, token).then(
                   edits => {
@@ -819,7 +818,7 @@ class TemplateJsonLanguageClient extends Disposable {
                     return [];
                   },
                   error => {
-                    client.logFailedRequest(DocumentRangeFormattingRequest.type, error);
+                    client.handleFailedRequest(DocumentRangeFormattingRequest.type, error, []);
                     return Promise.resolve([]);
                   }
                 );
