@@ -14,6 +14,50 @@ import { getDiagnosticsByPath, getDiagnosticsForPath, sfdxTestTemplatesPath } fr
 
 // tslint:disable: no-unused-expression
 describe('FileTemplateValidator', () => {
+  it('validates template-info/invalid/empty-no-text.json', async () => {
+    const templateInfoPath = path.join(
+      __dirname,
+      'schemas',
+      'testfiles',
+      'template-info',
+      'invalid',
+      'empty-no-text.json'
+    );
+    const validator = new FileTemplateValidator(await FileTemplateValidator.createTextDocument(templateInfoPath));
+    await validator.lint();
+    const srcDiagnostics = getDiagnosticsForPath(validator.diagnostics, templateInfoPath);
+    expect(srcDiagnostics, 'diagnostics').to.not.be.undefined;
+    const diagnostics = JSON.parse(JSON.stringify(srcDiagnostics));
+    const expectedDiagnostics = [
+      {
+        range: {
+          start: {
+            line: 0,
+            character: 0
+          },
+          end: {
+            line: 0,
+            character: 0
+          }
+        },
+        message: 'File does not contain template json',
+        code: ERRORS.TMPL_EMPTY_FILE,
+        severity: DiagnosticSeverity.Error,
+        source: LINTER_SOURCE_ID
+      }
+    ];
+    expect(diagnostics, 'diagnostics').to.have.deep.members(expectedDiagnostics);
+    if (validator.diagnostics.size > 1) {
+      expect.fail(
+        `Expected diagnostics only for ${templateInfoPath}, got diagnostics for: ` +
+          Array.from(validator.diagnostics.keys())
+            .map(doc => doc.uri)
+            .filter(filepath => filepath !== templateInfoPath)
+            .join(', ')
+      );
+    }
+  });
+
   // run validation on the semantically empty template-info testfiles
   [
     {
@@ -52,7 +96,9 @@ describe('FileTemplateValidator', () => {
       const templateInfoPath = path.join(__dirname, 'schemas', 'testfiles', 'template-info', 'invalid', filename);
       const validator = new FileTemplateValidator(await FileTemplateValidator.createTextDocument(templateInfoPath));
       await validator.lint();
-      const diagnostics = JSON.parse(JSON.stringify(getDiagnosticsForPath(validator.diagnostics, templateInfoPath)));
+      const srcDiagnostics = getDiagnosticsForPath(validator.diagnostics, templateInfoPath);
+      expect(srcDiagnostics, 'diagnostics').to.not.be.undefined;
+      const diagnostics = JSON.parse(JSON.stringify(srcDiagnostics));
       const schemaRange = {
         start: {
           line: 0,
