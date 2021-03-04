@@ -46,6 +46,34 @@ describe('TemplateLinterManager lints template-info.json', () => {
     }
   }
 
+  [
+    ['empty', ''],
+    ['whitespace only', '    \n\t\n'],
+    ['comment only', '// a comment']
+  ].forEach(([description, contents]) => {
+    it(`errors on ${description} template-info json file`, async () => {
+      [tmpdir] = await createTempTemplate(false);
+      // make an empty template-info.json file
+      const templateInfoUri = uriRelPath(tmpdir, 'template-info.json');
+      await writeTextToFile(templateInfoUri, contents);
+      // make sure we get the error
+      const errorFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_EMPTY_FILE;
+      const [allDiagnostics] = await openTemplateInfoAndWaitForDiagnostics(
+        templateInfoUri,
+        true,
+        d => d?.some(errorFilter),
+        'error about empty file'
+      );
+      const diagnostics = allDiagnostics.filter(errorFilter);
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 empty file error, got:\n' + JSON.stringify(allDiagnostics, undefined, 2));
+      }
+      expect(diagnostics[0], 'diagnostic[0]').to.be.not.undefined;
+      expect(diagnostics[0].message, 'diagnostic[0].message').to.equal('File does not contain template json');
+      expect(diagnostics[0].severity, 'diagnostics[0].severity').to.equals(vscode.DiagnosticSeverity.Error);
+    });
+  });
+
   it('shows missing "dashboards" problem on dashboard template', async () => {
     const [diagnostics] = await openTemplateInfoAndWaitForDiagnostics(
       'Missing_dashboards_Dashboard',

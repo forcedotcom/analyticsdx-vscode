@@ -107,6 +107,8 @@ export const ERRORS = Object.freeze({
   TMPL_DUPLICATE_NAME: 'tmpl-15',
   /** Duplicate label in a set of template assets */
   TMPL_DUPLICATE_LABEL: 'tmpl-16',
+  /** An empty file. */
+  TMPL_EMPTY_FILE: 'tmpl-17',
 
   /** Unknown variable in values in autoInstallDefinition. */
   AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',

@@ -337,7 +337,7 @@ export abstract class TemplateLinter<
   /** Run a lint, saving the results in this object. */
   public async lint(): Promise<this> {
     this.reset();
-    const tree = parseTree(await this.templateInfoDoc.getText());
+    const tree: JsonNode | undefined = parseTree(await this.templateInfoDoc.getText());
     await this.fireOnParsedTemplateInfo(this.templateInfoDoc, tree);
 
     if (tree) {
@@ -352,6 +352,17 @@ export abstract class TemplateLinter<
         this.lintUi(tree),
         this.lintRules(tree)
       ]);
+    } else {
+      // tree will be undefined if the file is 0-length or all whitespace/comments
+      this.addDiagnostic(
+        this.templateInfoDoc,
+        'File does not contain template json',
+        ERRORS.TMPL_EMPTY_FILE,
+        undefined,
+        {
+          severity: TemplateLinterDiagnosticSeverity.Error
+        }
+      );
     }
     return this;
   }
