@@ -17,7 +17,7 @@ export class TelemetryService {
   // salesforcedx-vscode-core extension
   private reporter: TelemetryReporter | undefined;
   private isTelemetryEnabled = false;
-  private sentTemplateEditingConfiguredEvent = false;
+  private sentTemplateEditingConfiguredEvent = -1;
   private setup: Promise<TelemetryService | undefined> | undefined;
 
   constructor() {}
@@ -78,11 +78,12 @@ export class TelemetryService {
   }
 
   public async sendTemplateEditingConfigured(dir: vscode.Uri) {
-    // only send this on the first template being opened, since, right now, we really only want to know if someone
+    // only send this on the first template being opened per day, since, right now, we really only want to know if someone
     // actually opened and used the template editing at all (vs. the extension start message, which will pretty much
     // always happens so it really just tracks installs), and we don't want to flood appinsights with gobs of messages.
-    if (!this.sentTemplateEditingConfiguredEvent) {
-      this.sentTemplateEditingConfiguredEvent = true;
+    const now = Date.now();
+    if (this.sentTemplateEditingConfiguredEvent <= 0 || now - this.sentTemplateEditingConfiguredEvent > 86400000) {
+      this.sentTemplateEditingConfiguredEvent = now;
       await this.setupVSCodeTelemetry();
       if (this.reporter !== undefined && this.isTelemetryEnabled) {
         this.reporter.sendTelemetryEvent('templateOpenedInSession', {

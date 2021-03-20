@@ -4,7 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { assert, match, SinonStub, stub } from 'sinon';
+import { assert, createSandbox, match, SinonSandbox, SinonStub } from 'sinon';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { EXTENSION_NAME } from '../../../src/constants';
@@ -12,15 +12,17 @@ import { TelemetryService } from '../../../src/telemetry/telemetry';
 
 describe('TelemetryService', () => {
   let reporter: TelemetryReporter;
+  let sandbox: SinonSandbox;
   let sendEvent: SinonStub<any>;
 
   beforeEach(() => {
     reporter = new TelemetryReporter('salesforcedx-vscode', 'v1', 'test567890');
-    sendEvent = stub(reporter, 'sendTelemetryEvent');
+    sandbox = createSandbox();
+    sendEvent = sandbox.stub(reporter, 'sendTelemetryEvent');
   });
 
   afterEach(async () => {
-    sendEvent.restore();
+    sandbox.restore();
     await reporter.dispose();
   });
 
@@ -75,7 +77,7 @@ describe('TelemetryService', () => {
     assert.calledWith(sendEvent, 'deactivationEvent', expectedData);
   });
 
-  it('should send correct data format on sendTemplateEditingConfigured only once', async () => {
+  it('should send correct data format on sendTemplateEditingConfigured only once per day', async () => {
     // don't use TelemetryService.getInstance() since it's an instance variable that prevents the
     // 2nd call from happening and it's possibly already been called by another test already
     const telemetryService = new TelemetryService();
@@ -89,8 +91,15 @@ describe('TelemetryService', () => {
     };
     assert.calledWith(sendEvent, 'templateOpenedInSession', match(expectedData));
 
-    // a 2nd call to the service shouldn't result in a call to the reporter
+    // a 2nd immediate call to the service shouldn't result in a call to the reporter
     await telemetryService.sendTemplateEditingConfigured(vscode.Uri.file('./foo'));
     assert.calledOnce(sendEvent);
+
+    // mock that it's a day in the future
+    const now = Date.now();
+    sandbox.stub(Date, 'now').returns(now + 90000000);
+    // so a second call should go through to the reporter
+    await telemetryService.sendTemplateEditingConfigured(vscode.Uri.file('./bar'));
+    assert.calledTwice(sendEvent);
   });
 });
