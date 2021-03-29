@@ -5,11 +5,16 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import {
+  EmptyParametersGatherer,
+  SfdxCommandlet,
+  SfdxCommandletExecutor,
+  SfdxWorkspaceChecker
+} from '@salesforce/salesforcedx-utils-vscode/out/src';
+import {
   CliCommandExecutor,
   Command,
   CommandExecution,
   CommandOutput,
-  CommandResult,
   SfdxCommandBuilder
 } from '@salesforce/salesforcedx-utils-vscode/out/src/cli';
 import {
@@ -23,18 +28,6 @@ import * as vscode from 'vscode';
 import { nls } from '../messages';
 import { getRootWorkspacePath } from '../util/rootWorkspace';
 
-// pull in some stuff from the core extension api to do sfdx cli stuff
-// TODO: in webide/theia, getExtension apparently returns a Promise<Extension>,
-// so this needs to check for that and wait for it or something, since we need
-// to extend some of the extension.exports fields as classes
-const sfdxCoreExports = vscode.extensions.getExtension('salesforce.salesforcedx-vscode-core')!.exports;
-const {
-  notificationService,
-  SfdxCommandlet,
-  SfdxWorkspaceChecker,
-  EmptyParametersGatherer,
-  SfdxCommandletExecutor
-} = sfdxCoreExports;
 // make shared instances here that we can export for everything to use
 const sfdxWorkspaceChecker = new SfdxWorkspaceChecker();
 const emptyParametersGatherer = new EmptyParametersGatherer();
@@ -127,7 +120,7 @@ export class SfdxCommandletWithOutput<T> {
           return this.executor.execute(inputs);
         case 'CANCEL':
           if (inputs.msg) {
-            notificationService.showErrorMessage(inputs.msg);
+            vscode.window.showErrorMessage(inputs.msg);
             return Promise.reject(inputs.msg);
           }
       }
@@ -137,18 +130,28 @@ export class SfdxCommandletWithOutput<T> {
   }
 }
 
+export function getCommandExecutionExitCode(execution: CommandExecution): Promise<number> {
+  return new Promise((resolve, reject) => {
+    execution.processExitSubject.subscribe(code => {
+      if (typeof code === 'number') {
+        resolve(code);
+      } else {
+        reject(new Error(`Invalid exitCode '${code}'`));
+      }
+    });
+  });
+}
+
 // re-export these things so our code can more easily import them from one place
 export {
   emptyParametersGatherer,
   emptyPreChecker,
-  notificationService,
   sfdxWorkspaceChecker,
   CancelResponse,
   CliCommandExecutor,
   Command,
   CommandExecution,
   CommandOutput,
-  CommandResult,
   ContinueResponse,
   ParametersGatherer,
   PostconditionChecker,

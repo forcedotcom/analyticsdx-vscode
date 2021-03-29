@@ -14,7 +14,6 @@ import {
   CancelResponse,
   CommandExecution,
   ContinueResponse,
-  notificationService,
   ParametersGatherer,
   SfdxCommandBuilder,
   SfdxCommandlet,
@@ -71,7 +70,7 @@ class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
     fs.writeFile(this.filepath, JSON.stringify(appJson), {}, err => {
       // if that failed, show an error message to user
       if (err) {
-        notificationService.showErrorMessage(
+        vscode.window.showErrorMessage(
           nls.localize('create_blank_app_cmd_tmp_file_error_text', this.filepath, err.message || err)
         );
       } else {

@@ -25,7 +25,7 @@
     "Other"
   ],
   "dependencies": {
-    "@salesforce/salesforcedx-utils-vscode": "0.5.0",
+    "@salesforce/salesforcedx-utils-vscode": "file:../../lib/salesforcedx-utils-vscode.tgz",
     "analyticsdx-template-lint": "0.5.0",
     "jsonc-parser": "2.3.1",
     "lodash.isequal": "4.5.0",
