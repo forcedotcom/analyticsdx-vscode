@@ -9,6 +9,7 @@ import * as semver from 'semver';
 import * as vscode from 'vscode';
 import * as which from 'which';
 import {
+  BaseSfdxCommandletExecutor,
   CliCommandExecutor,
   CommandOutput,
   ContinueResponse,
@@ -16,8 +17,7 @@ import {
   getCommandExecutionExitCode,
   PreconditionChecker,
   SfdxCommandBuilder,
-  SfdxCommandlet,
-  SfdxCommandletExecutor
+  SfdxCommandlet
 } from '../commands';
 import { nls } from '../messages';
 import { telemetryService } from '../telemetry';
@@ -102,7 +102,7 @@ class PromptingPreChecker implements PreconditionChecker {
   }
 }
 
-class InstallAdxExecutor extends SfdxCommandletExecutor<{}> {
+class InstallAdxExecutor extends BaseSfdxCommandletExecutor<{}> {
   public build() {
     return new SfdxCommandBuilder()
       .withDescription(nls.localize('install_analytics_sfdx_plugin_message'))
@@ -122,7 +122,7 @@ class InstallAdxExecutor extends SfdxCommandletExecutor<{}> {
 // this to get the 'CLI' part capitalized to match the description.
 const checkPluginPrefName = 'analyticsdx-vscode-core.CLI.checkForPlugin';
 
-class UpdateSfdxPluginsExecutor extends SfdxCommandletExecutor<{}> {
+class UpdateSfdxPluginsExecutor extends BaseSfdxCommandletExecutor<{}> {
   constructor(private readonly curVersion: string | undefined) {
     super();
   }

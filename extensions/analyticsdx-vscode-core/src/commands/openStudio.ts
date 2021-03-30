@@ -81,35 +81,25 @@ class OpenStudioExecutor<T> extends SfdxCommandletExecutorWithOutput<T> {
   }
 }
 
-const openStudioCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  emptyParametersGatherer,
-  new OpenStudioExecutor('home')
-);
-
-export async function openStudio() {
-  await openStudioCommandlet.run();
+export function openStudio(): Promise<void> {
+  return new SfdxCommandlet(sfdxWorkspaceChecker, emptyParametersGatherer, new OpenStudioExecutor('home')).run();
 }
 
-const openDataManagerCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  emptyParametersGatherer,
-  new OpenStudioExecutor('dataManager', 'analytics_open_dataManager')
-);
-
-export async function openDataManager() {
-  await openDataManagerCommandlet.run();
+export function openDataManager(): Promise<void> {
+  return new SfdxCommandlet(
+    sfdxWorkspaceChecker,
+    emptyParametersGatherer,
+    new OpenStudioExecutor('dataManager', 'analytics_open_dataManager')
+  ).run();
 }
 
-const openAppCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  new AppGatherer(),
-  new OpenStudioExecutor<AppMetadata>(
-    app => 'application/' + encodeURIComponent(app.folderid) + '/edit',
-    'analytics_open_app_in_studio'
-  )
-);
-
-export async function openAppInStudio() {
-  await openAppCommandlet.run();
+export function openAppInStudio(): Promise<void> {
+  return new SfdxCommandlet(
+    sfdxWorkspaceChecker,
+    new AppGatherer(),
+    new OpenStudioExecutor<AppMetadata>(
+      app => 'application/' + encodeURIComponent(app.folderid) + '/edit',
+      'analytics_open_app_in_studio'
+    )
+  ).run();
 }

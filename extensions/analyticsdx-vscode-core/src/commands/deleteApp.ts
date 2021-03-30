@@ -7,15 +7,15 @@
 
 import { nls } from '../messages';
 import {
+  BaseSfdxCommandletExecutor,
   DeleteObjectPostChecker,
   SfdxCommandBuilder,
   SfdxCommandlet,
-  SfdxCommandletExecutor,
   sfdxWorkspaceChecker
 } from './commands';
 import { AppGatherer, AppMetadata } from './gatherers/appGatherer';
 
-class DeleteAppExecutor extends SfdxCommandletExecutor<AppMetadata> {
+class DeleteAppExecutor extends BaseSfdxCommandletExecutor<AppMetadata> {
   public build(data: AppMetadata) {
     return new SfdxCommandBuilder()
       .withDescription(nls.localize('delete_app_cmd_message'))
@@ -28,20 +28,16 @@ class DeleteAppExecutor extends SfdxCommandletExecutor<AppMetadata> {
   }
 }
 
-const deleteAppCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  new AppGatherer(
-    // TODO: are there apps you can't or shouldn't delete?
-    undefined,
-    nls.localize('delete_app_cmd_no_apps_message'),
-    nls.localize('delete_app_cmd_placeholder_message')
-  ),
-  new DeleteAppExecutor(),
-  new DeleteObjectPostChecker<AppMetadata>(app =>
-    nls.localize('delete_app_cmd_confirm_text', app.name)
-  )
-);
-
-export async function deleteApp() {
-  await deleteAppCommandlet.run();
+export function deleteApp(): Promise<void> {
+  return new SfdxCommandlet(
+    sfdxWorkspaceChecker,
+    new AppGatherer(
+      // TODO: are there apps you can't or shouldn't delete?
+      undefined,
+      nls.localize('delete_app_cmd_no_apps_message'),
+      nls.localize('delete_app_cmd_placeholder_message')
+    ),
+    new DeleteAppExecutor(),
+    new DeleteObjectPostChecker<AppMetadata>(app => nls.localize('delete_app_cmd_confirm_text', app.name))
+  ).run();
 }

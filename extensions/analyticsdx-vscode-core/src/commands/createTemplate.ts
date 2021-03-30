@@ -6,10 +6,10 @@
  */
 
 import { nls } from '../messages';
-import { SfdxCommandBuilder, SfdxCommandlet, SfdxCommandletExecutor, sfdxWorkspaceChecker } from './commands';
+import { BaseSfdxCommandletExecutor, SfdxCommandBuilder, SfdxCommandlet, sfdxWorkspaceChecker } from './commands';
 import { AppGatherer, AppMetadata } from './gatherers/appGatherer';
 
-class CreateTemplateExecutor extends SfdxCommandletExecutor<AppMetadata> {
+class CreateTemplateExecutor extends BaseSfdxCommandletExecutor<AppMetadata> {
   public build(data: AppMetadata) {
     return new SfdxCommandBuilder()
       .withDescription(nls.localize('create_template_cmd_message'))
@@ -21,17 +21,15 @@ class CreateTemplateExecutor extends SfdxCommandletExecutor<AppMetadata> {
   }
 }
 
-const createTemplateCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  // only show apps that don't have a template yet
-  new AppGatherer(
-    app => !app.templateSourceId,
-    nls.localize('create_template_cmd_no_templates_message'),
-    nls.localize('create_template_cmd_placeholder_message')
-  ),
-  new CreateTemplateExecutor()
-);
-
-export async function createTemplate() {
-  await createTemplateCommandlet.run();
+export function createTemplate(): Promise<void> {
+  return new SfdxCommandlet(
+    sfdxWorkspaceChecker,
+    // only show apps that don't have a template yet
+    new AppGatherer(
+      app => !app.templateSourceId,
+      nls.localize('create_template_cmd_no_templates_message'),
+      nls.localize('create_template_cmd_placeholder_message')
+    ),
+    new CreateTemplateExecutor()
+  ).run();
 }

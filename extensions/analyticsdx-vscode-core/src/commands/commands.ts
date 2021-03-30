@@ -17,6 +17,8 @@ import {
   CommandOutput,
   SfdxCommandBuilder
 } from '@salesforce/salesforcedx-utils-vscode/out/src/cli';
+import { MISSING_LABEL_MSG } from '@salesforce/salesforcedx-utils-vscode/out/src/i18n';
+import { nls as sfdxNls } from '@salesforce/salesforcedx-utils-vscode/out/src/messages';
 import {
   CancelResponse,
   ContinueResponse,
@@ -35,12 +37,46 @@ const emptyPreChecker: PreconditionChecker = {
   check: () => true
 };
 
+let cachedOutputChannel: [vscode.OutputChannel | undefined] | undefined;
+export function sfdxOutputChannel(): vscode.OutputChannel | undefined {
+  // create the channel lazily to speed up extension activation
+  if (!cachedOutputChannel) {
+    let channelName: string | undefined;
+    try {
+      // as of 51.6.0, this is where the name for the 'Salesforce CLI' channel comes from
+      channelName = sfdxNls.localize('channel_name');
+    } catch (e) {
+      console.error('Error finding sfdx output channel name:', e);
+    }
+    if (channelName && !channelName.includes(MISSING_LABEL_MSG)) {
+      cachedOutputChannel = [vscode.window.createOutputChannel(channelName)];
+    } else {
+      console.error('Failed finding sfdx output channel name');
+      cachedOutputChannel = [undefined];
+    }
+  }
+  return cachedOutputChannel?.[0];
+}
+
+/** Base sfdx executor with our preferred output channel settings.
+ * Use this instead of using SfdxCommandletExecutor directly.
+ */
+export abstract class BaseSfdxCommandletExecutor<T> extends SfdxCommandletExecutor<T> {
+  // default to using the common Salesforce CLI output and to not force show the channel
+  constructor(channel: vscode.OutputChannel | undefined = sfdxOutputChannel(), showChannelOutput = false) {
+    super(channel);
+    this.showChannelOutput = showChannelOutput;
+  }
+
+  public abstract build(data: T): Command;
+}
+
 // FIXME: get something like this in the class in salesforce-vscode-core
 // this is basically a copy of SfdxCommandletExecutor and SfdxCommandletWithOutput
 // from there, just changing it to use a CommandOutput and return a Promise<string>
 // with the stdout -- this could pretty easily be added as an option to the code in
 // core
-export abstract class SfdxCommandletExecutorWithOutput<T> extends SfdxCommandletExecutor<T> {
+export abstract class SfdxCommandletExecutorWithOutput<T> extends BaseSfdxCommandletExecutor<T> {
   public execute(response: ContinueResponse<T>): Promise<string> {
     const startTime = process.hrtime();
     const cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -55,8 +91,6 @@ export abstract class SfdxCommandletExecutorWithOutput<T> extends SfdxCommandlet
     this.attachExecution(execution, cancellationTokenSource, cancellationToken);
     return new CommandOutput().getCmdResult(execution);
   }
-
-  public abstract build(data: T): Command;
 }
 
 export class EmptyPostChecker implements PostconditionChecker<any> {
@@ -157,6 +191,5 @@ export {
   PostconditionChecker,
   PreconditionChecker,
   SfdxCommandBuilder,
-  SfdxCommandlet,
-  SfdxCommandletExecutor
+  SfdxCommandlet
 };
