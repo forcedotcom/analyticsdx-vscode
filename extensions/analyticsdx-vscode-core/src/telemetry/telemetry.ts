@@ -5,20 +5,17 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as util from 'util';
+import { TelemetryService as BaseTelemetryService } from '@salesforce/salesforcedx-utils-vscode/out/src';
 import * as vscode from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
 import { EXTENSION_NAME } from '../constants';
-import { waitForDX } from '../dxsupport/waitForDX';
 
 export class TelemetryService {
   private static instance: TelemetryService;
-  private reporter: TelemetryReporter | undefined;
-  private isTelemetryEnabled: boolean;
-  private setup: Promise<TelemetryService | undefined> | undefined;
+
+  private readonly delegate: BaseTelemetryService;
 
   constructor() {
-    this.isTelemetryEnabled = false;
+    this.delegate = new BaseTelemetryService();
   }
 
   public static getInstance() {
@@ -28,76 +25,32 @@ export class TelemetryService {
     return TelemetryService.instance;
   }
 
-  public async setupVSCodeTelemetry() {
-    // if its already set up
-    if (this.reporter) {
-      return Promise.resolve(this);
-    }
-    if (!this.setup) {
-      this.setup = waitForDX(true)
-        .then((coreDependency: vscode.Extension<any>) => {
-          coreDependency.exports.telemetryService.showTelemetryMessage();
-
-          this.initializeService(
-            coreDependency.exports.telemetryService.getReporter(),
-            coreDependency.exports.telemetryService.isTelemetryEnabled()
-          );
-          return this;
-        })
-        .catch(err => {
-          return undefined;
-        });
-    }
-    return this.setup;
-  }
-
-  public initializeService(reporter: TelemetryReporter | undefined, isTelemetryEnabled: boolean): void {
-    this.isTelemetryEnabled = isTelemetryEnabled;
-    this.reporter = reporter;
+  public initializeService(context: vscode.ExtensionContext, aiKey: string, version: string): Promise<void> {
+    return this.delegate.initializeService(context, EXTENSION_NAME, aiKey, version);
   }
 
   /** Send a custom telemetry event */
   public async sendTelemetryEvent(
     eventName: string,
     extensionName: string,
-    properties: {
-      [key: string]: string;
-    } = {}
-  ) {
-    await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent(eventName, Object.assign(properties || {}, { extensionName }));
-    }
+    properties: { [key: string]: string } = {}
+  ): Promise<void> {
+    this.delegate.sendEventData(eventName, Object.assign(properties || {}, { extensionName }));
   }
 
   public async sendExtensionActivationEvent(hrstart: [number, number]): Promise<void> {
-    await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      const startupTime = this.getEndHRTime(hrstart);
-      this.reporter.sendTelemetryEvent('activationEvent', {
-        extensionName: EXTENSION_NAME,
-        startupTime
-      });
-    }
+    this.delegate.sendExtensionActivationEvent(hrstart);
   }
 
   public async sendExtensionDeactivationEvent(): Promise<void> {
-    await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent('deactivationEvent', {
-        extensionName: EXTENSION_NAME
-      });
-    }
+    this.delegate.sendExtensionDeactivationEvent();
   }
 
   /** Called when the user chooses to install @salesforce/analytics from our popup on startup. */
   public async sendInstallAnalyticsSfdxPluginEvent(): Promise<void> {
-    await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent('installAnalyticsSfdxPlugin', {
-        extensionName: EXTENSION_NAME
-      });
-    }
+    this.delegate.sendEventData('installAnalyticsSfdxPlugin', {
+      extensionName: EXTENSION_NAME
+    });
   }
 
   /** Called when the user chooses to update the @salesforce/analytics plugin (because it's out of date) from our
@@ -107,29 +60,18 @@ export class TelemetryService {
     currentVersion: string | undefined,
     minVersion: string
   ): Promise<void> {
-    await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent('updateAnalyticsSfdxPlugin', {
-        extensionName: EXTENSION_NAME,
-        currentVersion: currentVersion || '',
-        minVersion
-      });
-    }
+    this.delegate.sendEventData('updateAnalyticsSfdxPlugin', {
+      extensionName: EXTENSION_NAME,
+      currentVersion: currentVersion || '',
+      minVersion
+    });
   }
 
   /** Called when the user choose to stop sfdx plugin checks from the our popup on startup. */
   public async sendDisableAnalyticsSfdxPluginCheckEvent(currentVersion: string | undefined): Promise<void> {
-    await this.setupVSCodeTelemetry();
-    if (this.reporter !== undefined && this.isTelemetryEnabled) {
-      this.reporter.sendTelemetryEvent('disableAnalyticsSfdxPluginCheck', {
-        extensionName: EXTENSION_NAME,
-        currentVersion: currentVersion || ''
-      });
-    }
-  }
-
-  private getEndHRTime(hrstart: [number, number]): string {
-    const hrend = process.hrtime(hrstart);
-    return util.format('%d%d', hrend[0], hrend[1] / 1000000);
+    this.delegate.sendEventData('disableAnalyticsSfdxPluginCheck', {
+      extensionName: EXTENSION_NAME,
+      currentVersion: currentVersion || ''
+    });
   }
 }
