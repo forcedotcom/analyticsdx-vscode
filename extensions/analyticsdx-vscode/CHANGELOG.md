@@ -1,3 +1,15 @@
+# 0.6.0
+
+## Added
+
+- Show error on empty template-info.json file.
+
+## Fixed
+
+- Removed direct dependency on salesforcedx-vscode-core extension activation, to avoid possible startup error in
+  vscode 1.55+.
+- Fixed telemetry.
+
 # 0.5.0
 
 ## Added
