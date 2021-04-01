@@ -7,7 +7,6 @@
 
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import { telemetryService } from './telemetry';
 
 import {
   createApp,
@@ -21,6 +20,8 @@ import {
   updateTemplate,
   updateTemplateFromApp
 } from './commands';
+import { EXTENSION_NAME } from './constants';
+import { telemetryService } from './telemetry';
 import { checkAnalyticsSfdxPlugin } from './util/sfdx';
 
 function sendTelemetryCommand(eventName: string, extensionName: string, properties?: Record<string, string>) {
@@ -33,7 +34,7 @@ function sendTelemetryCommand(eventName: string, extensionName: string, properti
 let displayName = 'Salesforce Analytics CLI Integration';
 let version = '<unknown>';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   const extensionHRStart = process.hrtime();
 
   const packageJson = context.asAbsolutePath('package.json');
@@ -41,6 +42,12 @@ export function activate(context: vscode.ExtensionContext) {
     const json = JSON.parse(fs.readFileSync(packageJson).toString());
     displayName = json.displayName || displayName;
     version = json.version || version;
+    const aiKey = json.aiKey;
+    if (typeof aiKey === 'string' && aiKey) {
+      await telemetryService.initializeService(context, aiKey, version);
+    } else {
+      console.warn(`Missing aiKey in ${EXTENSION_NAME} package.json, telemetry is disabled`);
+    }
   } catch (e) {
     console.warn(`Unable to read ${packageJson}`, e);
   }
@@ -72,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   console.log(`${displayName} v${version} extension activated`);
   // Notify telemetry that our extension is now active
-  telemetryService.sendExtensionActivationEvent(extensionHRStart).catch();
+  telemetryService.sendExtensionActivationEvent(extensionHRStart).catch(console.error);
 }
 
 export function deactivate() {

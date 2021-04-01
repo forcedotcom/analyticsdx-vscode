@@ -11,14 +11,13 @@ import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { nls } from '../messages';
 import {
+  BaseSfdxCommandletExecutor,
   CancelResponse,
   CommandExecution,
   ContinueResponse,
-  notificationService,
   ParametersGatherer,
   SfdxCommandBuilder,
   SfdxCommandlet,
-  SfdxCommandletExecutor,
   sfdxWorkspaceChecker
 } from './commands';
 import { TemplateGatherer, TemplateMetadata } from './gatherers/templateGatherer';
@@ -41,7 +40,7 @@ class AppNameGatherer implements ParametersGatherer<string> {
 const appNameGatherer = new AppNameGatherer();
 
 // TODO: generalize the logic here to run something before and after running the cli cmd
-class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
+class CreateBlankAppExecutor extends BaseSfdxCommandletExecutor<string> {
   constructor(private readonly filepath: string) {
     super();
   }
@@ -71,7 +70,7 @@ class CreateBlankAppExecutor extends SfdxCommandletExecutor<string> {
     fs.writeFile(this.filepath, JSON.stringify(appJson), {}, err => {
       // if that failed, show an error message to user
       if (err) {
-        notificationService.showErrorMessage(
+        vscode.window.showErrorMessage(
           nls.localize('create_blank_app_cmd_tmp_file_error_text', this.filepath, err.message || err)
         );
       } else {
@@ -103,10 +102,10 @@ const mktempname: () => Promise<string> = promisify(callback => {
     callback
   );
 });
-export async function createBlankApp() {
+export async function createBlankApp(): Promise<void> {
   const filepath = await mktempname();
   const commandlet = new SfdxCommandlet(sfdxWorkspaceChecker, appNameGatherer, new CreateBlankAppExecutor(filepath));
-  await commandlet.run();
+  return commandlet.run();
 }
 
 type TemplateAndName = {
@@ -138,7 +137,7 @@ class TemplateAndNameGather implements ParametersGatherer<TemplateAndName> {
   }
 }
 
-class CreateAppExecutor extends SfdxCommandletExecutor<TemplateAndName> {
+class CreateAppExecutor extends BaseSfdxCommandletExecutor<TemplateAndName> {
   public build(data: TemplateAndName) {
     return new SfdxCommandBuilder()
       .withDescription(nls.localize('create_app_cmd_message', data.template.label || data.template.name))
@@ -152,11 +151,6 @@ class CreateAppExecutor extends SfdxCommandletExecutor<TemplateAndName> {
   }
 }
 
-const createAppCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  new TemplateAndNameGather(),
-  new CreateAppExecutor()
-);
-export function createApp() {
-  return createAppCommandlet.run();
+export function createApp(): Promise<void> {
+  return new SfdxCommandlet(sfdxWorkspaceChecker, new TemplateAndNameGather(), new CreateAppExecutor()).run();
 }

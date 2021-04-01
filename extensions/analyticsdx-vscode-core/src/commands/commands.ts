@@ -5,13 +5,20 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import {
+  EmptyParametersGatherer,
+  SfdxCommandlet,
+  SfdxCommandletExecutor,
+  SfdxWorkspaceChecker
+} from '@salesforce/salesforcedx-utils-vscode/out/src';
+import {
   CliCommandExecutor,
   Command,
   CommandExecution,
   CommandOutput,
-  CommandResult,
   SfdxCommandBuilder
 } from '@salesforce/salesforcedx-utils-vscode/out/src/cli';
+import { MISSING_LABEL_MSG } from '@salesforce/salesforcedx-utils-vscode/out/src/i18n';
+import { nls as sfdxNls } from '@salesforce/salesforcedx-utils-vscode/out/src/messages';
 import {
   CancelResponse,
   ContinueResponse,
@@ -23,18 +30,6 @@ import * as vscode from 'vscode';
 import { nls } from '../messages';
 import { getRootWorkspacePath } from '../util/rootWorkspace';
 
-// pull in some stuff from the core extension api to do sfdx cli stuff
-// TODO: in webide/theia, getExtension apparently returns a Promise<Extension>,
-// so this needs to check for that and wait for it or something, since we need
-// to extend some of the extension.exports fields as classes
-const sfdxCoreExports = vscode.extensions.getExtension('salesforce.salesforcedx-vscode-core')!.exports;
-const {
-  notificationService,
-  SfdxCommandlet,
-  SfdxWorkspaceChecker,
-  EmptyParametersGatherer,
-  SfdxCommandletExecutor
-} = sfdxCoreExports;
 // make shared instances here that we can export for everything to use
 const sfdxWorkspaceChecker = new SfdxWorkspaceChecker();
 const emptyParametersGatherer = new EmptyParametersGatherer();
@@ -42,12 +37,46 @@ const emptyPreChecker: PreconditionChecker = {
   check: () => true
 };
 
+let cachedOutputChannel: [vscode.OutputChannel | undefined] | undefined;
+export function sfdxOutputChannel(): vscode.OutputChannel | undefined {
+  // create the channel lazily to speed up extension activation
+  if (!cachedOutputChannel) {
+    let channelName: string | undefined;
+    try {
+      // as of 51.6.0, this is where the name for the 'Salesforce CLI' channel comes from
+      channelName = sfdxNls.localize('channel_name');
+    } catch (e) {
+      console.error('Error finding sfdx output channel name:', e);
+    }
+    if (channelName && !channelName.includes(MISSING_LABEL_MSG)) {
+      cachedOutputChannel = [vscode.window.createOutputChannel(channelName)];
+    } else {
+      console.error('Failed finding sfdx output channel name');
+      cachedOutputChannel = [undefined];
+    }
+  }
+  return cachedOutputChannel?.[0];
+}
+
+/** Base sfdx executor with our preferred output channel settings.
+ * Use this instead of using SfdxCommandletExecutor directly.
+ */
+export abstract class BaseSfdxCommandletExecutor<T> extends SfdxCommandletExecutor<T> {
+  // default to using the common Salesforce CLI output and to not force show the channel
+  constructor(channel: vscode.OutputChannel | undefined = sfdxOutputChannel(), showChannelOutput = false) {
+    super(channel);
+    this.showChannelOutput = showChannelOutput;
+  }
+
+  public abstract build(data: T): Command;
+}
+
 // FIXME: get something like this in the class in salesforce-vscode-core
 // this is basically a copy of SfdxCommandletExecutor and SfdxCommandletWithOutput
 // from there, just changing it to use a CommandOutput and return a Promise<string>
 // with the stdout -- this could pretty easily be added as an option to the code in
 // core
-export abstract class SfdxCommandletExecutorWithOutput<T> extends SfdxCommandletExecutor<T> {
+export abstract class SfdxCommandletExecutorWithOutput<T> extends BaseSfdxCommandletExecutor<T> {
   public execute(response: ContinueResponse<T>): Promise<string> {
     const startTime = process.hrtime();
     const cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -62,8 +91,6 @@ export abstract class SfdxCommandletExecutorWithOutput<T> extends SfdxCommandlet
     this.attachExecution(execution, cancellationTokenSource, cancellationToken);
     return new CommandOutput().getCmdResult(execution);
   }
-
-  public abstract build(data: T): Command;
 }
 
 export class EmptyPostChecker implements PostconditionChecker<any> {
@@ -127,7 +154,7 @@ export class SfdxCommandletWithOutput<T> {
           return this.executor.execute(inputs);
         case 'CANCEL':
           if (inputs.msg) {
-            notificationService.showErrorMessage(inputs.msg);
+            vscode.window.showErrorMessage(inputs.msg);
             return Promise.reject(inputs.msg);
           }
       }
@@ -137,23 +164,32 @@ export class SfdxCommandletWithOutput<T> {
   }
 }
 
+export function getCommandExecutionExitCode(execution: CommandExecution): Promise<number> {
+  return new Promise((resolve, reject) => {
+    execution.processExitSubject.subscribe(code => {
+      if (typeof code === 'number') {
+        resolve(code);
+      } else {
+        reject(new Error(`Invalid exitCode '${code}'`));
+      }
+    });
+  });
+}
+
 // re-export these things so our code can more easily import them from one place
 export {
   emptyParametersGatherer,
   emptyPreChecker,
-  notificationService,
   sfdxWorkspaceChecker,
   CancelResponse,
   CliCommandExecutor,
   Command,
   CommandExecution,
   CommandOutput,
-  CommandResult,
   ContinueResponse,
   ParametersGatherer,
   PostconditionChecker,
   PreconditionChecker,
   SfdxCommandBuilder,
-  SfdxCommandlet,
-  SfdxCommandletExecutor
+  SfdxCommandlet
 };

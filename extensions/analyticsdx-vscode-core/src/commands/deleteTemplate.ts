@@ -7,15 +7,15 @@
 
 import { nls } from '../messages';
 import {
+  BaseSfdxCommandletExecutor,
   DeleteObjectPostChecker,
   SfdxCommandBuilder,
   SfdxCommandlet,
-  SfdxCommandletExecutor,
   sfdxWorkspaceChecker
 } from './commands';
 import { TemplateGatherer, TemplateMetadata } from './gatherers/templateGatherer';
 
-class DeleteTemplateExecutor extends SfdxCommandletExecutor<TemplateMetadata> {
+class DeleteTemplateExecutor extends BaseSfdxCommandletExecutor<TemplateMetadata> {
   public build(data: TemplateMetadata) {
     return new SfdxCommandBuilder()
       .withDescription(nls.localize('delete_template_cmd_message'))
@@ -28,21 +28,19 @@ class DeleteTemplateExecutor extends SfdxCommandletExecutor<TemplateMetadata> {
   }
 }
 
-const deleteTemplateCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  new TemplateGatherer({
-    // you can only delete templates that don't have an associated app
-    filter: template => !template.folderid,
-    includeEmbedded: true,
-    noTemplatesMesg: nls.localize('delete_template_cmd_no_templates_message'),
-    placeholderMesg: nls.localize('delete_template_cmd_placeholder_message')
-  }),
-  new DeleteTemplateExecutor(),
-  new DeleteObjectPostChecker<TemplateMetadata>(template =>
-    nls.localize('delete_template_cmd_confirm_text', template.label || template.name)
-  )
-);
-
-export async function deleteTemplate() {
-  await deleteTemplateCommandlet.run();
+export function deleteTemplate(): Promise<void> {
+  return new SfdxCommandlet(
+    sfdxWorkspaceChecker,
+    new TemplateGatherer({
+      // you can only delete templates that don't have an associated app
+      filter: template => !template.folderid,
+      includeEmbedded: true,
+      noTemplatesMesg: nls.localize('delete_template_cmd_no_templates_message'),
+      placeholderMesg: nls.localize('delete_template_cmd_placeholder_message')
+    }),
+    new DeleteTemplateExecutor(),
+    new DeleteObjectPostChecker<TemplateMetadata>(template =>
+      nls.localize('delete_template_cmd_confirm_text', template.label || template.name)
+    )
+  ).run();
 }

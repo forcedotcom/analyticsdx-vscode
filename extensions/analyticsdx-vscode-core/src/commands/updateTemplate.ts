@@ -7,17 +7,17 @@
 import { nls } from '../messages';
 import { showQuickPick } from '../util/quickpick';
 import {
+  BaseSfdxCommandletExecutor,
   CancelResponse,
   ContinueResponse,
   SfdxCommandBuilder,
   SfdxCommandlet,
-  SfdxCommandletExecutor,
   sfdxWorkspaceChecker
 } from './commands';
 import { AppGatherer, AppQuickPickItem } from './gatherers/appGatherer';
 import { TemplateGatherer, TemplateMetadata } from './gatherers/templateGatherer';
 
-class UpdateTemplateExecutor extends SfdxCommandletExecutor<TemplateMetadata> {
+class UpdateTemplateExecutor extends BaseSfdxCommandletExecutor<TemplateMetadata> {
   constructor(private readonly description: string) {
     super();
   }
@@ -76,14 +76,12 @@ class TemplateWithFolderGatherer extends TemplateGatherer {
   }
 }
 
-const updateTemplateCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  new TemplateWithFolderGatherer(),
-  new UpdateTemplateExecutor(nls.localize('update_template_cmd_message'))
-);
-
-export async function updateTemplate() {
-  await updateTemplateCommandlet.run();
+export function updateTemplate(): Promise<void> {
+  return new SfdxCommandlet(
+    sfdxWorkspaceChecker,
+    new TemplateWithFolderGatherer(),
+    new UpdateTemplateExecutor(nls.localize('update_template_cmd_message'))
+  ).run();
 }
 
 class TemplateAndFolderGatherer extends TemplateGatherer {
@@ -131,16 +129,14 @@ class TemplateAndFolderGatherer extends TemplateGatherer {
   }
 }
 
-const updateTemplateFromAppCommandlet = new SfdxCommandlet(
-  sfdxWorkspaceChecker,
-  new TemplateAndFolderGatherer({
-    includeEmbedded: true,
-    noTemplatesMesg: nls.localize('update_template_from_app_cmd_no_templates_message'),
-    placeholderMesg: nls.localize('update_template_from_app_cmd_placeholder_message')
-  }),
-  new UpdateTemplateExecutor(nls.localize('update_template_from_app_cmd_message'))
-);
-
-export async function updateTemplateFromApp() {
-  await updateTemplateFromAppCommandlet.run();
+export function updateTemplateFromApp(): Promise<void> {
+  return new SfdxCommandlet(
+    sfdxWorkspaceChecker,
+    new TemplateAndFolderGatherer({
+      includeEmbedded: true,
+      noTemplatesMesg: nls.localize('update_template_from_app_cmd_no_templates_message'),
+      placeholderMesg: nls.localize('update_template_from_app_cmd_placeholder_message')
+    }),
+    new UpdateTemplateExecutor(nls.localize('update_template_from_app_cmd_message'))
+  ).run();
 }

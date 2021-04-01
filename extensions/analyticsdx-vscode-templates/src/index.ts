@@ -7,6 +7,7 @@
 
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import { EXTENSION_NAME } from './constants';
 import { telemetryService } from './telemetry';
 import { TemplateEditingManager } from './templateEditing';
 import { TemplateLinterManager } from './templateLinter';
@@ -23,7 +24,7 @@ export type ExtensionType =
     }>
   | undefined;
 
-export function activate(context: vscode.ExtensionContext): ExtensionType {
+export async function activate(context: vscode.ExtensionContext): Promise<ExtensionType> {
   const extensionHRStart = process.hrtime();
 
   // if we have no workspace folders, exit
@@ -37,6 +38,12 @@ export function activate(context: vscode.ExtensionContext): ExtensionType {
     const json = JSON.parse(fs.readFileSync(packageJson).toString());
     displayName = json.displayName || displayName;
     version = json.version || version;
+    const aiKey = json.aiKey;
+    if (typeof aiKey === 'string' && aiKey) {
+      await telemetryService.initializeService(context, aiKey, version);
+    } else {
+      console.warn(`Missing aiKey in ${EXTENSION_NAME} package.json, telemetry is disabled`);
+    }
   } catch (e) {
     console.warn(`Unable to read ${packageJson}`, e);
   }

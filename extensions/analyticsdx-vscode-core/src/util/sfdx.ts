@@ -9,15 +9,15 @@ import * as semver from 'semver';
 import * as vscode from 'vscode';
 import * as which from 'which';
 import {
+  BaseSfdxCommandletExecutor,
   CliCommandExecutor,
   CommandOutput,
-  CommandResult,
   ContinueResponse,
   emptyParametersGatherer,
+  getCommandExecutionExitCode,
   PreconditionChecker,
   SfdxCommandBuilder,
-  SfdxCommandlet,
-  SfdxCommandletExecutor
+  SfdxCommandlet
 } from '../commands';
 import { nls } from '../messages';
 import { telemetryService } from '../telemetry';
@@ -53,7 +53,7 @@ export async function isAnalyticsSfdxPluginInstalled(): Promise<boolean> {
     }
   }).execute();
   try {
-    const code = await new CommandResult().getExitCode(execution);
+    const code = await getCommandExecutionExitCode(execution);
     return code === 0;
   } catch (e) {
     return false;
@@ -102,7 +102,7 @@ class PromptingPreChecker implements PreconditionChecker {
   }
 }
 
-class InstallAdxExecutor extends SfdxCommandletExecutor<void> {
+class InstallAdxExecutor extends BaseSfdxCommandletExecutor<{}> {
   public build() {
     return new SfdxCommandBuilder()
       .withDescription(nls.localize('install_analytics_sfdx_plugin_message'))
@@ -111,7 +111,7 @@ class InstallAdxExecutor extends SfdxCommandletExecutor<void> {
       .build();
   }
 
-  public execute(response: ContinueResponse<void>): void {
+  public execute(response: ContinueResponse<{}>): void {
     telemetryService.sendInstallAnalyticsSfdxPluginEvent().catch(console.error);
     super.execute(response);
   }
@@ -122,7 +122,7 @@ class InstallAdxExecutor extends SfdxCommandletExecutor<void> {
 // this to get the 'CLI' part capitalized to match the description.
 const checkPluginPrefName = 'analyticsdx-vscode-core.CLI.checkForPlugin';
 
-class UpdateSfdxPluginsExecutor extends SfdxCommandletExecutor<void> {
+class UpdateSfdxPluginsExecutor extends BaseSfdxCommandletExecutor<{}> {
   constructor(private readonly curVersion: string | undefined) {
     super();
   }
@@ -137,7 +137,7 @@ class UpdateSfdxPluginsExecutor extends SfdxCommandletExecutor<void> {
       .build();
   }
 
-  public execute(response: ContinueResponse<void>): void {
+  public execute(response: ContinueResponse<{}>): void {
     telemetryService.sendUpdateAnalyticsSfdxPluginEvent(this.curVersion, minAdxPluginVersion).catch(console.error);
     super.execute(response);
   }
