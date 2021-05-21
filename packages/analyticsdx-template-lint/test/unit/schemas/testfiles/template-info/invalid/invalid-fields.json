@@ -63,7 +63,12 @@
       "label": "name",
       "name": "name",
       "userXmd": "datasets/name_Xmd.json",
-      "error": "This should trigger a warning"
+      "error": "This should trigger a warning",
+      "liveConnection" : {
+        "connectionName" : "testConnector",
+        "sourceObjectName" : "Name",
+        "error": "This should trigger a warning"
+      }
     }
   ],
   "storedQueries": [

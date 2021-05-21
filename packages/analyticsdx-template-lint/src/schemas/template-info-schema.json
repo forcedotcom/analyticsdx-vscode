@@ -679,6 +679,30 @@
                 "body": "${0}"
               }
             ]
+          },
+          "liveConnection": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["connectionName", "sourceObjectName"],
+            "properties": {
+              "connectionName": {
+                "type": "string",
+                "description": "The devname of the live connection (choose something unique to avoid collisions)"
+              },
+              "sourceObjectName": {
+                "type": "string",
+                "description": "The source object name"
+              }
+            },
+            "defaultSnippets": [
+              {
+                "label": "Live Dataset",
+                "body": {
+                  "connectionName": "someuniqueliveconnectionname",
+                  "sourceObjectName": ""
+                }
+              }
+            ]
           }
         },
         "defaultSnippets": [
