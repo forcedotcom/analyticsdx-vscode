@@ -682,7 +682,10 @@
           },
           "liveConnection": {
             "type": "object",
+            "description": "The connection information for this live dataset",
             "additionalProperties": false,
+            "$comment": "For now, allow this to be specified, but do not offer it in code-completions until the feature is ready",
+            "doNotSuggest": true,
             "required": ["connectionName", "sourceObjectName"],
             "properties": {
               "connectionName": {
@@ -696,10 +699,10 @@
             },
             "defaultSnippets": [
               {
-                "label": "Live Dataset",
+                "label": "New liveConnection",
                 "body": {
-                  "connectionName": "someuniqueliveconnectionname",
-                  "sourceObjectName": ""
+                  "connectionName": "${1:someuniqueliveconnectionname}",
+                  "sourceObjectName": "${2}"
                 }
               }
             ]
