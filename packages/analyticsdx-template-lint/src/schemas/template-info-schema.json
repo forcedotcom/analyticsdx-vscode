@@ -679,6 +679,33 @@
                 "body": "${0}"
               }
             ]
+          },
+          "liveConnection": {
+            "type": "object",
+            "description": "The connection information for this live dataset",
+            "additionalProperties": false,
+            "$comment": "For now, allow this to be specified, but do not offer it in code-completions until the feature is ready",
+            "doNotSuggest": true,
+            "required": ["connectionName", "sourceObjectName"],
+            "properties": {
+              "connectionName": {
+                "type": "string",
+                "description": "The devname of the live connection (choose something unique to avoid collisions)"
+              },
+              "sourceObjectName": {
+                "type": "string",
+                "description": "The source object name"
+              }
+            },
+            "defaultSnippets": [
+              {
+                "label": "New liveConnection",
+                "body": {
+                  "connectionName": "${1:someuniqueliveconnectionname}",
+                  "sourceObjectName": "${2}"
+                }
+              }
+            ]
           }
         },
         "defaultSnippets": [

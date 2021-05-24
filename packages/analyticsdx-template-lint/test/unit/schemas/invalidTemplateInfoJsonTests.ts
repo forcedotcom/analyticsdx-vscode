@@ -71,6 +71,7 @@ describe('template-info-schema.json finds errors in', () => {
       'eltDataflows[0].error',
       'recipes[0].error',
       'datasetFiles[0].error',
+      'datasetFiles[0].liveConnection.error',
       'storedQueries[0].error',
       'imageFiles[0].error',
       'extendedTypes.type',

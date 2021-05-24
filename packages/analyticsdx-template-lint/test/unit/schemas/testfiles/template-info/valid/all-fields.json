@@ -88,6 +88,14 @@
       "file": "not_used",
       "condition": "${Variables.Has_Product == 'Yes'}",
       "userXmd": "foo.json"
+    },
+    {
+      "label": "My Snowflake Dataset",
+      "name": "mysnowflakedataset",
+      "liveConnection": {
+        "connectionName": "someuniqueliveconnectionname",
+        "sourceObjectName": "CUSTOMER"
+      }
     }
   ],
   "storedQueries": [
