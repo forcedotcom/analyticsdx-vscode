@@ -1,3 +1,9 @@
+# 0.6.1
+
+## Added
+
+- Added field for live datasets in templates pilot.
+
 # 0.6.0
 
 ## Added
