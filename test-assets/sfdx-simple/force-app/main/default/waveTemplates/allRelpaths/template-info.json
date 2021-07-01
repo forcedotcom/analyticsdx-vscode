@@ -45,6 +45,13 @@
       "file": "dashboards/dashboard.json"
     }
   ],
+  "components": [
+    {
+      "label": "component",
+      "name": "components",
+      "file": "components/component.json"
+    }
+  ],
   "eltDataflows": [
     {
       "label": "dataflow",

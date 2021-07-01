@@ -22,6 +22,7 @@ const definitionFilesPats = [
   ['ruleDefinition'],
   ['rules', '*', 'file'],
   ['dashboards', '*', 'file'],
+  ['components', '*', 'file'],
   ['lenses', '*', 'file'],
   ['eltDataflows', '*', 'file'],
   ['storedQueries', '*', 'file'],

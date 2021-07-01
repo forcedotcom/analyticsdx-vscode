@@ -395,15 +395,15 @@ export abstract class TemplateLinter<
     );
 
     // make sure there aren't duplicate names amongst the various related files
-    // note: some of these with duplicate names (e.g. dashboards, lens) will fail to upload.
+    // note: some of these with duplicate names (e.g. dashboards, components, lens) will fail to upload.
     // some of these will upload and work with a duplicate name (e.g. imageFiles), but all-but-the-first asset with
     // same name will end up with a different name (e.g. "name1", "name2") which means other code looking for the asset
     // by name will only find the first one, so we're going to warn on those, too.
     [
       // dashboards and lens are stored in the same place, so they have to have unique names amongst each other
       {
-        type: 'dashboard or lens',
-        path: [['dashboards', '*', 'name'] as JSONPath, ['lenses', '*', 'name']]
+        type: 'dashboard, component, or lens',
+        path: [['dashboards', '*', 'name'] as JSONPath, ['components', '*', 'name'], ['lenses', '*', 'name']]
       },
       { type: 'dataflow', path: ['eltDataflows', '*', 'name'] as JSONPath },
       { type: 'recipe', path: ['recipes', '*', 'name'] },
@@ -427,6 +427,7 @@ export abstract class TemplateLinter<
     // operations that key on label will only find one of the assets, so we're going to warn on these
     [
       { type: 'dashboard', path: ['dashboards', '*', 'label'] as JSONPath },
+      { type: 'components', path: ['components', '*', 'label'] },
       { type: 'lens', path: ['lenses', '*', 'label'] },
       { type: 'dataflow', path: ['eltDataflows', '*', 'label'] },
       { type: 'recipe', path: ['recipes', '*', 'label'] },

@@ -62,6 +62,15 @@
       "file": "dashboards/foo_dashboard.json"
     }
   ],
+  "components": [
+    {
+      "label": "New component",
+      "name": "New_component_tp",
+      "condition": "${Variables.Overrides.createAllDashboards}",
+      "file": "components/New_component.json",
+      "overwriteOnUpgrade": "IfDifferent"
+    }
+  ],
   "eltDataflows": [
     {
       "file": "dataflow.json",

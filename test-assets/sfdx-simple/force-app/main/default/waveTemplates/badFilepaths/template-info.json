@@ -45,6 +45,13 @@
       "file": "dashboards/missing-dashboard.json"
     }
   ],
+  "components": [
+    {
+      "label": "missing-component",
+      "name": "missing-component",
+      "file": "components/missing-component.json"
+    }
+  ],
   "eltDataflows": [
     {
       "label": "missing-dataflow",

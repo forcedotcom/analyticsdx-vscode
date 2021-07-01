@@ -37,6 +37,15 @@
       "overwriteOnUpgrade": null
     }
   ],
+  "components": [
+    {
+      "file": "components/name.json",
+      "label": "name",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null
+    }
+  ],
   "eltDataflows": [
     {
       "file": "dataflows/name.json",

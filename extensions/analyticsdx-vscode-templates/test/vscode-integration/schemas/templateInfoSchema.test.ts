@@ -103,6 +103,7 @@ describe('template-info-schema.json hookup', () => {
     [
       ['rules', 'rule'],
       ['dashboards', 'dashboard'],
+      ['components', 'dashboard component'],
       ['lenses', 'lens'],
       ['eltDataflows', 'dataflow'],
       ['externalFiles', 'externalFile'],
@@ -174,6 +175,12 @@ describe('template-info-schema.json hookup', () => {
         }
       ],
       dashboards: [
+        {
+          condition: null,
+          overwriteOnUpgrade: null
+        }
+      ],
+      components: [
         {
           condition: null,
           overwriteOnUpgrade: null
@@ -295,6 +302,9 @@ describe('template-info-schema.json hookup', () => {
       { jsonpath: ['dashboards'], completions: ['[]'] },
       { jsonpath: ['dashboards', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['dashboards', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['components'], completions: ['[]'] },
+      { jsonpath: ['components', 0, 'condition'], completions: ['""', '${...} expression'] },
+      { jsonpath: ['components', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
       { jsonpath: ['eltDataflows'], completions: ['[]'] },
       { jsonpath: ['eltDataflows', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['eltDataflows', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },

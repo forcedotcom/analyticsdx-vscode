@@ -42,6 +42,14 @@
       "error": "This should trigger a warning"
     }
   ],
+  "components": [
+    {
+      "file": "components/name.json",
+      "label": "name",
+      "name": "name",
+      "error": "This should trigger a warning"
+    }
+  ],
   "eltDataflows": [
     {
       "file": "dataflows/name.json",
@@ -64,9 +72,9 @@
       "name": "name",
       "userXmd": "datasets/name_Xmd.json",
       "error": "This should trigger a warning",
-      "liveConnection" : {
-        "connectionName" : "testConnector",
-        "sourceObjectName" : "Name",
+      "liveConnection": {
+        "connectionName": "testConnector",
+        "sourceObjectName": "Name",
         "error": "This should trigger a warning"
       }
     }
