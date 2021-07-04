@@ -62,13 +62,37 @@ export function sfdxOutputChannel(): vscode.OutputChannel | undefined {
  * Use this instead of using SfdxCommandletExecutor directly.
  */
 export abstract class BaseSfdxCommandletExecutor<T> extends SfdxCommandletExecutor<T> {
+  // processExitSubject handler to show the output channel on error (if so configured in constructor)
+  private readonly showChannelOutputOnError: ((exitCode: number | undefined) => void) | undefined;
+
   // default to using the common Salesforce CLI output and to not force show the channel
-  constructor(channel: vscode.OutputChannel | undefined = sfdxOutputChannel(), showChannelOutput = false) {
+  constructor({
+    channel = sfdxOutputChannel(),
+    showChannelOutput = false,
+    showChannelOutputOnError = true
+  }: { channel?: vscode.OutputChannel; showChannelOutput?: boolean; showChannelOutputOnError?: boolean } = {}) {
     super(channel);
     this.showChannelOutput = showChannelOutput;
+
+    if (channel && showChannelOutputOnError) {
+      this.showChannelOutputOnError = exitCode => {
+        if (exitCode !== 0) {
+          channel?.show();
+        }
+      };
+    }
   }
 
   public abstract build(data: T): Command;
+
+  protected attachExecution(
+    execution: CommandExecution,
+    cancellationTokenSource: vscode.CancellationTokenSource,
+    cancellationToken: vscode.CancellationToken
+  ): void {
+    super.attachExecution(execution, cancellationTokenSource, cancellationToken);
+    execution.processExitSubject.subscribe(this.showChannelOutputOnError);
+  }
 }
 
 // FIXME: get something like this in the class in salesforce-vscode-core
