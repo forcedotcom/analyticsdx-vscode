@@ -17,8 +17,6 @@ import {
   CommandOutput,
   SfdxCommandBuilder
 } from '@salesforce/salesforcedx-utils-vscode/out/src/cli';
-import { MISSING_LABEL_MSG } from '@salesforce/salesforcedx-utils-vscode/out/src/i18n';
-import { nls as sfdxNls } from '@salesforce/salesforcedx-utils-vscode/out/src/messages';
 import {
   CancelResponse,
   ContinueResponse,
@@ -37,38 +35,50 @@ const emptyPreChecker: PreconditionChecker = {
   check: () => true
 };
 
-let cachedOutputChannel: [vscode.OutputChannel | undefined] | undefined;
+let cachedOutputChannel: vscode.OutputChannel | undefined;
 export function sfdxOutputChannel(): vscode.OutputChannel | undefined {
   // create the channel lazily to speed up extension activation
   if (!cachedOutputChannel) {
-    let channelName: string | undefined;
-    try {
-      // as of 51.6.0, this is where the name for the 'Salesforce CLI' channel comes from
-      channelName = sfdxNls.localize('channel_name');
-    } catch (e) {
-      console.error('Error finding sfdx output channel name:', e);
-    }
-    if (channelName && !channelName.includes(MISSING_LABEL_MSG)) {
-      cachedOutputChannel = [vscode.window.createOutputChannel(channelName)];
-    } else {
-      console.error('Failed finding sfdx output channel name');
-      cachedOutputChannel = [undefined];
-    }
+    cachedOutputChannel = vscode.window.createOutputChannel('Analytics - CLI');
   }
-  return cachedOutputChannel?.[0];
+  return cachedOutputChannel;
 }
 
 /** Base sfdx executor with our preferred output channel settings.
  * Use this instead of using SfdxCommandletExecutor directly.
  */
 export abstract class BaseSfdxCommandletExecutor<T> extends SfdxCommandletExecutor<T> {
-  // default to using the common Salesforce CLI output and to not force show the channel
-  constructor(channel: vscode.OutputChannel | undefined = sfdxOutputChannel(), showChannelOutput = false) {
+  // processExitSubject handler to show the output channel on error (if so configured in constructor)
+  private readonly showChannelOutputOnError: ((exitCode: number | undefined) => void) | undefined;
+
+  // default to using our shared cli channel, not automatically showing it, and always showing it if there's an error
+  constructor({
+    channel = sfdxOutputChannel(),
+    showChannelOutput = false,
+    showChannelOutputOnError = true
+  }: { channel?: vscode.OutputChannel; showChannelOutput?: boolean; showChannelOutputOnError?: boolean } = {}) {
     super(channel);
     this.showChannelOutput = showChannelOutput;
+
+    if (channel && showChannelOutputOnError) {
+      this.showChannelOutputOnError = exitCode => {
+        if (exitCode !== 0) {
+          channel?.show();
+        }
+      };
+    }
   }
 
   public abstract build(data: T): Command;
+
+  protected attachExecution(
+    execution: CommandExecution,
+    cancellationTokenSource: vscode.CancellationTokenSource,
+    cancellationToken: vscode.CancellationToken
+  ): void {
+    super.attachExecution(execution, cancellationTokenSource, cancellationToken);
+    execution.processExitSubject.subscribe(this.showChannelOutputOnError);
+  }
 }
 
 // FIXME: get something like this in the class in salesforce-vscode-core
