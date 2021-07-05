@@ -12,8 +12,7 @@ import {
   ContinueResponse,
   EmptyPostChecker,
   SfdxCommandBuilder,
-  SfdxCommandletExecutorWithOutput,
-  sfdxOutputChannel
+  SfdxCommandletExecutorWithOutput
 } from '../../../src/commands/commands';
 
 class TestExecutorWithOutput extends SfdxCommandletExecutorWithOutput<string> {
@@ -67,13 +66,6 @@ describe('Command Utilities', () => {
       };
       const output = await checker.check(inputs);
       expect(output).to.be.equal(inputs);
-    });
-  });
-
-  describe('sfdxOuputChannel()', () => {
-    // make sure our logic keeps working if/when we upgrade salesforcedx-utils-vscode
-    it('returns an output channel', () => {
-      expect(sfdxOutputChannel()).to.not.be.undefined.and.not.be.null;
     });
   });
 });
