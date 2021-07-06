@@ -366,6 +366,58 @@
         ]
       }
     },
+    "components": {
+      "type": ["null", "array"],
+      "description": "List of dashboard components to include in the template.",
+      "minItems": 0,
+      "examples": [[]],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "label"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the dashboard component json file."
+          },
+          "label": {
+            "type": "string",
+            "description": "The dashboard component label. Must match the 'label' attribute in the dashboard component file."
+          },
+          "name": {
+            "type": "string",
+            "description": "The dashboard component name. Must match the 'name' attribute in the dashboard component file."
+          },
+          "condition": {
+            "type": ["null", "string"],
+            "description": "If met, the dashboard component is created in the app. If not met, the dashboard component is not created.",
+            "defaultSnippets": [
+              {
+                "label": "\"\"",
+                "body": "${0}"
+              },
+              {
+                "label": "${...} expression",
+                "body": "${Variables.${1:varname}}"
+              }
+            ]
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New dashboard component",
+            "body": {
+              "file": "components/${1:name}.json",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
     "lenses": {
       "type": ["null", "array"],
       "description": "List of lenses to include in the template.",

@@ -354,8 +354,9 @@ describe('TemplateLinterManager lints template-info.json', () => {
     tmpdir = t;
     await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
     await setDocumentText(editor, {
-      dashboards: [{ name: 'dashboard' }, { name: 'dashboard' }, { name: 'lens' }],
-      lenses: [{ name: 'lens' }, { name: 'lens' }, { name: 'dashboard' }],
+      dashboards: [{ name: 'dashboard' }, { name: 'dashboard' }, { name: 'lens' }, { name: 'component' }],
+      lenses: [{ name: 'lens' }, { name: 'lens' }, { name: 'dashboard' }, { name: 'component' }],
+      components: [{ name: 'component' }, { name: 'component' }, { name: 'dashboard' }, { name: 'lens' }],
       eltDataflows: [{ name: 'dataflow' }, { name: 'dataflow' }],
       recipes: [{ name: 'recipe' }, { name: 'recipe' }],
       datasetFiles: [{ name: 'dataset' }, { name: 'dataset' }],
@@ -372,9 +373,15 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'dashboards[0].name',
       'dashboards[1].name',
       'dashboards[2].name',
+      'dashboards[3].name',
       'lenses[0].name',
       'lenses[1].name',
       'lenses[2].name',
+      'lenses[3].name',
+      'components[0].name',
+      'components[1].name',
+      'components[2].name',
+      'components[3].name',
       'eltDataflows[0].name',
       'eltDataflows[1].name',
       'recipes[0].name',
@@ -408,7 +415,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       expect(d.severity, `${jsonpath} diagnotic.severity`).to.equal(vscode.DiagnosticSeverity.Warning);
       expect(d.relatedInformation, `${jsonpath} diagnostic.relatedInformation`).to.not.be.undefined;
       expect(d.relatedInformation!.length, `${jsonpath} diagnostic.relatedInformation.length`).to.equal(
-        jsonpath?.startsWith('dashboard') || jsonpath?.startsWith('lenses') ? 2 : 1
+        jsonpath?.match(/^(dashboard|lenses|components)/) ? 3 : 1
       );
     });
   });
@@ -420,6 +427,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     await setDocumentText(editor, {
       dashboards: [{ label: 'dashboard' }, { label: 'dashboard' }],
       lenses: [{ label: 'lens' }, { label: 'lens' }],
+      components: [{ label: 'component' }, { label: 'component' }],
       eltDataflows: [{ label: 'dataflow' }, { label: 'dataflow' }],
       recipes: [{ label: 'recipe' }, { label: 'recipe' }],
       datasetFiles: [{ label: 'dataset' }, { label: 'dataset' }],
@@ -435,6 +443,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'dashboards[1].label',
       'lenses[0].label',
       'lenses[1].label',
+      'components[0].label',
+      'components[1].label',
       'eltDataflows[0].label',
       'eltDataflows[1].label',
       'recipes[0].label',
@@ -452,7 +462,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       await waitForDiagnostics(
         editor.document.uri,
         d => d && d.filter(dupFilter).length >= expectedPaths.length,
-        'initial duplicate label warnings'
+        `initial ${expectedPaths.length} duplicate label warnings`
       )
     ).filter(dupFilter);
     if (diagnostics.length !== expectedPaths.length) {
@@ -593,6 +603,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'externalFiles[0].userXmd',
       'lenses[0].file',
       'dashboards[0].file',
+      'components[0].file',
       'eltDataflows[0].file',
       'recipes[0].file',
       'extendedTypes.predictiveScoring[0].file'

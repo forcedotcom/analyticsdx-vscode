@@ -93,6 +93,7 @@ export class FileTemplateValidator extends TemplateLinter<string, TextDocument, 
       // validate any asset files against the base schema (this mostly just catches that they're valid json)
       [
         ['dashboards', '*', 'file'] as JSONPath,
+        ['components', '*', 'file'],
         ['lenses', '*', 'file'],
         ['eltDataflows', '*', 'file'],
         ['storedQueries', '*', 'file'],

@@ -6,11 +6,30 @@
  */
 
 import { expect } from 'chai';
+import { JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser';
 import * as path from 'path';
-import { DiagnosticSeverity } from 'vscode-json-languageservice';
+import { DiagnosticSeverity, TextDocument } from 'vscode-json-languageservice';
+import { matchJsonNodeAtPattern } from '../../src';
 import { ERRORS, JSON_SCHEMA_SOURCE_ID, LINTER_SOURCE_ID } from '../../src/constants';
 import { FileTemplateValidator } from '../../src/validator';
-import { getDiagnosticsByPath, getDiagnosticsForPath, sfdxTestTemplatesPath } from '../testutils';
+import { getDiagnosticsByPath, getDiagnosticsForPath, parseErrorToString, sfdxTestTemplatesPath } from '../testutils';
+
+function parseOrThrow(json: string): JsonNode {
+  const errors: ParseError[] = [];
+  const tree = parseTree(json, errors);
+  if (errors.length > 0) {
+    throw new Error('Failed to parse json: ' + errors.map(e => parseErrorToString(e, json)).join(', '));
+  }
+  return tree;
+}
+
+function jsonpathLineNum(tree: JsonNode, jsonpath: JSONPath, doc: TextDocument): number {
+  const node = matchJsonNodeAtPattern(tree, jsonpath);
+  if (!node) {
+    throw new Error('Failed to find node for ' + jsonpath.join('.'));
+  }
+  return doc.positionAt(node.offset).line;
+}
 
 // tslint:disable: no-unused-expression
 describe('FileTemplateValidator', () => {
@@ -255,7 +274,8 @@ describe('FileTemplateValidator', () => {
   it('validates badFilepaths/ template', async () => {
     const templatePath = path.join(sfdxTestTemplatesPath, 'badFilepaths');
     const templateInfoPath = path.join(templatePath, 'template-info.json');
-    const validator = new FileTemplateValidator(await FileTemplateValidator.createTextDocument(templateInfoPath));
+    const doc = await FileTemplateValidator.createTextDocument(templateInfoPath);
+    const validator = new FileTemplateValidator(doc);
     await validator.lint();
     const diagnostics = getDiagnosticsForPath(validator.diagnostics, templateInfoPath)
       ?.filter(
@@ -273,16 +293,52 @@ describe('FileTemplateValidator', () => {
         return { line: d.range.start.line, code: d.code };
       });
 
+    const templateInfo = parseOrThrow(doc.getText());
+
+    // the line #s of TMPL_INVALID_REL_PATH errors
+    const invalidRelPathLines = [
+      // empty rel path
+      ['releaseInfo', 'notesFile'] as JSONPath,
+      // .. in the middle of the path
+      ['datasetFiles', 0, 'userXmd'],
+      // .. at the beginning
+      ['extendedTypes', 'discoveryStories', 0, 'file'],
+      // absolute path
+      ['imageFiles', 0, 'file']
+    ].map(jsonpath => jsonpathLineNum(templateInfo, jsonpath, doc));
+
+    // the line #s of TMPL_REL_PATH_NOT_EXIST errors
+    const relPathNotExistLines = [
+      ['variableDefinition'] as JSONPath,
+      ['uiDefinition'],
+      ['folderDefinition'],
+      ['autoInstallDefinition'],
+      ['ruleDefinition'],
+      ['rules', 0, 'file'],
+      ['rules', 1, 'file'],
+      ['externalFiles', 0, 'file'],
+      ['externalFiles', 0, 'schema'],
+      ['externalFiles', 0, 'userXmd'],
+      ['lenses', 0, 'file'],
+      ['dashboards', 0, 'file'],
+      ['components', 0, 'file'],
+      ['eltDataflows', 0, 'file'],
+      ['recipes', 0, 'file'],
+      ['extendedTypes', 'predictiveScoring', 0, 'file']
+    ].map(jsonpath => jsonpathLineNum(templateInfo, jsonpath, doc));
+
+    // the line # of a TMPL_REL_PATH_NOT_FILE error (points to a directory)
+    const relPathNotFileLine = jsonpathLineNum(templateInfo, ['storedQueries', 0, 'file'], doc);
+
     const expected = [
-      ...[7, 71, 79, 93].map(line => {
+      ...invalidRelPathLines.map(line => {
         return { line, code: ERRORS.TMPL_INVALID_REL_PATH };
       }),
-      ...[9, 10, 11, 12, 13, 17, 21, 27, 29, 30, 37, 44, 51, 58, 84].map(line => {
+      ...relPathNotExistLines.map(line => {
         return { line, code: ERRORS.TMPL_REL_PATH_NOT_EXIST };
       }),
-      { line: 63, code: ERRORS.TMPL_REL_PATH_NOT_FILE }
+      { line: relPathNotFileLine, code: ERRORS.TMPL_REL_PATH_NOT_FILE }
     ].sort((d1, d2) => d1.line - d2.line);
-
     expect(diagnostics, 'diagnostics').to.have.deep.members(expected);
 
     if (validator.diagnostics.size > 1) {
