@@ -27,6 +27,7 @@
   ],
   "dependencies": {
     "@salesforce/salesforcedx-utils-vscode": "file:../../lib/salesforcedx-utils-vscode.tgz",
+    "@salesforce/templates": "52.1.0",
     "semver": "5.7.1",
     "tmp": "0.1.0",
     "which": "2.0.2"
@@ -78,6 +79,7 @@
     "workspaceContains:sfdx-project.json",
     "onCommand:analyticsdx.app.create.blank",
     "onCommand:analyticsdx.app.delete",
+    "onCommand:analyticsdx.dashboard.lwc.create",
     "onCommand:analyticsdx.studio.open",
     "onCommand:analyticsdx.studio.open.app",
     "onCommand:analyticsdx.telemetry.send",
@@ -100,6 +102,10 @@
       {
         "command": "analyticsdx.app.delete",
         "title": "%analyticsdx_app_delete_label%"
+      },
+      {
+        "command": "analyticsdx.dashboard.lwc.create",
+        "title": "%analyticsdx_dashboard_lwc_create_label%"
       },
       {
         "command": "analyticsdx.studio.open",
@@ -145,6 +151,10 @@
           "when": "sfdx:project_opened"
         },
         {
+          "command": "analyticsdx.dashboard.lwc.create",
+          "when": "sfdx:project_opened"
+        },
+        {
           "command": "analyticsdx.studio.open",
           "when": "sfdx:project_opened"
         },
@@ -171,6 +181,12 @@
         {
           "command": "analyticsdx.template.updateFromApp",
           "when": "sfdx:project_opened"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "analyticsdx.dashboard.lwc.create",
+          "when": "explorerResourceIsFolder && resourceFilename == lwc && sfdx:project_opened"
         }
       ]
     },

@@ -5,7 +5,9 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import {
+  CompositeParametersGatherer,
   EmptyParametersGatherer,
+  LibraryCommandletExecutor,
   SfdxCommandlet,
   SfdxCommandletExecutor,
   SfdxWorkspaceChecker
@@ -25,7 +27,7 @@ import {
   PreconditionChecker
 } from '@salesforce/salesforcedx-utils-vscode/out/src/types';
 import * as vscode from 'vscode';
-import { nls } from '../messages';
+import { showConfirmModal } from '../util';
 import { getRootWorkspacePath } from '../util/rootWorkspace';
 
 // make shared instances here that we can export for everything to use
@@ -36,12 +38,20 @@ const emptyPreChecker: PreconditionChecker = {
 };
 
 let cachedOutputChannel: vscode.OutputChannel | undefined;
-export function sfdxOutputChannel(): vscode.OutputChannel | undefined {
+export function sfdxOutputChannel(): vscode.OutputChannel {
   // create the channel lazily to speed up extension activation
   if (!cachedOutputChannel) {
     cachedOutputChannel = vscode.window.createOutputChannel('Analytics - CLI');
   }
   return cachedOutputChannel;
+}
+
+/** Return a fixed value. */
+export class FixedValueGatherer<T> implements ParametersGatherer<T> {
+  constructor(private readonly value: T) {}
+  public gather(): Promise<ContinueResponse<T>> {
+    return Promise.resolve({ type: 'CONTINUE', data: this.value });
+  }
 }
 
 /** Base sfdx executor with our preferred output channel settings.
@@ -109,27 +119,11 @@ export class EmptyPostChecker implements PostconditionChecker<any> {
   }
 }
 
-const okText = nls.localize('ok');
 export class DeleteObjectPostChecker<T> implements PostconditionChecker<T> {
   constructor(private readonly mesg: (t: T) => string) {}
   public async check(inputs: CancelResponse | ContinueResponse<T>): Promise<CancelResponse | ContinueResponse<T>> {
     if (inputs.type === 'CONTINUE') {
-      // TODO: refactor this to a util.confirm(...) method
-      const mesg = this.mesg(inputs.data);
-      const selection = await vscode.window.showWarningMessage(
-        mesg,
-        {
-          // put this right up front, otherwise it gets hidden in the corner of vscode
-          modal: true
-        },
-        // https://github.com/Microsoft/vscode/issues/71251
-        // Note: you always get a Cancel button, and for modals (at least on Mac),
-        // it will always put the first item on the rhs, then Cancel left of that,
-        // and then any other options left of that, which makes it impossible to do
-        // a decent Yes/No confirm dialog, so we're going with Ok/Cancel
-        okText
-      );
-      if (selection === okText) {
+      if (showConfirmModal(this.mesg(inputs.data))) {
         return inputs;
       }
     }
@@ -196,7 +190,9 @@ export {
   Command,
   CommandExecution,
   CommandOutput,
+  CompositeParametersGatherer,
   ContinueResponse,
+  LibraryCommandletExecutor,
   ParametersGatherer,
   PostconditionChecker,
   PreconditionChecker,

@@ -23,6 +23,14 @@ export const messages = Object.freeze({
   create_blank_app_cmd_message: 'Creating blank analytics app...',
   create_blank_app_cmd_tmp_file_error_text: 'Unable to write %s: %s',
 
+  // commands/createDashboardLWC.ts
+  create_dashboard_lwc_execution_name: 'SFDX: Create Analytics Dashboard LWC',
+  create_dashboard_lwc_filename_prompt: 'Enter LWC filename',
+  create_dashboard_lwc_overwrite_prompt: 'Overwrite existing LWC?',
+  create_dashboard_lwc_template_prompt: 'Select LWC template...',
+  create_dashboard_lwc_has_step: 'With attached step',
+  create_dashboard_lwc_no_has_step: 'Without attached step',
+
   // commands/createTemplate.ts
   create_template_cmd_message: 'Creating template from analytics app...',
   create_template_cmd_no_templates_message: 'No un-templatized apps available in org.',
@@ -58,6 +66,10 @@ export const messages = Object.freeze({
   app_gatherer_def_no_apps_message: 'No matching apps available in org.',
   app_gatherer_def_placeholder_message: 'Select an analytics app...',
   app_gatherer_def_fetch_message: 'Fetching analytics apps...',
+
+  // commands/gatherers/outputDirGatherer.ts
+  outputdir_gatherer_custom_dir_prompt: 'Select a custom directory...',
+  outputdir_gatherer_dir_prompt: 'Select a directory...',
 
   // commands/gatherers/templateGatherer.ts
   template_gatherer_def_no_templates_message: 'No matching templates available in org.',
