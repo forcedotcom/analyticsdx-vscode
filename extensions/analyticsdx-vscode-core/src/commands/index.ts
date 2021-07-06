@@ -7,6 +7,7 @@
 
 export * from './commands';
 export * from './createApp';
+export * from './createDashboardLWC';
 export * from './createTemplate';
 export * from './deleteApp';
 export * from './deleteTemplate';

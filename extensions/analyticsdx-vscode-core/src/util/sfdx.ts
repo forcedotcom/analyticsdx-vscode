@@ -5,6 +5,9 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import { SfdxProject } from '@salesforce/core';
+import { JsonArray, JsonMap } from '@salesforce/ts-types';
+import * as path from 'path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import * as which from 'which';
@@ -21,7 +24,7 @@ import {
 } from '../commands';
 import { nls } from '../messages';
 import { telemetryService } from '../telemetry';
-import { getRootWorkspacePath } from './rootWorkspace';
+import { getRootWorkspacePath, hasRootWorkspace } from './rootWorkspace';
 
 // The analytics sfdx plugin module name.
 const pluginName = '@salesforce/analytics';
@@ -180,5 +183,64 @@ export async function checkAnalyticsSfdxPlugin(force = false) {
   } else {
     // salesforcefx-vscode-core already shows a message if sfdx isn't installed, so we don't need to
     console.debug(`sfdx is not installed, skipping ${pluginName} plugin check`);
+  }
+}
+
+export const NO_ROOT_WORKSPACE_PATH_ERROR = 'NoRootWorkspacePath';
+export const NO_PACKAGE_DIRECTORY_PATHS_FOUND_ERROR = 'NoPackageDirectoryPathsFound';
+export const NO_PACKAGE_DIRECTORY_FOUND_ERROR = 'NoPackageDirectoryFound';
+
+/** Read the sfdx-project.json for a workspace.
+ * @param rootWorkspacePath the workspace path, defaults to `getRootWorkspacePath()`
+ */
+export function getSfdxProject(rootWorkspacePath?: string): Promise<SfdxProject> {
+  if (!rootWorkspacePath) {
+    if (hasRootWorkspace()) {
+      rootWorkspacePath = getRootWorkspacePath();
+    } else {
+      const error = new Error();
+      error.name = NO_ROOT_WORKSPACE_PATH_ERROR;
+      throw error;
+    }
+  }
+
+  return SfdxProject.resolve(rootWorkspacePath);
+}
+
+/** Get the packageDirectories paths, in order.
+ * @param rootWorkspacePath the workspace path, defaults to `getRootWorkspacePath()`
+ * @return the paths (relative to rootWorkspacePath, with platform-native seperators)
+ */
+export async function getPackageDirectoryPaths(rootWorkspacePath?: string): Promise<string[]> {
+  // SfdxProject.getPackageDirectories() does some internal validation that requires at least 1
+  // entry to have a "default": true field, but the schema for sfdx-project.json doesn't require that and some
+  // older sfdx-project.json's won't have it; this bypasses that.
+  const dirs = (await getSfdxProject(rootWorkspacePath)).getSfdxProjectJson().get('packageDirectories') as JsonArray;
+  if (dirs) {
+    let paths: string[] = [];
+    dirs.forEach(dir => {
+      let dirpath = (dir as JsonMap)?.path;
+      if (dirpath && typeof dirpath === 'string') {
+        dirpath = dirpath.trim();
+        if (dirpath.startsWith(path.sep)) {
+          dirpath = dirpath.substring(1);
+        }
+        if ((dir as JsonMap).default) {
+          paths = [dirpath].concat(paths);
+        } else {
+          paths.push(dirpath);
+        }
+      }
+    });
+    if (paths.length === 0) {
+      const error = new Error();
+      error.name = NO_PACKAGE_DIRECTORY_PATHS_FOUND_ERROR;
+      throw error;
+    }
+    return paths;
+  } else {
+    const error = new Error();
+    error.name = NO_PACKAGE_DIRECTORY_FOUND_ERROR;
+    throw error;
   }
 }

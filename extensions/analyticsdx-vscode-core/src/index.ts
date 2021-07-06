@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import {
   createApp,
   createBlankApp,
+  createDashboardLWCCommand,
   createTemplate,
   deleteApp,
   deleteTemplate,
@@ -63,6 +64,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('analyticsdx.app.create.blank', createBlankApp),
     vscode.commands.registerCommand('analyticsdx.app.create', createApp),
     vscode.commands.registerCommand('analyticsdx.app.delete', deleteApp),
+    vscode.commands.registerCommand('analyticsdx.dashboard.lwc.create', createDashboardLWCCommand),
     vscode.commands.registerCommand('analyticsdx.studio.open', openStudio),
     vscode.commands.registerCommand('analyticsdx.studio.open.app', openAppInStudio),
     vscode.commands.registerCommand('analyticsdx.studio.open.dataManager', openDataManager),

@@ -1,0 +1,4 @@
+# These will be created by the tests in createDashboardLWC.test.ts.
+# The code in there and this should be kept in-sync to make sure tmp test output files
+# don't accidently get checked in
+test_lwc_*
