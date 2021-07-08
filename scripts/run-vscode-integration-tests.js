@@ -30,7 +30,9 @@ const { downloadDirToExecutablePath, insidersDownloadDirToExecutablePath } = req
       // workspace path
       path.join(__dirname, '..', 'test-assets', 'sfdx-simple'),
       // turn off any user extensions, so it should run with only extensions setup in the run target
-      '--disable-extensions'
+      '--disable-extensions',
+      // turn off workspace trust for tests (so it doesn't show the big dialog on startup)
+      '--disable-workspace-trust'
     ]
   };
   try {
