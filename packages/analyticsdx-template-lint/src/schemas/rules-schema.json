@@ -77,6 +77,7 @@
                       "default": "*",
                       "enum": [
                         "*",
+                        "component",
                         "dashboard",
                         "discoveryStories",
                         "folder",
@@ -89,6 +90,7 @@
                       ],
                       "enumDescriptions": [
                         "Match all file types.",
+                        "Match dashboard component files.",
                         "Match dashboard files.",
                         "Match discoveryStory files.",
                         "Match the folderDefinition file.",
