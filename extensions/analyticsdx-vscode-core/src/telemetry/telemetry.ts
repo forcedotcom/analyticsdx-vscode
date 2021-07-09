@@ -12,15 +12,12 @@ import { EXTENSION_NAME } from '../constants';
 export class TelemetryService {
   private static instance: TelemetryService;
 
-  private readonly delegate: BaseTelemetryService;
+  constructor(private readonly delegate: BaseTelemetryService = new BaseTelemetryService()) {}
 
-  constructor() {
-    this.delegate = new BaseTelemetryService();
-  }
-
+  /** Get the singleton instance of this, tied to the default singleton of the underlying telemetry service */
   public static getInstance() {
     if (!TelemetryService.instance) {
-      TelemetryService.instance = new TelemetryService();
+      TelemetryService.instance = new TelemetryService(BaseTelemetryService.getInstance());
     }
     return TelemetryService.instance;
   }
