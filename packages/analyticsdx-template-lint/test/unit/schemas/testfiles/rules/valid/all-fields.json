@@ -58,6 +58,9 @@
           "label": null
         },
         {
+          "type": "component"
+        },
+        {
           "type": "dashboard"
         },
         {
