@@ -1,3 +1,16 @@
+# 0.7.0
+
+## Added
+
+- Add **SFDX: Create Analytics Dashboard LWC** command.
+- Support dashboard components in templates.
+
+## Fixed
+
+- Fixed telemetry for commands.
+- Use unique output name for command output.
+- Show output view on error from commands.
+
 # 0.6.1
 
 ## Added
