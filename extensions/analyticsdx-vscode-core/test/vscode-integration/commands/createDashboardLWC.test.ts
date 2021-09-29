@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import { camelCaseToTitleCase, upperFirst } from '@salesforce/kit';
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
@@ -34,7 +35,9 @@ async function verifyLWC(lwcDir: vscode.Uri, lwcName: string, hasStep: boolean) 
   const jsFileName = lwcName + '.js';
   const jsDoc = await vscode.workspace.openTextDocument(relFrom(lwcDir, jsFileName));
   let text = jsDoc.getText();
-  expect(text, jsFileName).to.match(new RegExp(`export default class ${lwcName} extends LightningElement`, 'i'));
+  expect(text, jsFileName).to.match(
+    new RegExp(`export default class ${upperFirst(lwcName)} extends LightningElement`, 'i')
+  );
   expect(text, jsFileName).to.match(/@api\s+getState;/);
   expect(text, jsFileName).to.match(/@api\s+setState;/);
   if (hasStep) {
@@ -51,6 +54,7 @@ async function verifyLWC(lwcDir: vscode.Uri, lwcName: string, hasStep: boolean) 
   expect(text, metaFilename).to.contain('<target>analytics__Dashboard</target>');
   expect(text, metaFilename).to.contain('targets="analytics__Dashboard"');
   expect(text, metaFilename).to.contain('<hasStep>' + (hasStep ? 'true' : 'false') + '</hasStep>');
+  expect(text, metaFilename).to.contain(`<masterLabel>${camelCaseToTitleCase(lwcName)}</masterLabel>`);
 
   const htmlFilename = lwcName + '.html';
   const htmlDoc = await vscode.workspace.openTextDocument(relFrom(lwcDir, htmlFilename));

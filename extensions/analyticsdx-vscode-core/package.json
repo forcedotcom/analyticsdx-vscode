@@ -27,7 +27,7 @@
   ],
   "dependencies": {
     "@salesforce/salesforcedx-utils-vscode": "file:../../lib/salesforcedx-utils-vscode.tgz",
-    "@salesforce/templates": "52.1.0",
+    "@salesforce/templates": "52.2.0",
     "semver": "5.7.1",
     "tmp": "0.1.0",
     "which": "2.0.2"
