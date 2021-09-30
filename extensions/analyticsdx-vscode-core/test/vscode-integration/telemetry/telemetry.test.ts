@@ -39,9 +39,7 @@ describe('TelemetryService', () => {
     isDevMode = false
   }: { isTelemetryEnabled?: boolean; isDevMode?: boolean } = {}) {
     // machineId is only looked at during initializeService so we can't change it later to any affect
-    if (!isDevMode) {
-      sandbox.stub(vscode.env, 'machineId').get(() => '123456');
-    }
+    sandbox.stub(vscode.env, 'machineId').get(() => (isDevMode ? 'someValue.machineId' : '123456'));
     sandbox.stub(BaseTelemetryService.prototype, 'isTelemetryEnabled').returns(Promise.resolve(isTelemetryEnabled));
 
     sandbox.stub(BaseTelemetryService.prototype, 'checkCliTelemetry').returns(Promise.resolve(true));
