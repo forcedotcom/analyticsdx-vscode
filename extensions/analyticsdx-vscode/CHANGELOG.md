@@ -1,3 +1,9 @@
+# 0.7.1
+
+## Fixed
+
+- Output default `<masterLabel>` from **SFDX: Create Analytics Dashboard LWC** command.
+
 # 0.7.0
 
 ## Added
