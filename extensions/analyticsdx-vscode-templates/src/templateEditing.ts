@@ -729,7 +729,7 @@ class TemplateJsonLanguageClient extends Disposable {
       client.registerProposedFeatures();
     } catch (e) {
       // don't fail the startup if it fails, just warn in the output channel
-      this.langOutputChannel.appendLine('Unable to register proposed language features: ' + (e.message || e));
+      this.langOutputChannel.appendLine('Unable to register proposed language features: ' + ((e as Error)?.message || e));
       if (e instanceof Error && e.stack) {
         this.langOutputChannel.appendLine(e.stack);
       }

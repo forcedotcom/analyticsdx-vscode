@@ -123,7 +123,7 @@ export class DeleteObjectPostChecker<T> implements PostconditionChecker<T> {
   constructor(private readonly mesg: (t: T) => string) {}
   public async check(inputs: CancelResponse | ContinueResponse<T>): Promise<CancelResponse | ContinueResponse<T>> {
     if (inputs.type === 'CONTINUE') {
-      if (showConfirmModal(this.mesg(inputs.data))) {
+      if (await showConfirmModal(this.mesg(inputs.data))) {
         return inputs;
       }
     }

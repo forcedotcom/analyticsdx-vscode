@@ -11,6 +11,7 @@
     "**/out": true
   },
   "typescript.tsdk": "./node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "editor.rulers": [120],

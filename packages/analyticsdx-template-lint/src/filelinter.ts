@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import { Node as JsonNode } from 'jsonc-parser';
 import * as path from 'path';
 import { TemplateLinter, TemplateLinterDiagnosticSeverity, TemplateLinterDocument } from './linter';
+import { pathIsFile } from './utils';
 
 class FileDocument implements TemplateLinterDocument<string> {
   constructor(private readonly filepath: string) {}
@@ -44,16 +45,8 @@ export default abstract class FileTemplateLinter<Diagnostic> extends TemplateLin
     return path.join(dir, relpath);
   }
 
-  protected async uriIsFile(uri: string): Promise<boolean | undefined> {
-    try {
-      const stat = await fs.promises.stat(uri);
-      return stat.isFile();
-    } catch (error) {
-      if (error?.code === 'ENOENT') {
-        return undefined;
-      }
-      throw error;
-    }
+  protected uriIsFile(uri: string): Promise<boolean | undefined> {
+    return pathIsFile(uri);
   }
 
   protected async getDocument(uri: string): Promise<FileDocument> {

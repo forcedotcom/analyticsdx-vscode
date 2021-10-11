@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import * as fs from 'fs';
 import * as Fuse from 'fuse.js';
 import { JSONPath, Node as JsonNode } from 'jsonc-parser';
 
@@ -130,6 +131,20 @@ export function matchJsonNodeAtPattern(
   return found;
 }
 
+/** Tell if the specified file path exists and is a file.
+ * @return true if it's a file, false it's not a file, undefined if it doesn't exist.
+ */
+export async function pathIsFile(filepath: string): Promise<boolean | undefined> {
+  try {
+    const stat = await fs.promises.stat(filepath);
+    return stat.isFile();
+  } catch (error) {
+    if (typeof error === 'object' && (error as any).code === 'ENOENT') {
+      return undefined;
+    }
+    throw error;
+  }
+}
 /** Tell if the specified string is a valid relative-path (for templates) */
 export function isValidRelpath(relpath: string | undefined | null): boolean {
   return (

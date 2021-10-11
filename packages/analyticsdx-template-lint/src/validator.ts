@@ -21,7 +21,7 @@ import { DiagnosticRelatedInformation, Location } from 'vscode-languageserver-ty
 import { JSON_SCHEMA_SOURCE_ID, JSON_SOURCE_ID, LINTER_SOURCE_ID } from './constants';
 import { TemplateLinter, TemplateLinterDiagnosticSeverity } from './linter';
 import { schemas } from './schemas';
-import { matchJsonNodesAtPattern } from './utils';
+import { matchJsonNodesAtPattern, pathIsFile } from './utils';
 
 async function schemaValidate(
   jsonSvc: LanguageService,
@@ -159,16 +159,8 @@ export class FileTemplateValidator extends TemplateLinter<string, TextDocument, 
     return path.join(dir, relpath);
   }
 
-  protected async uriIsFile(uri: string): Promise<boolean | undefined> {
-    try {
-      const stat = await fs.promises.stat(uri);
-      return stat.isFile();
-    } catch (error) {
-      if (error?.code === 'ENOENT') {
-        return undefined;
-      }
-      throw error;
-    }
+  protected uriIsFile(uri: string): Promise<boolean | undefined> {
+    return pathIsFile(uri);
   }
 
   protected async getDocument(uri: string): Promise<TextDocument> {

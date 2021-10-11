@@ -137,10 +137,10 @@ describe('createDashboardLWC.ts', () => {
       lwcName = await makeTmpLWCName(lwcRootDir);
       showInputBox.callsFake(() => Promise.resolve(lwcName));
 
-      const showQuickPick: sinon.SinonStub<[any | Thenable<any>], any | Thenable<any>> = sandbox.stub(
-        vscode.window,
-        'showQuickPick'
-      );
+      const showQuickPick = sandbox.stub(vscode.window, 'showQuickPick') as sinon.SinonStub<
+        [any | Thenable<any>],
+        any | Thenable<any>
+      >;
       let callNum = 0;
       showQuickPick.callsFake(async (items: any) => {
         callNum++;
