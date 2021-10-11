@@ -410,6 +410,14 @@ export async function setDocumentText(editor: vscode.TextEditor, textOrObj: stri
   }
 }
 
+export function getCompletionItemLabelText(item: vscode.CompletionItem): string {
+  return typeof item.label === 'string' ? item.label : item.label.label;
+}
+
+export function compareCompletionItems(l1: vscode.CompletionItem, l2: vscode.CompletionItem): number {
+  return getCompletionItemLabelText(l1).localeCompare(getCompletionItemLabelText(l2));
+}
+
 export async function getCompletionItems(uri: vscode.Uri, position: vscode.Position): Promise<vscode.CompletionList> {
   const result = await vscode.commands.executeCommand<vscode.CompletionList>(
     'vscode.executeCompletionItemProvider',
@@ -434,7 +442,10 @@ export async function verifyCompletionsContain(
   // json language service, is injecting extra stuff into our document type).
   const dups: string[] = [];
   list.items
-    .reduce((m, val) => m.set(val.label, (m.get(val.label) || 0) + 1), new Map<string, number>())
+    .reduce((m, val) => {
+      const text = getCompletionItemLabelText(val);
+      return m.set(text, (m.get(text) || 0) + 1);
+    }, new Map<string, number>())
     .forEach((num, label) => {
       if (num >= 2) {
         dups.push(label);

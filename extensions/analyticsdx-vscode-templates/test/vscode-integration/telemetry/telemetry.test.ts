@@ -15,9 +15,17 @@ import { EXTENSION_NAME } from '../../../src/constants';
 import { TelemetryService } from '../../../src/telemetry/telemetry';
 
 class MockExtensionContext implements vscode.ExtensionContext {
+  public extensionMode: vscode.ExtensionMode = vscode.ExtensionMode.Test;
+  public secrets!: vscode.SecretStorage;
+  public extensionUri!: vscode.Uri;
+  public environmentVariableCollection!: vscode.EnvironmentVariableCollection;
+  public storageUri: vscode.Uri | undefined;
+  public globalStorageUri!: vscode.Uri;
+  public logUri!: vscode.Uri;
+  public extension!: vscode.Extension<any>;
   public subscriptions: Array<{ dispose(): any }> = [];
   public workspaceState!: vscode.Memento;
-  public globalState!: vscode.Memento;
+  public globalState!: vscode.Memento & { setKeysForSync(keys: readonly string[]): void };
   public extensionPath: string = 'extensionPath';
   public asAbsolutePath(relativePath: string): string {
     return relativePath;

@@ -14,6 +14,7 @@ import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '.
 import { NEW_VARIABLE_SNIPPETS } from '../../../src/variables';
 import {
   closeAllEditors,
+  compareCompletionItems,
   createTemplateWithRelatedFiles,
   createTempTemplate,
   getCodeActions,
@@ -410,7 +411,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     // make sure we get the completions for each variable to insert a full property
     let completions = (
       await verifyCompletionsContain(autoInstallEditor.document, position, '"arrayvar"', '"stringvar"')
-    ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+    ).sort(compareCompletionItems);
     if (completions.length !== 2) {
       expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
     }
@@ -456,7 +457,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     position = autoInstallEditor.document.positionAt(varNode!.parent!.children![0].offset);
     completions = (
       await verifyCompletionsContain(autoInstallEditor.document, position, '"arrayvar"', '"stringvar"')
-    ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+    ).sort(compareCompletionItems);
     if (completions.length !== 2) {
       expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
     }

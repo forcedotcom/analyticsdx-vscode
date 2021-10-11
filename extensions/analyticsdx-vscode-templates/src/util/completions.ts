@@ -43,7 +43,7 @@ type SupportsLocationFunction = (location: Location, context: vscode.CompletionC
  * A delegate to JsonCompletionItemProvider, to support handling sets of attribute-paths -> completion sets
  * in a constructor.
  */
-export type JsonCompletionItemProviderDelegate = {
+export type JsonCompletionItemProviderDelegate<T extends vscode.CompletionItem = vscode.CompletionItem> = {
   /**
    * Tell if the specified document is valid for this delegate.
    * If undefined, then this can potentially support any document.
@@ -83,7 +83,7 @@ export type JsonCompletionItemProviderDelegate = {
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
-  ) => vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList>;
+  ) => vscode.ProviderResult<T[] | vscode.CompletionList<T>>;
 };
 
 /**
@@ -131,10 +131,11 @@ export function newRelativeFilepathDelegate(delegate: {
  * In general, you should initialize only 1 item provider to run against a file matcher at a time, to avoid parsing
  * the json multiple times in different provider instances.
  */
-export class JsonCompletionItemProvider implements vscode.CompletionItemProvider {
-  private delegates: JsonCompletionItemProviderDelegate[];
+export class JsonCompletionItemProvider<T extends vscode.CompletionItem = vscode.CompletionItem>
+  implements vscode.CompletionItemProvider<T> {
+  private delegates: Array<JsonCompletionItemProviderDelegate<T>>;
 
-  constructor(...delegates: JsonCompletionItemProviderDelegate[]) {
+  constructor(...delegates: Array<JsonCompletionItemProviderDelegate<T>>) {
     this.delegates = delegates || [];
   }
 
@@ -143,7 +144,7 @@ export class JsonCompletionItemProvider implements vscode.CompletionItemProvider
     position: vscode.Position,
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
-  ): vscode.ProviderResult<vscode.CompletionList> {
+  ): vscode.ProviderResult<vscode.CompletionList<T>> {
     let delegates = this.delegatesByDocument(this.delegates, document, context);
     if (delegates.length > 0) {
       const location = getLocation(document.getText(), document.offsetAt(position));
@@ -168,14 +169,14 @@ export class JsonCompletionItemProvider implements vscode.CompletionItemProvider
   }
 
   private provideDelegateCompletionItems(
-    delegates: JsonCompletionItemProviderDelegate[],
+    delegates: Array<JsonCompletionItemProviderDelegate<T>>,
     range: vscode.Range | undefined,
     location: Location,
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
-  ): vscode.ProviderResult<vscode.CompletionList> {
-    let all = Promise.resolve(new vscode.CompletionList([], false));
+  ): vscode.ProviderResult<vscode.CompletionList<T>> {
+    let all = Promise.resolve(new vscode.CompletionList<T>([], false));
 
     delegates.forEach(delegate => {
       const results = delegate.getItems(range, location, document, token, context);
@@ -201,7 +202,7 @@ export class JsonCompletionItemProvider implements vscode.CompletionItemProvider
   }
 
   private delegatesByDocument(
-    delegates: JsonCompletionItemProviderDelegate[],
+    delegates: Array<JsonCompletionItemProviderDelegate<T>>,
     document: vscode.TextDocument,
     context: vscode.CompletionContext
   ) {
@@ -211,17 +212,21 @@ export class JsonCompletionItemProvider implements vscode.CompletionItemProvider
   }
 
   private delegatesByLocation(
-    delegates: JsonCompletionItemProviderDelegate[],
+    delegates: Array<JsonCompletionItemProviderDelegate<T>>,
     location: Location,
     context: vscode.CompletionContext
-  ) {
+  ): Array<JsonCompletionItemProviderDelegate<T>> {
     return delegates.filter(
       delegate => !delegate.isSupportedLocation || delegate.isSupportedLocation(location, context)
     );
   }
 }
 
-function wrapItemText(item: vscode.CompletionItem, startText?: string, endText?: string): vscode.CompletionItem {
+function wrapItemText<T extends vscode.CompletionItem = vscode.CompletionItem>(
+  item: T,
+  startText?: string,
+  endText?: string
+): T {
   if (!(item.insertText instanceof vscode.SnippetString)) {
     if (startText) {
       if (item.insertText) {
@@ -240,11 +245,10 @@ function wrapItemText(item: vscode.CompletionItem, startText?: string, endText?:
   return item;
 }
 
-function wrapItemsTexts<T extends vscode.CompletionItem[] | vscode.CompletionList | undefined | null>(
-  items: T,
-  startText?: string,
-  endText?: string
-): T {
+function wrapItemsTexts<
+  L extends T[] | vscode.CompletionList<T> | undefined | null,
+  T extends vscode.CompletionItem = vscode.CompletionItem
+>(items: L, startText?: string, endText?: string): L {
   if (!items || (!startText && !endText)) {
     return items;
   }
@@ -252,5 +256,5 @@ function wrapItemsTexts<T extends vscode.CompletionItem[] | vscode.CompletionLis
     items.items = wrapItemsTexts(items.items, startText, endText);
     return items;
   }
-  return (items as vscode.CompletionItem[]).map(item => wrapItemText(item, startText, endText)) as T;
+  return (items as T[]).map(item => wrapItemText(item, startText, endText)) as L;
 }

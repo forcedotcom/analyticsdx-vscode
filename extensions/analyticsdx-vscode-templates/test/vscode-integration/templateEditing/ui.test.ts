@@ -13,6 +13,7 @@ import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '.
 import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
+  compareCompletionItems,
   createTemplateWithRelatedFiles,
   createTempTemplate,
   findPositionByJsonPath,
@@ -294,7 +295,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
         '"StringArrayVar"',
         '"StringTypeVar"'
       )
-    ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+    ).sort(compareCompletionItems);
     if (completions.length !== 5) {
       expect.fail('Expected 5 completions, got: ' + completions.map(i => i.label).join(', '));
     }
