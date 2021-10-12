@@ -352,7 +352,7 @@ describe('template-info-schema.json hookup', () => {
         const tree = parseTree(doc!.getText());
         expect(tree, 'json node').to.not.be.undefined;
         // go to the field
-        const node = findNodeAtLocation(tree, jsonpath);
+        const node = findNodeAtLocation(tree!, jsonpath);
         expect(node, jsonPathStr).to.not.be.undefined;
         // go to right after the ":"
         const position = doc!.positionAt(node!.parent!.colonOffset! + 1);

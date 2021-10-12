@@ -28,7 +28,7 @@ export abstract class VariableRefDefinitionProvider extends JsonAttributeDefinit
       const varUri = uriRelPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
       const doc = await vscode.workspace.openTextDocument(varUri);
       const tree = parseTree(doc.getText());
-      const nameNode = findNodeAtLocation(tree, [varname]);
+      const nameNode = tree && findNodeAtLocation(tree, [varname]);
       if (nameNode) {
         return new vscode.Location(varUri, rangeForNode(nameNode.parent ?? nameNode, doc));
       }

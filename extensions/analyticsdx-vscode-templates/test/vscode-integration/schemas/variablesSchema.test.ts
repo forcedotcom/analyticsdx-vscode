@@ -85,7 +85,7 @@ describe('variables-schema.json hookup', () => {
 
         const tree = parseTree(variablesEditor.document.getText());
         // find the variableType {} in the json
-        const varType = findNodeAtLocation(tree, [varName, 'variableType']);
+        const varType = tree && findNodeAtLocation(tree, [varName, 'variableType']);
         expect(varType, `${varName}.variableType`).to.not.be.undefined;
         // go right after the opening brace
         const position = variablesEditor.document.positionAt(varType!.offset + 1);

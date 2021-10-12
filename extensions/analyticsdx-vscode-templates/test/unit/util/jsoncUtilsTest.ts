@@ -25,6 +25,9 @@ describe('jsoncUtils', () => {
     if (errors.length > 0) {
       throw new Error('Failed to parse json: ' + errors.map(e => parseErrorToString(e, json)).join(', '));
     }
+    if (!jsonNode) {
+      throw new Error('Empty json from parse');
+    }
     return jsonNode;
   }
 

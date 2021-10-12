@@ -71,7 +71,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // find the [ after hooks:
-    const node = findNodeAtLocation(tree, ['hooks']);
+    const node = tree && findNodeAtLocation(tree, ['hooks']);
     expect(node, 'hooks').to.not.be.undefined;
     const scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -209,7 +209,8 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     const [doc] = await openFile(uri, true);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
     const tree = parseTree(doc.getText());
-    const node = findNodeAtLocation(tree, ['configuration', 'appConfiguration', 'values', 'StringTypeVar'])?.parent;
+    const node =
+      tree && findNodeAtLocation(tree, ['configuration', 'appConfiguration', 'values', 'StringTypeVar'])?.parent;
     expect(node, 'configuration.appConfiguration.values.StringTypeVar propNode').to.be.not.undefined;
     const nameNode = node!.children?.[0];
     expect(nameNode, 'nameNode').to.not.be.undefined;
@@ -352,7 +353,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
     // make sure the 'foo' variable go into variables.json
     const variables = parseTree(variablesEditor.document.getText());
-    const fooNode = findNodeAtLocation(variables, ['foo']);
+    const fooNode = variables && findNodeAtLocation(variables, ['foo']);
     expect(fooNode, 'foo in variables.json').to.not.be.undefined;
     // and that it's a {} object
     expect(fooNode!.type, 'foo in variables.json type').to.equal('object');
@@ -469,7 +470,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
 
     // also, make sure that other completions items (like the New variable snippet items from
     // NewVariableCompletionItemProviderDelegate) don't bleed over
-    position = autoInstallEditor.document.positionAt(autoInstallJson.offset).translate(0, 1);
+    position = autoInstallEditor.document.positionAt(autoInstallJson!.offset).translate(0, 1);
     completions = (await getCompletionItems(autoInstallEditor.document.uri, position)).items;
     if (completions.some(c => NEW_VARIABLE_SNIPPETS.some(s => c.label === s.label))) {
       expect.fail(
