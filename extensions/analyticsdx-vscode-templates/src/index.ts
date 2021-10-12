@@ -5,7 +5,6 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { EXTENSION_NAME } from './constants';
 import { telemetryService } from './telemetry';
@@ -33,19 +32,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<Extens
     return;
   }
 
-  const packageJson = context.asAbsolutePath('package.json');
-  try {
-    const json = JSON.parse(fs.readFileSync(packageJson).toString());
-    displayName = json.displayName || displayName;
-    version = json.version || version;
-    const aiKey = json.aiKey;
-    if (typeof aiKey === 'string' && aiKey) {
-      await telemetryService.initializeService(context, aiKey, version);
-    } else {
-      console.warn(`Missing aiKey in ${EXTENSION_NAME} package.json, telemetry is disabled`);
-    }
-  } catch (e) {
-    console.warn(`Unable to read ${packageJson}`, e);
+  const packageJson = context.extension.packageJSON;
+  displayName = packageJson?.displayName || displayName;
+  version = packageJson?.version || version;
+  const aiKey = packageJson?.aiKey;
+  if (typeof aiKey === 'string' && aiKey) {
+    await telemetryService.initializeService(context, aiKey, version);
+  } else {
+    console.warn(`Missing aiKey in ${EXTENSION_NAME} package.json, telemetry is disabled`);
   }
 
   const config = vscode.workspace.getConfiguration('analyticsdx-vscode-templates');
