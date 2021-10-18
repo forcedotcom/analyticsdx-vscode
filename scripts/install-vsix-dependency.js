@@ -18,9 +18,6 @@ var isInsiders = process.env.CODE_VERSION === 'insiders';
 const testRunFolder = path.join('.vscode-test', isInsiders ? 'insiders' : 'stable');
 const testRunFolderAbsolute = path.join(process.cwd(), testRunFolder);
 
-const downloadPlatform =
-  process.platform === 'darwin' ? 'darwin' : process.platform === 'win32' ? 'win32-archive' : 'linux-x64';
-
 const windowsExecutable = path.join(testRunFolderAbsolute, 'bin', isInsiders ? 'code-insiders' : 'code');
 const darwinExecutable = path.join(
   testRunFolderAbsolute,
