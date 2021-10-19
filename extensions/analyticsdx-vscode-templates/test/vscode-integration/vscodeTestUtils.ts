@@ -328,13 +328,7 @@ export async function createTempTemplate(
 
 export function writeTextToFile(file: vscode.Uri, textOrObj: string | object): Thenable<void> {
   const text = typeof textOrObj === 'string' ? textOrObj : JSON.stringify(textOrObj, undefined, 2);
-  const len = text.length;
-  // 2 bytes for each unicde char
-  const buf = new ArrayBuffer(len * 2);
-  const view = new Uint16Array(buf);
-  for (let i = 0; i < len; i++) {
-    view[i] = text.charCodeAt(i);
-  }
+  const buf = Buffer.from(text, 'utf-8');
   return vscode.workspace.fs.writeFile(file, new Uint8Array(buf));
 }
 
