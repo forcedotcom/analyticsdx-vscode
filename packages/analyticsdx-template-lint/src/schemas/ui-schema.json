@@ -24,7 +24,7 @@
           "condition": {
             "type": "string",
             "description": "A {{...}} condition against variables. Can use && and || to join expressions. If the condition evaluates to true, then the page displays. If the condition evaluates to false, the page does not display.",
-            "pattern": "^{{.+}}$",
+            "pattern": "^\\{\\{.+\\}\\}$",
             "patternErrorMessage": "Must be a valid {{...}} expression.",
             "examples": [
               "{{Variables.stringVariable == 'Yes'}}",
@@ -89,7 +89,7 @@
                   "oneOf": [
                     {
                       "type": "string",
-                      "pattern": "^{{.+}}$",
+                      "pattern": "^\\{\\{.+\\}\\}$",
                       "patternErrorMessage": "Value must be 'Disabled', 'Hidden', 'Visible', or a {{...}} expression.",
                       "examples": [
                         "{{Variables.booleanVariable}}",

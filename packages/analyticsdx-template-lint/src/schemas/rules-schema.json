@@ -304,7 +304,7 @@
       "oneOf": [
         {
           "type": "string",
-          "pattern": "^\\${.+}$",
+          "pattern": "^\\$\\{.+\\}$",
           "patternErrorMessage": "Not a valid ${...} expression nor \"true\" nor \"false\"."
         },
         {

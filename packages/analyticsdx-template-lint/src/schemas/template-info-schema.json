@@ -149,7 +149,7 @@
     },
     "assetVersion": {
       "type": "number",
-      "defaults": 46.0,
+      "default": 52.0,
       "minimum": 39.0,
       "$comment": "multipleOf 1.0 will basically check that it's a whole number or ends in .0, to match what's currently supported",
       "multipleOf": 1.0,
