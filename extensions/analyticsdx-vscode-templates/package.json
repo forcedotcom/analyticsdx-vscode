@@ -45,7 +45,7 @@
     "@types/tmp": "0.2.2",
     "@types/vscode": "1.60.0",
     "chai": "^4.0.2",
-    "cross-env": "5.2.0",
+    "cross-env": "7.0.3",
     "mocha": "7.0.1",
     "mocha-junit-reporter": "^1.13.0",
     "mocha-multi-reporters": "^1.1.4",
