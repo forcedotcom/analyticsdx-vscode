@@ -17,8 +17,8 @@ import { getRootWorkspace } from '../../../src/util/rootWorkspace';
 
 function makeTmpLWCName(basedir: vscode.Uri): Promise<string> {
   return new Promise((resolve, reject) => {
-    // tmpName() is supposed to only use alphanum chars, which should be valid for lwc names
-    tmp.tmpName({ dir: basedir.fsPath, prefix: 'test_lwc_' }, (err, tmppath) => {
+    // tmpName() w/ template is supposed to only use alphanum chars, which should be valid for lwc names
+    tmp.tmpName({ tmpdir: basedir.fsPath, template: 'test_lwc_XXXXXX' }, (err, tmppath) => {
       if (err) {
         reject(err);
       }

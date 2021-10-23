@@ -300,11 +300,12 @@ export async function createTempTemplate(
   // If you change this base name here, be sure to change that .gitignore
   const dir = await new Promise<vscode.Uri>((resolve, reject) => {
     // the folder name needs to be a valid dev name; tmpName() is supposed to only use alphanum chars
-    tmp.tmpName({ dir: basedir.fsPath, prefix: 'test_template_' }, (err, tmppath) => {
+    tmp.tmpName({ tmpdir: basedir.fsPath, prefix: 'test_template_' }, (err, tmppath) => {
       if (err) {
         reject(err);
+      } else {
+        resolve(vscode.Uri.file(tmppath));
       }
-      resolve(vscode.Uri.file(tmppath));
     });
   });
   await vscode.workspace.fs.createDirectory(dir);
