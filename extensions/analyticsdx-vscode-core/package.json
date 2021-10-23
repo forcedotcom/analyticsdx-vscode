@@ -28,6 +28,7 @@
   "dependencies": {
     "@salesforce/salesforcedx-utils-vscode": "file:../../lib/salesforcedx-utils-vscode.tgz",
     "@salesforce/templates": "52.2.0",
+    "glob": "7.2.0",
     "semver": "5.7.1",
     "tmp": "0.1.0",
     "which": "2.0.2"
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@salesforce/analyticsdx-test-utils-vscode": "0.7.1",
     "@types/chai": "^4.0.0",
+    "@types/glob": "7.2.0",
     "@types/mocha": "7.0.1",
     "@types/node": "14.17.27",
     "@types/open": "6.0.0",
