@@ -6,11 +6,11 @@
   "description": "Provides test utilities to run mocha tests",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "@types/chai": "^4.0.0",
+    "@types/chai": "4.2.22",
     "@types/glob": "7.2.0",
     "@types/mocha": "7.0.1",
     "@types/node": "14.17.27",
-    "chai": "^4.0.2",
+    "chai": "4.3.4",
     "decache": "4.6.0",
     "glob": "7.2.0",
     "istanbul-lib-coverage": "3.0.2",
