@@ -142,7 +142,7 @@ describe('createDashboardLWC.ts', () => {
         any | Thenable<any>
       >;
       let callNum = 0;
-      showQuickPick.callsFake(async (items: any) => {
+      showQuickPick.callsFake(async () => {
         callNum++;
         if (callNum === 1) {
           // 1st quick pick should be for the directory
