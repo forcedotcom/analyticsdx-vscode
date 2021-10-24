@@ -6,7 +6,7 @@
  */
 
 import * as fs from 'fs';
-import * as Fuse from 'fuse.js';
+import Fuse from 'fuse.js';
 import { JSONPath, Node as JsonNode } from 'jsonc-parser';
 
 /**
@@ -198,9 +198,8 @@ export function fuzzySearcher(
   }
   let list: string[] | undefined;
   const searchOpts = { limit };
-  let fuzzer: Fuse<string, Fuse.FuseOptions<string>> | undefined;
+  let fuzzer: Fuse<string> | undefined;
   return (pattern: string) => {
-    const results: string[] = [];
     // lazily, make a copy of the array since we have to index into it later and it could change outside of this
     // generated method
     if (!list) {
@@ -219,14 +218,6 @@ export function fuzzySearcher(
     if (pattern.length > fuzzOptions.maxPatternLength) {
       pattern = pattern.substring(0, fuzzOptions.maxPatternLength);
     }
-    fuzzer.search(pattern, searchOpts).forEach((index: any) => {
-      // on flat string arrays, fuse.js gives us an array of indices into the original list
-      if (typeof index === 'number') {
-        if (index >= 0 && index < list!.length) {
-          results.push(list![index]);
-        }
-      }
-    });
-    return results;
+    return fuzzer.search(pattern, searchOpts).map(result => result.item);
   };
 }

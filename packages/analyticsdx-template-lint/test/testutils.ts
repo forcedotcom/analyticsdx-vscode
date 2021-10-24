@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import Ajv, { ErrorObject as AjvErrorObject, Options as AjvOptions } from 'ajv';
-import * as betterAjvErrors from 'better-ajv-errors';
+import betterAjvErrors = require('better-ajv-errors');
 import { expect } from 'chai';
 import * as fs from 'fs';
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser';
