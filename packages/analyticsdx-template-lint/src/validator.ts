@@ -36,7 +36,8 @@ async function schemaValidate(
     // linting issues
     diagnostics.forEach(d => {
       if (!d.source) {
-        // code seems to be undefined if it's a json schema issues, otherwise it's a json format issue
+        // code seems to be undefined if it's a json schema issues, otherwise it's a json format issue (and
+        // code should be one of the values in ErrorCode)
         d.source = d.code === undefined ? JSON_SCHEMA_SOURCE_ID : JSON_SOURCE_ID;
       }
     });

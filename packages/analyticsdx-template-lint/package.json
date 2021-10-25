@@ -24,7 +24,7 @@
     "typescript": "4.4.3"
   },
   "optionalDependencies": {
-    "vscode-json-languageservice": "3.8.4"
+    "vscode-json-languageservice": "^4.1.8"
   },
   "files": [
     "out/src"
