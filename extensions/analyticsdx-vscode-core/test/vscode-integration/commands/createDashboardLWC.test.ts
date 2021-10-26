@@ -17,8 +17,8 @@ import { getRootWorkspace } from '../../../src/util/rootWorkspace';
 
 function makeTmpLWCName(basedir: vscode.Uri): Promise<string> {
   return new Promise((resolve, reject) => {
-    // tmpName() is supposed to only use alphanum chars, which should be valid for lwc names
-    tmp.tmpName({ dir: basedir.fsPath, prefix: 'test_lwc_' }, (err, tmppath) => {
+    // tmpName() w/ template is supposed to only use alphanum chars, which should be valid for lwc names
+    tmp.tmpName({ tmpdir: basedir.fsPath, template: 'test_lwc_XXXXXX' }, (err, tmppath) => {
       if (err) {
         reject(err);
       }
@@ -137,12 +137,12 @@ describe('createDashboardLWC.ts', () => {
       lwcName = await makeTmpLWCName(lwcRootDir);
       showInputBox.callsFake(() => Promise.resolve(lwcName));
 
-      const showQuickPick: sinon.SinonStub<[any | Thenable<any>], any | Thenable<any>> = sandbox.stub(
-        vscode.window,
-        'showQuickPick'
-      );
+      const showQuickPick = sandbox.stub(vscode.window, 'showQuickPick') as sinon.SinonStub<
+        [any | Thenable<any>],
+        any | Thenable<any>
+      >;
       let callNum = 0;
-      showQuickPick.callsFake(async (items: any) => {
+      showQuickPick.callsFake(async () => {
         callNum++;
         if (callNum === 1) {
           // 1st quick pick should be for the directory

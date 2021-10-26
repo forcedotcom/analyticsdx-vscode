@@ -36,7 +36,7 @@ export class RemoveJsonPropertyCodeActionProvider implements vscode.CodeActionPr
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.CodeAction[]> {
     const root = parseTree(document.getText());
-    const node = findNodeAtOffset(root, document.offsetAt(range.start));
+    const node = root && findNodeAtOffset(root, document.offsetAt(range.start));
 
     for (const path of this.paths) {
       if ((!token || !token.isCancellationRequested) && node && this.isSupportedAttributeNode(node, path)) {

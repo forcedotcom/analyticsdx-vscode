@@ -33,7 +33,7 @@ export class OutputDirGatherer implements ParametersGatherer<OutputDirType> {
     try {
       packageDirs = await getPackageDirectoryPaths();
     } catch (e) {
-      if (e.name !== 'NoPackageDirectoryPathsFound' && e.name !== 'NoPackageDirectoriesFound') {
+      if (e instanceof Error && e.name !== 'NoPackageDirectoryPathsFound' && e.name !== 'NoPackageDirectoriesFound') {
         throw e;
       }
     }

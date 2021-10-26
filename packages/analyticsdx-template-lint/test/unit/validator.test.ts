@@ -8,9 +8,9 @@
 import { expect } from 'chai';
 import { JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser';
 import * as path from 'path';
-import { DiagnosticSeverity, TextDocument } from 'vscode-json-languageservice';
+import { DiagnosticSeverity, ErrorCode, TextDocument } from 'vscode-json-languageservice';
 import { matchJsonNodeAtPattern } from '../../src';
-import { ERRORS, JSON_SCHEMA_SOURCE_ID, LINTER_SOURCE_ID } from '../../src/constants';
+import { ERRORS, JSON_SCHEMA_SOURCE_ID, JSON_SOURCE_ID, LINTER_SOURCE_ID } from '../../src/constants';
 import { FileTemplateValidator } from '../../src/validator';
 import { getDiagnosticsByPath, getDiagnosticsForPath, parseErrorToString, sfdxTestTemplatesPath } from '../testutils';
 
@@ -19,6 +19,9 @@ function parseOrThrow(json: string): JsonNode {
   const tree = parseTree(json, errors);
   if (errors.length > 0) {
     throw new Error('Failed to parse json: ' + errors.map(e => parseErrorToString(e, json)).join(', '));
+  }
+  if (!tree) {
+    throw new Error('Empty json from parse');
   }
   return tree;
 }
@@ -185,7 +188,8 @@ describe('FileTemplateValidator', () => {
           range: { start: { line: 13, character: 2 }, end: { line: 13, character: 42 } },
           message: 'Deprecated. Use a templateToApp rule instead.',
           severity: DiagnosticSeverity.Warning,
-          source: JSON_SCHEMA_SOURCE_ID
+          code: ErrorCode.Deprecated,
+          source: JSON_SOURCE_ID
         },
         {
           range: { start: { line: 13, character: 2 }, end: { line: 13, character: 42 } },
@@ -282,7 +286,7 @@ describe('FileTemplateValidator', () => {
         // filter out the ones about ruleDefinition and the folder.json not having a name w/ auto-install
         d =>
           !(
-            (d.source === JSON_SCHEMA_SOURCE_ID && d.message.startsWith('Deprecated')) ||
+            (d.source === JSON_SOURCE_ID && d.code === ErrorCode.Deprecated) ||
             d.code === ERRORS.TMPL_RULES_AND_RULE_DEFINITION ||
             d.code === ERRORS.TMPL_AUTO_INSTALL_MISSING_FOLDER_NAME
           )

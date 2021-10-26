@@ -61,7 +61,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // find the appliesTo.type in the first rule to see if the enum works
-    let node = findNodeAtLocation(tree, ['rules', 0, 'appliesTo', 0, 'type']);
+    let node = findNodeAtLocation(tree!, ['rules', 0, 'appliesTo', 0, 'type']);
     expect(node, 'rules[0].appliesTo[0].type').to.not.be.undefined;
     let position = doc.positionAt(node!.offset);
     await verifyCompletionsContain(
@@ -80,13 +80,13 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
     );
 
     // find the actions.action in the first rule to see if the enum works
-    node = findNodeAtLocation(tree, ['rules', 0, 'actions', 0, 'action']);
+    node = findNodeAtLocation(tree!, ['rules', 0, 'actions', 0, 'action']);
     expect(node, 'rules[0].actions[0].action').to.not.be.undefined;
     position = doc.positionAt(node!.offset);
     await verifyCompletionsContain(doc, position, '"add"', '"delete"', '"eval"', '"put"', '"replace"', '"set"');
 
     // find the returns in the first macro definition, and make sure the examples and snippet works
-    node = findNodeAtLocation(tree, ['macros', 0, 'definitions', 0, 'returns']);
+    node = findNodeAtLocation(tree!, ['macros', 0, 'definitions', 0, 'returns']);
     expect(node, 'macros[0].definitions[0].returns').to.not.be.undefined;
     position = doc.positionAt(node!.offset);
     await verifyCompletionsContain(doc, position, '""', 'true', 'false', 'null', '[]', '{}');
@@ -98,7 +98,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // go to just before the [ in "rules"
-    let node = findNodeAtLocation(tree, ['rules']);
+    let node = findNodeAtLocation(tree!, ['rules']);
     expect(node, 'rules').to.not.be.undefined;
     let scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -109,7 +109,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
     await verifyCompletionsContain(doc, position, 'New rule');
 
     // go to just after the [ in "actions"
-    node = findNodeAtLocation(tree, ['rules', 0, 'actions']);
+    node = findNodeAtLocation(tree!, ['rules', 0, 'actions']);
     expect(node, 'rules[0].actions').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -120,7 +120,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
     await verifyCompletionsContain(doc, position, 'New action');
 
     // go right after the [ in "constants"
-    node = findNodeAtLocation(tree, ['constants']);
+    node = findNodeAtLocation(tree!, ['constants']);
     expect(node, 'constants').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {

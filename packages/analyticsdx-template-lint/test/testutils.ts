@@ -4,8 +4,8 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import * as Ajv from 'ajv';
-import * as betterAjvErrors from 'better-ajv-errors';
+import Ajv, { ErrorObject as AjvErrorObject, Options as AjvOptions } from 'ajv';
+import betterAjvErrors = require('better-ajv-errors');
 import { expect } from 'chai';
 import * as fs from 'fs';
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser';
@@ -72,6 +72,21 @@ export function getDiagnosticsByPath<Document extends { uri: string }, Diagnosti
   return m;
 }
 
+function newVscodeAjv(options?: AjvOptions): Ajv {
+  // we need allowUnionTypes on and strictRequired off for the anyOf's to work right w/ ajv
+  const ajv = new Ajv({ allowUnionTypes: true, strictRequired: false, ...options });
+  // tell ajv about the extra json-schema props that vscode supports
+  ajv.addVocabulary([
+    'allowComments',
+    'defaultSnippets',
+    'deprecationMessage',
+    'doNotSuggest',
+    'enumDescriptions',
+    'patternErrorMessage'
+  ]);
+  return ajv;
+}
+
 /** Asynchronously generate a describe() testsuite for a json schema and a set of
  * test files, which should all be valid for the schema, using Ajv.
  * @param schema the json schema (as a json object)
@@ -104,14 +119,14 @@ export function generateJsonSchemaValidFilesTestSuite(
         } else {
           // we have to make the describe() in the async callback so that it works w/ run() and --delay in mocha
           return describe(schemaName + ' validates files', () => {
-            const ajv = new Ajv({ allErrors: true, jsonPointers: true });
+            const ajv = newVscodeAjv({ allErrors: true });
             const validator = ajv.compile(schema);
             const readFile = promisify(fs.readFile);
 
             entries.forEach(entry => {
               it(path.join(testFilesDir, entry.path), async () => {
                 const json = await readFile(entry.fullPath, { encoding: 'utf-8' }).then(jsoncParse);
-                const result = await validator(json);
+                const result = validator(json);
                 if (!result || (validator.errors && validator.errors.length > 0)) {
                   const errorsText = betterAjvErrors(schema, json, validator.errors, { indent: 2 });
                   expect.fail('schema validation failed with errors:\n' + errorsText);
@@ -136,13 +151,11 @@ export function generateJsonSchemaValidFilesTestSuite(
 
 /** Create a function that uses Ajv to validate a file against a json schema, and return the resulting SchemaErrors. */
 export function createRelPathValidateFn(schema: object, basedir: string): (relpath: string) => Promise<SchemaErrors> {
-  const ajv = new Ajv({ allErrors: true });
-  const validator = ajv.compile(schema);
-  const readFile = promisify(fs.readFile);
-
   return async function validate(relpath: string) {
-    const json = await readFile(path.join(basedir, relpath), { encoding: 'utf-8' }).then(jsoncParse);
-    const result = await validator(json);
+    const ajv = newVscodeAjv({ allErrors: true });
+    const validator = ajv.compile(schema);
+    const json = await fs.promises.readFile(path.join(basedir, relpath), { encoding: 'utf-8' }).then(jsoncParse);
+    const result = validator(json);
     if (result || !validator.errors || validator.errors.length <= 0) {
       expect.fail('Expected validation errors on ' + relpath);
     }
@@ -153,16 +166,16 @@ export function createRelPathValidateFn(schema: object, basedir: string): (relpa
 export class SchemaErrors {
   private readonly missingProps = new Set<string>();
   private readonly invalidProps = new Set<string>();
-  private readonly unrecognizedErrors: Ajv.ErrorObject[] = [];
+  private readonly unrecognizedErrors: AjvErrorObject[] = [];
 
-  constructor(errors: Ajv.ErrorObject[] | undefined | null) {
+  constructor(errors: AjvErrorObject[] | undefined | null) {
     if (errors) {
       errors.forEach(error => {
+        // see https://ajv.js.org/api.html#validation-errors for details specific errors types
         if (error.keyword === 'required') {
           // this means a required field is missing
-          let name =
-            this.cleanDataPath(error.dataPath || '') + '.' + (error.params as Ajv.RequiredParams).missingProperty;
-          // if it's nested, dataPath will be the parent field
+          let name = this.jsonPointerToJsonpath(error.instancePath || '') + '.' + error.params.missingProperty;
+          // if it's nested, instancePath will be the parent field
           if (name.startsWith('.')) {
             name = name.substring(1);
           }
@@ -180,29 +193,29 @@ export class SchemaErrors {
             error.keyword === 'maxLength' ||
             error.keyword === 'minimum' ||
             error.keyword === 'multipleOf') &&
-          error.dataPath
+          error.instancePath
         ) {
           // this means an invalid value in a field or wrong # of items in an array,
-          // we'll usually get a bunch of these (with the same dataPath) per bad field
-          let name = this.cleanDataPath(error.dataPath);
+          // we'll usually get a bunch of these (with the same instancePath) per bad field
+          let name = this.jsonPointerToJsonpath(error.instancePath);
           if (name.startsWith('.')) {
             name = name.substring(1);
           }
           this.invalidProps.add(name);
         } else if (error.keyword === 'additionalProperties') {
           // this means an object has a property that doesn't exist in the schema -- report this as invalid for now
-          let name = this.cleanDataPath(error.dataPath);
+          let name = this.jsonPointerToJsonpath(error.instancePath);
           if (name.startsWith('.')) {
             name = name.substring(1);
           }
           if (name) {
             name += '.';
           }
-          name += (error.params as Ajv.AdditionalPropertiesParams).additionalProperty;
+          name += error.params.additionalProperty;
           this.invalidProps.add(name);
-        } else if (error.keyword === 'if' && error.dataPath === '') {
+        } else if (error.keyword === 'if' && error.instancePath === '') {
           // we'll get this error if any of the top-level fields are missing, we can skip it since we
-          // should also get a 'required' error with dataPath: ''
+          // should also get a 'required' error with instancePath: ''
         } else {
           // add anything else to the unrecognizedErrors
           this.unrecognizedErrors.push(error);
@@ -211,10 +224,24 @@ export class SchemaErrors {
     }
   }
 
-  private cleanDataPath(name: string): string {
-    // for some errors, Ajv will give us dataPaths like "['foo'].bar.properties['baz'].type"; this will try to convert
-    // that to foo.bar.properties.baz.type (assuming 'foo' and 'baz' are valid unqouted javascript ids)
-    return name.replace(/\['([a-zA-Z_][a-zA-Z0-9_]*)'\]/g, '.$1');
+  private jsonPointerToJsonpath(name: string): string {
+    // ajv is going to give us jsonpointers like /foo/bar/1/properties/B A Z/.type; this will try to convert
+    // that to jsop path style foo.bar[1].properties['B A Z'].type
+    return name.split('/').reduce((path, part) => {
+      // Note: this doesn't cover the full jsonpointer syntax (https://datatracker.ietf.org/doc/html/rfc6901),
+      // but it should work for the current errors from our schemas during the unit tests.
+      if (part) {
+        if (part.match(/^[0-9]$/)) {
+          path += `[${part}]`;
+        } else if (part.match(/^([a-zA-Z_][a-zA-Z0-9_]*)$/)) {
+          path += `.${part}`;
+        } else {
+          path += `['${part}'']`;
+        }
+      }
+      return path;
+    }, '');
+    //return name.replace(/\['([a-zA-Z_][a-zA-Z0-9_]*)'\]/g, '.$1');
   }
 
   public expectMissingProps(exact: boolean, ...names: string[]) {

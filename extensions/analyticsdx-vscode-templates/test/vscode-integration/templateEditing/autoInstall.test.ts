@@ -14,6 +14,7 @@ import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '.
 import { NEW_VARIABLE_SNIPPETS } from '../../../src/variables';
 import {
   closeAllEditors,
+  compareCompletionItems,
   createTemplateWithRelatedFiles,
   createTempTemplate,
   getCodeActions,
@@ -70,7 +71,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // find the [ after hooks:
-    const node = findNodeAtLocation(tree, ['hooks']);
+    const node = tree && findNodeAtLocation(tree, ['hooks']);
     expect(node, 'hooks').to.not.be.undefined;
     const scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -208,7 +209,8 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     const [doc] = await openFile(uri, true);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
     const tree = parseTree(doc.getText());
-    const node = findNodeAtLocation(tree, ['configuration', 'appConfiguration', 'values', 'StringTypeVar'])?.parent;
+    const node =
+      tree && findNodeAtLocation(tree, ['configuration', 'appConfiguration', 'values', 'StringTypeVar'])?.parent;
     expect(node, 'configuration.appConfiguration.values.StringTypeVar propNode').to.be.not.undefined;
     const nameNode = node!.children?.[0];
     expect(nameNode, 'nameNode').to.not.be.undefined;
@@ -351,7 +353,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
     // make sure the 'foo' variable go into variables.json
     const variables = parseTree(variablesEditor.document.getText());
-    const fooNode = findNodeAtLocation(variables, ['foo']);
+    const fooNode = variables && findNodeAtLocation(variables, ['foo']);
     expect(fooNode, 'foo in variables.json').to.not.be.undefined;
     // and that it's a {} object
     expect(fooNode!.type, 'foo in variables.json type').to.equal('object');
@@ -410,7 +412,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     // make sure we get the completions for each variable to insert a full property
     let completions = (
       await verifyCompletionsContain(autoInstallEditor.document, position, '"arrayvar"', '"stringvar"')
-    ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+    ).sort(compareCompletionItems);
     if (completions.length !== 2) {
       expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
     }
@@ -456,7 +458,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     position = autoInstallEditor.document.positionAt(varNode!.parent!.children![0].offset);
     completions = (
       await verifyCompletionsContain(autoInstallEditor.document, position, '"arrayvar"', '"stringvar"')
-    ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+    ).sort(compareCompletionItems);
     if (completions.length !== 2) {
       expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
     }
@@ -468,7 +470,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
 
     // also, make sure that other completions items (like the New variable snippet items from
     // NewVariableCompletionItemProviderDelegate) don't bleed over
-    position = autoInstallEditor.document.positionAt(autoInstallJson.offset).translate(0, 1);
+    position = autoInstallEditor.document.positionAt(autoInstallJson!.offset).translate(0, 1);
     completions = (await getCompletionItems(autoInstallEditor.document.uri, position)).items;
     if (completions.some(c => NEW_VARIABLE_SNIPPETS.some(s => c.label === s.label))) {
       expect.fail(

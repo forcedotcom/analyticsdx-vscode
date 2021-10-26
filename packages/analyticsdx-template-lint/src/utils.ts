@@ -5,7 +5,8 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as Fuse from 'fuse.js';
+import * as fs from 'fs';
+import Fuse from 'fuse.js';
 import { JSONPath, Node as JsonNode } from 'jsonc-parser';
 
 /**
@@ -130,6 +131,20 @@ export function matchJsonNodeAtPattern(
   return found;
 }
 
+/** Tell if the specified file path exists and is a file.
+ * @return true if it's a file, false it's not a file, undefined if it doesn't exist.
+ */
+export async function pathIsFile(filepath: string): Promise<boolean | undefined> {
+  try {
+    const stat = await fs.promises.stat(filepath);
+    return stat.isFile();
+  } catch (error) {
+    if (typeof error === 'object' && (error as any).code === 'ENOENT') {
+      return undefined;
+    }
+    throw error;
+  }
+}
 /** Tell if the specified string is a valid relative-path (for templates) */
 export function isValidRelpath(relpath: string | undefined | null): boolean {
   return (
@@ -183,9 +198,8 @@ export function fuzzySearcher(
   }
   let list: string[] | undefined;
   const searchOpts = { limit };
-  let fuzzer: Fuse<string, Fuse.FuseOptions<string>> | undefined;
+  let fuzzer: Fuse<string> | undefined;
   return (pattern: string) => {
-    const results: string[] = [];
     // lazily, make a copy of the array since we have to index into it later and it could change outside of this
     // generated method
     if (!list) {
@@ -204,14 +218,6 @@ export function fuzzySearcher(
     if (pattern.length > fuzzOptions.maxPatternLength) {
       pattern = pattern.substring(0, fuzzOptions.maxPatternLength);
     }
-    fuzzer.search(pattern, searchOpts).forEach((index: any) => {
-      // on flat string arrays, fuse.js gives us an array of indices into the original list
-      if (typeof index === 'number') {
-        if (index >= 0 && index < list!.length) {
-          results.push(list![index]);
-        }
-      }
-    });
-    return results;
+    return fuzzer.search(pattern, searchOpts).map(result => result.item);
   };
 }

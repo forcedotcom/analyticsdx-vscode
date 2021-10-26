@@ -300,11 +300,12 @@ export async function createTempTemplate(
   // If you change this base name here, be sure to change that .gitignore
   const dir = await new Promise<vscode.Uri>((resolve, reject) => {
     // the folder name needs to be a valid dev name; tmpName() is supposed to only use alphanum chars
-    tmp.tmpName({ dir: basedir.fsPath, prefix: 'test_template_' }, (err, tmppath) => {
+    tmp.tmpName({ tmpdir: basedir.fsPath, prefix: 'test_template_' }, (err, tmppath) => {
       if (err) {
         reject(err);
+      } else {
+        resolve(vscode.Uri.file(tmppath));
       }
-      resolve(vscode.Uri.file(tmppath));
     });
   });
   await vscode.workspace.fs.createDirectory(dir);
@@ -328,13 +329,7 @@ export async function createTempTemplate(
 
 export function writeTextToFile(file: vscode.Uri, textOrObj: string | object): Thenable<void> {
   const text = typeof textOrObj === 'string' ? textOrObj : JSON.stringify(textOrObj, undefined, 2);
-  const len = text.length;
-  // 2 bytes for each unicde char
-  const buf = new ArrayBuffer(len * 2);
-  const view = new Uint16Array(buf);
-  for (let i = 0; i < len; i++) {
-    view[i] = text.charCodeAt(i);
-  }
+  const buf = Buffer.from(text, 'utf-8');
   return vscode.workspace.fs.writeFile(file, new Uint8Array(buf));
 }
 
@@ -410,6 +405,14 @@ export async function setDocumentText(editor: vscode.TextEditor, textOrObj: stri
   }
 }
 
+export function getCompletionItemLabelText(item: vscode.CompletionItem): string {
+  return typeof item.label === 'string' ? item.label : item.label.label;
+}
+
+export function compareCompletionItems(l1: vscode.CompletionItem, l2: vscode.CompletionItem): number {
+  return getCompletionItemLabelText(l1).localeCompare(getCompletionItemLabelText(l2));
+}
+
 export async function getCompletionItems(uri: vscode.Uri, position: vscode.Position): Promise<vscode.CompletionList> {
   const result = await vscode.commands.executeCommand<vscode.CompletionList>(
     'vscode.executeCompletionItemProvider',
@@ -434,7 +437,10 @@ export async function verifyCompletionsContain(
   // json language service, is injecting extra stuff into our document type).
   const dups: string[] = [];
   list.items
-    .reduce((m, val) => m.set(val.label, (m.get(val.label) || 0) + 1), new Map<string, number>())
+    .reduce((m, val) => {
+      const text = getCompletionItemLabelText(val);
+      return m.set(text, (m.get(text) || 0) + 1);
+    }, new Map<string, number>())
     .forEach((num, label) => {
       if (num >= 2) {
         dups.push(label);

@@ -16,9 +16,16 @@ import { EXTENSION_NAME } from '../../../src/constants';
 import { TelemetryService } from '../../../src/telemetry/telemetry';
 
 class MockExtensionContext implements vscode.ExtensionContext {
+  public secrets!: vscode.SecretStorage;
+  public extensionUri!: vscode.Uri;
+  public environmentVariableCollection!: vscode.EnvironmentVariableCollection;
+  public storageUri: vscode.Uri | undefined;
+  public globalStorageUri!: vscode.Uri;
+  public logUri!: vscode.Uri;
+  public extension!: vscode.Extension<any>;
   public subscriptions: Array<{ dispose(): any }> = [];
   public workspaceState!: vscode.Memento;
-  public globalState!: vscode.Memento;
+  public globalState!: vscode.Memento & { setKeysForSync(keys: readonly string[]): void };
   public extensionPath: string = 'extensionPath';
   public asAbsolutePath(relativePath: string): string {
     return relativePath;
@@ -26,6 +33,8 @@ class MockExtensionContext implements vscode.ExtensionContext {
   public storagePath = 'storagePath';
   public globalStoragePath = 'globalStoragePath';
   public logPath = 'logPath';
+
+  constructor(public extensionMode: vscode.ExtensionMode = vscode.ExtensionMode.Production) {}
 }
 
 describe('TelemetryService', () => {
@@ -36,8 +45,9 @@ describe('TelemetryService', () => {
 
   async function initTelemetryService({
     isTelemetryEnabled = true,
-    isDevMode = false
-  }: { isTelemetryEnabled?: boolean; isDevMode?: boolean } = {}) {
+    isDevMode = false,
+    extensionMode = vscode.ExtensionMode.Production
+  }: { isTelemetryEnabled?: boolean; isDevMode?: boolean; extensionMode?: vscode.ExtensionMode } = {}) {
     // machineId is only looked at during initializeService so we can't change it later to any affect
     sandbox.stub(vscode.env, 'machineId').get(() => (isDevMode ? 'someValue.machineId' : '123456'));
     sandbox.stub(BaseTelemetryService.prototype, 'isTelemetryEnabled').returns(Promise.resolve(isTelemetryEnabled));
@@ -55,7 +65,7 @@ describe('TelemetryService', () => {
     });
 
     telemetryService = new TelemetryService();
-    await telemetryService.initializeService(new MockExtensionContext(), 'aiKey', '0.0.1');
+    await telemetryService.initializeService(new MockExtensionContext(extensionMode), 'aiKey', '0.0.1');
   }
 
   beforeEach(() => {
@@ -76,6 +86,14 @@ describe('TelemetryService', () => {
     await initTelemetryService({ isDevMode: true });
     await telemetryService.sendExtensionActivationEvent([1, 700]);
     sinon.assert.notCalled(sendEvent);
+  });
+
+  [vscode.ExtensionMode.Development, vscode.ExtensionMode.Test].forEach(mode => {
+    it(`should not send telemetry data for extensionMode ${vscode.ExtensionMode[mode]}`, async () => {
+      await initTelemetryService({ extensionMode: mode });
+      await telemetryService.sendExtensionActivationEvent([1, 700]);
+      sinon.assert.notCalled(sendEvent);
+    });
   });
 
   it('should send correct data format on sendTelemetryEvent', async () => {

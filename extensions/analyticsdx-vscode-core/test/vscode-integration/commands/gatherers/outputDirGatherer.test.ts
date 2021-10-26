@@ -23,10 +23,10 @@ describe('OutputDirGatherer', () => {
   });
 
   it('show correct initial options', async () => {
-    const showQuickPick: sinon.SinonStub<[any | Thenable<any>], any | Thenable<any>> = sandbox.stub(
-      vscode.window,
-      'showQuickPick'
-    );
+    const showQuickPick = sandbox.stub(vscode.window, 'showQuickPick') as sinon.SinonStub<
+      [any | Thenable<any>],
+      any | Thenable<any>
+    >;
     let quickPickItems: any;
     showQuickPick.callsFake(async (items: any) => {
       quickPickItems = await items;
@@ -42,10 +42,10 @@ describe('OutputDirGatherer', () => {
   });
 
   it('show correct custom directories', async () => {
-    const showQuickPick: sinon.SinonStub<[any | Thenable<any>], any | Thenable<any>> = sandbox.stub(
-      vscode.window,
-      'showQuickPick'
-    );
+    const showQuickPick = sandbox.stub(vscode.window, 'showQuickPick') as sinon.SinonStub<
+      [any | Thenable<any>],
+      any | Thenable<any>
+    >;
     let callNum = 0;
     let quickPickItems: any;
     showQuickPick.callsFake(async (items: any) => {

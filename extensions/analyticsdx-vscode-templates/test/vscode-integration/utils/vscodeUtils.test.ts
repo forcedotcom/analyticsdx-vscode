@@ -70,12 +70,13 @@ describe('vscodeUtils', () => {
 
   describe('rangeForNode()', () => {
     let document: vscode.TextDocument;
-    let root: JsonNode;
+    let root: JsonNode | undefined;
 
     before(async () => {
       await closeAllEditors();
       document = await vscode.workspace.openTextDocument(uriFromTestRoot('vscodeUtilsTest', 'vscodeUtils.test.json'));
       root = parseTree(document.getText());
+      expect(root, 'jsonNode root').to.not.be.undefined;
     });
     after(closeAllEditors);
 

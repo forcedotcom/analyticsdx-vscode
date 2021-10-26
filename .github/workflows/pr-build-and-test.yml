@@ -5,6 +5,9 @@ on:
     branches:
       - develop
 
+env:
+  NODE_VERSION: '14.16.0'
+
 jobs:
   pr-build:
     runs-on: ubuntu-latest
@@ -12,11 +15,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js 12.4.0
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
         with:
-          node-version: '12.4.0'
+          node-version: ${{ env.NODE_VERSION }}
       - name: Build
         run: |
           npm install
@@ -35,11 +38,11 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js 12.4.0
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
         with:
-          node-version: '12.4.0'
+          node-version: ${{ env.NODE_VERSION }}
       - name: Build
         run: |
           npm install
@@ -57,11 +60,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js 12.4.0
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
         with:
-          node-version: '12.4.0'
+          node-version: ${{ env.NODE_VERSION }}
       - name: Build
         # do --ignore-scripts so it skips the bootstrap in the extensions/, since test:vsix-integration runs
         # a git clean and a bootstrap to build the vsix's
@@ -81,11 +84,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js 12.4.0
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
         with:
-          node-version: '12.4.0'
+          node-version: ${{ env.NODE_VERSION }}
       - name: Build
         # Note: npm run lint fails silently on windows for some reason, but we really only need
         # to run it in one job anyways

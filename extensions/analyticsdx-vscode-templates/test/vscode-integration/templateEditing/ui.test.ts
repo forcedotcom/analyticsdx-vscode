@@ -13,6 +13,7 @@ import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '.
 import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
+  compareCompletionItems,
   createTemplateWithRelatedFiles,
   createTempTemplate,
   findPositionByJsonPath,
@@ -69,7 +70,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // find the visibility in the first page variable to see if the enum works
-    let node = findNodeAtLocation(tree, ['pages', 0, 'variables', 0, 'visibility']);
+    let node = findNodeAtLocation(tree!, ['pages', 0, 'variables', 0, 'visibility']);
     expect(node, 'pages[0].variables').to.not.be.undefined;
     let position = doc.positionAt(node!.offset);
     await verifyCompletionsContain(
@@ -82,7 +83,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     );
 
     // find the start of the first "page" item
-    node = findNodeAtLocation(tree, ['pages', 0]);
+    node = findNodeAtLocation(tree!, ['pages', 0]);
     expect(node, 'pages').to.not.be.undefined;
     // this should be right the opening '{'
     position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
@@ -96,7 +97,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // go to just before the [ in "pages"
-    let node = findNodeAtLocation(tree, ['pages']);
+    let node = findNodeAtLocation(tree!, ['pages']);
     expect(node, 'pages').to.not.be.undefined;
     let scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -107,7 +108,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New pages');
 
     // go to just after the [ in "variables"
-    node = findNodeAtLocation(tree, ['pages', 0, 'variables']);
+    node = findNodeAtLocation(tree!, ['pages', 0, 'variables']);
     expect(node, 'pages[0].variables').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -118,7 +119,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New variable');
 
     // go right after the [ in "displayMessages"
-    node = findNodeAtLocation(tree, ['displayMessages']);
+    node = findNodeAtLocation(tree!, ['displayMessages']);
     expect(node, 'displayMessages').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -234,7 +235,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     const [doc] = await openFile(uri, true);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
     const tree = parseTree(doc.getText());
-    const node = findNodeAtLocation(tree, ['pages', 0, 'variables', 3, 'name'])?.parent;
+    const node = tree && findNodeAtLocation(tree, ['pages', 0, 'variables', 3, 'name'])?.parent;
     expect(node, 'pages[0].variables[3].name propNode').to.be.not.undefined;
     const nameNode = node!.children?.[0];
     expect(nameNode, 'nameNode').to.not.be.undefined;
@@ -294,7 +295,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
         '"StringArrayVar"',
         '"StringTypeVar"'
       )
-    ).sort((i1, i2) => i1.label.localeCompare(i2.label));
+    ).sort(compareCompletionItems);
     if (completions.length !== 5) {
       expect.fail('Expected 5 completions, got: ' + completions.map(i => i.label).join(', '));
     }
@@ -419,7 +420,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     await waitForDiagnostics(variablesEditor.document.uri, d => d && d.length === 0);
     // make sure the 'foo' variable go into variables.json
     const variables = parseTree(variablesEditor.document.getText());
-    const fooNode = findNodeAtLocation(variables, ['foo']);
+    const fooNode = variables && findNodeAtLocation(variables, ['foo']);
     expect(fooNode, 'foo in variables.json').to.not.be.undefined;
     // and that it's a {} object
     expect(fooNode!.type, 'foo in variables.json type').to.equal('object');

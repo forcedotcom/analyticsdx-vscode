@@ -126,7 +126,7 @@ export abstract class VariableRefCompletionItemProviderDelegate implements JsonC
     const doc = await vscode.workspace.openTextDocument(varUri);
     const tree = parseTree(doc.getText());
     const items: vscode.CompletionItem[] = [];
-    if (tree.type === 'object') {
+    if (tree?.type === 'object') {
       tree.children?.forEach(child => {
         if (
           child.type === 'property' &&

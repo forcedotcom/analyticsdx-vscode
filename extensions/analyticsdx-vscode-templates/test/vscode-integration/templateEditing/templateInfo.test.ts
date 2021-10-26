@@ -207,10 +207,11 @@ describe('TemplateEditorManager configures template-info.json', () => {
 
     // make sure assetIcon and templateIcon got removed
     const tree = parseTree(doc!.getText());
-    if (findNodeAtLocation(tree, ['assetIcon'])) {
+    expect(tree, 'jsonNode root').to.not.be.undefined;
+    if (findNodeAtLocation(tree!, ['assetIcon'])) {
       expect.fail('"assetIcon" was not removed from the file');
     }
-    if (findNodeAtLocation(tree, ['templateIcon'])) {
+    if (findNodeAtLocation(tree!, ['templateIcon'])) {
       expect.fail('"templateIcon" was not removed from the file');
     }
   });

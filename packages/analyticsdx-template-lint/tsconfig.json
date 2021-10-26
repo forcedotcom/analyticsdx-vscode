@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es6",
-    "lib": ["es6", "dom"],
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    // fuse.js only works w/ esModuleInterop on
+    "esModuleInterop": true,
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "node",

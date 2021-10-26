@@ -66,7 +66,7 @@ export class VariableHoverProvider implements vscode.HoverProvider {
       // so we can't get to the variable definition object from it and we need to do a real
       // full parse
       const tree = parseTree(document.getText());
-      const node = findNodeAtOffset(tree, document.offsetAt(position));
+      const node = tree && findNodeAtOffset(tree, document.offsetAt(position));
       // if they're hovering the string-key part of a top-level property def (e.g. "here": {})
       if (
         node?.type === 'string' &&
@@ -103,7 +103,7 @@ export abstract class VariableRefHoverProvider implements vscode.HoverProvider {
         const varUri = uriRelPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
         const varDoc = await vscode.workspace.openTextDocument(varUri);
         const tree = parseTree(varDoc.getText());
-        const txt = hoverMarkdownForVariable(varname, findNodeAtLocation(tree, [varname]));
+        const txt = hoverMarkdownForVariable(varname, tree && findNodeAtLocation(tree, [varname]));
         if (txt) {
           return new vscode.Hover(txt, rangeForNode(location.previousNode, varDoc));
         }

@@ -9,7 +9,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { downloadAndUnzipVSCode } = require('vscode-test');
+const { downloadAndUnzipVSCode } = require('@vscode/test-electron');
 
 function symlink(src, dest) {
   try {
@@ -24,7 +24,7 @@ function symlink(src, dest) {
 }
 
 // Downloads an instance of VS Code for tests to either .vscode-test/insiders or .vscode-test/stable
-(async function() {
+(async function () {
   const installDir = process.env.CODE_VERSION === 'insiders' ? 'insiders' : 'stable';
   const electron = await downloadAndUnzipVSCode(installDir);
   // downloadAndUnzipVSCode generates a path (with a version #) to the Electron executable, like:

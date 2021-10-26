@@ -64,7 +64,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // find the type in the first variable
-    let node = findNodeAtLocation(tree, ['string', 'variableType', 'type']);
+    let node = findNodeAtLocation(tree!, ['string', 'variableType', 'type']);
     expect(node, 'string.variableType.type').to.not.be.undefined;
     let position = doc.positionAt(node!.offset);
     await verifyCompletionsContain(
@@ -87,7 +87,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     );
 
     // find the start of the first "dataType" field in the 2nd variable
-    node = findNodeAtLocation(tree, ['sobjectfield', 'variableType', 'dataType']);
+    node = findNodeAtLocation(tree!, ['sobjectfield', 'variableType', 'dataType']);
     expect(node, 'sobjectfield.variableType.dataType').to.not.be.undefined;
     position = doc.positionAt(node!.offset);
     await verifyCompletionsContain(
@@ -105,7 +105,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     );
 
     // check for the unused fields in the sobjectfield var
-    node = findNodeAtLocation(tree, ['sobjectfield']);
+    node = findNodeAtLocation(tree!, ['sobjectfield']);
     expect(node, 'sobjectfield').to.not.be.undefined;
     // this should be right at the opening '{'
     position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
@@ -128,7 +128,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // go to just before the { in "variableType" in the string var
-    const node = findNodeAtLocation(tree, ['string', 'variableType']);
+    const node = findNodeAtLocation(tree!, ['string', 'variableType']);
     expect(node, 'string.variableType').to.not.be.undefined;
     const scan = scanLinesUntil(doc, ch => ch === '{', doc.positionAt(node!.offset));
     if (scan.ch !== '{') {
@@ -237,7 +237,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     const [doc] = await openFile(uri, true);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
     const tree = parseTree(doc.getText());
-    const node = findNodeAtLocation(tree, ['ObjectTypeVar'])?.parent;
+    const node = tree && findNodeAtLocation(tree, ['ObjectTypeVar'])?.parent;
     expect(node, 'ObjectTypeVar propNode').to.be.not.undefined;
     const nameNode = node!.children?.[0];
     expect(nameNode, 'nameNode').to.not.be.undefined;
@@ -249,7 +249,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
       expect.fail("Expected at least one hover to contain 'ObjectTypeVar'");
     }
 
-    const valueNode = findNodeAtLocation(tree, ['ObjectTypeVar', 'label']);
+    const valueNode = findNodeAtLocation(tree!, ['ObjectTypeVar', 'label']);
     expect(valueNode, 'ObjectTypeVar.label').to.not.be.undefined;
     hovers = await getHovers(uri, doc.positionAt(valueNode!.offset));
     expect(hovers, 'ObjectTypeVar.label hovers').to.not.be.undefined;
@@ -262,9 +262,9 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     const [doc] = await openFile(uri, true);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
     const tree = parseTree(doc.getText());
-    expect(tree.type, 'root json type').to.equal('object');
+    expect(tree?.type, 'root json type').to.equal('object');
     // this shold right after the opening { (and before any of the existing variable defs)
-    let position = doc.positionAt(tree.offset).translate(0, 1);
+    let position = doc.positionAt(tree!.offset).translate(0, 1);
     let completions = await verifyCompletionsContain(doc, position, ...NEW_VARIABLE_SNIPPETS.map(s => s.label));
     if (completions.length !== NEW_VARIABLE_SNIPPETS.length) {
       expect.fail(
@@ -277,7 +277,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     });
 
     // make sure the snippets don't show up elsewhere, like in a variable def body
-    const node = findNodeAtLocation(tree, ['StringTypeVar']);
+    const node = findNodeAtLocation(tree!, ['StringTypeVar']);
     expect(node, 'StringTypeVar node').to.not.be.undefined;
     position = doc.positionAt(node!.offset);
     completions = (await getCompletionItems(doc.uri, position)).items;

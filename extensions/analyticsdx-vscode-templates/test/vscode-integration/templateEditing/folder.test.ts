@@ -61,13 +61,13 @@ describe('TemplateEditorManager configures folderDefinition', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // find the accessType in the first shares to see if the enum works
-    let node = findNodeAtLocation(tree, ['shares', 0, 'accessType']);
+    let node = findNodeAtLocation(tree!, ['shares', 0, 'accessType']);
     expect(node, 'shares[0].accessType').to.not.be.undefined;
     let position = doc.positionAt(node!.offset);
     await verifyCompletionsContain(doc, position, '"Edit"', '"Manage"', '"View"');
 
     // find the start of the first node (which should be the "error" property)
-    node = tree.children![0];
+    node = tree!.children![0];
     expect(node, 'first node').to.not.be.undefined;
     // this should be right the first double-quote at the beginning of "error"
     position = doc.positionAt(node.offset);
@@ -82,7 +82,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
     const tree = parseTree(doc.getText());
     expect(tree, 'json text').to.not.be.undefined;
     // go just before the {} in "featuresAssets"
-    let node = findNodeAtLocation(tree, ['featuredAssets']);
+    let node = findNodeAtLocation(tree!, ['featuredAssets']);
     expect(node, 'featuredAssets').to.not.be.undefined;
     let scan = scanLinesUntil(doc, ch => ch === '{', doc.positionAt(node!.offset));
     if (scan.ch !== '{') {
@@ -93,7 +93,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New featuredAssets', 'null');
 
     // go before after the [ in "shares"
-    node = findNodeAtLocation(tree, ['shares']);
+    node = findNodeAtLocation(tree!, ['shares']);
     expect(node, 'shares').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
@@ -104,7 +104,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New share', 'null');
 
     // go right after the [ in "shares"
-    node = findNodeAtLocation(tree, ['shares']);
+    node = findNodeAtLocation(tree!, ['shares']);
     expect(node, 'shares').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {

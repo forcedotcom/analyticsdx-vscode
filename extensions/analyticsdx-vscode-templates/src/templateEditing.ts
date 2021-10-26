@@ -20,15 +20,13 @@ import {
   DocumentRangeFormattingRequest,
   ErrorAction,
   InitializeError,
-  LanguageClient,
   LanguageClientOptions,
   Message,
   NotificationType,
   RequestType,
-  ResponseError,
-  ServerOptions,
-  TransportKind
+  ResponseError
 } from 'vscode-languageclient';
+import { LanguageClient, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import {
   AutoInstallVariableCodeActionProvider,
   AutoInstallVariableCompletionItemProviderDelegate,
@@ -729,7 +727,7 @@ class TemplateJsonLanguageClient extends Disposable {
       client.registerProposedFeatures();
     } catch (e) {
       // don't fail the startup if it fails, just warn in the output channel
-      this.langOutputChannel.appendLine('Unable to register proposed language features: ' + (e.message || e));
+      this.langOutputChannel.appendLine('Unable to register proposed language features: ' + ((e as Error)?.message || e));
       if (e instanceof Error && e.stack) {
         this.langOutputChannel.appendLine(e.stack);
       }
@@ -809,7 +807,8 @@ class TemplateJsonLanguageClient extends Disposable {
                 const params: DocumentRangeFormattingParams = {
                   textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
                   range: client.code2ProtocolConverter.asRange(range),
-                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options))
+                  // FIXME: get FileFormattingOptions from workspace configs
+                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options), {})
                 };
                 return client.sendRequest(DocumentRangeFormattingRequest.type, params, token).then(
                   edits => {
@@ -819,8 +818,7 @@ class TemplateJsonLanguageClient extends Disposable {
                     return [];
                   },
                   error => {
-                    client.logFailedRequest(DocumentRangeFormattingRequest.type, error);
-                    return Promise.resolve([]);
+                    return client.handleFailedRequest(DocumentRangeFormattingRequest.type, error, []);
                   }
                 );
               }

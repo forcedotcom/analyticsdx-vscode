@@ -51,7 +51,7 @@ export function quickFixUsedTelemetryCommand(
 
 /** Create a Command that will send a codeCompletionUsed telemetry event. */
 export function codeCompletionUsedTelemetryCommand(
-  label: string,
+  label: string | vscode.CompletionItemLabel,
   type: string,
   jsonPath: string | JSONPath,
   fileNameOrUri: string | vscode.Uri,
@@ -60,7 +60,7 @@ export function codeCompletionUsedTelemetryCommand(
   return createTelemetryCommand(
     'codeCompletionUsed',
     {
-      label,
+      label: typeof label === 'string' ? label : label.label,
       type,
       jsonPath: typeof jsonPath === 'string' ? jsonPath : jsonPathToString(jsonPath),
       fileName: typeof fileNameOrUri === 'string' ? fileNameOrUri : uriBasename(fileNameOrUri)
