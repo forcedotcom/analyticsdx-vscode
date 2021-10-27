@@ -35,7 +35,9 @@ const {
       // turn off any user extensions, so it should run with only extensions setup in the run target
       '--disable-extensions',
       // turn off workspace trust for tests (so it doesn't show the big dialog on startup)
-      '--disable-workspace-trust'
+      '--disable-workspace-trust',
+      '--sync',
+      'off'
     ]
   };
   try {

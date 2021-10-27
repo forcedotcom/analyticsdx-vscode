@@ -249,7 +249,10 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     hovers = await waitFor(
       () => getHovers(uri, doc.positionAt(valueNode!.offset)),
       hovers => hovers.length >= 2,
-      { timeoutMessage: 'Timed out waiting for both hovers on valueNode' }
+      {
+        timeoutMessage: hovers =>
+          'Timed out waiting for both hovers on valueNode, got hovers:' + JSON.stringify(hovers, undefined, 2)
+      }
     );
     expect(hovers, 'valueNode hovers').to.not.be.undefined;
     // on the value field, it should have the schema hover and the hover from our provider

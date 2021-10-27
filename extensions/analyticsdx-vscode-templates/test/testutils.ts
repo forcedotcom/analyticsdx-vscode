@@ -7,6 +7,44 @@
 
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser';
 
+function envMs(name: string): number | undefined {
+  const s = process.env[name];
+  if (s) {
+    try {
+      return parseInt(s, 10);
+    } catch (error) {
+      console.error(`Invalid env.${name} '${s}'`);
+    }
+  }
+  return undefined;
+}
+
+let _defaultWaitForTimeoutMs: number | undefined = undefined;
+function defaultWaitForTimeoutMs(): number {
+  if (typeof _defaultWaitForTimeoutMs === 'undefined') {
+    _defaultWaitForTimeoutMs = envMs('ADX_DEFAULT_WAIT_FOR_TIMEOUT');
+    if (typeof _defaultWaitForTimeoutMs === 'undefined' || _defaultWaitForTimeoutMs <= 0) {
+      _defaultWaitForTimeoutMs = 5000;
+    } else {
+      console.log(`Using defaultWaitForTimeoutMS=${_defaultWaitForTimeoutMs}`);
+    }
+  }
+  return _defaultWaitForTimeoutMs;
+}
+
+let _defaultWaitForPauseMs: number | undefined = undefined;
+function defaultWaitForpauseMs(): number {
+  if (typeof _defaultWaitForPauseMs === 'undefined') {
+    _defaultWaitForPauseMs = envMs('ADX_DEFAULT_WAIT_FOR_TIMEOUT');
+    if (typeof _defaultWaitForPauseMs === 'undefined' || _defaultWaitForPauseMs <= 0) {
+      _defaultWaitForPauseMs = 500;
+    } else {
+      console.log(`Using defaultWaitForPauseMs=${_defaultWaitForPauseMs}`);
+    }
+  }
+  return _defaultWaitForPauseMs;
+}
+
 /**
  * Wait for the specified function to match against the predicate
  * @param func the fuction to call
@@ -21,8 +59,8 @@ export function waitFor<T>(
   func: () => T | Promise<T>,
   predicate: (val: T) => boolean | undefined,
   {
-    pauseMs = 300,
-    timeoutMs = 5000,
+    pauseMs = defaultWaitForpauseMs(),
+    timeoutMs = defaultWaitForTimeoutMs(),
     rejectOnError = true,
     timeoutMessage = 'timeout'
   }: {
