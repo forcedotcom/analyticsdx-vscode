@@ -10,6 +10,7 @@ import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
 import { NEW_VARIABLE_SNIPPETS } from '../../../src/variables';
+import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
   createTempTemplate,
@@ -241,10 +242,12 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     expect(node, 'ObjectTypeVar propNode').to.be.not.undefined;
     const nameNode = node!.children?.[0];
     expect(nameNode, 'nameNode').to.not.be.undefined;
-    let hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
-    expect(hovers, 'nameNode hovers').to.not.be.undefined;
     // on the name field, it should have the schema hover and the hover from our provider
-    expect(hovers.length, 'valueNode hovers.length').to.equal(2);
+    let hovers = await waitFor(
+      () => getHovers(uri, doc.positionAt(nameNode!.offset)),
+      hovers => hovers && hovers.length === 2,
+      { timeoutMessage: hovers => 'Exepected 2 hovers, got: ' + JSON.stringify(hovers, undefined, 2) }
+    );
     if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('ObjectTypeVar') >= 0))) {
       expect.fail("Expected at least one hover to contain 'ObjectTypeVar'");
     }

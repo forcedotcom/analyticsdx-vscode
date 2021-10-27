@@ -12,6 +12,7 @@ import { ERRORS } from '../../../src/constants';
 import { matchJsonNodeAtPattern } from '../../../src/util/jsoncUtils';
 import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
 import { NEW_VARIABLE_SNIPPETS } from '../../../src/variables';
+import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
   compareCompletionItems,
@@ -214,12 +215,15 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     expect(node, 'configuration.appConfiguration.values.StringTypeVar propNode').to.be.not.undefined;
     const nameNode = node!.children?.[0];
     expect(nameNode, 'nameNode').to.not.be.undefined;
-    const hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
-    expect(hovers, 'nameNode hovers').to.not.be.undefined;
-    // something (probably json lang services) puts an empty hover, so just make sure our variable hover shows up
-    if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('StringTypeVar') >= 0))) {
-      expect.fail("Expected a hover to contain 'StringTypeVar', got: " + JSON.stringify(hovers, undefined, 2));
-    }
+    // sometimes we get an initial 1 empty hover, then the hover comes after a little bit
+    await waitFor(
+      () => getHovers(uri, doc.positionAt(nameNode!.offset)),
+      hovers => hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('StringTypeVar') >= 0)),
+      {
+        timeoutMessage: hovers =>
+          "Expected a hover to contain 'StringTypeVar', got: " + JSON.stringify(hovers, undefined, 2)
+      }
+    );
   });
 
   it('go to definition support for variable names', async () => {
