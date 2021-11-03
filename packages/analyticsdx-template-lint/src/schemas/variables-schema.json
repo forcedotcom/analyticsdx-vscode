@@ -217,8 +217,15 @@
               "const": "ConnectorType"
             },
             "connectorType": {
+              "type": ["null", "string"],
               "description": "The type of connector to offer to the user.  Only used for ConnectorType variables.",
-              "doNotSuggest": false
+              "doNotSuggest": false,
+              "defaultSnippets": [
+                {
+                  "label": "\"\"",
+                  "body": "${0}"
+                }
+              ]
             }
           },
           "required": ["type"]

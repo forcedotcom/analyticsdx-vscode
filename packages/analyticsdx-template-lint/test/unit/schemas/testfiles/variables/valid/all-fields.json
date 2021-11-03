@@ -335,7 +335,6 @@
     "variableType": {
       "type": "ArrayType",
       "itemsType": {
-        "enums": [],
         "type": "ConnectorType",
         "connectorType": "Salesforce"
       }
