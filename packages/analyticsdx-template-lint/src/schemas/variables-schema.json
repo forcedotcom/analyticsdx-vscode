@@ -168,9 +168,10 @@
               "type": "string",
               "description": "Required data type of underlying sObject field.",
               "enum": [
-                "xsd:base64",
+                "tns:ID",
+                "xsd:anyType",
+                "xsd:base64Binary",
                 "xsd:boolean",
-                "xsd:byte",
                 "xsd:date",
                 "xsd:dateTime",
                 "xsd:double",

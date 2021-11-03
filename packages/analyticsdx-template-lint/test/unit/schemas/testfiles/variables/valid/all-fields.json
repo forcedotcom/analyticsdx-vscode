@@ -46,7 +46,7 @@
     "label": "Sojbect Field Variable",
     "variableType": {
       "type": "SobjectFieldType",
-      "dataType": "xsd:base64"
+      "dataType": "xsd:base64Binary"
     },
     "defaultValue": {
       "sobjectName": "Account",
@@ -59,10 +59,10 @@
       "dataType": "xsd:boolean"
     }
   },
-  "sobjectbytefield": {
+  "sobjectidfield": {
     "variableType": {
       "type": "SobjectFieldType",
-      "dataType": "xsd:byte"
+      "dataType": "tns:ID"
     }
   },
   "sobjectdatefield": {

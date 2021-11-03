@@ -94,9 +94,10 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     await verifyCompletionsContain(
       doc,
       position,
-      '"xsd:base64"',
+      '"tns:ID"',
+      '"xsd:anyType"',
+      '"xsd:base64Binary"',
       '"xsd:boolean"',
-      '"xsd:byte"',
       '"xsd:date"',
       '"xsd:dateTime"',
       '"xsd:double"',
