@@ -27,13 +27,9 @@ function makeTmpLWCName(basedir: vscode.Uri): Promise<string> {
   });
 }
 
-function relFrom(dir: vscode.Uri, ...paths: string[]): vscode.Uri {
-  return dir.with({ path: path.posix.join(dir.path, ...paths) });
-}
-
 async function verifyLWC(lwcDir: vscode.Uri, lwcName: string, hasStep: boolean) {
   const jsFileName = lwcName + '.js';
-  const jsDoc = await vscode.workspace.openTextDocument(relFrom(lwcDir, jsFileName));
+  const jsDoc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(lwcDir, jsFileName));
   let text = jsDoc.getText();
   expect(text, jsFileName).to.match(
     new RegExp(`export default class ${upperFirst(lwcName)} extends LightningElement`, 'i')
@@ -49,7 +45,7 @@ async function verifyLWC(lwcDir: vscode.Uri, lwcName: string, hasStep: boolean) 
   }
 
   const metaFilename = lwcName + '.js-meta.xml';
-  const metaDoc = await vscode.workspace.openTextDocument(relFrom(lwcDir, metaFilename));
+  const metaDoc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(lwcDir, metaFilename));
   text = metaDoc.getText();
   expect(text, metaFilename).to.contain('<target>analytics__Dashboard</target>');
   expect(text, metaFilename).to.contain('targets="analytics__Dashboard"');
@@ -57,7 +53,7 @@ async function verifyLWC(lwcDir: vscode.Uri, lwcName: string, hasStep: boolean) 
   expect(text, metaFilename).to.contain(`<masterLabel>${camelCaseToTitleCase(lwcName)}</masterLabel>`);
 
   const htmlFilename = lwcName + '.html';
-  const htmlDoc = await vscode.workspace.openTextDocument(relFrom(lwcDir, htmlFilename));
+  const htmlDoc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(lwcDir, htmlFilename));
   text = htmlDoc.getText();
   expect(text, htmlFilename).to.contain('<template>');
   expect(text, htmlFilename).to.contain('</template>');
@@ -79,7 +75,7 @@ async function uriExists(uri: vscode.Uri): Promise<boolean> {
 describe('createDashboardLWC.ts', () => {
   const ws = getRootWorkspace();
   const lwcRootDirFsRelPath = path.join('force-app', 'main', 'default', 'lwc');
-  const lwcRootDir = relFrom(ws.uri, 'force-app/main/default/lwc');
+  const lwcRootDir = vscode.Uri.joinPath(ws.uri, 'force-app/main/default/lwc');
 
   let lwcDir: vscode.Uri | undefined;
   beforeEach(() => {
@@ -110,14 +106,14 @@ describe('createDashboardLWC.ts', () => {
 
     it('creates lwc with step', async () => {
       const lwcName = await makeTmpLWCName(lwcRootDir);
-      lwcDir = relFrom(lwcRootDir, lwcName);
+      lwcDir = vscode.Uri.joinPath(lwcRootDir, lwcName);
       await createDashboardLWC({ folderUri: lwcRootDir, fileName: lwcName });
       await verifyLWC(lwcDir, lwcName, true);
     });
 
     it('creates lwc without step', async () => {
       const lwcName = await makeTmpLWCName(lwcRootDir);
-      lwcDir = relFrom(lwcRootDir, lwcName);
+      lwcDir = vscode.Uri.joinPath(lwcRootDir, lwcName);
       await createDashboardLWC({ folderUri: lwcRootDir, fileName: lwcName, template: 'analyticsDashboard' });
       await verifyLWC(lwcDir, lwcName, false);
     });
@@ -154,7 +150,7 @@ describe('createDashboardLWC.ts', () => {
         return Promise.reject(new Error(`showQuickPick called ${callNum} times`));
       });
 
-      lwcDir = relFrom(lwcRootDir, lwcName);
+      lwcDir = vscode.Uri.joinPath(lwcRootDir, lwcName);
     });
 
     afterEach(async () => {

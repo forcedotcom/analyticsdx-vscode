@@ -6,7 +6,7 @@
  */
 
 import * as vscode from 'vscode';
-import { uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { uriStat } from '../../../src/util/vscodeUtils';
 import { closeAllEditors, createTempTemplate, openFile, waitForDiagnostics, writeTextToFile } from '../vscodeTestUtils';
 
 // if someone opens a related file (w/o opening template-info.json), TemplateLinter will possibly add diagnostics
@@ -24,7 +24,7 @@ describe('TemplateLinterManager cleans up all diagnostics', () => {
     await closeAllEditors();
     // create a template with errors in a related file and in template-info.json w/o opening any documents (yet)
     [tmpdir] = await createTempTemplate(false);
-    uiJson = uriRelPath(tmpdir, 'ui.json');
+    uiJson = vscode.Uri.joinPath(tmpdir, 'ui.json');
     await writeTextToFile(uiJson, {
       error: 'This should trigger a diagnostic from the json-schema',
       pages: [
@@ -38,7 +38,7 @@ describe('TemplateLinterManager cleans up all diagnostics', () => {
         }
       ]
     });
-    templateInfo = uriRelPath(tmpdir, 'template-info.json');
+    templateInfo = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     await writeTextToFile(templateInfo, {
       // this should give diagnostics from both the json schema and the linter
       templateType: 'app',

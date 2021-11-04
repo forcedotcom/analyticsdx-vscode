@@ -9,7 +9,7 @@ import { findNodeAtLocation, Location, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonAttributeDefinitionProvider } from '../util/definitions';
-import { rangeForNode, uriRelPath } from '../util/vscodeUtils';
+import { rangeForNode } from '../util/vscodeUtils';
 
 /** Base class for providing definition (cmd+click) support on variables references. */
 export abstract class VariableRefDefinitionProvider extends JsonAttributeDefinitionProvider {
@@ -25,7 +25,7 @@ export abstract class VariableRefDefinitionProvider extends JsonAttributeDefinit
   ): Promise<vscode.Location | undefined> {
     const varname = typeof location.previousNode?.value === 'string' && location.previousNode.value;
     if (varname) {
-      const varUri = uriRelPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
+      const varUri = vscode.Uri.joinPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
       const doc = await vscode.workspace.openTextDocument(varUri);
       const tree = parseTree(doc.getText());
       const nameNode = tree && findNodeAtLocation(tree, [varname]);

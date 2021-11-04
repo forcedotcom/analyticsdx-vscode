@@ -7,7 +7,6 @@
 
 import { expect } from 'chai';
 import { findNodeAtLocation, JSONPath, parseTree } from 'jsonc-parser';
-import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { jsonPathToString } from '../../../src/util/jsoncUtils';
 import { scanLinesUntil, uriStat } from '../../../src/util/vscodeUtils';
@@ -265,7 +264,7 @@ describe('template-info-schema.json hookup', () => {
     before(async () => {
       await closeAllEditors();
       [tmpdir] = await createTempTemplate(false);
-      const templateInfo = tmpdir.with({ path: path.join(tmpdir.path, 'template-info.json') });
+      const templateInfo = vscode.Uri.joinPath(tmpdir, 'template-info.json');
       await writeTextToFile(templateInfo, json);
       [doc] = await openFile(templateInfo);
     });

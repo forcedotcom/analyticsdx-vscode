@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { jsonpathFrom, scanLinesUntil, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { jsonpathFrom, scanLinesUntil, uriStat } from '../../../src/util/vscodeUtils';
 import {
   closeAllEditors,
   createTempTemplate,
@@ -134,10 +134,10 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
   it('on change of path value', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     // and rules.json with some content that would have schema errors
-    const rulesUri = uriRelPath(tmpdir, 'rules.json');
+    const rulesUri = vscode.Uri.joinPath(tmpdir, 'rules.json');
     await writeEmptyJsonFile(rulesUri);
     const [rulesDoc, rulesEditor] = await openFile(rulesUri);
     await setDocumentText(
@@ -208,7 +208,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
   it('without default json language services', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     await setDocumentText(
       templateEditor,
@@ -228,7 +228,7 @@ describe('TemplateEditorManager configures rulesDefinitions', () => {
     // that should give us a warning about rules.json not existing
     await waitForDiagnostics(templateUri, diagnostics => diagnostics?.some(d => jsonpathFrom(d) === 'rules[0].file'));
     // create a rules.json that has a comment and some bad json
-    const rulesUri = uriRelPath(tmpdir, 'rules.json');
+    const rulesUri = vscode.Uri.joinPath(tmpdir, 'rules.json');
     await writeEmptyJsonFile(rulesUri);
     const [, rulesEditor] = await openFile(rulesUri);
     await setDocumentText(

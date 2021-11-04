@@ -159,11 +159,6 @@ export function isUriAtOrUnder(dir: vscode.Uri, file: vscode.Uri): boolean {
   return isSameUri(dir, file) || isUriUnder(dir, file);
 }
 
-/** Add relative path(s) to a base uri. */
-export function uriRelPath(base: vscode.Uri, ...relpath: string[]): vscode.Uri {
-  return base.with({ path: path.join(base.path, ...relpath) });
-}
-
 /** Get the the basename of the path of a uri. */
 export function uriBasename(uri: vscode.Uri): string {
   return path.basename(uri.path);
@@ -225,12 +220,7 @@ async function _uriReaddir(
       });
     }
     if (recurse && (fileType & vscode.FileType.Directory) !== 0) {
-      const p = _uriReaddir(
-        dir.with({ path: path.join(dir.path, name) }),
-        reldir ? path.join(reldir, name) : name,
-        recurse,
-        filter
-      );
+      const p = _uriReaddir(vscode.Uri.joinPath(dir, name), reldir ? path.join(reldir, name) : name, recurse, filter);
       // let the recursion run, combining the results in order
       results = Promise.all([results, p]).then(([all, descendants]) => {
         all.push(...descendants);

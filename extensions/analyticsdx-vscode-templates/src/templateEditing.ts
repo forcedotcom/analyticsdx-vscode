@@ -65,7 +65,6 @@ import {
   isUriUnder,
   uriBasename,
   uriDirname,
-  uriRelPath,
   uriStat
 } from './util/vscodeUtils';
 import { NewVariableCompletionItemProviderDelegate, VariableHoverProvider } from './variables';
@@ -163,7 +162,7 @@ export class TemplateDirEditing extends Disposable {
       isUriUnder(this.dir, file) &&
       !!this.autoInstallDefinitionPath &&
       isValidRelpath(this.autoInstallDefinitionPath) &&
-      isSameUri(uriRelPath(this.dir, this.autoInstallDefinitionPath), file)
+      isSameUri(vscode.Uri.joinPath(this.dir, this.autoInstallDefinitionPath), file)
     );
   }
 
@@ -177,7 +176,7 @@ export class TemplateDirEditing extends Disposable {
       isUriUnder(this.dir, file) &&
       !!this.uiDefinitionPath &&
       isValidRelpath(this.uiDefinitionPath) &&
-      isSameUri(uriRelPath(this.dir, this.uiDefinitionPath), file)
+      isSameUri(vscode.Uri.joinPath(this.dir, this.uiDefinitionPath), file)
     );
   }
 
@@ -191,7 +190,7 @@ export class TemplateDirEditing extends Disposable {
       isUriUnder(this.dir, file) &&
       !!this.variablesDefinitionPath &&
       isValidRelpath(this.variablesDefinitionPath) &&
-      isSameUri(uriRelPath(this.dir, this.variablesDefinitionPath), file)
+      isSameUri(vscode.Uri.joinPath(this.dir, this.variablesDefinitionPath), file)
     );
   }
 

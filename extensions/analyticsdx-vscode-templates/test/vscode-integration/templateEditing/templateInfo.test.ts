@@ -11,7 +11,7 @@ import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { ERRORS, TEMPLATE_INFO, TEMPLATE_JSON_LANG_ID } from '../../../src/constants';
 import { jsonPathToString } from '../../../src/util/jsoncUtils';
-import { argsFrom, jsonpathFrom, uriDirname, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { argsFrom, jsonpathFrom, uriDirname, uriStat } from '../../../src/util/vscodeUtils';
 import { jsoncParse, waitFor } from '../../testutils';
 import {
   closeAllEditors,
@@ -256,7 +256,7 @@ describe('TemplateEditorManager configures template-info.json', () => {
       'no warnings on folderDefintion after quick fix'
     );
     // make sure the file got created
-    const uri = uriRelPath(tmpdir, 'dir/folder.json');
+    const uri = vscode.Uri.joinPath(tmpdir, 'dir/folder.json');
     const stat = await uriStat(uri);
     if (!stat) {
       expect.fail(`${uri.toString()} doesn't exist after quick fix`);
@@ -285,7 +285,7 @@ describe('TemplateEditorManager configures template-info.json', () => {
       path: 'folder.json',
       initialJson: {}
     });
-    const [doc, editor] = await openTemplateInfo(uriRelPath(tmpdir, 'template-info.json'), true);
+    const [doc, editor] = await openTemplateInfo(vscode.Uri.joinPath(tmpdir, 'template-info.json'), true);
     await setDocumentText(editor, {
       templateType: 'embeddedapp',
       folderDefinition: 'folder.json'
@@ -321,7 +321,7 @@ describe('TemplateEditorManager configures template-info.json', () => {
       'no warnings on folderDefintion after quick fix'
     );
     // make sure the share got created in folder.json
-    const uri = uriRelPath(tmpdir, 'folder.json');
+    const uri = vscode.Uri.joinPath(tmpdir, 'folder.json');
     const folderDoc = await vscode.workspace.openTextDocument(uri);
     const folderJson = jsoncParse(folderDoc.getText());
     expect(folderJson, 'folder.json').to.not.be.undefined;

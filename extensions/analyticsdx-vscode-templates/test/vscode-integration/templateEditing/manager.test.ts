@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { TEMPLATE_JSON_LANG_ID } from '../../../src/constants';
-import { uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { uriStat } from '../../../src/util/vscodeUtils';
 import {
   closeAllEditors,
   createTempTemplate,
@@ -42,7 +42,7 @@ describe('TemplateEditorManager', () => {
 
     it('template-info.json opened', async () => {
       // open the template-info.json in the create tmp folder
-      const file = uriRelPath(tmpdir!, 'template-info.json');
+      const file = vscode.Uri.joinPath(tmpdir!, 'template-info.json');
       await openTemplateInfoAndWaitForDiagnostics(file);
       // make sure the template dir gets setup for editing
       await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), tmpdir!, true);
@@ -50,7 +50,7 @@ describe('TemplateEditorManager', () => {
 
     it('related file opened', async () => {
       // create an empty folder.json in the template directory
-      const file = uriRelPath(tmpdir!, 'folder.json');
+      const file = vscode.Uri.joinPath(tmpdir!, 'folder.json');
       await writeEmptyJsonFile(file);
       // open that file
       await openFile(file);
@@ -80,7 +80,7 @@ describe('TemplateEditorManager', () => {
       const templateEditingManager = await getTemplateEditorManager();
 
       // open the template-info.json
-      const file = uriRelPath(tmpdir, 'template-info.json');
+      const file = vscode.Uri.joinPath(tmpdir, 'template-info.json');
       await openTemplateInfoAndWaitForDiagnostics(file);
       // make sure the template dir gets setup for editing
       await waitForTemplateEditorManagerHas(templateEditingManager, tmpdir, true);
@@ -96,7 +96,7 @@ describe('TemplateEditorManager', () => {
       const templateEditingManager = await getTemplateEditorManager();
 
       // open the template-info.json
-      const file = uriRelPath(tmpdir, 'template-info.json');
+      const file = vscode.Uri.joinPath(tmpdir, 'template-info.json');
       await openTemplateInfoAndWaitForDiagnostics(file);
       // make sure the template dir gets setup for editing
       await waitForTemplateEditorManagerHas(templateEditingManager, tmpdir, true);
@@ -109,11 +109,11 @@ describe('TemplateEditorManager', () => {
 
     it("of template folder's folder", async () => {
       [tmpdir] = await createTempTemplate(false, { show: false }, 'subdir');
-      const templateDir = uriRelPath(tmpdir, 'subdir');
+      const templateDir = vscode.Uri.joinPath(tmpdir, 'subdir');
       const templateEditingManager = await getTemplateEditorManager();
 
       // open the template-info.json
-      const file = uriRelPath(templateDir, 'template-info.json');
+      const file = vscode.Uri.joinPath(templateDir, 'template-info.json');
       await openTemplateInfoAndWaitForDiagnostics(file);
       // make sure the template dir gets setup for editing
       await waitForTemplateEditorManagerHas(templateEditingManager, templateDir, true);
