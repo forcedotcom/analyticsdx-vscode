@@ -108,7 +108,7 @@ export function matchJsonNodeAtPattern(
   let found: JsonNode | undefined;
   const earlyReturnException = new Object();
   // this exception-based stack-unwinding is similar to what jsonc-parser's getLocation() impl does to exit early
-  // (https://github.com/microsoft/node-jsonc-parser/blob/master/src/impl/parser.ts#L41)
+  // (https://github.com/microsoft/node-jsonc-parser/blob/main/src/impl/parser.ts#L41)
   try {
     matchJsonNodesAtPattern(
       roots,

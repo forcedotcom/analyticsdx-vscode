@@ -113,7 +113,7 @@ export class VscodeTemplateLinter extends TemplateLinter<vscode.Uri, vscode.Text
 export class TemplateLinterManager extends Disposable {
   // https://www.humanbenchmark.com/tests/reactiontime/statistics,
   // plus the linting on vscode extension package.json's is using 300ms
-  // (https://github.com/microsoft/vscode/blob/master/extensions/extension-editing/src/extensionLinter.ts)
+  // (https://github.com/microsoft/vscode/blob/main/extensions/extension-editing/src/extensionLinter.ts)
   public static readonly LINT_DEBOUNCE_MS = 300;
 
   private diagnosticCollection = new UriExistsDiagnosticCollection(

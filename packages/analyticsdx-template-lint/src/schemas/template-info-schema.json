@@ -5,7 +5,7 @@
   "description": "",
   "type": "object",
   "additionalProperties": false,
-  "$comment": "vscode supports some extra fields (e.g. allowComments, enumDescriptions, deprecationMessage, patternErrorMessage, defaultSnippets), see https://github.com/microsoft/vscode/blob/master/src/vs/base/common/jsonSchema.ts",
+  "$comment": "vscode supports some extra fields (e.g. allowComments, enumDescriptions, deprecationMessage, patternErrorMessage, defaultSnippets), see https://github.com/microsoft/vscode/blob/main/src/vs/base/common/jsonSchema.ts",
   "allowComments": true,
   "if": {
     "properties": {
@@ -202,7 +202,7 @@
             "enum": ["templateToApp", "appToTemplate"],
             "enumDescriptions": [
               "Rules to apply when creating a new app from a template.",
-              "Rules to apply when updating the template from the master app."
+              "Rules to apply when updating the template from the source app."
             ],
             "default": "templateToApp",
             "description": "The type of the rules file."

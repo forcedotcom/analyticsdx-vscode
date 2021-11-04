@@ -519,7 +519,7 @@ export class TemplateEditingManager extends Disposable {
 
 /* Custom json language server and client stuff.
  * This is mostly based off of the json-language-features client code
- * (https://github.com/microsoft/vscode/blob/master/extensions/json-language-features/client/src/jsonMain.ts).
+ * (https://github.com/microsoft/vscode/blob/main/extensions/json-language-features/client/src/jsonClient.ts).
  * Because there is no public api to dynamically associate a json-schema to a file, we need to do it ourselves.
  * This will start a vscode-json-languageserver, but will configure a custom language client, where we can dynamically
  * send up file -> json-schema associations for the various file paths specified in a template-info.json.
@@ -705,7 +705,7 @@ class TemplateJsonLanguageClient extends Disposable {
               if (stat) {
                 // json schema diagnostics seem to come through w/ no source, so set it to the language (which json
                 // format diagnostics do)
-                diagnostics.forEach(d => d.source ??= TEMPLATE_JSON_LANG_ID);
+                diagnostics.forEach(d => (d.source ??= TEMPLATE_JSON_LANG_ID));
                 next(uri, diagnostics);
               }
             })
@@ -727,7 +727,9 @@ class TemplateJsonLanguageClient extends Disposable {
       client.registerProposedFeatures();
     } catch (e) {
       // don't fail the startup if it fails, just warn in the output channel
-      this.langOutputChannel.appendLine('Unable to register proposed language features: ' + ((e as Error)?.message || e));
+      this.langOutputChannel.appendLine(
+        'Unable to register proposed language features: ' + ((e as Error)?.message || e)
+      );
       if (e instanceof Error && e.stack) {
         this.langOutputChannel.appendLine(e.stack);
       }
@@ -848,7 +850,7 @@ class TemplateJsonLanguageClient extends Disposable {
       });
 
     // add these lang config rules programmatically, to match what
-    // https://github.com/microsoft/vscode/blob/master/extensions/json-language-features/client/src/jsonMain.ts does
+    // https://github.com/microsoft/vscode/blob/main/extensions/json-language-features/client/src/jsonClient.ts does
     vscode.languages.setLanguageConfiguration(TEMPLATE_JSON_LANG_ID, {
       wordPattern: /("(?:[^\\\"]*(?:\\.)?)*"?)|[^\s{}\[\],:]+/,
       indentationRules: {
