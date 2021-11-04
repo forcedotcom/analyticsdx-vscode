@@ -11,7 +11,7 @@ import { findNodeAtLocation, JSONPath, Node as JsonNode } from 'jsonc-parser';
 import isEqual = require('lodash.isequal');
 import { posix as path } from 'path';
 import * as fspath from 'path';
-import { getErrorStatusDescription, xhr, XHRResponse } from 'request-light';
+import { getErrorStatusDescription, xhr } from 'request-light';
 import * as vscode from 'vscode';
 import {
   CloseAction,
@@ -612,10 +612,10 @@ class TemplateJsonLanguageClient extends Disposable {
   public start(): this {
     // find the vscode-json-languageserver module's main js module
     const serverPath = fspath.join(this.extensionPath, 'node_modules', 'vscode-json-languageserver');
-    const serverMain = this.readJSONFile(fspath.join(serverPath, 'package.json')).main;
+    const serverMain = this.readJSONFile(fspath.join(serverPath, 'package.json')).main || 'out/node/jsonServerMain';
     const serverModule = fspath.join(serverPath, serverMain);
-    // serverModule should then be like '.../out/jsonServerMain', so the actual file will be jsonServerMain.js -- make
-    // sure it exists, since we will not get an relevant error message on the callbacks if it doesn't
+    // serverModule should then be like '.../jsonServerMain', so the actual file will be jsonServerMain.js -- make
+    // sure it exists, since we will not get any relevant error message on the callbacks if it doesn't
     if (!fs.existsSync(serverModule + '.js') && !fs.existsSync(serverModule)) {
       this.langOutputChannel.appendLine(`vscode-json-languageserver main module unavailable: ${serverModule}`);
       this.langOutputChannel.appendLine('Some template editing features will be unavailable');
@@ -661,7 +661,7 @@ class TemplateJsonLanguageClient extends Disposable {
         handledSchemaProtocols: ['file'],
         // don't provide a default formatter, we'll wire it up ourselves so we can configure the options
         provideFormatter: false,
-        customCapabilities: { rangeFormatting: { editLimit: 1000 } }
+        customCapabilities: { rangeFormatting: { editLimit: 10000 } }
       },
       synchronize: {
         configurationSection: ['http'],
@@ -745,23 +745,29 @@ class TemplateJsonLanguageClient extends Disposable {
         // handle content request
         client.onRequest(VSCodeContentRequest.type, (uriPath: string) => {
           const uri = vscode.Uri.parse(uriPath);
-          if (uri.scheme !== 'http' && uri.scheme !== 'https') {
+          if (uri.scheme === 'untitled') {
+            return Promise.reject(new ResponseError(3, `Unable to load ${uri.toString()}`));
+          } else if (uri.scheme !== 'http' && uri.scheme !== 'https') {
             return vscode.workspace.openTextDocument(uri).then(
               doc => {
                 schemaDocuments[uri.toString()] = true;
                 return doc.getText();
               },
-              error => Promise.reject(error)
+              (error: any) =>
+                Promise.reject(new ResponseError(2, error?.toString() || `Failed to open ${uri.toString()}`))
             );
           } else {
             const headers = { 'Accept-Encoding': 'gzip, deflate' };
             return xhr({ url: uriPath, followRedirects: 5, headers }).then(
               response => response.responseText,
-              (error: XHRResponse) =>
+              (error: any) =>
                 Promise.reject(
                   new ResponseError(
-                    error.status,
-                    error.responseText || getErrorStatusDescription(error.status) || error.toString()
+                    4,
+                    error?.toString() ||
+                      (typeof error?.status === 'number'
+                        ? getErrorStatusDescription(error.status)
+                        : `Failed to fetch ${uriPath}`)
                   )
                 )
             );
@@ -806,11 +812,19 @@ class TemplateJsonLanguageClient extends Disposable {
                 options: vscode.FormattingOptions,
                 token: vscode.CancellationToken
               ): vscode.ProviderResult<vscode.TextEdit[]> {
+                const filesConfig = vscode.workspace.getConfiguration('files', document);
+                const fileFormattingOptions = {
+                  trimTrailingWhitespace: filesConfig.get<boolean>('trimTrailingWhitespace'),
+                  trimFinalNewlines: filesConfig.get<boolean>('trimFinalNewlines'),
+                  insertFinalNewline: filesConfig.get<boolean>('insertFinalNewline')
+                };
                 const params: DocumentRangeFormattingParams = {
                   textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
                   range: client.code2ProtocolConverter.asRange(range),
-                  // FIXME: get FileFormattingOptions from workspace configs
-                  options: client.code2ProtocolConverter.asFormattingOptions(getFormattingOptions(options), {})
+                  options: client.code2ProtocolConverter.asFormattingOptions(
+                    getFormattingOptions(options),
+                    fileFormattingOptions
+                  )
                 };
                 return client.sendRequest(DocumentRangeFormattingRequest.type, params, token).then(
                   edits => {
@@ -820,7 +834,8 @@ class TemplateJsonLanguageClient extends Disposable {
                     return [];
                   },
                   error => {
-                    return client.handleFailedRequest(DocumentRangeFormattingRequest.type, error, []);
+                    client.handleFailedRequest(DocumentRangeFormattingRequest.type, error, []);
+                    return Promise.resolve([]);
                   }
                 );
               }
@@ -849,24 +864,13 @@ class TemplateJsonLanguageClient extends Disposable {
         }
       });
 
-    // add these lang config rules programmatically, to match what
-    // https://github.com/microsoft/vscode/blob/main/extensions/json-language-features/client/src/jsonClient.ts does
-    vscode.languages.setLanguageConfiguration(TEMPLATE_JSON_LANG_ID, {
-      wordPattern: /("(?:[^\\\"]*(?:\\.)?)*"?)|[^\s{}\[\],:]+/,
-      indentationRules: {
-        increaseIndentPattern: /({+(?=([^"]*"[^"]*")*[^"}]*$))|(\[+(?=([^"]*"[^"]*")*[^"\]]*$))/,
-        decreaseIndentPattern: /^\s*[}\]],?\s*$/
-      }
-    });
-
     this.languageClient = client;
     return this;
   }
 
   public updateSchemaAssociations() {
     if (this.languageClient && this.clientReady) {
-      const a = this.getSchemaAssociations();
-      this.languageClient.sendNotification(SchemaAssociationNotification.type, a);
+      this.languageClient.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations());
     }
   }
 
