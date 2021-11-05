@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { jsonpathFrom, scanLinesUntil, uriDirname, uriStat } from '../../../src/util/vscodeUtils';
 import { NEW_VARIABLE_SNIPPETS } from '../../../src/variables';
 import { waitFor } from '../../testutils';
 import {
@@ -94,9 +94,10 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
     await verifyCompletionsContain(
       doc,
       position,
-      '"xsd:base64"',
+      '"tns:ID"',
+      '"xsd:anyType"',
+      '"xsd:base64Binary"',
       '"xsd:boolean"',
-      '"xsd:byte"',
       '"xsd:date"',
       '"xsd:dateTime"',
       '"xsd:double"',
@@ -143,10 +144,10 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
   it('on change of path value', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     // and variables.json with some content that would have schema errors
-    const variablesUri = uriRelPath(tmpdir, 'variables.json');
+    const variablesUri = vscode.Uri.joinPath(tmpdir, 'variables.json');
     await writeEmptyJsonFile(variablesUri);
     const [variablesDoc, variablesEditor] = await openFile(variablesUri);
     await setDocumentText(
@@ -196,7 +197,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
   it('without default json language services', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     await setDocumentText(
       templateEditor,
@@ -213,7 +214,7 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
       diagnostics?.some(d => jsonpathFrom(d) === 'variableDefinition')
     );
     // create a variables.json that has a comment and some bad json
-    const variablesUri = uriRelPath(tmpdir, 'variables.json');
+    const variablesUri = vscode.Uri.joinPath(tmpdir, 'variables.json');
     await writeEmptyJsonFile(variablesUri);
     const [, variablesEditor] = await openFile(variablesUri);
     await setDocumentText(

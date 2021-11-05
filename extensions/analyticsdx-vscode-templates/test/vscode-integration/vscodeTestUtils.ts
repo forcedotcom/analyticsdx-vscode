@@ -16,7 +16,7 @@ import { TemplateEditingManager } from '../../src/templateEditing';
 import { TemplateLinterManager } from '../../src/templateLinter';
 import { matchJsonNodeAtPattern } from '../../src/util/jsoncUtils';
 import { findTemplateInfoFileFor } from '../../src/util/templateUtils';
-import { uriBasename, uriRelPath } from '../../src/util/vscodeUtils';
+import { uriBasename } from '../../src/util/vscodeUtils';
 import { waitFor } from '../testutils';
 
 // the tests here open vscode against /test-assets/sfdx-simple,
@@ -64,9 +64,7 @@ export function waitForTemplateExtensionActive(pauseMs?: number, timeoutMs?: num
 export function uriFromTestRoot(...paths: string[]): vscode.Uri {
   const root = vscode.workspace.workspaceFolders![0];
   if (paths && paths.length) {
-    return root.uri.with({
-      path: path.join(root.uri.path, ...paths)
-    });
+    return vscode.Uri.joinPath(root.uri, ...paths);
   }
   return root.uri;
 }
@@ -312,11 +310,11 @@ export async function createTempTemplate(
   let templateDir = dir;
   if (subdirs && subdirs.length) {
     for (const subdir of subdirs) {
-      templateDir = templateDir.with({ path: path.join(templateDir.path, subdir) });
+      templateDir = vscode.Uri.joinPath(templateDir, subdir);
       await vscode.workspace.fs.createDirectory(templateDir);
     }
   }
-  const file = templateDir.with({ path: path.join(templateDir.path, 'template-info.json') });
+  const file = vscode.Uri.joinPath(templateDir, 'template-info.json');
   // write the template-info.json file
   await writeTextToFile(file, includeName ? { name: uriBasename(templateDir) } : {});
 
@@ -353,13 +351,13 @@ export async function createTemplateWithRelatedFiles(
 ): Promise<[vscode.Uri, vscode.TextEditor[]]> {
   const [tmpdir] = await createTempTemplate(false);
   // make an empty template
-  const templateUri = uriRelPath(tmpdir, 'template-info.json');
+  const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
   const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
   const templateJson: { [key: string]: any } = {};
   // create the related file(s)
   const editors = await Promise.all(
     files.map(async file => {
-      const uri = uriRelPath(tmpdir!, file.path);
+      const uri = vscode.Uri.joinPath(tmpdir!, file.path);
       await writeEmptyJsonFile(uri);
       const [, editor] = await openFile(uri);
       await setDocumentText(editor, file.initialJson);

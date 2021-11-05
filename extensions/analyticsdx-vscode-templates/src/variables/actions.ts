@@ -16,7 +16,6 @@ import {
   findEditorForDocument,
   getFormattingOptionsForEditor,
   jsonEditsToWorkspaceEdit,
-  uriRelPath,
   uriStat
 } from '../util/vscodeUtils';
 
@@ -79,7 +78,7 @@ export abstract class VariableRefCodeActionProvider implements vscode.CodeAction
 
   private async newCreateVarAction(name: string, document: vscode.TextDocument, diagnostic: vscode.Diagnostic) {
     // caller is checking variablesDefinitionPath is defined
-    const varUri = uriRelPath(this.template.dir, this.template.variablesDefinitionPath!);
+    const varUri = vscode.Uri.joinPath(this.template.dir, this.template.variablesDefinitionPath!);
     const stat = await uriStat(varUri);
     // if variablesDefinitionPath exists but is not a file, skip out
     if (stat && (stat.type & vscode.FileType.File) === 0) {

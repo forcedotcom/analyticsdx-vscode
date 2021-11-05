@@ -10,7 +10,7 @@ import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { ERRORS } from '../../../src/constants';
 import { matchJsonNodeAtPattern } from '../../../src/util/jsoncUtils';
-import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { jsonpathFrom, scanLinesUntil, uriDirname, uriStat } from '../../../src/util/vscodeUtils';
 import { NEW_VARIABLE_SNIPPETS } from '../../../src/variables';
 import { waitFor } from '../../testutils';
 import {
@@ -92,10 +92,10 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
   it('on change of path value', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     // and auto-install.json with some content that would have schema errors
-    const autoInstallUri = uriRelPath(tmpdir, 'auto-install.json');
+    const autoInstallUri = vscode.Uri.joinPath(tmpdir, 'auto-install.json');
     await writeEmptyJsonFile(autoInstallUri);
     const [autoInstallDoc, autoInstallEditor] = await openFile(autoInstallUri);
     await setDocumentText(
@@ -161,7 +161,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
   it('without default json language services', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     await setDocumentText(
       templateEditor,
@@ -178,7 +178,7 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
       diagnostics?.some(d => jsonpathFrom(d) === 'autoInstallDefinition')
     );
     // create a auto-install.json that has a comment and some bad json
-    const autoInstallUri = uriRelPath(tmpdir, 'auto-install.json');
+    const autoInstallUri = vscode.Uri.joinPath(tmpdir, 'auto-install.json');
     await writeEmptyJsonFile(autoInstallUri);
     const [, autoInstallEditor] = await openFile(autoInstallUri);
     await setDocumentText(
@@ -243,7 +243,9 @@ describe('TemplateEditorManager configures autoInstallDefinitions', () => {
     if (locations.length !== 1) {
       expect.fail('Expected 1 location for StringTypeVar, got:\n' + JSON.stringify(locations, undefined, 2));
     }
-    expect(locations[0].uri.path, 'location path').to.equal(uriRelPath(uriDirname(uri), 'variables.json').path);
+    expect(locations[0].uri.path, 'location path').to.equal(
+      vscode.Uri.joinPath(uriDirname(uri), 'variables.json').path
+    );
 
     // should not find a definition location for UnknownVar
     propNode = matchJsonNodeAtPattern(root, ['configuration', 'appConfiguration', 'values', 'UnknownVar'])?.parent

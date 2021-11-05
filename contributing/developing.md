@@ -99,8 +99,10 @@ Similarly, when dealing with file paths, you should try to use
 manipulating [`URI.path`](https://code.visualstudio.com/api/references/vscode-api#Uri.path), e.g.:
 
 ```typescript
+// preferred
 import { uriDirname } from './util/vscodeUtils';
 const dir = uriDirname(document.uri);
+const relfile = vscode.Uri.joinPath(dir, 'rel-file.json');
 // or
 import { posix as path } from 'path';
 const relfile = document.uri.with({ path: path.join(path.dirname(document.uri.path), 'rel-file.json') });

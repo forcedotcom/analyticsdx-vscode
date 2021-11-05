@@ -21,24 +21,23 @@ import {
   uriBasename,
   uriDirname,
   UriExistsDiagnosticCollection,
-  uriRelPath,
   uriStat
 } from './util/vscodeUtils';
 
 export class VscodeTemplateLinter extends TemplateLinter<vscode.Uri, vscode.TextDocument, AdxDiagnostic> {
-  protected uriDirname(uri: vscode.Uri): vscode.Uri {
+  protected override uriDirname(uri: vscode.Uri): vscode.Uri {
     return uriDirname(uri);
   }
 
-  protected uriBasename(uri: vscode.Uri): string {
+  protected override uriBasename(uri: vscode.Uri): string {
     return uriBasename(uri);
   }
 
-  protected uriRelPath(dir: vscode.Uri, relpath: string): vscode.Uri {
-    return uriRelPath(dir, relpath);
+  protected override uriRelPath(dir: vscode.Uri, relpath: string): vscode.Uri {
+    return vscode.Uri.joinPath(dir, relpath);
   }
 
-  protected async uriIsFile(uri: vscode.Uri): Promise<boolean | undefined> {
+  protected override async uriIsFile(uri: vscode.Uri): Promise<boolean | undefined> {
     const stat = await uriStat(uri);
     if (!stat) {
       return undefined;
@@ -47,7 +46,7 @@ export class VscodeTemplateLinter extends TemplateLinter<vscode.Uri, vscode.Text
     }
   }
 
-  protected async getDocument(uri: vscode.Uri): Promise<vscode.TextDocument> {
+  protected override async getDocument(uri: vscode.Uri): Promise<vscode.TextDocument> {
     return vscode.workspace.openTextDocument(uri);
   }
 
@@ -65,7 +64,7 @@ export class VscodeTemplateLinter extends TemplateLinter<vscode.Uri, vscode.Text
     }
   }
 
-  protected createDiagnotic(
+  protected override createDiagnotic(
     doc: vscode.TextDocument,
     mesg: string,
     code: string,
@@ -113,7 +112,7 @@ export class VscodeTemplateLinter extends TemplateLinter<vscode.Uri, vscode.Text
 export class TemplateLinterManager extends Disposable {
   // https://www.humanbenchmark.com/tests/reactiontime/statistics,
   // plus the linting on vscode extension package.json's is using 300ms
-  // (https://github.com/microsoft/vscode/blob/master/extensions/extension-editing/src/extensionLinter.ts)
+  // (https://github.com/microsoft/vscode/blob/main/extensions/extension-editing/src/extensionLinter.ts)
   public static readonly LINT_DEBOUNCE_MS = 300;
 
   private diagnosticCollection = new UriExistsDiagnosticCollection(

@@ -5,7 +5,6 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { uriBasename, uriDirname, uriStat } from './vscodeUtils';
 
@@ -21,7 +20,7 @@ export async function findTemplateInfoFileFor(file: vscode.Uri): Promise<vscode.
   let dir = uriDirname(file);
   // don't go out of the workspace
   while (vscode.workspace.getWorkspaceFolder(dir)) {
-    file = dir.with({ path: path.join(dir.path, 'template-info.json') });
+    file = vscode.Uri.joinPath(dir, 'template-info.json');
     const stat = await uriStat(file);
     // if there's a template-info.json there, check it
     if (stat) {

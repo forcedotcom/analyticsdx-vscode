@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { ERRORS } from '../../../src/constants';
-import { jsonpathFrom, uriBasename, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { jsonpathFrom, uriBasename, uriStat } from '../../../src/util/vscodeUtils';
 import {
   closeAllEditors,
   createTempTemplate,
@@ -54,7 +54,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     it(`errors on ${description} template-info json file`, async () => {
       [tmpdir] = await createTempTemplate(false);
       // make an empty template-info.json file
-      const templateInfoUri = uriRelPath(tmpdir, 'template-info.json');
+      const templateInfoUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
       await writeTextToFile(templateInfoUri, contents);
       // make sure we get the error
       const errorFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_EMPTY_FILE;
@@ -257,7 +257,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('shows warnings on duplicate relpath usages', async () => {
     const [t, , editor] = await createTempTemplate(true);
     tmpdir = t;
-    await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+    await writeEmptyJsonFile(vscode.Uri.joinPath(tmpdir, 'file.json'));
     await setDocumentText(editor, {
       variableDefinition: 'file.json',
       uiDefinition: 'file.json',
@@ -352,7 +352,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('shows warning on duplicate asset names', async () => {
     const [t, , editor] = await createTempTemplate(true);
     tmpdir = t;
-    await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+    await writeEmptyJsonFile(vscode.Uri.joinPath(tmpdir, 'file.json'));
     await setDocumentText(editor, {
       dashboards: [{ name: 'dashboard' }, { name: 'dashboard' }, { name: 'lens' }, { name: 'component' }],
       lenses: [{ name: 'lens' }, { name: 'lens' }, { name: 'dashboard' }, { name: 'component' }],
@@ -423,7 +423,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('shows warning on duplicate asset labels', async () => {
     const [t, , editor] = await createTempTemplate(true);
     tmpdir = t;
-    await writeEmptyJsonFile(uriRelPath(tmpdir, 'file.json'));
+    await writeEmptyJsonFile(vscode.Uri.joinPath(tmpdir, 'file.json'));
     await setDocumentText(editor, {
       dashboards: [{ label: 'dashboard' }, { label: 'dashboard' }],
       lenses: [{ label: 'lens' }, { label: 'lens' }],
@@ -478,10 +478,10 @@ describe('TemplateLinterManager lints template-info.json', () => {
 
   it('shows error on having ruleDefinition and rules', async () => {
     [tmpdir] = await createTempTemplate(false);
-    await writeTextToFile(uriRelPath(tmpdir, 'rules1.json'), {});
-    await writeTextToFile(uriRelPath(tmpdir, 'rules2.json'), {});
+    await writeTextToFile(vscode.Uri.joinPath(tmpdir, 'rules1.json'), {});
+    await writeTextToFile(vscode.Uri.joinPath(tmpdir, 'rules2.json'), {});
     // make a template with ruleDefinition and rules
-    const templateInfoUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateInfoUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     await writeTextToFile(templateInfoUri, {
       rules: [
         {
@@ -530,7 +530,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('shows problems on having deprecated icons with new badges', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make a template with the deprecrated and new icons
-    const templateInfoUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateInfoUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     await writeTextToFile(templateInfoUri, {
       assetIcon: '16.png',
       templateIcon: 'default.png',
@@ -648,7 +648,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it("updates problems on missing related file when it's created and deleted", async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     // now, set the variableDefinition to a file that doesn't exist
     await setDocumentText(
@@ -673,7 +673,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     );
 
     // create variables.json
-    const variablesUri = uriRelPath(tmpdir, 'variables.json');
+    const variablesUri = vscode.Uri.joinPath(tmpdir, 'variables.json');
     await writeEmptyJsonFile(variablesUri);
     // and the diagnostic should go away
     await waitForDiagnostics(
@@ -695,7 +695,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('warns on variables in ui.json in embeddedapp', async () => {
     // create an embeddedapp template, with 1 page for 1 variable (without yet opening it)
     [tmpdir] = await createTempTemplate(false);
-    await writeTextToFile(uriRelPath(tmpdir, 'variables.json'), {
+    await writeTextToFile(vscode.Uri.joinPath(tmpdir, 'variables.json'), {
       var1: {
         variableType: {
           type: 'StringType'
@@ -703,7 +703,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
         defaultValue: 'default value'
       }
     });
-    const uiUri = uriRelPath(tmpdir, 'ui.json');
+    const uiUri = vscode.Uri.joinPath(tmpdir, 'ui.json');
     await writeTextToFile(uiUri, {
       pages: [
         {
@@ -717,7 +717,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
         }
       ]
     });
-    const templateInfoUri = uriRelPath(tmpdir!, 'template-info.json');
+    const templateInfoUri = vscode.Uri.joinPath(tmpdir!, 'template-info.json');
     await writeTextToFile(templateInfoUri, {
       templateType: 'embeddedapp',
       name: uriBasename(tmpdir),
@@ -754,7 +754,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('warns on missing shares in embeddedapp', async () => {
     // create an embeddedapp template
     [tmpdir] = await createTempTemplate(false, { show: false });
-    const templateInfoUri = uriRelPath(tmpdir!, 'template-info.json');
+    const templateInfoUri = vscode.Uri.joinPath(tmpdir!, 'template-info.json');
     await writeTextToFile(templateInfoUri, {
       templateType: 'embeddedapp',
       name: uriBasename(tmpdir),
@@ -778,7 +778,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     );
 
     // now create an empty folder.json
-    const folderUri = uriRelPath(tmpdir!, 'folder.json');
+    const folderUri = vscode.Uri.joinPath(tmpdir!, 'folder.json');
     await writeTextToFile(folderUri, {});
     const [, folderEditor] = await openFile(folderUri);
     // and we should still have the diagnostic on folderDefinitoin
@@ -817,7 +817,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('warns on autoInstallDefinition on non-app template', async () => {
     const [dir, doc, editor] = await createTempTemplate(true);
     tmpdir = dir;
-    await writeTextToFile(uriRelPath(dir, 'auto-install.json'), {
+    await writeTextToFile(vscode.Uri.joinPath(dir, 'auto-install.json'), {
       hooks: [],
       configuration: { appConfiguration: {} }
     });
@@ -895,7 +895,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
   it('warns on autoInstallDefinition with no folder name', async () => {
     const [dir, templateDoc, templateEditor] = await createTempTemplate(true);
     tmpdir = dir;
-    await writeTextToFile(uriRelPath(dir, 'auto-install.json'), {
+    await writeTextToFile(vscode.Uri.joinPath(dir, 'auto-install.json'), {
       hooks: [],
       configuration: { appConfiguration: {} }
     });
@@ -936,7 +936,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     expect(d.relatedInformation, 'relatedInformation').to.be.undefined;
 
     // create folder.json w/ a name
-    const folderUri = uriRelPath(tmpdir, 'folder.json');
+    const folderUri = vscode.Uri.joinPath(tmpdir, 'folder.json');
     await writeTextToFile(folderUri, { name: uriBasename(tmpdir) });
     const [folderDoc, folderEditor] = await openFile(folderUri);
     // should have no warning now

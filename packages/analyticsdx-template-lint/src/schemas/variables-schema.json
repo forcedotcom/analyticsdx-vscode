@@ -168,9 +168,10 @@
               "type": "string",
               "description": "Required data type of underlying sObject field.",
               "enum": [
-                "xsd:base64",
+                "tns:ID",
+                "xsd:anyType",
+                "xsd:base64Binary",
                 "xsd:boolean",
-                "xsd:byte",
                 "xsd:date",
                 "xsd:dateTime",
                 "xsd:double",
@@ -217,8 +218,15 @@
               "const": "ConnectorType"
             },
             "connectorType": {
+              "type": ["null", "string"],
               "description": "The type of connector to offer to the user.  Only used for ConnectorType variables.",
-              "doNotSuggest": false
+              "doNotSuggest": false,
+              "defaultSnippets": [
+                {
+                  "label": "\"\"",
+                  "body": "${0}"
+                }
+              ]
             }
           },
           "required": ["type"]

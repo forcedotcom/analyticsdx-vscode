@@ -16,7 +16,7 @@ import {
 } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
-import { rangeForNode, uriRelPath } from '../util/vscodeUtils';
+import { rangeForNode } from '../util/vscodeUtils';
 
 /** Generate hover markdown text for a variable definition. */
 export function hoverMarkdownForVariable(
@@ -100,7 +100,7 @@ export abstract class VariableRefHoverProvider implements vscode.HoverProvider {
       const location = getLocation(document.getText(), document.offsetAt(position));
       if (this.isSupportedLocation(location) && typeof location.previousNode?.value === 'string') {
         const varname = location.previousNode.value;
-        const varUri = uriRelPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
+        const varUri = vscode.Uri.joinPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
         const varDoc = await vscode.workspace.openTextDocument(varUri);
         const tree = parseTree(varDoc.getText());
         const txt = hoverMarkdownForVariable(varname, tree && findNodeAtLocation(tree, [varname]));

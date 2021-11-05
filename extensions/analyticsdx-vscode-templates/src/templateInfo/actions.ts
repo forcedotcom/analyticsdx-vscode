@@ -18,7 +18,6 @@ import {
   jsonEditsToWorkspaceEdit,
   uriBasename,
   uriDirname,
-  uriRelPath,
   uriStat
 } from '../util/vscodeUtils';
 
@@ -41,7 +40,7 @@ export class CreateRelPathFileCodeActionProvider implements vscode.CodeActionPro
           const fix = new vscode.CodeAction(`Create ${args.relPath}`, vscode.CodeActionKind.QuickFix);
           fix.diagnostics = [d];
           fix.edit = new vscode.WorkspaceEdit();
-          const relUri = uriRelPath(uriDirname(document.uri), args.relPath);
+          const relUri = vscode.Uri.joinPath(uriDirname(document.uri), args.relPath);
           fix.edit.createFile(relUri);
           if (jsonFileFilter(args.relPath)) {
             fix.edit.insert(relUri, new vscode.Position(0, 0), '{}');

@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TEMPLATE_JSON_LANG_ID } from '../../../src/constants';
-import { jsonpathFrom, scanLinesUntil, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { jsonpathFrom, scanLinesUntil, uriStat } from '../../../src/util/vscodeUtils';
 import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
@@ -120,17 +120,17 @@ describe('TemplateEditorManager configures folderDefinition', () => {
   it('on change of path value', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     // and folder.json with some content that would have schema errors
-    const folderUri = uriRelPath(tmpdir, 'folder.json');
+    const folderUri = vscode.Uri.joinPath(tmpdir, 'folder.json');
     await writeEmptyJsonFile(folderUri);
     const [folderDoc, folderEditor] = await openFile(folderUri);
     await setDocumentText(
       folderEditor,
       JSON.stringify(
         {
-          error: 'intentionally unknown error field for test to look for'
+          error: 'intentionoverride ally unknown error field for test to look for'
         },
         undefined,
         2
@@ -182,7 +182,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
   it('without default json language services', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     await setDocumentText(
       templateEditor,
@@ -199,7 +199,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
       diagnostics?.some(d => jsonpathFrom(d) === 'folderDefinition')
     );
     // create a folder.json that has a comment and some bad json
-    const folderUri = uriRelPath(tmpdir, 'folder.json');
+    const folderUri = vscode.Uri.joinPath(tmpdir, 'folder.json');
     await writeEmptyJsonFile(folderUri);
     const [, folderEditor] = await openFile(folderUri);
     await setDocumentText(
@@ -225,7 +225,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
   it.skip('formatting', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     await setDocumentText(
       templateEditor,
@@ -238,7 +238,7 @@ describe('TemplateEditorManager configures folderDefinition', () => {
       )
     );
     // create a folder.json
-    const folderUri = uriRelPath(tmpdir, 'folder.json');
+    const folderUri = vscode.Uri.joinPath(tmpdir, 'folder.json');
     await writeEmptyJsonFile(folderUri);
     const [, folderEditor] = await openFile(folderUri);
     // wait for the doc to get mapped to adx-template-json

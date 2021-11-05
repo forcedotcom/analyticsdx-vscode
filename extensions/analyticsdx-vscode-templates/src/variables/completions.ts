@@ -11,7 +11,6 @@ import { codeCompletionUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
 import { isValidVariableName } from '../util/templateUtils';
-import { uriRelPath } from '../util/vscodeUtils';
 
 export const NEW_VARIABLE_SNIPPETS = Object.freeze([
   { label: 'New array variable', type: 'ArrayType' },
@@ -53,10 +52,7 @@ export class NewVariableCompletionItemProviderDelegate implements JsonCompletion
           .appendPlaceholder(type)
           .appendText('"');
         if (type === 'ArrayType') {
-          snippet
-            .appendText(',\n\t\t"itemsType": {\n\t\t\t"type": "')
-            .appendTabstop()
-            .appendText('"\n\t\t}');
+          snippet.appendText(',\n\t\t"itemsType": {\n\t\t\t"type": "').appendTabstop().appendText('"\n\t\t}');
         }
         snippet.appendText('\n\t}\n}').appendTabstop(0);
         // REVIEWME: calculate if this needs a trailing comma? typescript doesn't seem to in array/object literals,
@@ -122,7 +118,7 @@ export abstract class VariableRefCompletionItemProviderDelegate implements JsonC
     document: vscode.TextDocument
   ): Promise<vscode.CompletionItem[]> {
     // pull the variables names from the variables file
-    const varUri = uriRelPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
+    const varUri = vscode.Uri.joinPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
     const doc = await vscode.workspace.openTextDocument(varUri);
     const tree = parseTree(doc.getText());
     const items: vscode.CompletionItem[] = [];

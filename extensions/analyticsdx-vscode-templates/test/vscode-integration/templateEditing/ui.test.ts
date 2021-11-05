@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { ERRORS } from '../../../src/constants';
-import { jsonpathFrom, scanLinesUntil, uriDirname, uriRelPath, uriStat } from '../../../src/util/vscodeUtils';
+import { jsonpathFrom, scanLinesUntil, uriDirname, uriStat } from '../../../src/util/vscodeUtils';
 import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
@@ -133,10 +133,10 @@ describe('TemplateEditorManager configures uiDefinition', () => {
   it('on change of path value', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     // and ui.json with some content that would have schema errors
-    const uiUri = uriRelPath(tmpdir, 'ui.json');
+    const uiUri = vscode.Uri.joinPath(tmpdir, 'ui.json');
     await writeEmptyJsonFile(uiUri);
     const [uiDoc, uiEditor] = await openFile(uiUri);
     await setDocumentText(
@@ -195,7 +195,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
   it('without default json language services', async () => {
     [tmpdir] = await createTempTemplate(false);
     // make an empty template
-    const templateUri = uriRelPath(tmpdir, 'template-info.json');
+    const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
     const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
     await setDocumentText(
       templateEditor,
@@ -210,7 +210,7 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     // that should give us a warning about ui.json not existing
     await waitForDiagnostics(templateUri, diagnostics => diagnostics?.some(d => jsonpathFrom(d) === 'uiDefinition'));
     // create a ui.json that has a comment and some bad json
-    const uiUri = uriRelPath(tmpdir, 'ui.json');
+    const uiUri = vscode.Uri.joinPath(tmpdir, 'ui.json');
     await writeEmptyJsonFile(uiUri);
     const [, uiEditor] = await openFile(uiUri);
     await setDocumentText(
@@ -276,7 +276,9 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     if (locations.length !== 1) {
       expect.fail('Expected 1 location, got:\n' + JSON.stringify(locations, undefined, 2));
     }
-    expect(locations[0].uri.path, 'location path').to.equal(uriRelPath(uriDirname(uri), 'variables.json').path);
+    expect(locations[0].uri.path, 'location path').to.equal(
+      vscode.Uri.joinPath(uriDirname(uri), 'variables.json').path
+    );
   });
 
   it('code completions for variable names', async () => {
