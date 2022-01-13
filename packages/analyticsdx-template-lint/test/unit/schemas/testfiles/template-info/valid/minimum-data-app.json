@@ -1,0 +1,11 @@
+{
+  "templateType": "data",
+  "label": "MinTemplate",
+  "name": "MinTemplate",
+  "assetVersion": 55.0,
+  "releaseInfo": {
+    "templateVersion": "1.1"
+  }
+  // data templates technically need 1 dataset, externalFile, or recipe, but that's checked by the linter
+  // and not the schema
+}

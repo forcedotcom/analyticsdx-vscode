@@ -22,6 +22,20 @@ import { findEditorForDocument, getFormattingOptionsForEditor, jsonEditsToWorksp
 export class RemoveJsonPropertyCodeActionProvider implements vscode.CodeActionProvider {
   public static readonly providedCodeActionKinds = [vscode.CodeActionKind.QuickFix];
 
+  /** Create a workspace edit that will remove the specified json node (property and value)
+   * @param path the json path to the node to remove
+   * @param document the json document
+   */
+  public static createRemoveJsonPropertyWorkspaceEdit(
+    path: JSONPath,
+    document: vscode.TextDocument
+  ): vscode.WorkspaceEdit | undefined {
+    const formattingOptions = getFormattingOptionsForEditor(findEditorForDocument(document));
+    // this should delete it, plus take care of leading/trailing commas
+    const edits = jsonModify(document.getText(), path, undefined, { formattingOptions });
+    return jsonEditsToWorkspaceEdit(edits, document, new vscode.WorkspaceEdit());
+  }
+
   /** The json paths to properties that will be offered to delete. */
   protected paths: JSONPath[];
 
@@ -44,11 +58,7 @@ export class RemoveJsonPropertyCodeActionProvider implements vscode.CodeActionPr
         if (propNode) {
           const jsonPathStr = jsonPathToString(path);
           const fix = new vscode.CodeAction(`Remove ${jsonPathStr}`, vscode.CodeActionKind.QuickFix);
-          fix.edit = new vscode.WorkspaceEdit();
-          const formattingOptions = getFormattingOptionsForEditor(findEditorForDocument(document));
-          // this should delete it, plus take care of leading/trailing commas
-          const edits = jsonModify(document.getText(), path, undefined, { formattingOptions });
-          jsonEditsToWorkspaceEdit(edits, document, fix.edit);
+          fix.edit = RemoveJsonPropertyCodeActionProvider.createRemoveJsonPropertyWorkspaceEdit(path, document);
           // send telemetry when someone uses a quick fix
           fix.command = quickFixUsedTelemetryCommand(fix.title, jsonPathStr, document.uri);
           return [fix];

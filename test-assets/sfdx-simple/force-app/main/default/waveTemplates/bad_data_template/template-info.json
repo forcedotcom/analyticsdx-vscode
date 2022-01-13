@@ -1,0 +1,78 @@
+{
+  "templateType": "data",
+  "name": "bad_data_template",
+  "label": "Invalid data template",
+  "description": "For validator.test.ts, a data template that is missing the required objects and has invalid objects",
+  "assetVersion": 55.0,
+  "releaseInfo": {
+    "templateVersion": "1.0"
+  },
+  // Note: this intentionally has no recipes, datasetFiles, and externalFiles (intentionally left out)
+  "recipes": [],
+  "datasetFiles": null,
+
+  // These should all be invalid
+  "dashboards": [
+    {
+      "file": "dashboards/name.json",
+      "label": "name",
+      "name": "name"
+    }
+  ],
+  "components": [
+    {
+      "file": "components/name.json",
+      "label": "name",
+      "name": "name"
+    }
+  ],
+  "lenses": [
+    {
+      "file": "lenses/name.json",
+      "label": "name",
+      "name": "name"
+    }
+  ],
+  "eltDataflows": [
+    {
+      "file": "dataflows/name.json",
+      "label": "name",
+      "name": "name"
+    }
+  ],
+  "storedQueries": [
+    {
+      "file": "queries/name.json",
+      "label": "name",
+      "name": "name"
+    }
+  ],
+  "extendedTypes": {
+    "discoveryStories": [
+      {
+        "file": "name.json",
+        "label": "name",
+        "name": "name"
+      }
+    ],
+    "predictiveScoring": [
+      {
+        "file": "name.json",
+        "label": "name",
+        "name": "name"
+      }
+    ]
+  },
+  "imageFiles": [
+    {
+      "file": "name.png",
+      "name": "name"
+    }
+  ],
+  "templateDependencies": [
+    {
+      "name": "name",
+      "templateVersion": ">=1.0"
+    }
+  ]
+}

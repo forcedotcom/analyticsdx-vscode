@@ -274,7 +274,7 @@ export class TemplateLinterManager extends Disposable {
   }
 
   /** Run against the current queue of template-info documents awaiting linting. */
-  private async lint() {
+  private lint() {
     this._isLinting = true;
     try {
       let all = Promise.resolve();

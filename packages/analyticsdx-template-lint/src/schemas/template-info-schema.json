@@ -33,7 +33,7 @@
       "required": ["name", "label", "assetVersion", "lenses"]
     },
     "else": {
-      "$comment": "app templates need these",
+      "$comment": "app and data templates need these",
       "required": ["name", "label", "assetVersion", "releaseInfo"]
     }
   },
@@ -54,7 +54,7 @@
         {
           "type": "string",
           "$comment": "These are also valid in the server, but we shouldn't prompt users for them. Also, json-schema doesn't support sending in a case-sensitive flag nor doing a (?i) group.",
-          "pattern": "^(lens|Lens|TemporaryApp|temporaryApp|temporaryapp)$"
+          "pattern": "^(lens|Lens|TemporaryApp|temporaryApp|temporaryapp|Data|data)$"
         },
         {
           "type": "null"

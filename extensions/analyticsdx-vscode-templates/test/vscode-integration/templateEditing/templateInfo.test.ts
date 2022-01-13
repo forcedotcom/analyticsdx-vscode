@@ -334,5 +334,53 @@ describe('TemplateEditorManager configures template-info.json', () => {
     ]);
   });
 
+  it('quick fix to remove unsupported data template asset fields', async () => {
+    const [t, doc, editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await setDocumentText(editor, {
+      templateType: 'data',
+      recipes: [{ label: 'recipe', name: 'recipe', file: 'recipe.json' }],
+      // lenses aren't supported in data templates
+      lenses: [{ label: 'lens', name: 'lens', file: 'lens.json' }],
+      // empty array, though, should not have a diagnostic
+      dashboards: []
+    });
+    // wait for the warning on lenses
+    const assetIconFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_DATA_UNSUPPORTED_OBJECT;
+    const diagnostics = (
+      await waitForDiagnostics(doc.uri, d => d && d.filter(assetIconFilter).length >= 1, 'initial warning on lenses')
+    )
+      .filter(assetIconFilter)
+      .sort(sortDiagnostics);
+    if (diagnostics.length !== 1) {
+      expect.fail('Expected 1 diagnostic on "lenses", got: ' + JSON.stringify(diagnostics, undefined, 2));
+    }
+    // look for the 'Remove lenses' quick fix on the diagnostic
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('lenses');
+    const allActions = await getCodeActions(doc.uri, diagnostics[0].range);
+    const actions = allActions.filter(a => a.title.startsWith('Remove lenses'));
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 remove action for lenses, got: [' + allActions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].edit, 'lenses quick fix.edit').to.not.be.undefined;
+
+    // run the quick fix
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+
+    // make sure the lenses warnings went away
+    await waitForDiagnostics(
+      doc.uri,
+      d => d?.filter(assetIconFilter).length === 0,
+      'no warnings lenses after quick fix'
+    );
+
+    // make sure the json got updated
+    const json = jsoncParse(doc.getText());
+    expect(json, 'template-info.json').to.not.be.undefined;
+    expect(json.lenses, 'lenses').to.be.undefined;
+  });
+
   // TODO: tests for definitionProvider, actionProvider, etc.
 });

@@ -2,7 +2,7 @@
   "templateType": "app",
   "label": "Empty required App",
   "name": "Empty_required",
-  "description": "For linter.test.ts, an app template with empty lenses, dashboards, eltDataflows, externalFiles, and recipes",
+  "description": "For validator.test.ts, an app template with empty lenses, dashboards, eltDataflows, externalFiles, and recipes",
   "assetVersion": 46.0,
   "rules": [
     {

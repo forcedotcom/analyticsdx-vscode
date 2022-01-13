@@ -41,8 +41,13 @@ import {
   TEMPLATE_INFO,
   TEMPLATE_JSON_LANG_ID
 } from './constants';
+import { ERRORS } from './constants';
 import { telemetryService } from './telemetry';
-import { CreateFolderShareCodeActionProvider, CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
+import {
+  CreateFolderShareCodeActionProvider,
+  CreateRelPathFileCodeActionProvider,
+  RemoveJsonPropertyDiagnosticCodeActionProvider
+} from './templateInfo/actions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
@@ -252,7 +257,15 @@ export class TemplateDirEditing extends Disposable {
       // and quick fixes for embeddedapps w/o shares
       vscode.languages.registerCodeActionsProvider(templateInfoSelector, new CreateFolderShareCodeActionProvider(), {
         providedCodeActionKinds: CreateFolderShareCodeActionProvider.providedCodeActionKinds
-      })
+      }),
+      // and quick fixes for removing unsupported fields
+      vscode.languages.registerCodeActionsProvider(
+        templateInfoSelector,
+        new RemoveJsonPropertyDiagnosticCodeActionProvider(ERRORS.TMPL_DATA_UNSUPPORTED_OBJECT),
+        {
+          providedCodeActionKinds: RemoveJsonPropertyDiagnosticCodeActionProvider.providedCodeActionKinds
+        }
+      )
     );
 
     // hookup editing support for the other template file types and operations here
