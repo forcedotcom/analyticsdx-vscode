@@ -380,6 +380,7 @@ export abstract class TemplateLinter<
       this.lintTemplateInfoAutoInstallDefinition(this.templateInfoDoc, tree)
     ]);
     // while those are going, do these synchronous ones
+    this.listTemplateInfoAssetVersion(this.templateInfoDoc, tree);
     this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
     this.lintTemplateInfoIcons(this.templateInfoDoc, tree);
@@ -445,6 +446,23 @@ export abstract class TemplateLinter<
 
     // wait for the async ones
     await p;
+  }
+
+  private listTemplateInfoAssetVersion(doc: Document, tree: JsonNode) {
+    const [assetVersion, assertVersionNode] = findJsonPrimitiveAttributeValue(tree, 'assetVersion');
+    // recipes requires assetVersion 47.0+; the json schema will handle if assetVersion is missing or NaN or invalid
+    if (assertVersionNode && typeof assetVersion === 'number' && assetVersion < 47.0) {
+      const [numRecipes, recipesNode] = lengthJsonArrayAttributeValue(tree, 'recipes');
+      if (numRecipes > 0) {
+        this.addDiagnostic(
+          doc,
+          'Recipes require an assetVersion of at least 47.0',
+          ERRORS.TMPL_RECIPES_MIN_ASSET_VERSION,
+          assertVersionNode,
+          { relatedInformation: [{ doc, node: recipesNode, mesg: 'Recipes array' }] }
+        );
+      }
+    }
   }
 
   private async lintTemplateInfoByType(doc: Document, tree: JsonNode): Promise<void> {

@@ -134,6 +134,8 @@ export const ERRORS = Object.freeze({
   TMPL_DATA_MISSING_OBJECTS: 'tmpl-18',
   /** Data templates cannot have other assets */
   TMPL_DATA_UNSUPPORTED_OBJECT: 'tmpl-19',
+  /** Recipes need assetVersion 47.0+. */
+  TMPL_RECIPES_MIN_ASSET_VERSION: 'tmpl-20',
 
   /** Unknown variable in values in autoInstallDefinition. */
   AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',

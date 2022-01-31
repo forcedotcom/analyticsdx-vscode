@@ -9,8 +9,7 @@ import { expect } from 'chai';
 import { JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser';
 import * as path from 'path';
 import { DiagnosticSeverity, ErrorCode, TextDocument } from 'vscode-json-languageservice';
-import { matchJsonNodeAtPattern } from '../../src';
-import { ERRORS, JSON_SCHEMA_SOURCE_ID, JSON_SOURCE_ID, LINTER_SOURCE_ID } from '../../src/constants';
+import { ERRORS, JSON_SCHEMA_SOURCE_ID, JSON_SOURCE_ID, LINTER_SOURCE_ID, matchJsonNodeAtPattern } from '../../src';
 import { FileTemplateValidator } from '../../src/validator';
 import { getDiagnosticsByPath, getDiagnosticsForPath, parseErrorToString, sfdxTestTemplatesPath } from '../testutils';
 
