@@ -133,7 +133,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified'
+      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
     );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // on the missing fields, there shouldn't be any relatedInformations
@@ -151,7 +151,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified'
+      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
     );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // there should be related information for each field being empty
@@ -178,7 +178,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified'
+      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
     );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // there should be relatedInformations for dashboards, externalFiles, and lenses

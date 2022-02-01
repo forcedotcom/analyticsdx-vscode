@@ -2,7 +2,7 @@
   "templateType": "app",
   "label": "FullAppTemplate",
   "name": "allRelpaths",
-  "assetVersion": 46.0,
+  "assetVersion": 47.0,
   "releaseInfo": {
     "templateVersion": "1.1",
     "notesFile": "releaseNotes.html"

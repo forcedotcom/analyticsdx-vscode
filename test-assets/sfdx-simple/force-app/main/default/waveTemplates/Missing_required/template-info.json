@@ -2,7 +2,7 @@
   "templateType": "app",
   "label": "Missing required App",
   "name": "Missing_required",
-  "description": "For linter.test.ts, an app template missing leneses, dashboards, eltDataflows, externalFiles, and recipes",
+  "description": "For validator.test.ts, an app template missing leneses, dashboards, eltDataflows, externalFiles, and recipes",
   "assetVersion": 46.0,
   "rules": [
     {

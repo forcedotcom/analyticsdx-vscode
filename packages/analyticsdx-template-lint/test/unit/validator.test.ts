@@ -9,8 +9,7 @@ import { expect } from 'chai';
 import { JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser';
 import * as path from 'path';
 import { DiagnosticSeverity, ErrorCode, TextDocument } from 'vscode-json-languageservice';
-import { matchJsonNodeAtPattern } from '../../src';
-import { ERRORS, JSON_SCHEMA_SOURCE_ID, JSON_SOURCE_ID, LINTER_SOURCE_ID } from '../../src/constants';
+import { ERRORS, JSON_SCHEMA_SOURCE_ID, JSON_SOURCE_ID, LINTER_SOURCE_ID, matchJsonNodeAtPattern } from '../../src';
 import { FileTemplateValidator } from '../../src/validator';
 import { getDiagnosticsByPath, getDiagnosticsForPath, parseErrorToString, sfdxTestTemplatesPath } from '../testutils';
 
@@ -87,7 +86,7 @@ describe('FileTemplateValidator', () => {
       missingField: 'releaseInfo',
       lintWarning: {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
-        message: 'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified',
+        message: 'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified',
         code: ERRORS.TMPL_APP_MISSING_OBJECTS
       }
     },
@@ -96,7 +95,7 @@ describe('FileTemplateValidator', () => {
       missingField: 'releaseInfo',
       lintWarning: {
         range: { start: { line: 1, character: 2 }, end: { line: 1, character: 23 } },
-        message: 'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified',
+        message: 'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified',
         code: ERRORS.TMPL_APP_MISSING_OBJECTS
       }
     },
@@ -107,6 +106,15 @@ describe('FileTemplateValidator', () => {
         range: { start: { line: 1, character: 2 }, end: { line: 1, character: 29 } },
         message: 'Dashboard templates must have exactly 1 dashboard specified',
         code: ERRORS.TMPL_DASH_ONE_DASHBOARD
+      }
+    },
+    {
+      filename: 'empty-data-app.json',
+      missingField: 'releaseInfo',
+      lintWarning: {
+        range: { start: { line: 1, character: 2 }, end: { line: 1, character: 24 } },
+        message: 'Data templates must have at least 1 dataset, externalFile, or recipe specified',
+        code: ERRORS.TMPL_DATA_MISSING_OBJECTS
       }
     },
     {
@@ -354,6 +362,58 @@ describe('FileTemplateValidator', () => {
             .join(', ')
       );
     }
+  });
+
+  it('validates bad_data_template/ template', async () => {
+    const templateInfoPath = path.join(sfdxTestTemplatesPath, 'bad_data_template', 'template-info.json');
+    const doc = await FileTemplateValidator.createTextDocument(templateInfoPath);
+    const validator = new FileTemplateValidator(doc);
+    await validator.lint();
+
+    // there should be one missing object warning on the templateType node
+    const diagnostics = getDiagnosticsForPath(validator.diagnostics, templateInfoPath)?.filter(
+      d => d.code === ERRORS.TMPL_DATA_MISSING_OBJECTS
+    );
+    if (diagnostics?.length !== 1) {
+      expect.fail(
+        `Expected 1 missing objects diagnostic for ${templateInfoPath}, got: ${JSON.stringify(
+          diagnostics,
+          undefined,
+          2
+        )}`
+      );
+    }
+    const templateInfo = parseOrThrow(doc.getText());
+    expect(diagnostics[0].range.start.line, 'missing objects diagnostic line num').to.equal(
+      jsonpathLineNum(templateInfo, ['templateType'], doc)
+    );
+    // it should have relatedInformation pointing to the 2 empty array fields
+    let lineNums = diagnostics[0].relatedInformation?.map(r => r.location.range.start.line).sort();
+    let expectedLines = [
+      jsonpathLineNum(templateInfo, ['recipes'], doc),
+      jsonpathLineNum(templateInfo, ['datasetFiles'], doc)
+    ].sort();
+    expect(lineNums, 'missing objects diagnostic relatedInformation').to.have.deep.members(expectedLines);
+
+    // there should be unsupported object warnings on the various fields
+    lineNums = getDiagnosticsForPath(validator.diagnostics, templateInfoPath)
+      ?.filter(d => d.code === ERRORS.TMPL_DATA_UNSUPPORTED_OBJECT)
+      .map(d => d.range.start.line)
+      .sort();
+    expectedLines = [
+      ['dashboards'] as JSONPath,
+      ['components'],
+      ['lenses'],
+      ['eltDataflows'],
+      ['storedQueries'],
+      ['extendedTypes', 'discoveryStories'],
+      ['extendedTypes', 'predictiveScoring'],
+      ['imageFiles'],
+      ['templateDependencies']
+    ]
+      .map(jsonpath => jsonpathLineNum(templateInfo, jsonpath, doc))
+      .sort();
+    expect(lineNums, 'unsupported object diagnostic line nums').to.have.deep.members(expectedLines);
   });
 
   // TODO: add more validation/linting tests

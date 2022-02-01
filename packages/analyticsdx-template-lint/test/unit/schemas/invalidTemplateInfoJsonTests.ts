@@ -9,28 +9,23 @@ import * as path from 'path';
 import { schemas } from '../../../src/schemas';
 import { createRelPathValidateFn } from '../../testutils';
 
-// Note: VSCode doesn't use Ajv for it's json schema, so the errors we get here won't exactly line up with
+// Note: VSCode doesn't use Ajv for its json schema, so the errors we get here won't exactly line up with
 // what shows in VSCode; we'll test that in a vscode-integration test.
 // Also, the deprecationMessage's in the schema is only supported in VSCode, so we won't see those errors here
-// either
+// either.
 describe('template-info-schema.json finds errors in', () => {
   const validate = createRelPathValidateFn(
     schemas.templateInfo,
     path.join(__dirname, 'testfiles', 'template-info', 'invalid')
   );
 
-  it('empty.json', async () => {
-    const errors = await validate('empty.json');
-    errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'releaseInfo');
-    errors.expectNoInvalidProps();
-    errors.expectNoUnrecognizedErrors();
-  });
-
-  it('empty-app.json', async () => {
-    const errors = await validate('empty-app.json');
-    errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'releaseInfo');
-    errors.expectNoInvalidProps();
-    errors.expectNoUnrecognizedErrors();
+  ['empty.json', 'empty-app.json', 'empty-data-app.json'].forEach(file => {
+    it(file, async () => {
+      const errors = await validate(file);
+      errors.expectMissingProps(true, 'name', 'label', 'assetVersion', 'releaseInfo');
+      errors.expectNoInvalidProps();
+      errors.expectNoUnrecognizedErrors();
+    });
   });
 
   it('empty-dashboard.json', async () => {

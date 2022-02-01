@@ -1,7 +1,7 @@
 {
   "label": "Empty and Missing required App",
   "name": "Empty_and_missing_required",
-  "description": "For linter.test.ts, an app template missing eltDataflows and recipes; with empty lenses, dashboards and externalFiles; and intentionally not having templateType specified",
+  "description": "For validator.test.ts, an app template missing eltDataflows and recipes; with empty lenses, dashboards and externalFiles; and intentionally not having templateType specified",
   "assetVersion": 49.0,
   "rules": [
     {

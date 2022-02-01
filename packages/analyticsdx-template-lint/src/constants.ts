@@ -14,6 +14,21 @@ export const JSON_SOURCE_ID = 'json';
 /** Diagnostic source id for json schema issues. */
 export const JSON_SCHEMA_SOURCE_ID = 'json-schema';
 
+// Note: this should be in sync with the paths below
+const assetAttrPaths = [
+  ['dashboards'] as JSONPath,
+  ['components'],
+  ['lenses'],
+  ['eltDataflows'],
+  ['storedQueries'],
+  ['extendedTypes', 'discoveryStories'],
+  ['extendedTypes', 'predictiveScoring'],
+  ['recipes'],
+  ['externalFiles'],
+  ['datasetFiles'],
+  ['imageFiles']
+];
+
 const definitionFilesPats = [
   ['variableDefinition'] as JSONPath,
   ['uiDefinition'],
@@ -71,7 +86,12 @@ export const TEMPLATE_INFO = Object.freeze({
   /**
    * All JSONPaths to attributes that can be relative-paths to other files.
    */
-  allRelFilePathLocationPatterns: Object.freeze([...jsonPats, ...htmlPats, ...imagePats, ...csvPats])
+  allRelFilePathLocationPatterns: Object.freeze([...jsonPats, ...htmlPats, ...imagePats, ...csvPats]),
+
+  /**
+   * The JSONPaths to attributes in template-info.json that points to assets that can be manged by the template.
+   */
+  assetAttrPaths: Object.freeze(assetAttrPaths)
 });
 
 /** Diagnostic error codes, generally set in TemplateLinter. */
@@ -110,6 +130,12 @@ export const ERRORS = Object.freeze({
   TMPL_DUPLICATE_LABEL: 'tmpl-16',
   /** An empty file. */
   TMPL_EMPTY_FILE: 'tmpl-17',
+  /** Data template needs at least 1 dataset, externalFile, or recipe */
+  TMPL_DATA_MISSING_OBJECTS: 'tmpl-18',
+  /** Data templates cannot have other assets */
+  TMPL_DATA_UNSUPPORTED_OBJECT: 'tmpl-19',
+  /** Recipes need assetVersion 47.0+. */
+  TMPL_RECIPES_MIN_ASSET_VERSION: 'tmpl-20',
 
   /** Unknown variable in values in autoInstallDefinition. */
   AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',

@@ -376,12 +376,12 @@ export abstract class TemplateLinter<
       ...TEMPLATE_INFO.allRelFilePathLocationPatterns.map(path =>
         this.lintRelFilePath(this.templateInfoDoc, tree, path)
       ),
-      this.lintTemplateInfoEmbeddedApp(this.templateInfoDoc, tree),
+      this.lintTemplateInfoByType(this.templateInfoDoc, tree),
       this.lintTemplateInfoAutoInstallDefinition(this.templateInfoDoc, tree)
     ]);
     // while those are going, do these synchronous ones
+    this.listTemplateInfoAssetVersion(this.templateInfoDoc, tree);
     this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
-    this.lintTemplateInfoMinimumObjects(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
     this.lintTemplateInfoIcons(this.templateInfoDoc, tree);
 
@@ -448,9 +448,95 @@ export abstract class TemplateLinter<
     await p;
   }
 
-  private async lintTemplateInfoEmbeddedApp(doc: Document, tree: JsonNode): Promise<void> {
-    const [type, typeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
-    if (type === 'embeddedapp') {
+  private listTemplateInfoAssetVersion(doc: Document, tree: JsonNode) {
+    const [assetVersion, assertVersionNode] = findJsonPrimitiveAttributeValue(tree, 'assetVersion');
+    // recipes requires assetVersion 47.0+; the json schema will handle if assetVersion is missing or NaN or invalid
+    if (assertVersionNode && typeof assetVersion === 'number' && assetVersion < 47.0) {
+      const [numRecipes, recipesNode] = lengthJsonArrayAttributeValue(tree, 'recipes');
+      if (numRecipes > 0) {
+        this.addDiagnostic(
+          doc,
+          'Recipes require an assetVersion of at least 47.0',
+          ERRORS.TMPL_RECIPES_MIN_ASSET_VERSION,
+          assertVersionNode,
+          { relatedInformation: [{ doc, node: recipesNode, mesg: 'Recipes array' }] }
+        );
+      }
+    }
+  }
+
+  private async lintTemplateInfoByType(doc: Document, tree: JsonNode): Promise<void> {
+    const [templateType, templateTypeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
+    // do the check if templateType is not specified or is a string; if it's anythigng else, the json-schema should
+    // show a warning
+    if (!templateTypeNode || (templateType && typeof templateType === 'string')) {
+      switch (templateType ? templateType.toLocaleLowerCase() : 'app') {
+        case 'app':
+        case 'embeddedapp': {
+          await this.lintAppTemplateInfo(doc, tree, templateType, templateTypeNode);
+          break;
+        }
+        case 'dashboard': {
+          this.lintDashboardTemplateInfo(doc, tree, templateTypeNode);
+          break;
+        }
+        case 'data': {
+          this.lintDataTemplateInfo(doc, tree, templateTypeNode);
+          break;
+        }
+        // REVIEWME: do Lens templates require anything?
+      }
+    }
+  }
+
+  private async lintAppTemplateInfo(
+    doc: Document,
+    tree: JsonNode,
+    templateType: 'app' | 'embeddedapp',
+    templateTypeNode: JsonNode | undefined
+  ): Promise<void> {
+    // for app templates, it needs to have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified,
+    // so accumulate the total of each (handling the -1 meaning no node) and the property nodes for each
+    // empty array field
+    const { count, nodes } = [
+      { data: lengthJsonArrayAttributeValue(tree, 'dashboards'), name: 'dashboards' },
+      { data: lengthJsonArrayAttributeValue(tree, 'eltDataflows'), name: 'dataflows' },
+      { data: lengthJsonArrayAttributeValue(tree, 'externalFiles'), name: 'externalFiles' },
+      { data: lengthJsonArrayAttributeValue(tree, 'lenses'), name: 'lenses' },
+      { data: lengthJsonArrayAttributeValue(tree, 'recipes'), name: 'recipes' }
+    ].reduce(
+      (all, { data, name }) => {
+        if (data[0] > 0) {
+          all.count += data[0];
+        }
+        // node.parent should be the property node, (e.g. '"dashboards": []')
+        if (data[1] && data[1].parent) {
+          all.nodes.push([data[1].parent, name]);
+        }
+        return all;
+      },
+      { count: 0, nodes: [] as Array<[JsonNode, string]> }
+    );
+    if (count <= 0) {
+      // add a related warning on each empty array property node
+      const relatedInformation =
+        nodes.length > 0
+          ? nodes.map(([node, name]) => {
+              return { doc, node, mesg: `Empty ${name} array` };
+            })
+          : undefined;
+      this.addDiagnostic(
+        doc,
+        'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified',
+        ERRORS.TMPL_APP_MISSING_OBJECTS,
+        // put the warning on the "templateType": "app" property
+        templateTypeNode && templateTypeNode.parent,
+        { relatedInformation }
+      );
+    }
+
+    // there's some more checks for embeddedapp templates
+    if (templateType === 'embeddedapp') {
       // make sure there's no ui pages specified
       const uiDefNode = findNodeAtLocation(tree, ['uiDefinition']);
       if (uiDefNode) {
@@ -480,7 +566,7 @@ export abstract class TemplateLinter<
           doc,
           'Templates of type embeddedapp must have at least 1 share definition in the folderDefinition file',
           ERRORS.TMPL_EMBEDDED_APP_NO_SHARES,
-          folderDefNode?.parent || folderDefNode || typeNode?.parent || typeNode,
+          folderDefNode?.parent || folderDefNode || templateTypeNode?.parent || templateTypeNode,
           {
             args: {
               folderDefinitionUri
@@ -488,6 +574,88 @@ export abstract class TemplateLinter<
           }
         );
       }
+    }
+  }
+
+  private lintDashboardTemplateInfo(doc: Document, tree: JsonNode, templateTypeNode: JsonNode | undefined) {
+    // for dashboard templates, there needs to exactly 1 dashboard specified
+    const [len, dashboards] = lengthJsonArrayAttributeValue(tree, 'dashboards');
+    if (len !== 1) {
+      this.addDiagnostic(
+        doc,
+        'Dashboard templates must have exactly 1 dashboard specified',
+        ERRORS.TMPL_DASH_ONE_DASHBOARD,
+        // put it on the "dashboards" array, or the "templateType": "..." property, if either available
+        dashboards || (templateTypeNode && templateTypeNode.parent)
+      );
+    }
+
+    // TODO: don't allow the others
+  }
+
+  private lintDataTemplateInfo(doc: Document, tree: JsonNode, templateTypeNode: JsonNode | undefined) {
+    // for data templates, it needs to have at least 1 dataset, externalFile, or recipe specified,
+    // so accumulate the total of each (handling the -1 meaning no node) and the property nodes for each
+    // empty array field
+    const { count, nodes } = [
+      { data: lengthJsonArrayAttributeValue(tree, 'datasetFiles'), name: 'datasets' },
+      { data: lengthJsonArrayAttributeValue(tree, 'externalFiles'), name: 'externalFiles' },
+      { data: lengthJsonArrayAttributeValue(tree, 'recipes'), name: 'recipes' }
+    ].reduce(
+      (all, { data, name }) => {
+        if (data[0] > 0) {
+          all.count += data[0];
+        }
+        // node.parent should be the property node, (e.g. '"recipes": []')
+        if (data[1] && data[1].parent) {
+          all.nodes.push([data[1].parent, name]);
+        }
+        return all;
+      },
+      { count: 0, nodes: [] as Array<[JsonNode, string]> }
+    );
+    if (count <= 0) {
+      // add a related warning on each empty array property node
+      const relatedInformation =
+        nodes.length > 0
+          ? nodes.map(([node, name]) => {
+              return { doc, node, mesg: `Empty ${name} array` };
+            })
+          : undefined;
+      this.addDiagnostic(
+        doc,
+        'Data templates must have at least 1 dataset, externalFile, or recipe specified',
+        ERRORS.TMPL_DATA_MISSING_OBJECTS,
+        // put the warning on the "templateType": "data" property
+        templateTypeNode && templateTypeNode.parent,
+        { relatedInformation }
+      );
+    }
+
+    // make sure it only has datasets, externalFiles's, or recipes
+    TEMPLATE_INFO.assetAttrPaths.forEach(attrPath => {
+      if (attrPath[0] === 'datasetFiles' || attrPath[0] === 'externalFiles' || attrPath[0] === 'recipes') {
+        return;
+      }
+      const [count, node] = lengthJsonArrayAttributeValue(tree, ...attrPath);
+      if (count > 0) {
+        this.addDiagnostic(
+          doc,
+          'Data templates only support datasets, external files, and recipes',
+          ERRORS.TMPL_DATA_UNSUPPORTED_OBJECT,
+          node?.parent || node
+        );
+      }
+    });
+    // and no dependencies currently
+    const [depsCount, node] = lengthJsonArrayAttributeValue(tree, 'templateDependencies');
+    if (depsCount > 0) {
+      this.addDiagnostic(
+        doc,
+        'Data templates do not support dependencies',
+        ERRORS.TMPL_DATA_UNSUPPORTED_OBJECT,
+        node?.parent || node
+      );
     }
   }
 
@@ -560,74 +728,6 @@ export abstract class TemplateLinter<
           ruleDefinition.parent || ruleDefinition,
           { severity: TemplateLinterDiagnosticSeverity.Error }
         );
-      }
-    }
-  }
-
-  private lintTemplateInfoMinimumObjects(doc: Document, tree: JsonNode) {
-    const [templateType, templateTypeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
-    // do the check if templateType is not specified or is a string; if it's anythigng else, the json-schema should
-    // show a warning
-    if (!templateTypeNode || (templateType && typeof templateType === 'string')) {
-      switch (templateType ? templateType.toLocaleLowerCase() : 'app') {
-        case 'app':
-        case 'embeddedapp': {
-          // for app templates, it needs to have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified,
-          // so accumulate the total of each (handling the -1 meaning no node) and the property nodes for each
-          // empty array field
-          const { count, nodes } = [
-            { data: lengthJsonArrayAttributeValue(tree, 'dashboards'), name: 'dashboards' },
-            { data: lengthJsonArrayAttributeValue(tree, 'eltDataflows'), name: 'dataflows' },
-            { data: lengthJsonArrayAttributeValue(tree, 'externalFiles'), name: 'externalFiles' },
-            { data: lengthJsonArrayAttributeValue(tree, 'lenses'), name: 'lenses' },
-            { data: lengthJsonArrayAttributeValue(tree, 'recipes'), name: 'recipes' }
-          ].reduce(
-            (all, { data, name }) => {
-              if (data[0] > 0) {
-                all.count += data[0];
-              }
-              // node.parent should be the property node, (e.g. '"dashboards": []')
-              if (data[1] && data[1].parent) {
-                all.nodes.push([data[1].parent, name]);
-              }
-              return all;
-            },
-            { count: 0, nodes: [] as Array<[JsonNode, string]> }
-          );
-          if (count <= 0) {
-            // add a related warning on each empty array property node
-            const relatedInformation =
-              nodes.length > 0
-                ? nodes.map(([node, name]) => {
-                    return { doc, node, mesg: `Empty ${name} array` };
-                  })
-                : undefined;
-            this.addDiagnostic(
-              doc,
-              'App templates must have at least 1 dashboard, dataflow, externaFile, lens, or recipe specified',
-              ERRORS.TMPL_APP_MISSING_OBJECTS,
-              // put the warning on the "templateType": "app" property
-              templateTypeNode && templateTypeNode.parent,
-              { relatedInformation }
-            );
-          }
-          break;
-        }
-        case 'dashboard': {
-          // for dashboard templates, there needs to exactly 1 dashboard specified
-          const [len, dashboards] = lengthJsonArrayAttributeValue(tree, 'dashboards');
-          if (len !== 1) {
-            this.addDiagnostic(
-              doc,
-              'Dashboard templates must have exactly 1 dashboard specified',
-              ERRORS.TMPL_DASH_ONE_DASHBOARD,
-              // put it on the "dashboards" array, or the "templateType": "..." property, if either available
-              dashboards || (templateTypeNode && templateTypeNode.parent)
-            );
-          }
-          break;
-        }
-        // REVIEWME: do Lens templates require anything?
       }
     }
   }
