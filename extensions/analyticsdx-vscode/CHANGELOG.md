@@ -1,3 +1,17 @@
+# 0.8.0
+
+## Added
+
+- Added `data` templateType for Summer `22 beta
+
+## Fixed
+
+- Validate that `assetVersion` is 47.0+ if using recipes in a template.
+- Variables json schema fixes:
+  - `connectorType` value needs to be a string or null.
+  - Fixed enum values for `dataType` on `SobjectFieldType` variables.
+- Updated dependencies versions.
+
 # 0.7.1
 
 ## Fixed
