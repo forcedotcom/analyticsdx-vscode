@@ -1020,6 +1020,7 @@ export abstract class TemplateLinter<
             .filter(isValidVariableName)
             [Symbol.iterator]()
       });
+      const [templateType] = findJsonPrimitiveAttributeValue(templateInfo, 'templateType');
       // find all the variable objects
       matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {
         if (nameNode && nameNode.type === 'string' && nameNode.value) {
@@ -1037,10 +1038,20 @@ export abstract class TemplateLinter<
             this.addDiagnostic(uiDoc, mesg, ERRORS.UI_PAGE_UNKNOWN_VARIABLE, nameNode, { args });
           } else {
             const type = variableTypes[name];
-            if (type === 'ObjectType' || type === 'DateTimeType' || type === 'DatasetAnyFieldType') {
+            if (type === 'ObjectType' || type === 'DateTimeType') {
               this.addDiagnostic(
                 uiDoc,
                 `${type} variable '${name}' is not supported in ui pages`,
+                ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
+                nameNode
+              );
+            } else if (
+              type === 'DatasetAnyFieldType' &&
+              !(typeof templateType === 'string' && templateType.toLowerCase() === 'data')
+            ) {
+              this.addDiagnostic(
+                uiDoc,
+                `${type} variable '${name}' is only supported in ui pages in data templates`,
                 ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
                 nameNode
               );
