@@ -142,11 +142,18 @@ describe('TemplateLinter', () => {
 
   describe('ui.json', () => {
     [
-      { templateType: 'data', numErrors: 0 },
-      { templateType: 'app', numErrors: 1 }
-    ].forEach(({ templateType, numErrors }) => {
-      it(`validates DatasetAnyFieldType for ${templateType} template`, async () => {
-        const dir = 'datasetAnyFieldType';
+      { templateType: 'data', numErrors: 0, type: 'DatasetAnyFieldType', isArray: false },
+      { templateType: 'data', numErrors: 0, type: 'DatasetAnyFieldType', isArray: true },
+      { templateType: 'app', numErrors: 1, type: 'DatasetAnyFieldType', isArray: false },
+      { templateType: 'app', numErrors: 1, type: 'DatasetAnyFieldType', isArray: true },
+      { templateType: 'app', numErrors: 1, type: 'ObjectType', isArray: false },
+      { templateType: 'app', numErrors: 1, type: 'ObjectType', isArray: true },
+      { templateType: 'app', numErrors: 1, type: 'DateTimeType', isArray: false },
+      { templateType: 'app', numErrors: 1, type: 'DateTimeType', isArray: true }
+    ].forEach(({ templateType, numErrors, type, isArray }) => {
+      it(`validates ${type}${isArray ? '[]' : ''} variable for ${templateType} template`, async () => {
+        const dir = type;
+        const variableType = isArray ? { type: 'ArrayType', itemsType: { type } } : { type };
         linter = new TestLinter(
           dir,
           {
@@ -155,13 +162,13 @@ describe('TemplateLinter', () => {
             variableDefinition: 'variables.json'
           },
           new StringDocument(path.join(dir, 'variables.json'), {
-            anyFieldVar: { variableType: { type: 'DatasetAnyFieldType' } }
+            var: { variableType }
           }),
           new StringDocument(path.join(dir, 'ui.json'), {
             pages: [
               {
                 title: 'title',
-                variables: [{ name: 'anyFieldVar' }]
+                variables: [{ name: 'var' }]
               }
             ]
           })

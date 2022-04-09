@@ -204,13 +204,15 @@ export abstract class TemplateLinter<
     return { doc: undefined, uri: undefined, json: undefined };
   }
 
-  /** Load the variableDefinition file and return a map of variableName -> variableType, or undefined if
+  /** Load the variableDefinition file and return a map of variableName -> variableType + isArray, or undefined if
    * variablesDefinition isn't specified or can't be read.
    */
-  protected async loadVariableTypesForTemplate(templateInfo: JsonNode): Promise<Record<string, string> | undefined> {
+  protected async loadVariableTypesForTemplate(
+    templateInfo: JsonNode
+  ): Promise<Record<string, { type: string; isArray: boolean }> | undefined> {
     const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
     if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
-      const variableTypes: Record<string, string> = {};
+      const variableTypes: Record<string, { type: string; isArray: boolean }> = {};
       varJson.children.forEach(prop => {
         if (
           prop.type === 'property' &&
@@ -222,7 +224,15 @@ export abstract class TemplateLinter<
         ) {
           const name = prop.children[0].value as string;
           const [type] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'type');
-          variableTypes[name] = typeof type === 'string' && type ? type : 'StringType';
+          if (typeof type === 'string' && type.toLowerCase() === 'arraytype') {
+            const [itemsType] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'itemsType', 'type');
+            variableTypes[name] = {
+              type: typeof itemsType === 'string' && itemsType ? itemsType : 'StringType',
+              isArray: true
+            };
+          } else {
+            variableTypes[name] = { type: typeof type === 'string' && type ? type : 'StringType', isArray: false };
+          }
         }
       });
       return variableTypes;
@@ -1037,7 +1047,8 @@ export abstract class TemplateLinter<
             }
             this.addDiagnostic(uiDoc, mesg, ERRORS.UI_PAGE_UNKNOWN_VARIABLE, nameNode, { args });
           } else {
-            const type = variableTypes[name];
+            // the variable exists, so check that the variable type is supported for the templateType
+            const type = variableTypes[name].type;
             if (type === 'ObjectType' || type === 'DateTimeType') {
               this.addDiagnostic(
                 uiDoc,
