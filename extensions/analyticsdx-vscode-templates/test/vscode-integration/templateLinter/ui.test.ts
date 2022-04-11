@@ -232,7 +232,9 @@ describe('TemplateLinterManager lints ui.json', () => {
         const diagnostic = diagnostics[i];
         expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
         expect(diagnostic.message, `diagnostics[${i}].message`).to.equal(
-          `${type} variable '${type}Var' is not supported in ui pages`
+          type === 'DatasetAnyFieldType'
+            ? `${type} variable '${type}Var' is only supported in ui pages in data templates`
+            : `${type} variable '${type}Var' is not supported in ui pages`
         );
         expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE);
         expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(`pages[${j}].variables[${k}].name`);

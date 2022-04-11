@@ -204,13 +204,15 @@ export abstract class TemplateLinter<
     return { doc: undefined, uri: undefined, json: undefined };
   }
 
-  /** Load the variableDefinition file and return a map of variableName -> variableType, or undefined if
+  /** Load the variableDefinition file and return a map of variableName -> variableType + isArray, or undefined if
    * variablesDefinition isn't specified or can't be read.
    */
-  protected async loadVariableTypesForTemplate(templateInfo: JsonNode): Promise<Record<string, string> | undefined> {
+  protected async loadVariableTypesForTemplate(
+    templateInfo: JsonNode
+  ): Promise<Record<string, { type: string; isArray: boolean }> | undefined> {
     const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
     if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
-      const variableTypes: Record<string, string> = {};
+      const variableTypes: Record<string, { type: string; isArray: boolean }> = {};
       varJson.children.forEach(prop => {
         if (
           prop.type === 'property' &&
@@ -222,7 +224,15 @@ export abstract class TemplateLinter<
         ) {
           const name = prop.children[0].value as string;
           const [type] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'type');
-          variableTypes[name] = typeof type === 'string' && type ? type : 'StringType';
+          if (typeof type === 'string' && type.toLowerCase() === 'arraytype') {
+            const [itemsType] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'itemsType', 'type');
+            variableTypes[name] = {
+              type: typeof itemsType === 'string' && itemsType ? itemsType : 'StringType',
+              isArray: true
+            };
+          } else {
+            variableTypes[name] = { type: typeof type === 'string' && type ? type : 'StringType', isArray: false };
+          }
         }
       });
       return variableTypes;
@@ -976,15 +986,16 @@ export abstract class TemplateLinter<
       // let this one start
       const p = this.lintUiCheckVariables(templateInfo, doc, ui);
       // run this one while that's running
-      this.lintUiVariablesSpecifiedForPages(doc, ui);
+      this.lintUiVariablesSpecifiedForPages(templateInfo, doc, ui);
       return p;
     }
   }
 
-  private lintUiVariablesSpecifiedForPages(doc: Document, ui: JsonNode) {
+  private lintUiVariablesSpecifiedForPages(templateInfo: JsonNode, doc: Document, ui: JsonNode) {
     findNodeAtLocation(ui, ['pages'])?.children?.forEach(page => {
       // if it's not a vfPage
-      if (!findNodeAtLocation(page, ['vfPage'])) {
+      const vfPage = findNodeAtLocation(page, ['vfPage']);
+      if (!vfPage) {
         const variables = findNodeAtLocation(page, ['variables']);
         if (!variables) {
           this.addDiagnostic(
@@ -1002,6 +1013,18 @@ export abstract class TemplateLinter<
           );
         }
         // if variables is defined as something other than an array, the json schema should warn on that
+      } else {
+        // if it's got a vfPage, make sure it's not a data template, which doesn't support vfPages
+        const [templateType] = findJsonPrimitiveAttributeValue(templateInfo, 'templateType');
+        if (typeof templateType === 'string' && templateType.toLowerCase() === 'data') {
+          this.addDiagnostic(
+            doc,
+            'vfPage is unsupported for data templates',
+            ERRORS.UI_PAGE_VFPAGE_UNSUPPORTED,
+            // put it on the "vfPage" prop name
+            vfPage.parent?.children?.[0] || vfPage.parent || vfPage
+          );
+        }
       }
     });
   }
@@ -1020,6 +1043,7 @@ export abstract class TemplateLinter<
             .filter(isValidVariableName)
             [Symbol.iterator]()
       });
+      const [templateType] = findJsonPrimitiveAttributeValue(templateInfo, 'templateType');
       // find all the variable objects
       matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {
         if (nameNode && nameNode.type === 'string' && nameNode.value) {
@@ -1036,11 +1060,22 @@ export abstract class TemplateLinter<
             }
             this.addDiagnostic(uiDoc, mesg, ERRORS.UI_PAGE_UNKNOWN_VARIABLE, nameNode, { args });
           } else {
-            const type = variableTypes[name];
-            if (type === 'ObjectType' || type === 'DateTimeType' || type === 'DatasetAnyFieldType') {
+            // the variable exists, so check that the variable type is supported for the templateType
+            const type = variableTypes[name].type;
+            if (type === 'ObjectType' || type === 'DateTimeType') {
               this.addDiagnostic(
                 uiDoc,
                 `${type} variable '${name}' is not supported in ui pages`,
+                ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
+                nameNode
+              );
+            } else if (
+              type === 'DatasetAnyFieldType' &&
+              !(typeof templateType === 'string' && templateType.toLowerCase() === 'data')
+            ) {
+              this.addDiagnostic(
+                uiDoc,
+                `${type} variable '${name}' is only supported in ui pages in data templates`,
                 ERRORS.UI_PAGE_UNSUPPORTED_VARIABLE,
                 nameNode
               );
