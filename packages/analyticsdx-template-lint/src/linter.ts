@@ -986,15 +986,16 @@ export abstract class TemplateLinter<
       // let this one start
       const p = this.lintUiCheckVariables(templateInfo, doc, ui);
       // run this one while that's running
-      this.lintUiVariablesSpecifiedForPages(doc, ui);
+      this.lintUiVariablesSpecifiedForPages(templateInfo, doc, ui);
       return p;
     }
   }
 
-  private lintUiVariablesSpecifiedForPages(doc: Document, ui: JsonNode) {
+  private lintUiVariablesSpecifiedForPages(templateInfo: JsonNode, doc: Document, ui: JsonNode) {
     findNodeAtLocation(ui, ['pages'])?.children?.forEach(page => {
       // if it's not a vfPage
-      if (!findNodeAtLocation(page, ['vfPage'])) {
+      const vfPage = findNodeAtLocation(page, ['vfPage']);
+      if (!vfPage) {
         const variables = findNodeAtLocation(page, ['variables']);
         if (!variables) {
           this.addDiagnostic(
@@ -1012,6 +1013,18 @@ export abstract class TemplateLinter<
           );
         }
         // if variables is defined as something other than an array, the json schema should warn on that
+      } else {
+        // if it's got a vfPage, make sure it's not a data template, which doesn't support vfPages
+        const [templateType] = findJsonPrimitiveAttributeValue(templateInfo, 'templateType');
+        if (typeof templateType === 'string' && templateType.toLowerCase() === 'data') {
+          this.addDiagnostic(
+            doc,
+            'vfPage is unsupported for data templates',
+            ERRORS.UI_PAGE_VFPAGE_UNSUPPORTED,
+            // put it on the "vfPage" prop name
+            vfPage.parent?.children?.[0] || vfPage.parent || vfPage
+          );
+        }
       }
     });
   }

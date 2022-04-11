@@ -157,6 +157,8 @@ export const ERRORS = Object.freeze({
   UI_PAGE_UNKNOWN_VARIABLE: 'ui-3',
   /** Unsupported variable type in non-vfPage ui page */
   UI_PAGE_UNSUPPORTED_VARIABLE: 'ui-4',
+  /** vfPage is unsupported for the template type */
+  UI_PAGE_VFPAGE_UNSUPPORTED: 'ui-5',
 
   /** Duplicate constant in rules file(s) */
   RULES_DUPLICATE_CONSTANT: 'rules-1',

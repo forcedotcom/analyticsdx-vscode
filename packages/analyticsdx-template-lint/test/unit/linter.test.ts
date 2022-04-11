@@ -186,5 +186,37 @@ describe('TemplateLinter', () => {
         }
       });
     });
+
+    it('validates vfPages in data templates', async () => {
+      const dir = 'vfPageInDataTemplate';
+      linter = new TestLinter(
+        dir,
+        {
+          templateType: 'data',
+          uiDefinition: 'ui.json',
+          variableDefinition: 'variables.json'
+        },
+        new StringDocument(path.join(dir, 'ui.json'), {
+          pages: [
+            {
+              title: 'title',
+              vfPage: {
+                name: 'name',
+                namespace: 'ns'
+              }
+            }
+          ]
+        })
+      );
+      await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, path.join(linter.dir, 'ui.json'))?.filter(
+        d => d.code === ERRORS.UI_PAGE_VFPAGE_UNSUPPORTED
+      );
+      if (diagnostics?.length !== 1) {
+        expect.fail(
+          `Expected 1 ${ERRORS.UI_PAGE_VFPAGE_UNSUPPORTED} diagnostics, got: ` + stringifyDiagnostics(diagnostics)
+        );
+      }
+    });
   });
 });
