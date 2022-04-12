@@ -1,3 +1,15 @@
+# 0.8.1
+
+## Added
+
+- Added `refresh` api hook to dashbaord lightning web components.
+- Allow `DatasetAnyFieldType` variables in `data` templates.
+- Validate no `vfPage` pages in `data` templates.
+
+## Fixed
+
+- Validate `ArrayType` of unsupported variable types.
+
 # 0.8.0
 
 ## Added
