@@ -123,9 +123,8 @@ export class CreateFolderShareCodeActionProvider implements vscode.CodeActionPro
           jsonStringifyWithOptions({ shares: [DEFAULT_SHARE_JSON] }, formattingOptions)
         );
       } else {
-        // -1 means add to the end of the "shares" array (which should be the first item since it should be missing or
-        // empty)
-        const edits = jsonModify(folderText, ['shares', -1], DEFAULT_SHARE_JSON, { formattingOptions });
+        // shares should be missing, null, empty, or not-an-array so just set it
+        const edits = jsonModify(folderText, ['shares'], [DEFAULT_SHARE_JSON], { formattingOptions });
         // no actual edits, so no need for a quick fix
         if (edits.length <= 0) {
           return undefined;
