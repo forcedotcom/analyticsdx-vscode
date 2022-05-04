@@ -44,17 +44,18 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": ["app", "dashboard", "embeddedapp"],
+          "enum": ["app", "dashboard", "data", "embeddedapp"],
           "enumDescriptions": [
             "Specify that the template creates an app.",
             "Specify that the template creates a dashboard.",
+            "Specify that the template creates a data app.",
             "Specify that the template creates an embedded app."
           ]
         },
         {
           "type": "string",
           "$comment": "These are also valid in the server, but we shouldn't prompt users for them. Also, json-schema doesn't support sending in a case-sensitive flag nor doing a (?i) group.",
-          "pattern": "^(lens|Lens|TemporaryApp|temporaryApp|temporaryapp|Data|data)$"
+          "pattern": "^(lens|Lens|TemporaryApp|temporaryApp|temporaryapp)$"
         },
         {
           "type": "null"
