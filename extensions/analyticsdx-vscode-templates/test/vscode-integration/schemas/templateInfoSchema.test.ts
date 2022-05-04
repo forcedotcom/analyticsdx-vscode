@@ -278,7 +278,7 @@ describe('template-info-schema.json hookup', () => {
 
     // make a test for each of these fields to make sure it has the expected completion items
     [
-      { jsonpath: ['templateType'] as JSONPath, completions: ['"app"', '"dashboard"', '"embeddedapp"'] },
+      { jsonpath: ['templateType'] as JSONPath, completions: ['"app"', '"dashboard"', '"data"', '"embeddedapp"'] },
       { jsonpath: ['variableDefinition'], completions: ['""'] },
       { jsonpath: ['uiDefinition'], completions: ['""'] },
       { jsonpath: ['ruleDefinition'], completions: ['""'] },
