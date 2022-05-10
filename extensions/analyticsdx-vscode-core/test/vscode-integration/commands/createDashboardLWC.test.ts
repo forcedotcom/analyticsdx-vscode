@@ -37,6 +37,7 @@ async function verifyLWC(lwcDir: vscode.Uri, lwcName: string, hasStep: boolean) 
   expect(text, jsFileName).to.match(/@api\s+getState;/);
   expect(text, jsFileName).to.match(/@api\s+setState;/);
   expect(text, jsFileName).to.match(/@api\s+refresh;/);
+  expect(text, jsFileName).to.match(/@api\s+stateChangedCallback([^\s]+,\s*[^\s]+)\s*{.*}/);
   if (hasStep) {
     expect(text, jsFileName).to.match(/@api\s+results;/);
     expect(text, jsFileName).to.match(/@api\s+metadata;/);
