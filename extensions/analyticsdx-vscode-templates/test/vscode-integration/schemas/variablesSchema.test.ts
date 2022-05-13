@@ -12,41 +12,45 @@ import { TEMPLATE_JSON_LANG_ID } from '../../../src/constants';
 import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
-  createTemplateWithRelatedFiles as _createTemplateWithRelatedFiles,
+  createTemplateWithRelatedFiles,
   verifyCompletionsContain,
   waitForDiagnostics
 } from '../vscodeTestUtils';
 
 // tslint:disable:no-unused-expression
 describe('variables-schema.json hookup', () => {
-  describe('has correct code completions for variableType', () => {
-    let tmpdir: vscode.Uri;
-    beforeEach(closeAllEditors);
-    afterEach(async () => {
-      await closeAllEditors();
-      if (tmpdir) {
-        await vscode.workspace.fs.delete(tmpdir, { recursive: true, useTrash: false });
-      }
-    });
+  let tmpdir: vscode.Uri;
+  beforeEach(closeAllEditors);
+  afterEach(async () => {
+    await closeAllEditors();
+    if (tmpdir) {
+      await vscode.workspace.fs.delete(tmpdir, { recursive: true, useTrash: false });
+    }
+  });
 
-    async function createTemplateWithVariable(name: string, type: string) {
+  async function createTemplateWithVariables(initialJson: any) {
+    const [dir, editors] = await createTemplateWithRelatedFiles({
+      field: 'variableDefinition',
+      path: 'variables.json',
+      initialJson
+    });
+    // save off the temp directory so it'll get deleted
+    tmpdir = dir;
+    // return the variable editor
+    return editors[0];
+  }
+
+  describe('has correct code completions for variableType', () => {
+    async function createTemplateWithVariableType(name: string, type: string) {
       const initialJson: any = {
-        error: 'This should cause a schema error to look for'
-      };
-      initialJson[name] = {
-        variableType: {
-          type
+        error: 'This should cause a schema error to look for',
+        [name]: {
+          variableType: {
+            type
+          }
         }
       };
-      const [dir, editors] = await _createTemplateWithRelatedFiles({
-        field: 'variableDefinition',
-        path: 'variables.json',
-        initialJson
-      });
-      // save off the temp directory so it'll get deleted
-      tmpdir = dir;
-      // return the variable editor
-      return editors[0];
+      return createTemplateWithVariables(initialJson);
     }
 
     // make sure the doNotSuggest logic in variables-schema.json for the type-specific fields in variableType works
@@ -71,7 +75,7 @@ describe('variables-schema.json hookup', () => {
     ].forEach(({ type, expected, initialErrorsCount }) => {
       it(type, async () => {
         const varName = `${type}Var`;
-        const variablesEditor = await createTemplateWithVariable(varName, type);
+        const variablesEditor = await createTemplateWithVariableType(varName, type);
         await waitFor(
           () => variablesEditor.document.languageId,
           lang => lang === TEMPLATE_JSON_LANG_ID,
@@ -93,4 +97,38 @@ describe('variables-schema.json hookup', () => {
       });
     });
   }); // describe('has correct code-completions for variableType')
+
+  it('has code-completions for connectorType', async () => {
+    const variablesEditor = await createTemplateWithVariables({
+      error: 'an initial error to look for',
+      connectorVar: { variableType: { type: 'ConnectorType', connectorType: '' } }
+    });
+    await waitFor(
+      () => variablesEditor.document.languageId,
+      lang => lang === TEMPLATE_JSON_LANG_ID,
+      { timeoutMessage: 'timeout waiting for variables.json languageId' }
+    );
+    await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 1, 'initial error on variables.json');
+    const tree = parseTree(variablesEditor.document.getText());
+    // find the variableType {} in the json
+    const connectorType = tree && findNodeAtLocation(tree, ['connectorVar', 'variableType', 'connectorType']);
+    expect(connectorType, `connectorType node`).to.not.be.undefined;
+    expect(connectorType!.parent, `connectorType prop node`).to.not.be.undefined;
+    expect(connectorType!.parent!.colonOffset, `connectorType colonOffset`).to.not.be.undefined;
+    // go right after the colon
+    const position = variablesEditor.document.positionAt(connectorType!.parent!.colonOffset! + 1);
+    // check that it has some of the known connector types from the schema
+    await verifyCompletionsContain(
+      variablesEditor.document,
+      position,
+      '"ActCRM"',
+      '"AmazonS3"',
+      '"Redshift"',
+      '"SalesforceReport"',
+      '"SfdcLocal"',
+      // and null and empty string shoudl be in the completions too
+      'null',
+      '""'
+    );
+  });
 });

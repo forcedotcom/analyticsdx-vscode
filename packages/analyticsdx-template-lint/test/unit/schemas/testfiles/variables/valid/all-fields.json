@@ -320,7 +320,6 @@
   "connector": {
     "label": "my connector",
     "description": "This will be the connector.",
-
     "variableType": {
       "type": "ConnectorType",
       "connectorType": "Salesforce"
@@ -336,7 +335,7 @@
       "type": "ArrayType",
       "itemsType": {
         "type": "ConnectorType",
-        "connectorType": "Salesforce"
+        "connectorType": "SalesforceReport"
       }
     }
   }
