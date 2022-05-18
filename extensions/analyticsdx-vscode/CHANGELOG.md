@@ -1,3 +1,15 @@
+# 0.8.2
+
+## Added
+
+- Add code completions on `connectorType` in variables.json.
+- Add `stateChangedCallback()` to javascript created from **SFDX: Create Analytics Dashboard LWC**.
+
+## Fixed
+
+- Fix `embeddedapp` folder.json shares quick action when field is `null`.
+- Include `data` in `templateType` code completions.
+
 # 0.8.1
 
 ## Added
