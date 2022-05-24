@@ -23,7 +23,7 @@
     "mocha-junit-reporter": "2.0.2",
     "mocha-multi-reporters": "1.5.1",
     "mock-spawn": "0.2.6",
-    "shx": "0.3.3",
+    "shx": "0.3.4",
     "source-map-support": "0.5.20",
     "typescript": "4.6.3"
   },
