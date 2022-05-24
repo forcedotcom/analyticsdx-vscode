@@ -6,7 +6,7 @@ on:
       - develop
 
 env:
-  NODE_VERSION: '14.16.0'
+  NODE_VERSION: '16.13.0'
 
 jobs:
   pr-build:

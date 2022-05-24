@@ -9,7 +9,7 @@
     "@types/chai": "4.2.22",
     "@types/glob": "7.2.0",
     "@types/mocha": "9.0.0",
-    "@types/node": "14.17.27",
+    "@types/node": "16.11.36",
     "chai": "4.3.4",
     "decache": "4.6.0",
     "glob": "7.2.0",
