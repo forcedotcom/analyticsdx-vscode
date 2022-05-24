@@ -16,6 +16,11 @@ import {
 } from '../../../src/util/completions';
 import { closeAllEditors, findPositionByJsonPath, openTemplateInfo } from '../vscodeTestUtils';
 
+const INVOKE_COMPLETION_CONTEXT: vscode.CompletionContext = {
+  triggerKind: vscode.CompletionTriggerKind.Invoke,
+  triggerCharacter: undefined
+};
+
 // tslint:disable:no-unused-expression
 describe('JsonCompletionItemProvider', () => {
   let cancellationTokenSource: vscode.CancellationTokenSource;
@@ -44,9 +49,12 @@ describe('JsonCompletionItemProvider', () => {
       })
     );
 
-    const list = await provider.provideCompletionItems(doc, position!, cancellationTokenSource.token, {
-      triggerKind: vscode.CompletionTriggerKind.Invoke
-    });
+    const list = await provider.provideCompletionItems(
+      doc,
+      position!,
+      cancellationTokenSource.token,
+      INVOKE_COMPLETION_CONTEXT
+    );
     expect(list, 'items list').to.not.be.undefined.and.not.be.null;
     const items = list!.items;
     expect(items, 'items').to.not.be.undefined.and.not.be.null;
@@ -73,9 +81,12 @@ describe('JsonCompletionItemProvider', () => {
       })
     );
 
-    const list = await provider.provideCompletionItems(doc, position!, cancellationTokenSource.token, {
-      triggerKind: vscode.CompletionTriggerKind.Invoke
-    });
+    const list = await provider.provideCompletionItems(
+      doc,
+      position!,
+      cancellationTokenSource.token,
+      INVOKE_COMPLETION_CONTEXT
+    );
     expect(list, 'items list').to.be.undefined;
   });
 
@@ -91,9 +102,12 @@ describe('JsonCompletionItemProvider', () => {
       })
     );
 
-    const list = await provider.provideCompletionItems(doc, position!, cancellationTokenSource.token, {
-      triggerKind: vscode.CompletionTriggerKind.Invoke
-    });
+    const list = await provider.provideCompletionItems(
+      doc,
+      position!,
+      cancellationTokenSource.token,
+      INVOKE_COMPLETION_CONTEXT
+    );
     expect(list, 'items list').to.not.be.undefined.and.not.be.null;
     const items = list!.items;
     expect(items, 'items').to.not.be.undefined.and.not.be.null;
@@ -121,9 +135,12 @@ describe('JsonCompletionItemProvider', () => {
 
     const provider = new JsonCompletionItemProvider(delegate1, delegate2);
     const items = (
-      await provider.provideCompletionItems(doc, new vscode.Position(0, 0), cancellationTokenSource.token, {
-        triggerKind: vscode.CompletionTriggerKind.Invoke
-      })
+      await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, 0),
+        cancellationTokenSource.token,
+        INVOKE_COMPLETION_CONTEXT
+      )
     )?.items;
     expect(items, 'items').to.not.be.undefined;
     if (items!.length !== 1) {
@@ -153,9 +170,12 @@ describe('JsonCompletionItemProvider', () => {
 
     const provider = new JsonCompletionItemProvider(delegate1, delegate2);
     const items = (
-      await provider.provideCompletionItems(doc, new vscode.Position(0, 0), cancellationTokenSource.token, {
-        triggerKind: vscode.CompletionTriggerKind.Invoke
-      })
+      await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, 0),
+        cancellationTokenSource.token,
+        INVOKE_COMPLETION_CONTEXT
+      )
     )?.items;
     expect(items, 'items').to.not.be.undefined;
     if (items!.length !== 1) {
