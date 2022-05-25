@@ -12,7 +12,7 @@
     "@types/node": "16.11.36",
     "chai": "4.3.4",
     "decache": "4.6.0",
-    "glob": "7.2.0",
+    "glob": "8.0.3",
     "istanbul-lib-coverage": "3.0.2",
     "istanbul-lib-hook": "3.0.0",
     "istanbul-lib-instrument": "5.0.3",
