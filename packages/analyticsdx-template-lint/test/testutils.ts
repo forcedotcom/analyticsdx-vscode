@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import Ajv, { ErrorObject as AjvErrorObject, Options as AjvOptions } from 'ajv';
-import betterAjvErrors = require('better-ajv-errors');
+import betterAjvErrors from 'better-ajv-errors';
 import { expect } from 'chai';
 import * as fs from 'fs';
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser';
@@ -128,7 +128,7 @@ export function generateJsonSchemaValidFilesTestSuite(
                 const json = await readFile(entry.fullPath, { encoding: 'utf-8' }).then(jsoncParse);
                 const result = validator(json);
                 if (!result || (validator.errors && validator.errors.length > 0)) {
-                  const errorsText = betterAjvErrors(schema, json, validator.errors, { indent: 2 });
+                  const errorsText = betterAjvErrors(schema, json, validator.errors || [], { indent: 2 });
                   expect.fail('schema validation failed with errors:\n' + errorsText);
                 }
               });
