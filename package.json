@@ -1,4 +1,17 @@
 {
+  "name": "analyticsdx-vscode",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forcedotcom/analyticsdx-vscode.git"
+  },
+  "engines": {
+    "node": ">=16.13.0"
+  },
+  "dependencies": {
+    "node": "^16.13.0",
+    "npm": "^6"
+  },
   "devDependencies": {
     "@salesforce/dev-config": "1.5.0",
     "@types/lerna-alias": "3.0.0",
@@ -42,10 +55,5 @@
     "build-all-vsixs": "node scripts/build-all-vsixs.js",
     "update-sha256": "node scripts/update-sha256.js",
     "publish-all-vsixs": "node scripts/publish-all-vsixs.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/forcedotcom/analyticsdx-vscode.git"
-  },
-  "license": "BSD-3-Clause"
+  }
 }
