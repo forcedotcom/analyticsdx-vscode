@@ -10,10 +10,10 @@ Familiarize yourself with the codebase and by reading the various [contributing 
 
 Then,
 
-1. Fork and/or clone this repository.
+1. Fork or clone this repository.
 1. Create a _topic_ branch in your fork based on the correct branch (usually the **develop** branch, see [Branches section](#branches) below). Note, this step is recommended but technically not required if contributing using a fork.
-1. Edit the code in your fork.
-1. Create a pull request when you are done.
+1. Edit the code.
+1. Push your branch and create a pull request when you are done.
 
 ## Branches
 

@@ -33,6 +33,10 @@ export class PrefixingOutputChannel implements vscode.OutputChannel {
     this.output?.clear();
   }
 
+  public replace(value: string): void {
+    this.output?.replace(value);
+  }
+
   public show(preserveFocus?: boolean | undefined): void;
   public show(column?: vscode.ViewColumn | undefined, preserveFocus?: boolean | undefined): void;
   public show(column?: any, preserveFocus?: any) {

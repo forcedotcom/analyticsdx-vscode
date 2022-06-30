@@ -12,7 +12,8 @@ const cwd = process.cwd();
 const { runTests } = require('@vscode/test-electron');
 const {
   downloadDirToExecutablePath,
-  insidersDownloadDirToExecutablePath
+  insidersDownloadDirToExecutablePath,
+  systemDefaultPlatform
 } = require('@vscode/test-electron/out/util.js');
 
 // Run vscode tests under your out/test/vscode-integration folder.
@@ -22,8 +23,8 @@ const {
   const isInsiders = process.env.CODE_VERSION === 'insiders';
   const installDir = path.join(cwd, '.vscode-test', isInsiders ? 'insiders' : 'stable');
   const execPath = isInsiders
-    ? insidersDownloadDirToExecutablePath(installDir)
-    : downloadDirToExecutablePath(installDir);
+    ? insidersDownloadDirToExecutablePath(installDir, systemDefaultPlatform)
+    : downloadDirToExecutablePath(installDir, systemDefaultPlatform);
 
   const opts = {
     vscodeExecutablePath: execPath,

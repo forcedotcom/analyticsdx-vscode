@@ -2,7 +2,8 @@
 
 ## Pre-requisites
 
-1.  We are using the same version of Node that the current release of VSCode uses (currently 14.16.0).
+1.  We are using the same version of Node that the supported release of VSCode uses (see `engines.vscode` in the
+    extensions' `package.json`'s, currently 16.13.0).
     If you need to work with multiple versions of Node (e.g. for other projects), you might consider using
     [nvm](https://github.com/creationix/nvm).
 1.  It is suggested, though not required, that you use the Insiders version of VS
@@ -11,6 +12,9 @@
     .vscode/extensions.json. The first time you open VS Code on this workspace,
     it will ask you to install them. **Please do so since this includes the
     linters and formatters**.
+1.  Additionally, VS Code should prompt to set the Typescript version of the same as the project. If it does not,
+    open any `.ts` file, then open the command palette and select **Typescript: Select TypeScript Version...**, then
+    select **Use Workspace Version**.
 
 ## Structure
 
@@ -92,7 +96,7 @@ subchapters.
 
 In general, when dealing with files in vscode, you should try to use
 [`vscode.workspace.fs`](https://code.visualstudio.com/api/references/vscode-api#workspace.fs) instead of
-the regular node `fs` package.This is so your code can support any remote fileystems configured in VSCode.
+the regular node `fs` package. This is so your code can support any remote fileystems configured in VSCode.
 
 Similarly, when dealing with file paths, you should try to use
 [`vscode.Uri`](https://code.visualstudio.com/api/references/vscode-api#Uri)'s, and only use `path.posix` when
