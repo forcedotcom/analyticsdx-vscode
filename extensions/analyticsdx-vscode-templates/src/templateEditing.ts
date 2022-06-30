@@ -342,7 +342,7 @@ export class TemplateEditingManager extends Disposable {
   constructor(context: vscode.ExtensionContext, output?: vscode.OutputChannel) {
     super();
     this.extensionPath = context.extensionPath;
-    const schemasPath = 'node_modules/analyticsdx-template-lint/out/src/schemas';
+    const schemasPath = 'node_modules/@salesforce/analyticsdx-template-lint/out/src/schemas';
     // TODO: warn if any of the schemas are missing
     this.baseSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/adx-template-json-base-schema.json`));
     this.templateInfoSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/template-info-schema.json`));

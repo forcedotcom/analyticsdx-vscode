@@ -7,7 +7,7 @@
 
 import { posix as path } from 'path';
 
-export { isValidRelpath } from 'analyticsdx-template-lint';
+export { isValidRelpath } from '@salesforce/analyticsdx-template-lint';
 
 const whitespaceRe = /^\s$/;
 export function isWhitespaceChar(ch: string) {

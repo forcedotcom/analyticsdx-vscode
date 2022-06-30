@@ -48,7 +48,7 @@
     "watch": "lerna run --parallel watch",
     "eslint-check": "eslint --print-config .eslintrc.json | eslint-config-prettier-check",
     "reformat": "node scripts/reformat-with-prettier.js",
-    "vscode:package": "lerna exec --scope analyticsdx-template-lint -- npm prune --production && lerna run vscode:package --concurrency 1 && node scripts/reformat-with-prettier",
+    "vscode:package": "lerna exec --scope @salesforce/analyticsdx-template-lint -- npm prune --production && lerna run vscode:package --concurrency 1 && node scripts/reformat-with-prettier",
     "vscode:sha256": "lerna run vscode:sha256 --concurrency 1",
     "vscode:publish": "lerna run vscode:publish --concurrency 1",
     "update-versions": "node scripts/update-versions.js",
