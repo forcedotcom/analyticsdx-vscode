@@ -1,7 +1,7 @@
 {
   "version": "0.8.2",
   "publisher": "salesforce",
-  "name": "analyticsdx-template-lint",
+  "name": "@salesforce/analyticsdx-template-lint",
   "displayName": "Salesforce Analytics Template Lint",
   "description": "Provides a linting api for Salesforce/TableauCRM analytics templates",
   "license": "BSD-3-Clause",

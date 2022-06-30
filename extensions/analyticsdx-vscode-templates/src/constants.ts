@@ -8,7 +8,7 @@
 import { newFileExtensionFilter } from './util/utils';
 
 // re-export these from the linter library, in case we need to muck with them in the future
-export { ERRORS, LINTER_SOURCE_ID, TEMPLATE_INFO } from 'analyticsdx-template-lint';
+export { ERRORS, LINTER_SOURCE_ID, TEMPLATE_INFO } from '@salesforce/analyticsdx-template-lint';
 
 // Note: keep these in-sync with the publisher and name in package.json
 export const EXTENSION_PUBLISHER = 'salesforce';

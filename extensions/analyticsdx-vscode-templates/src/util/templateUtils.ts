@@ -8,7 +8,7 @@
 import * as vscode from 'vscode';
 import { uriBasename, uriDirname, uriStat } from './vscodeUtils';
 
-export { isValidVariableName } from 'analyticsdx-template-lint';
+export { isValidVariableName } from '@salesforce/analyticsdx-template-lint';
 
 /** Traverse up from the file until you find the template-info.json, without leaving the vscode workspace folders.
  * @return the file uri, or undefined if not found (i.e. file is not part of a template)

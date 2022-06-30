@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { TemplateLinter, TemplateLinterDiagnosticSeverity } from 'analyticsdx-template-lint';
+import { TemplateLinter, TemplateLinterDiagnosticSeverity } from '@salesforce/analyticsdx-template-lint';
 import { getNodePath, Node as JsonNode } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { LINTER_SOURCE_ID } from './constants';

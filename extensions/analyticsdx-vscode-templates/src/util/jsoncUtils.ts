@@ -7,7 +7,7 @@
 
 import { FormattingOptions, getNodePath, JSONPath, Node as JsonNode } from 'jsonc-parser';
 
-export { matchJsonNodeAtPattern, matchJsonNodesAtPattern } from 'analyticsdx-template-lint';
+export { matchJsonNodeAtPattern, matchJsonNodesAtPattern } from '@salesforce/analyticsdx-template-lint';
 
 const jsonIdRegex = /^[A-Za-z][-A-Za-z0-9_]*$/;
 /**
