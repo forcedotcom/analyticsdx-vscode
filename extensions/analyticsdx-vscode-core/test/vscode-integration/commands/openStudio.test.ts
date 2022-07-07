@@ -44,7 +44,7 @@ describe('openStudio.ts', () => {
   });
 
   it('openStudio() parses sfdx response successfully', async () => {
-    const expectedUrl = 'https://mydomain.salesforce.com/secur/frontdoor.jsp?sid=sid&retURL=analytics%2Fhome';
+    const expectedUrl = 'https://mydomain.salesforce.com/secur/frontdoor.jsp?sid=sid&retURL=%2Fanalytics%2Fhome';
     mockSpawn.setDefault(
       mockSpawn.simple(
         0,
@@ -73,6 +73,8 @@ describe('openStudio.ts', () => {
   });
 
   it('openDataManager() sends correct route', async () => {
+    const expectedUrl =
+      'https://mydomain.salesforce.com/secur/frontdoor.jsp?sid=sid&retURL=%2Flightning%2Fn%2Fstandard-AnalyticsDataManager';
     mockSpawn.setDefault(
       mockSpawn.simple(
         0,
@@ -80,7 +82,7 @@ describe('openStudio.ts', () => {
           {
             status: 0,
             result: {
-              url: 'https://mydomain.salesforce.com/secur/frontdoor.jsp?sid=sid&retURL=analytics%2FdataManager'
+              url: expectedUrl
             }
           },
           undefined,
@@ -91,7 +93,14 @@ describe('openStudio.ts', () => {
     await openDataManager();
     // make sure sfdx got the right -p arg
     sinon.assert.called(withArgSpy);
-    expect(flatten(withArgSpy.args), 'sfdx args').to.include.members(['-p', '/analytics/dataManager']);
+    expect(flatten(withArgSpy.args), 'sfdx args').to.include.members([
+      '-p',
+      '/lightning/n/standard-AnalyticsDataManager'
+    ]);
+
+    // make sure it sends the right url to openExternal()
+    sinon.assert.calledOnce(openExternal);
+    expect(openExternal.firstCall.args[0].toString(), 'uri').to.equal(vscode.Uri.parse(expectedUrl).toString());
   });
 
   it('openAppInStudio() sends correct route', async () => {
@@ -102,8 +111,7 @@ describe('openStudio.ts', () => {
           {
             status: 0,
             result: {
-              url:
-                'https://mydomain.salesforce.com/secur/frontdoor.jsp?sid=sid&retURL=analytics%2Fapplication%2Fid%2Fedit'
+              url: 'https://mydomain.salesforce.com/secur/frontdoor.jsp?sid=sid&retURL=analytics%2Fapplication%2Fid%2Fedit'
             }
           },
           undefined,

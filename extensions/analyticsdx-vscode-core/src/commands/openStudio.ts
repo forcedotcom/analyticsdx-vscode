@@ -19,45 +19,32 @@ import { AppGatherer, AppMetadata } from './gatherers/appGatherer';
 
 export function baseStudioPath() {
   return (
-    vscode.workspace
-      .getConfiguration()
-      .get<string>('analyticsdx-vscode-core.studio.path')
-      ?.trimLeft() || '/analytics/'
+    vscode.workspace.getConfiguration().get<string>('analyticsdx-vscode-core.studio.path')?.trimStart() || '/analytics/'
   );
 }
-
-// REVIEWME: just get the url from sfdx and open in a vscode WebViewPanel?
 
 // This will have sfdx print the url, which this will read and use with vscode.env.openExternal() so that
 // it works in Code Builder (and Github Codespaces).
 
-class OpenStudioExecutor<T> extends SfdxCommandletExecutorWithOutput<T> {
+class OpenOrgPathExecutor<T> extends SfdxCommandletExecutorWithOutput<T> {
   constructor(
     // this value should not start with /
-    private readonly routegen: string | ((data: T) => string),
-    private readonly logName = 'analytics_open_studio'
+    private readonly pathgen: string | ((data: T) => string),
+    private readonly logName: string,
+    private readonly commandDescription: string
   ) {
     super();
   }
 
   public build(data: T) {
-    let path = baseStudioPath();
-    const route = typeof this.routegen === 'string' ? this.routegen : this.routegen(data);
-    if (path.indexOf('%s') >= 0) {
-      path = path.replace('%s', route);
-    } else {
-      if (!path.endsWith('/')) {
-        path += '/';
-      }
-      path += route;
-    }
+    let path = typeof this.pathgen === 'string' ? this.pathgen : this.pathgen(data);
     // #'s in the url don't work when going through sfdx -> Uri.parse() -> openExternal() -> frontdoor.jsp -> retURL,
     // something in there seems to double-encode the query params in a way which the server then doesn't double-decode
     // correctly, and it gets a 404 from the server since the # in the url ends up as a literal %23 instead of the
     // original #, so just get rid of that for now
-    path.replace(/#.*$/, '');
+    path = path.replace(/#.*$/, '');
     return new SfdxCommandBuilder()
-      .withDescription(nls.localize('open_studio_cmd_message'))
+      .withDescription(this.commandDescription)
       .withArg('force:org:open')
       .withArg('-r')
       .withArg('-p')
@@ -81,6 +68,32 @@ class OpenStudioExecutor<T> extends SfdxCommandletExecutorWithOutput<T> {
   }
 }
 
+class OpenStudioExecutor<T> extends OpenOrgPathExecutor<T> {
+  constructor(
+    // this value should not start with /
+    routegen: string | ((data: T) => string),
+    logName = 'analytics_open_studio'
+  ) {
+    super(
+      (data: T) => {
+        let path = baseStudioPath();
+        const route = typeof routegen === 'string' ? routegen : routegen(data);
+        if (path.indexOf('%s') >= 0) {
+          path = path.replace('%s', route);
+        } else {
+          if (!path.endsWith('/')) {
+            path += '/';
+          }
+          path += route;
+        }
+        return path;
+      },
+      logName,
+      nls.localize('open_studio_cmd_message')
+    );
+  }
+}
+
 export function openStudio(): Promise<void> {
   return new SfdxCommandlet(sfdxWorkspaceChecker, emptyParametersGatherer, new OpenStudioExecutor('home')).run();
 }
@@ -89,7 +102,11 @@ export function openDataManager(): Promise<void> {
   return new SfdxCommandlet(
     sfdxWorkspaceChecker,
     emptyParametersGatherer,
-    new OpenStudioExecutor('dataManager', 'analytics_open_dataManager')
+    new OpenOrgPathExecutor(
+      '/lightning/n/standard-AnalyticsDataManager',
+      'analytics_open_dataManager',
+      nls.localize('open_data_manager_cmd_message')
+    )
   ).run();
 }
 

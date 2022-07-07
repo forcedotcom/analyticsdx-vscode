@@ -51,6 +51,7 @@ export const messages = Object.freeze({
   // commands/openStudio.js
   open_studio_cmd_message: 'Opening Analytics Studio...',
   open_studio_cmd_error: 'Unable to determine org url',
+  open_data_manager_cmd_message: 'Opening Data Manager...',
 
   // commands/updateTemplate.ts
   update_template_cmd_message: 'Updating analytics template from associated app...',
