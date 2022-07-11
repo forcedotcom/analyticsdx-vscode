@@ -1,3 +1,10 @@
+# 0.9.0
+
+## Fixed
+
+- **SFDX: Open Analytics Data Manager** opens new Data Manager.
+- Updated dependencies versions, requires vscode 1.67+.
+
 # 0.8.2
 
 ## Added
