@@ -1,0 +1,30 @@
+{
+  "pages": [
+    {
+      "title": "",
+      "backgroundImage": null,
+      "condition": null,
+      "helpUrl": null,
+      "layout": {
+        "type": "SingleColumn",
+        "header": null,
+        "center": {
+          "items": []
+        }
+      }
+    },
+    {
+      "title": "",
+      "layout": {
+        "type": "SingleColumn",
+        "header": {
+          "text": null,
+          "description": null
+        },
+        "center": {
+          "items": []
+        }
+      }
+    }
+  ]
+}

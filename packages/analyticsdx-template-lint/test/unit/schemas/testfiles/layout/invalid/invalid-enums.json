@@ -1,0 +1,37 @@
+{
+  "pages": [
+    {
+      "title": "Page title",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": [
+            {
+              "type": "badvalue",
+              "visibility": "badvalue"
+            },
+            {
+              "type": "",
+              "visibility": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Page title",
+      "layout": {
+        "type": "badvalue",
+        "center": {
+          "items": []
+        }
+      }
+    }
+  ],
+  "displayMessages": [
+    {
+      "text": "",
+      "location": "badvalue"
+    }
+  ]
+}

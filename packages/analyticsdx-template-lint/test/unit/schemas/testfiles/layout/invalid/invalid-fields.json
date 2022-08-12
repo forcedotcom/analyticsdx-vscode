@@ -1,0 +1,42 @@
+{
+  "error": "This should trigger a warning",
+  "pages": [
+    {
+      "error": "This should trigger a warning",
+      "backgroundImage": {
+        "error": "This should trigger a warning",
+        "name": "SentimentAnalysisBackground"
+      },
+      "condition": "{{true}}",
+      "title": "Primitive Array Variables",
+      "helpUrl": "https://salesforce.com/",
+      "layout": {
+        "error": "This should trigger a warning",
+        "type": "SingleColumn",
+        "header": {
+          "error": "This should trigger a warning"
+        },
+        "center": {
+          "error": "This should trigger a warning",
+          "items": [
+            {
+              "error": "This should trigger a warning",
+              "type": "Image",
+              "image": {
+                "error": "This should trigger a warning",
+                "name": "PositivePossum"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "displayMessages": [
+    {
+      "error": "This should trigger a warning",
+      "text": "display message",
+      "location": "AppLandingPage"
+    }
+  ]
+}

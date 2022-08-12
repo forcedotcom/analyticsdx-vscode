@@ -54,9 +54,16 @@ suites.push(
     generateJsonSchemaValidFilesTestSuite(schema, 'ui-schema.json', __dirname, 'testfiles', 'ui', 'valid')
   )
 );
+
 suites.push(
   import('../../../src/schemas/variables-schema.json').then(schema =>
     generateJsonSchemaValidFilesTestSuite(schema, 'variables-schema.json', __dirname, 'testfiles', 'variables', 'valid')
+  )
+);
+
+suites.push(
+  import('../../../src/schemas/layout-schema.json').then(schema =>
+    generateJsonSchemaValidFilesTestSuite(schema, 'layout-schema.json', __dirname, 'testfiles', 'layout', 'valid')
   )
 );
 

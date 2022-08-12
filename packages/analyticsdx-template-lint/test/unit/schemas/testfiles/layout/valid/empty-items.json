@@ -1,0 +1,25 @@
+{
+  "pages": [
+    {
+      "title": "Page title",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": []
+        }
+      }
+    },
+    {
+      "title": "Page title",
+      "layout": {
+        "type": "TwoColumn",
+        "left": {
+          "items": []
+        },
+        "right": {
+          "items": []
+        }
+      }
+    }
+  ]
+}
