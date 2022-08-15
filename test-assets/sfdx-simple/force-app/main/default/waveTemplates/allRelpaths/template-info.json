@@ -9,6 +9,7 @@
   },
   "variableDefinition": "variables.json",
   "uiDefinition": "ui.json",
+  "layoutDefinition": "layout.json",
   "folderDefinition": "folder.json",
   "autoInstallDefinition": "auto-install.json",
   "ruleDefinition": "rule-definition.json",

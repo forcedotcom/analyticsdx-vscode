@@ -193,14 +193,14 @@ describe('FileTemplateValidator', () => {
     expect(diagnostics, 'diagnostics').to.deep.equal({
       [templateInfoPath]: [
         {
-          range: { start: { line: 13, character: 2 }, end: { line: 13, character: 42 } },
+          range: { start: { line: 14, character: 2 }, end: { line: 14, character: 42 } },
           message: 'Deprecated. Use a templateToApp rule instead.',
           severity: DiagnosticSeverity.Warning,
           code: ErrorCode.Deprecated,
           source: JSON_SOURCE_ID
         },
         {
-          range: { start: { line: 13, character: 2 }, end: { line: 13, character: 42 } },
+          range: { start: { line: 14, character: 2 }, end: { line: 14, character: 42 } },
           message:
             "Template is combining deprecated 'ruleDefinition' and 'rules'. Please consolidate 'ruleDefinition' into 'rules'",
           severity: DiagnosticSeverity.Error,
@@ -208,7 +208,14 @@ describe('FileTemplateValidator', () => {
           source: LINTER_SOURCE_ID
         },
         {
-          range: { start: { line: 12, character: 2 }, end: { line: 12, character: 46 } },
+          range: { start: { line: 11, character: 23 }, end: { line: 11, character: 34 } },
+          message: 'layoutDefinition is only supported in data templates',
+          severity: DiagnosticSeverity.Warning,
+          code: ERRORS.TMPL_LAYOUT_UNSUPPORTED,
+          source: LINTER_SOURCE_ID
+        },
+        {
+          range: { start: { line: 13, character: 2 }, end: { line: 13, character: 46 } },
           message: "'name' is required in folderDefinition file when using autoInstallDefinition",
           severity: DiagnosticSeverity.Warning,
           code: ERRORS.TMPL_AUTO_INSTALL_MISSING_FOLDER_NAME,
@@ -241,6 +248,14 @@ describe('FileTemplateValidator', () => {
         }
       ],
       [path.join(templatePath, 'folder.json')]: [
+        {
+          range: { start: { line: 5, character: 2 }, end: { line: 5, character: 9 } },
+          message: 'Property error is not allowed.',
+          severity: DiagnosticSeverity.Warning,
+          source: JSON_SCHEMA_SOURCE_ID
+        }
+      ],
+      [path.join(templatePath, 'layout.json')]: [
         {
           range: { start: { line: 5, character: 2 }, end: { line: 5, character: 9 } },
           message: 'Property error is not allowed.',

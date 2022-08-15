@@ -42,6 +42,12 @@ import {
   TEMPLATE_JSON_LANG_ID
 } from './constants';
 import { ERRORS } from './constants';
+import {
+  LayoutVariableCodeActionProvider,
+  LayoutVariableCompletionItemProviderDelegate,
+  LayoutVariableDefinitionProvider,
+  LayoutVariableHoverProvider
+} from './layout';
 import { telemetryService } from './telemetry';
 import {
   CreateFolderShareCodeActionProvider,
@@ -86,6 +92,7 @@ export class TemplateDirEditing extends Disposable {
   private _folderDefinitionPath: string | undefined;
   private _autoInstallDefinitionPath: string | undefined;
   private _uiDefinitionPath: string | undefined;
+  private _layoutDefinitionPath: string | undefined;
   private _variablesDefinitionPath: string | undefined;
   private _rulesDefinitionPaths: Set<string> | undefined;
 
@@ -131,6 +138,12 @@ export class TemplateDirEditing extends Disposable {
     path = this.getRelFilePathFromAttr(tree, 'uiDefinition');
     if (path !== this._uiDefinitionPath) {
       this._uiDefinitionPath = path;
+      updated = true;
+    }
+
+    path = this.getRelFilePathFromAttr(tree, 'layoutDefinition');
+    if (path !== this._layoutDefinitionPath) {
+      this._layoutDefinitionPath = path;
       updated = true;
     }
 
@@ -182,6 +195,20 @@ export class TemplateDirEditing extends Disposable {
       !!this.uiDefinitionPath &&
       isValidRelpath(this.uiDefinitionPath) &&
       isSameUri(vscode.Uri.joinPath(this.dir, this.uiDefinitionPath), file)
+    );
+  }
+
+  get layoutDefinitionPath() {
+    return this._layoutDefinitionPath;
+  }
+
+  /** Tell if the specified file uri corresponds to our layoutDefinition path. */
+  public isLayoutDefinitionFile(file: vscode.Uri): boolean {
+    return (
+      isUriUnder(this.dir, file) &&
+      !!this.layoutDefinitionPath &&
+      isValidRelpath(this.layoutDefinitionPath) &&
+      isSameUri(vscode.Uri.joinPath(this.dir, this.layoutDefinitionPath), file)
     );
   }
 
@@ -274,6 +301,8 @@ export class TemplateDirEditing extends Disposable {
     this.disposables.push(
       // hookup Go To Definition from variable name in ui.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new UiVariableDefinitionProvider(this)),
+      // hookup Go To Definition from variable name in layout.json to variables.json
+      vscode.languages.registerDefinitionProvider(relatedFileSelector, new LayoutVariableDefinitionProvider(this)),
       // hookup Go To Definition from varaibles name in auto-install.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new AutoInstallVariableDefinitionProvider(this)),
 
@@ -282,6 +311,8 @@ export class TemplateDirEditing extends Disposable {
         new JsonCompletionItemProvider(
           // hookup code-completion for variables names in page in ui.json's
           new UiVariableCompletionItemProviderDelegate(this),
+          // hookup code-completion for variables names in page in layout.json's
+          new LayoutVariableCompletionItemProviderDelegate(this),
           // hoookup compeltions for variables in appConfiguration.values
           new AutoInstallVariableCompletionItemProviderDelegate(this),
           // hookup completions for new variable definitions in variables.json's
@@ -292,6 +323,11 @@ export class TemplateDirEditing extends Disposable {
       // hookup quick fixes for variable names in ui.json's
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
         providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
+      }),
+
+      // hookup quick fixes for variable names in layout.json's
+      vscode.languages.registerCodeActionsProvider(relatedFileSelector, new LayoutVariableCodeActionProvider(this), {
+        providedCodeActionKinds: LayoutVariableCodeActionProvider.providedCodeActionKinds
       }),
 
       // hookup quick fixes for variable names in auto-install.json's
@@ -306,6 +342,7 @@ export class TemplateDirEditing extends Disposable {
       // hookup hover text
       vscode.languages.registerHoverProvider(relatedFileSelector, new UiVariableHoverProvider(this)),
       // REVIEWME: make a multi-proxy hover provider so there's only 1 registration?
+      vscode.languages.registerHoverProvider(relatedFileSelector, new LayoutVariableHoverProvider(this)),
       vscode.languages.registerHoverProvider(relatedFileSelector, new VariableHoverProvider(this)),
       vscode.languages.registerHoverProvider(relatedFileSelector, new AutoInstallVariableHoverProvider(this))
     );
@@ -334,6 +371,7 @@ export class TemplateEditingManager extends Disposable {
   public readonly folderSchemaPath: vscode.Uri;
   public readonly autoInstallSchemaPath: vscode.Uri;
   public readonly uiSchemaPath: vscode.Uri;
+  public readonly layoutSchemaPath: vscode.Uri;
   public readonly variablesSchemaPath: vscode.Uri;
   public readonly rulesSchemaPath: vscode.Uri;
 
@@ -349,6 +387,7 @@ export class TemplateEditingManager extends Disposable {
     this.folderSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/folder-schema.json`));
     this.autoInstallSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/auto-install-schema.json`));
     this.uiSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/ui-schema.json`));
+    this.layoutSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/layout-schema.json`));
     this.variablesSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/variables-schema.json`));
     this.rulesSchemaPath = vscode.Uri.file(context.asAbsolutePath(`${schemasPath}/rules-schema.json`));
     this.logger = Logger.from(output);
@@ -486,6 +525,13 @@ export class TemplateEditingManager extends Disposable {
         );
 
         this.addRelpathSchemaAssociation(associations, this.uiSchemaPath, editing.dir, editing.uiDefinitionPath);
+
+        this.addRelpathSchemaAssociation(
+          associations,
+          this.layoutSchemaPath,
+          editing.dir,
+          editing.layoutDefinitionPath
+        );
 
         this.addRelpathSchemaAssociation(
           associations,

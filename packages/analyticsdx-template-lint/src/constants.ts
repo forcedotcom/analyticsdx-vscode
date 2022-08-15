@@ -166,7 +166,7 @@ export const ERRORS = Object.freeze({
   /** Unknown variable in page layout */
   LAYOUT_PAGE_UNKNOWN_VARIABLE: 'lay-1',
   /** Unsupported variable type in layout page */
-  LAYOUT_PAGE_UNSUPPORTED_VARIABLE: 'layout-2',
+  LAYOUT_PAGE_UNSUPPORTED_VARIABLE: 'lay-2',
 
   /** Duplicate constant in rules file(s) */
   RULES_DUPLICATE_CONSTANT: 'rules-1',
