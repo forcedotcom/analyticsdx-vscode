@@ -32,6 +32,7 @@ const assetAttrPaths = [
 const definitionFilesPats = [
   ['variableDefinition'] as JSONPath,
   ['uiDefinition'],
+  ['layoutDefinition'],
   ['folderDefinition'],
   ['autoInstallDefinition'],
   ['ruleDefinition'],
@@ -136,6 +137,8 @@ export const ERRORS = Object.freeze({
   TMPL_DATA_UNSUPPORTED_OBJECT: 'tmpl-19',
   /** Recipes need assetVersion 47.0+. */
   TMPL_RECIPES_MIN_ASSET_VERSION: 'tmpl-20',
+  /** layoutDefinition is only for data templates */
+  TMPL_LAYOUT_UNSUPPORTED: 'tmpl-21',
 
   /** Unknown variable in values in autoInstallDefinition. */
   AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',
@@ -159,6 +162,11 @@ export const ERRORS = Object.freeze({
   UI_PAGE_UNSUPPORTED_VARIABLE: 'ui-4',
   /** vfPage is unsupported for the template type */
   UI_PAGE_VFPAGE_UNSUPPORTED: 'ui-5',
+
+  /** Unknown variable in page layout */
+  LAYOUT_PAGE_UNKNOWN_VARIABLE: 'lay-1',
+  /** Unsupported variable type in layout page */
+  LAYOUT_PAGE_UNSUPPORTED_VARIABLE: 'layout-2',
 
   /** Duplicate constant in rules file(s) */
   RULES_DUPLICATE_CONSTANT: 'rules-1',

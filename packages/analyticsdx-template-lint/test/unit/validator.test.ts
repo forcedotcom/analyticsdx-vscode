@@ -323,6 +323,7 @@ describe('FileTemplateValidator', () => {
     const relPathNotExistLines = [
       ['variableDefinition'] as JSONPath,
       ['uiDefinition'],
+      ['layoutDefinition'],
       ['folderDefinition'],
       ['autoInstallDefinition'],
       ['ruleDefinition'],
@@ -339,9 +340,6 @@ describe('FileTemplateValidator', () => {
       ['extendedTypes', 'predictiveScoring', 0, 'file']
     ].map(jsonpath => jsonpathLineNum(templateInfo, jsonpath, doc));
 
-    // the line # of a TMPL_REL_PATH_NOT_FILE error (points to a directory)
-    const relPathNotFileLine = jsonpathLineNum(templateInfo, ['storedQueries', 0, 'file'], doc);
-
     const expected = [
       ...invalidRelPathLines.map(line => {
         return { line, code: ERRORS.TMPL_INVALID_REL_PATH };
@@ -349,7 +347,10 @@ describe('FileTemplateValidator', () => {
       ...relPathNotExistLines.map(line => {
         return { line, code: ERRORS.TMPL_REL_PATH_NOT_EXIST };
       }),
-      { line: relPathNotFileLine, code: ERRORS.TMPL_REL_PATH_NOT_FILE }
+      // storedQueries points to a directory, so it gets a TMPL_REL_PATH_NOT_FILE error
+      { line: jsonpathLineNum(templateInfo, ['storedQueries', 0, 'file'], doc), code: ERRORS.TMPL_REL_PATH_NOT_FILE },
+      // layoutDefinition is only valid for templates
+      { line: jsonpathLineNum(templateInfo, ['layoutDefinition'], doc), code: ERRORS.TMPL_LAYOUT_UNSUPPORTED }
     ].sort((d1, d2) => d1.line - d2.line);
     expect(diagnostics, 'diagnostics').to.have.deep.members(expected);
 

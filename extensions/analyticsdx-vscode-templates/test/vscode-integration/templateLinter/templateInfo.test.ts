@@ -593,6 +593,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
     [
       'variableDefinition',
       'uiDefinition',
+      'layoutDefinition',
       'folderDefinition',
       'autoInstallDefinition',
       'ruleDefinition',

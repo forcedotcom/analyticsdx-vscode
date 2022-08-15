@@ -8,7 +8,13 @@
 import { expect } from 'chai';
 import { getNodePath, Node as JsonNode } from 'jsonc-parser';
 import * as path from 'path';
-import { ERRORS, TemplateLinter, TemplateLinterDiagnosticSeverity, TemplateLinterDocument } from '../../src';
+import {
+  ERRORS,
+  jsonPathToString,
+  TemplateLinter,
+  TemplateLinterDiagnosticSeverity,
+  TemplateLinterDocument
+} from '../../src';
 import { getDiagnosticsForPath } from '../testutils';
 
 class StringDocument implements TemplateLinterDocument<string> {
@@ -26,7 +32,7 @@ interface Diagnostic {
   doc: StringDocument;
   mesg: string;
   code: string;
-  location: JsonNode | undefined;
+  jsonpath: string | undefined;
   severity: TemplateLinterDiagnosticSeverity;
   args: Record<string, any> | undefined;
   relatedInformation: Array<{ node: JsonNode | undefined; doc: StringDocument; mesg: string }> | undefined;
@@ -38,7 +44,7 @@ function stringifyDiagnostics(diagnostics: Diagnostic[] | undefined): string {
       uri: d.doc.uri,
       mesg: d.mesg,
       code: d.code,
-      nodePath: d.location && getNodePath(d.location),
+      jsonpath: d.jsonpath,
       severity: TemplateLinterDiagnosticSeverity[d.severity],
       args: d.args,
       relatedInformation: d.relatedInformation
@@ -96,7 +102,7 @@ class TestLinter extends TemplateLinter<string, StringDocument, Diagnostic> {
       doc,
       mesg,
       code,
-      location,
+      jsonpath: location && jsonPathToString(getNodePath(location)),
       severity,
       args,
       relatedInformation
@@ -137,6 +143,39 @@ describe('TemplateLinter', () => {
         expect.fail('Expected 1 recipe asset version diagnostic, got: ' + stringifyDiagnostics(diagnostics));
       }
       expect(diagnostics?.[0].relatedInformation?.length, '# of relatedInformation').to.equal(1);
+    });
+
+    ['data', 'app', undefined].forEach(templateType => {
+      it(`validates layoutDefinition for ${templateType} templateType`, async () => {
+        const dir = 'layoutDefinition';
+        linter = new TestLinter(
+          dir,
+          {
+            templateType,
+            layoutDefinition: 'layout.json'
+          },
+          new StringDocument(path.join(dir, 'layout.json'), {})
+        );
+        await linter.lint();
+        let diagnostics =
+          getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri)?.filter(
+            d => d.code === ERRORS.TMPL_LAYOUT_UNSUPPORTED
+          ) || [];
+        // should get an error for non-data template
+        if (templateType !== 'data' && diagnostics.length !== 1) {
+          expect.fail('Expected 1 layout definition diagnostic, got: ' + stringifyDiagnostics(diagnostics));
+        } else if (templateType === 'data' && diagnostics.length !== 0) {
+          expect.fail('Expected no layout definition diagnostic, got: ' + stringifyDiagnostics(diagnostics));
+        }
+        // and there shouldn't be an error about the file not existing
+        diagnostics =
+          getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri)?.filter(
+            d => d.code === ERRORS.TMPL_REL_PATH_NOT_EXIST
+          ) || [];
+        if (diagnostics.length !== 0) {
+          expect.fail('Expected no file not found diagnostics, got ' + stringifyDiagnostics(diagnostics));
+        }
+      });
     });
   });
 
@@ -217,6 +256,120 @@ describe('TemplateLinter', () => {
           `Expected 1 ${ERRORS.UI_PAGE_VFPAGE_UNSUPPORTED} diagnostics, got: ` + stringifyDiagnostics(diagnostics)
         );
       }
+    });
+  });
+
+  describe('layout.json', () => {
+    it('validates variables exist', async () => {
+      const dir = 'layoutVariables';
+      const layoutPath = path.join(dir, 'layout.json');
+      linter = new TestLinter(
+        dir,
+        {
+          templateType: 'data',
+          layoutDefinition: 'layout.json',
+          variableDefinition: 'variables.json'
+        },
+        new StringDocument(path.join(dir, 'variables.json'), {
+          foo: { variableType: { type: 'StringType' } }
+        }),
+        new StringDocument(layoutPath, {
+          pages: [
+            {
+              title: '',
+              layout: {
+                type: 'SingleColumn',
+                center: {
+                  items: [
+                    { type: 'Variable', name: 'foo' },
+                    { type: 'Variable', name: 'food' }
+                  ]
+                }
+              }
+            },
+            {
+              title: '',
+              layout: {
+                type: 'TwoColumn',
+                left: {
+                  items: [{ type: 'Variable', name: 'bar' }]
+                },
+                right: {
+                  items: [
+                    { type: 'Variable', name: 'foo' },
+                    { type: 'Text', text: '...' }
+                  ]
+                }
+              }
+            }
+          ]
+        })
+      );
+
+      const errors = await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 unknown variable errors, got' + stringifyDiagnostics(diagnostics));
+      }
+
+      let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[1].name');
+      expect(diagnostic, 'food variable error').to.not.be.undefined;
+      expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+      expect(diagnostic!.args).to.deep.equal({ name: 'food', match: 'foo' });
+
+      diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].layout.left.items[0].name');
+      expect(diagnostic, 'bar variable error').to.not.be.undefined;
+      expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+      expect(diagnostic!.args).to.deep.equal({ name: 'bar' });
+    });
+
+    it('validates variable types', async () => {
+      const dir = 'layoutVariables';
+      const layoutPath = path.join(dir, 'layout.json');
+      linter = new TestLinter(
+        dir,
+        {
+          templateType: 'data',
+          layoutDefinition: 'layout.json',
+          variableDefinition: 'variables.json'
+        },
+        new StringDocument(path.join(dir, 'variables.json'), {
+          obj: { variableType: { type: 'ObjectType' } },
+          datetime: { variableType: { type: 'DateTimeType' } },
+          foo: { variableType: { type: 'StringType' } }
+        }),
+        new StringDocument(layoutPath, {
+          pages: [
+            {
+              title: '',
+              layout: {
+                type: 'SingleColumn',
+                center: {
+                  items: [
+                    { type: 'Variable', name: 'obj' },
+                    { type: 'Variable', name: 'datetime' },
+                    { type: 'Variable', name: 'foo' }
+                  ]
+                }
+              }
+            }
+          ]
+        })
+      );
+
+      const errors = await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 unsupported variable errors, got' + stringifyDiagnostics(diagnostics));
+      }
+
+      let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[0].name');
+      expect(diagnostic, 'obj variable error').to.not.be.undefined;
+      expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNSUPPORTED_VARIABLE);
+
+      diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[1].name');
+      expect(diagnostic, 'datetime variable error').to.not.be.undefined;
+      expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNSUPPORTED_VARIABLE);
     });
   });
 });
