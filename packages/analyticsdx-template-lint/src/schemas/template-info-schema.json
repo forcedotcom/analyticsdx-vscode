@@ -262,7 +262,7 @@
     },
     "layoutDefinition": {
       "type": ["null", "string"],
-      "description": "Path to the UI layout information file. This is currently only supported for `data` templates.",
+      "description": "Path to the UI layout information file. This is currently only supported for data templates.",
       "defaultSnippets": [
         {
           "label": "\"\"",

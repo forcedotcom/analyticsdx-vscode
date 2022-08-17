@@ -94,7 +94,7 @@
                   },
                   "description": {
                     "type": ["null", "string"],
-                    "description": "Header description text, display under the header text.",
+                    "description": "Header description text, displayed under the header text.",
                     "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
                   }
                 },
