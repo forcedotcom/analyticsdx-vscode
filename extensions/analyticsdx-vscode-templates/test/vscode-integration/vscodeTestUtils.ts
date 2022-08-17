@@ -154,10 +154,12 @@ export async function openFile(
   }
   let editor: vscode.TextEditor | undefined;
   if (show) {
-    // we need to give a column to have multiple editor open, otherwise it will always replace an active editor
+    // we need to give a column to have multiple editors open, otherwise it will always replace an active editor
     // (by closing the active editor)
-    // TODO: figure out why this won't open a 2nd doc in a tab in the active column
-    editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+    editor = await vscode.window.showTextDocument(
+      doc,
+      vscode.window.activeTextEditor ? vscode.ViewColumn.Beside : vscode.ViewColumn.Active
+    );
   }
   return [doc, editor];
 }

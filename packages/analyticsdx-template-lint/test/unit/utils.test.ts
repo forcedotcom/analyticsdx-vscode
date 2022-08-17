@@ -6,11 +6,12 @@
  */
 
 import { expect } from 'chai';
-import { Node as JsonNode, ParseError, parseTree, printParseErrorCode } from 'jsonc-parser';
+import { JSONPath, Node as JsonNode, ParseError, parseTree, printParseErrorCode } from 'jsonc-parser';
 import {
   fuzzySearcher,
   isValidRelpath,
   isValidVariableName,
+  jsonPathToString,
   matchJsonNodeAtPattern,
   matchJsonNodesAtPattern
 } from '../../src/utils';
@@ -40,6 +41,50 @@ describe('utils', () => {
     }
     return jsonNode;
   }
+
+  describe('jsonPathToString()', () => {
+    it('works for empty path', () => {
+      const path: JSONPath = [];
+      expect(jsonPathToString(path)).to.be.equals('');
+    });
+
+    it('works for objects', () => {
+      const path: JSONPath = ['releaseInfo', 'noteFiles'];
+      expect(jsonPathToString(path)).to.be.equals('releaseInfo.noteFiles');
+    });
+
+    it('works for non-id fields in objects', () => {
+      const path: JSONPath = [
+        'root',
+        '000',
+        'a+b',
+        'a b',
+        'a/b',
+        "'ab'",
+        '"ab"',
+        'true',
+        'a.b',
+        'a,b',
+        'a:b',
+        '[]',
+        '()',
+        'field'
+      ];
+      expect(jsonPathToString(path)).to.be.equals(
+        'root["000"]["a+b"]["a b"]["a/b"]["\'ab\'"]["\\"ab\\""]["true"]["a.b"]["a,b"]["a:b"]["[]"]["()"].field'
+      );
+    });
+
+    it('works for arrays', () => {
+      const path: JSONPath = [0, 1, 14];
+      expect(jsonPathToString(path)).to.be.equals('[0][1][14]');
+    });
+
+    it('works for objects and arrays', () => {
+      const path: JSONPath = ['externalFiles', 0, 'file'];
+      expect(jsonPathToString(path)).to.be.equals('externalFiles[0].file');
+    });
+  });
 
   describe('matchJsonNodesAtPattern() on object root', () => {
     const object: JsonNode = parseOrThrow({

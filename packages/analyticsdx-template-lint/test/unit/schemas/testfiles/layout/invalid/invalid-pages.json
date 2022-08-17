@@ -1,0 +1,53 @@
+{
+  "pages": [
+    {
+      "title": "Bad items",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": [
+            {},
+            {
+              "type": "Variable",
+              "name": "this is a bad name"
+            },
+            {
+              "type": "Variable"
+            },
+            {
+              "type": "Text"
+            },
+            {
+              "type": "Image"
+            },
+            {
+              "type": "Image",
+              "image": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Mismatched single column",
+      "layout": {
+        "type": "SingleColumn",
+        "left": {
+          "items": []
+        },
+        "right": {
+          "items": []
+        }
+      }
+    },
+    {
+      "title": "Mismatched two column",
+      "layout": {
+        "type": "TwoColumn",
+        "center": {
+          "items": []
+        }
+      }
+    }
+  ]
+}

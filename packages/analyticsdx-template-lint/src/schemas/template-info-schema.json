@@ -260,6 +260,18 @@
         }
       ]
     },
+    "layoutDefinition": {
+      "type": ["null", "string"],
+      "description": "Path to the UI layout information file. This is currently only supported for data templates.",
+      "defaultSnippets": [
+        {
+          "label": "\"\"",
+          "body": "${0}"
+        }
+      ],
+      "$comment": "This feature is not fully GA for public consumption, so hide it from code-completion for now",
+      "doNotSuggest": true
+    },
     "variableDefinition": {
       "type": ["null", "string"],
       "description": "Path to the variables definition file.",

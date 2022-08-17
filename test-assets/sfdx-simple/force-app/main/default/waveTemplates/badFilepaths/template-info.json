@@ -9,6 +9,7 @@
   },
   "variableDefinition": "missing-variables.json",
   "uiDefinition": "missing-ui.json",
+  "layoutDefinition": "missing-layout.json",
   "folderDefinition": "missing-folder.json",
   "autoInstallDefinition": "missing-auto-install.json",
   "ruleDefinition": "missing-rules-definition.json",

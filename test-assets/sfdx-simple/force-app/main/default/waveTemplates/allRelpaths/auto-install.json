@@ -1,7 +1,7 @@
 {
   // single-line comments
   /*
-   * multi-line commaent
+   * multi-line comment
    */
   "error": "intentional error for tests to look for",
   "hooks": [],

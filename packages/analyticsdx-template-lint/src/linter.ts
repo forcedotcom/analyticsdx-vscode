@@ -45,6 +45,38 @@ function lengthJsonArrayAttributeValue(tree: JsonNode, ...pattern: JSONPath): [n
   return [nodes ? nodes.length : -1, node];
 }
 
+/** Find all of the panel items contained in the specified layoutDefinition file's pages' layouts.
+ */
+function findAllItemsForLayoutDefinition(layoutJson: JsonNode): JsonNode[] {
+  return matchJsonNodesAtPattern(layoutJson, ['pages', '*', 'layout']).flatMap(layout => {
+    const [type] = findJsonPrimitiveAttributeValue(layout, 'type');
+    if (type === 'SingleColumn') {
+      return matchJsonNodesAtPattern(layout, ['center', 'items', '*']);
+    } else if (type === 'TwoColumn') {
+      return matchJsonNodesAtPattern(layout, ['left', 'items', '*']).concat(
+        matchJsonNodesAtPattern(layout, ['right', 'items', '*'])
+      );
+    }
+    return [];
+  });
+}
+
+/** Find all the names for all the variable items in the pages' layouts and the
+ * JsonNodes for the 'name' attribute.
+ */
+function findAllVariableNamesForLayoutDefinition(layoutJson: JsonNode): Array<{ name: string; nameNode: JsonNode }> {
+  return findAllItemsForLayoutDefinition(layoutJson).reduce((items, item) => {
+    const type = findJsonPrimitiveAttributeValue(item, 'type')[0];
+    if (type === 'Variable') {
+      const [name, nameNode] = findJsonPrimitiveAttributeValue(item, 'name');
+      if (typeof name === 'string' && nameNode) {
+        items.push({ name, nameNode });
+      }
+    }
+    return items;
+  }, [] as Array<{ name: string; nameNode: JsonNode }>);
+}
+
 export type TemplateLinterUri = {
   toString(): string;
 };
@@ -267,7 +299,7 @@ export abstract class TemplateLinter<
   }
 
   /** Finds if non-unique values are found amongst the string values for a jsonpath(s).
-   * @param source the doc + json nodes to search for the jsonpath in
+   * @param sources the doc + json nodes to search for the jsonpath in
    * @param jsonpathOrPaths the path or paths to the value nodes(s) in the json
    * @param message the message for a diagnostic for each duplicate value node, can be a string or function
    * @param code the error code
@@ -359,6 +391,7 @@ export abstract class TemplateLinter<
         this.lintTemplateInfo(tree),
         this.lintAutoInstall(tree),
         this.lintVariables(tree),
+        this.lintLayout(tree),
         this.lintUi(tree),
         this.lintRules(tree)
       ]);
@@ -453,6 +486,20 @@ export abstract class TemplateLinter<
         ERRORS.TMPL_DUPLICATE_LABEL
       )
     );
+
+    // layoutDefinition is currently only supported for data templates in 240 (Winter '23)
+    const [layoutDefinition, layoutDefinitionNode] = findJsonPrimitiveAttributeValue(tree, 'layoutDefinition');
+    if (typeof layoutDefinition === 'string') {
+      const [templateType] = findJsonPrimitiveAttributeValue(tree, 'templateType');
+      if (!(typeof templateType === 'string' && templateType.toLocaleLowerCase() === 'data')) {
+        this.addDiagnostic(
+          this.templateInfoDoc,
+          'layoutDefinition is only supported in data templates',
+          ERRORS.TMPL_LAYOUT_UNSUPPORTED,
+          layoutDefinitionNode
+        );
+      }
+    }
 
     // wait for the async ones
     await p;
@@ -978,6 +1025,55 @@ export abstract class TemplateLinter<
         }
       }
     });
+  }
+
+  private async lintLayout(templateInfo: JsonNode) {
+    const { doc, json: layout } = await this.loadTemplateRelPathJson(templateInfo, ['layoutDefinition']);
+    if (doc && layout) {
+      // start this one
+      const p = this.lintLayoutCheckVariables(templateInfo, doc, layout);
+      return p;
+    }
+  }
+
+  private async lintLayoutCheckVariables(templateInfo: JsonNode, doc: Document, layoutJson: JsonNode) {
+    const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
+    // go through the variables items in the pages' layouts
+    const variables = findAllVariableNamesForLayoutDefinition(layoutJson);
+    if (variables.length > 0) {
+      const fuzzySearch = fuzzySearcher({
+        // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
+        [Symbol.iterator]: () =>
+          Object.keys(variableTypes)
+            // also, only include valid variable names in the fuzzy search
+            .filter(isValidVariableName)
+            [Symbol.iterator]()
+      });
+      variables.forEach(({ name, nameNode }) => {
+        if (!variableTypes[name]) {
+          let mesg = `Cannot find variable '${name}'`;
+          // see if there's a variable w/ a similar name
+          const [match] = fuzzySearch(name);
+          const args: Record<string, any> | undefined = { name };
+          if (match && match.length > 0) {
+            args.match = match;
+            mesg += `, did you mean '${match}'?`;
+          }
+          this.addDiagnostic(doc, mesg, ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE, nameNode, { args });
+        } else {
+          // the variable exists, so check that the variable type is supported
+          const type = variableTypes[name].type;
+          if (type === 'ObjectType' || type === 'DateTimeType') {
+            this.addDiagnostic(
+              doc,
+              `${type} variable '${name}' is not supported in layout pages`,
+              ERRORS.LAYOUT_PAGE_UNSUPPORTED_VARIABLE,
+              nameNode
+            );
+          }
+        }
+      });
+    }
   }
 
   private async lintUi(templateInfo: JsonNode) {

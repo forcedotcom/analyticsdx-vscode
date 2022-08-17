@@ -7,33 +7,11 @@
 
 import { FormattingOptions, getNodePath, JSONPath, Node as JsonNode } from 'jsonc-parser';
 
-export { matchJsonNodeAtPattern, matchJsonNodesAtPattern } from '@salesforce/analyticsdx-template-lint';
-
-const jsonIdRegex = /^[A-Za-z][-A-Za-z0-9_]*$/;
-/**
- * Convert the specified path of a node to a an javascript-style expression (e.g. foo.bar[2])
- */
-export function jsonPathToString(path: JSONPath): string {
-  let buf = '';
-  path.forEach(part => {
-    if (typeof part === 'string') {
-      // if the part is valid json-ish id, slap it on directly
-      if (jsonIdRegex.test(part) && part !== 'true' && part !== 'false') {
-        if (buf) {
-          buf += '.';
-        }
-        buf += part;
-      } else {
-        // otherwise do associate-array style, with double-quotes
-        buf += '["' + part.replace(/"/g, '\\"') + '"]';
-      }
-    } else {
-      // number
-      buf += '[' + part + ']';
-    }
-  });
-  return buf;
-}
+export {
+  jsonPathToString,
+  matchJsonNodeAtPattern,
+  matchJsonNodesAtPattern
+} from '@salesforce/analyticsdx-template-lint';
 
 /** Find the ancestor 'property' json node at or above the specified node for the specified property.
  * This does not support wildcard paths.

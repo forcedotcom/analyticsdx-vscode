@@ -1,0 +1,31 @@
+{
+  // single-line comments
+  /*
+   * multi-line comment
+   */
+  "error": "intentional error for tests to look for",
+  "pages": [
+    {
+      "title": "Page1",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": [
+            { "type": "Variable", "name": "sobjectfield", "visibility": "Hidden" },
+            {
+              "type": "Image",
+              "image": { "name": "someimage" }
+            },
+            { "type": "Text", "text": "Some text here", "visibility": "{{Variables.booleanVariable}}" }
+          ]
+        }
+      }
+    }
+  ],
+  "displayMessages": [
+    {
+      "text": "",
+      "location": "AppLandingPage"
+    }
+  ]
+}

@@ -9,6 +9,32 @@ import * as fs from 'fs';
 import Fuse from 'fuse.js';
 import { JSONPath, Node as JsonNode } from 'jsonc-parser';
 
+const jsonIdRegex = /^[A-Za-z][-A-Za-z0-9_]*$/;
+/**
+ * Convert the specified path of a node to a an javascript-style expression (e.g. foo.bar[2])
+ */
+export function jsonPathToString(path: JSONPath): string {
+  let buf = '';
+  path.forEach(part => {
+    if (typeof part === 'string') {
+      // if the part is valid json-ish id, slap it on directly
+      if (jsonIdRegex.test(part) && part !== 'true' && part !== 'false') {
+        if (buf) {
+          buf += '.';
+        }
+        buf += part;
+      } else {
+        // otherwise do associate-array style, with double-quotes
+        buf += '["' + part.replace(/"/g, '\\"') + '"]';
+      }
+    } else {
+      // number
+      buf += '[' + part + ']';
+    }
+  });
+  return buf;
+}
+
 /**
  * Return all nodes that match the path-patterns.
  * @param roots the json node root(s) to start at.

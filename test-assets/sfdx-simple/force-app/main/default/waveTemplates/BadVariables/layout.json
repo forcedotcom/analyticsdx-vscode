@@ -1,0 +1,20 @@
+{
+  "pages": [
+    {
+      "title": "Invalid variable types in non-vfPage",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": [
+            // these should get errors about the type
+            { "type": "Variable", "name": "DateTimeTypeVar" },
+            { "type": "Variable", "name": "ObjectTypeVar" },
+            // this should be fine
+            { "type": "Variable", "name": "DatasetAnyFieldTypeVar" },
+            { "type": "Variable", "name": "StringTypeVar" }
+          ]
+        }
+      }
+    }
+  ]
+}

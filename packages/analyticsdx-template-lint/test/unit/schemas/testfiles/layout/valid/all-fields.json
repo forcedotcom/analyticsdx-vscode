@@ -1,0 +1,111 @@
+{
+  "pages": [
+    {
+      "backgroundImage": {
+        "name": "SentimentAnalysisBackground",
+        "namespace": "ns"
+      },
+      "condition": "{{true}}",
+      "title": "Primitive Array Variables",
+      "helpUrl": "https://salesforce.com/",
+      "layout": {
+        "type": "SingleColumn",
+        "header": {
+          "text": "Select on field from a source object to run Sentiment Analysis against. Select on field from a source object to run Sentiment Analysis against. Select on field from a source object to run Sentiment Analysis against.",
+          "description": "Choose up to 20 additional fields to incldue in the resulting dataset. Choose up to 20 additional fields to incldue in the resulting dataset. Choose up to 20 additional fields to incldue in the resulting dataset."
+        },
+        "center": {
+          "items": [
+            {
+              "type": "Variable",
+              "name": "multiString",
+              "visibility": "Disabled"
+            },
+            {
+              "type": "Image",
+              "image": {
+                "name": "PositivePossum",
+                "namespace": "ns"
+              },
+              "visibility": "Hidden"
+            },
+            {
+              "type": "Variable",
+              "name": "multiNumber",
+              "visibility": "Visible"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "backgroundImage": {
+        "name": "einstein"
+      },
+      "condition": "{{Variables.foo}}",
+      "title": "Primitive Variables",
+      "layout": {
+        "type": "TwoColumn",
+        "header": {
+          "text": "Select on field from a source object to run Sentiment Analysis against",
+          "description": "Choose up to 20 additional fields to incldue in the resulting dataset."
+        },
+        "left": {
+          "items": [
+            {
+              "type": "Variable",
+              "name": "withComputedValue",
+              "visibility": "{{Variables.disabled == true}}"
+            },
+            {
+              "type": "Text",
+              "text": "This next checkbox controls the rhs variables"
+            },
+            {
+              "type": "Variable",
+              "name": "booleanVar",
+              "visibility": "Visible"
+            }
+          ]
+        },
+        "right": {
+          "items": [
+            {
+              "type": "Variable",
+              "name": "stringVar",
+              "visibility": "{{Variables.booleanVar ? 'Visible' : 'Disabled'}}"
+            },
+            {
+              "type": "Variable",
+              "name": "selectedString",
+              "visibility": "{{Variables.booleanVar ? 'Visible' : 'Disabled'}}"
+            },
+            {
+              "type": "Image",
+              "visibility": "{{Variables.booleanVar ? 'Visible' : 'Hidden'}}",
+              "image": {
+                "name": "PositivePossum"
+              }
+            },
+            {
+              "type": "Variable",
+              "name": "numberVar",
+              "visibility": "{{Variables.booleanVar ? 'Visible' : 'Hidden'}}"
+            },
+            {
+              "type": "Variable",
+              "name": "selectedNumber",
+              "visibility": "{{Variables.booleanVar ? 'Visible' : 'Hidden'}}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "displayMessages": [
+    {
+      "text": "display message",
+      "location": "AppLandingPage"
+    }
+  ]
+}
