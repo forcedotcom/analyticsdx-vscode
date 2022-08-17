@@ -105,7 +105,7 @@ export abstract class VariableRefHoverProvider implements vscode.HoverProvider {
         const tree = parseTree(varDoc.getText());
         const txt = hoverMarkdownForVariable(varname, tree && findNodeAtLocation(tree, [varname]));
         if (txt) {
-          return new vscode.Hover(txt, rangeForNode(location.previousNode, varDoc));
+          return new vscode.Hover(txt, rangeForNode(location.previousNode, document));
         }
       }
     }
