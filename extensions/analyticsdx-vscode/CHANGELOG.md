@@ -1,3 +1,13 @@
+# 0.9.1
+
+## Added
+
+- Added `data` template layout support for Winter `23 beta.
+
+## Fixed
+
+- Fixed highlighted text when showing template variable name hover.
+
 # 0.9.0
 
 ## Fixed
@@ -33,7 +43,7 @@
 
 ## Added
 
-- Added `data` templateType for Summer `22 beta
+- Added `data` templateType for Summer `22 beta.
 
 ## Fixed
 
