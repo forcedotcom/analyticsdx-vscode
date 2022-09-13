@@ -104,6 +104,7 @@ describe('template-info-schema.json hookup', () => {
       ['dashboards', 'dashboard'],
       ['components', 'dashboard component'],
       ['lenses', 'lens'],
+      ['recipes', 'recipe'],
       ['eltDataflows', 'dataflow'],
       ['externalFiles', 'externalFile'],
       ['datasetFiles', 'dataset'],

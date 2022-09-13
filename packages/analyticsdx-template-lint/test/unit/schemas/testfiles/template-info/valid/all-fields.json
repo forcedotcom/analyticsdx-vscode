@@ -87,7 +87,14 @@
       "label": "recipe",
       "name": "recipe",
       "condition": "${'No'}",
-      "overwriteOnUpgrade": "Always"
+      "overwriteOnUpgrade": "Always",
+      "executeCondition": "CreateSyncExecute"
+    },
+    {
+      "file": "recipes/recipe2.json",
+      "label": "recipe2",
+      "name": "recipe2",
+      "executeCondition": "${Variables.runRecipes == 'Yes' ? 'CreateSyncExecute' : 'CreateOnly'}"
     }
   ],
   "datasetFiles": [

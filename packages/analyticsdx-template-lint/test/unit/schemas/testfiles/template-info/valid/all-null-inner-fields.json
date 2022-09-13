@@ -61,7 +61,8 @@
       "label": "name",
       "name": "name",
       "condition": null,
-      "overwriteOnUpgrade": null
+      "overwriteOnUpgrade": null,
+      "executeCondition": null
     }
   ],
   "datasetFiles": [

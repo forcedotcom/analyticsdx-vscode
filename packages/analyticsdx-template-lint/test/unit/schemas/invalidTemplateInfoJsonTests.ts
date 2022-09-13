@@ -160,6 +160,16 @@ describe('template-info-schema.json finds errors in', () => {
     errors.expectNoUnrecognizedErrors();
   });
 
+  it('invalid-executeCondition.json', async () => {
+    const errors = await validate('invalid-executeCondition.json');
+    errors.expectInvalidProps(
+      true,
+      'recipes[0].executeCondition',
+      'recipes[1].executeCondition',
+      'recipes[2].executeCondition'
+    );
+  });
+
   // TODO: rules, dashboard, lenses, eltDataflows, externalFiles, datasetFiles, imageFiles, storedQueries, extendedTypes,
   //       customAttributes, icons, videos, templateDependencies required fields
   // TODO: rules.type valid
