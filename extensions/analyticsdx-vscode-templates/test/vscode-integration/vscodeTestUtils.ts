@@ -356,24 +356,40 @@ export async function createTemplateWithRelatedFiles(
   const templateUri = vscode.Uri.joinPath(tmpdir, 'template-info.json');
   const [, , templateEditor] = await openTemplateInfoAndWaitForDiagnostics(templateUri, true);
   const templateJson: { [key: string]: any } = {};
-  // create the related file(s)
-  const editors = await Promise.all(
-    files.map(async file => {
-      const uri = vscode.Uri.joinPath(tmpdir!, file.path);
-      await writeEmptyJsonFile(uri);
-      const [, editor] = await openFile(uri);
-      await setDocumentText(editor, file.initialJson);
-      // but since it's not reference by the template-info.json, it should have no errors
-      await waitForDiagnostics(editor.document.uri, d => d && d.length === 0, `No initial diagnostics on ${file.path}`);
-      // inject the attribute into the template-info json
-      if (typeof file.field === 'string') {
-        templateJson[file.field] = file.path;
-      } else {
-        file.field(templateJson, file.path);
-      }
-      return editor;
-    })
-  );
+  // const editors = await Promise.all(
+  //   files.map(async file => {
+  //     const uri = vscode.Uri.joinPath(tmpdir!, file.path);
+  //     await writeEmptyJsonFile(uri);
+  //     const [, editor] = await openFile(uri);
+  //     await setDocumentText(editor, file.initialJson);
+  //     // but since it's not reference by the template-info.json, it should have no errors
+  //     await waitForDiagnostics(editor.document.uri, d => d && d.length === 0, `No initial diagnostics on ${file.path}`);
+  //     // inject the attribute into the template-info json
+  //     if (typeof file.field === 'string') {
+  //       templateJson[file.field] = file.path;
+  //     } else {
+  //       file.field(templateJson, file.path);
+  //     }
+  //     return editor;
+  //   })
+  // );
+  // create the related file(s) serially
+  const editors = [] as vscode.TextEditor[];
+  for (const file of files) {
+    const uri = vscode.Uri.joinPath(tmpdir!, file.path);
+    await writeEmptyJsonFile(uri);
+    const [, editor] = await openFile(uri);
+    await setDocumentText(editor, file.initialJson);
+    // but since it's not reference by the template-info.json, it should have no errors
+    await waitForDiagnostics(editor.document.uri, d => d && d.length === 0, `No initial diagnostics on ${file.path}`);
+    // inject the attribute into the template-info json
+    if (typeof file.field === 'string') {
+      templateJson[file.field] = file.path;
+    } else {
+      file.field(templateJson, file.path);
+    }
+    editors.push(editor);
+  }
 
   // now, hookup the related file(s)
   await setDocumentText(templateEditor, templateJson);
