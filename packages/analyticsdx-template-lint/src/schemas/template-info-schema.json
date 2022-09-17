@@ -538,8 +538,6 @@
     "recipes": {
       "type": ["null", "array"],
       "description": "List of recipes to include in the template.",
-      "$comment": "For now, allow this to be specified, but do not offer it in code-completions until the feature is ready",
-      "doNotSuggest": true,
       "minItems": 0,
       "examples": [[]],
       "items": {
@@ -571,6 +569,31 @@
                 "label": "${...} expression",
                 "body": "${Variables.${1:varname}}"
               }
+            ]
+          },
+          "executeCondition": {
+            "description": "Controls if the recipe syncs and executes during app creation. Value must be 'CreateSyncExecute', 'CreateExecute', 'CreateOnly', or a ${...} expression against variables that evaluates to one of those.",
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^\\$\\{.+\\}$",
+                "patternErrorMessage": "Value must be 'CreateSyncExecute', 'CreateExecute', 'CreateOnly', or a ${...} expression.",
+                "examples": [
+                  "${Variables.doSync ? 'CreateSyncExecute' : 'CreateExecute'}",
+                  "${Variables.runRecipes == 'Yes' ? 'CreateSyncExecute' : 'CreateOnly'}"
+                ]
+              },
+              {
+                "type": "string",
+                "default": "CreateSyncExecute",
+                "enum": ["CreateSyncExecute", "CreateExecute", "CreateOnly"],
+                "enumDescriptions": [
+                  "Create, sync, and execute the recipe during app creation.",
+                  "Create and execute the recipe during app creation, but don't sync it.",
+                  "Create the recipe during app creation, but don't sync or execute it."
+                ]
+              },
+              { "type": "null" }
             ]
           },
           "overwriteOnUpgrade": {

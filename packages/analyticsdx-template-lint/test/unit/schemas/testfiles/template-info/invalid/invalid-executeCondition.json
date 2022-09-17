@@ -1,0 +1,29 @@
+{
+  "name": "invalid_executeCondition",
+  "label": "Test invalid recipe executeConditions",
+  "templateType": "data",
+  "assetVersion": 56.0,
+  "releaseInfo": {
+    "templateVersion": "1.0"
+  },
+  "recipes": [
+    {
+      "file": "recipes/recipe1.json",
+      "label": "recipe1",
+      "name": "recipe1",
+      "executeCondition": "{{Variables.invalidExpression}}"
+    },
+    {
+      "file": "recipes/recipe2.json",
+      "label": "recipe2",
+      "name": "recipe2",
+      "executeCondition": "InvalidValue"
+    },
+    {
+      "file": "recipes/recipe3.json",
+      "label": "recipe3",
+      "name": "recipe3",
+      "executeCondition": ""
+    }
+  ]
+}
