@@ -1,8 +1,14 @@
+# 0.9.2
+
+## Added
+
+- Added `executionCondition` on `recipe`s in templates (Winter '23).
+
 # 0.9.1
 
 ## Added
 
-- Added `data` template layout support for Winter `23 beta.
+- Added `data` template layout support for Winter '23 beta.
 
 ## Fixed
 
