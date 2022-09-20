@@ -276,8 +276,8 @@ describe('TemplateEditorManager configures uiDefinition', () => {
     if (locations.length !== 1) {
       expect.fail('Expected 1 location, got:\n' + JSON.stringify(locations, undefined, 2));
     }
-    expect(locations[0].uri.path, 'location path').to.equal(
-      vscode.Uri.joinPath(uriDirname(uri), 'variables.json').path
+    expect(locations[0].uri.fsPath, 'location path').to.equal(
+      vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
     );
   });
 
