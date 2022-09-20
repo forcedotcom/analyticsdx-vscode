@@ -231,8 +231,11 @@ export class TemplateDirEditing extends Disposable {
   }
 
   public static key(dir: vscode.Uri) {
-    // right now, this only configures things based on schema and filepath, so only key on those
-    return dir.scheme + ':' + dir.path;
+    // right now, this only configures things based on schema and path, so only key on those.
+    // Note: on windows, dir.path can return the drive letter as either upper or lower depending on what
+    // created the Uri (e.g. workspaceFolders tends to returns it upper, TextDocument.uri tends to have it lower), so
+    // use fsPath when it's a file uri, since fsPath is supposed to normalize the drive letter to lower
+    return dir.scheme + ':' + (dir.scheme === 'file' ? dir.fsPath : dir.path);
   }
 
   public start(): this {

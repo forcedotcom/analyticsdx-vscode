@@ -57,7 +57,9 @@ export class OutputDirGatherer implements ParametersGatherer<OutputDirType> {
 
   protected getCustomDirs(packageDirs: string[], rootPath: string): string[] {
     const packages = packageDirs.length > 1 ? `{${packageDirs.join(',')}}` : packageDirs[0];
-    return new glob.GlobSync(path.join(rootPath, packages, '**', path.sep)).found.map(value => {
+    // glob patterns have to use / (https://github.com/isaacs/node-glob#windows)
+    const pattern = path.join(rootPath, packages, '**', path.sep).replace(/\\/g, '/');
+    return new glob.GlobSync(pattern).found.map(value => {
       const relativePath = path.relative(rootPath, path.join(value, path.sep));
       return path.join(relativePath, this.typeDirRequired && !relativePath.endsWith(this.typeDir) ? this.typeDir : '');
     });
