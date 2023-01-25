@@ -1,3 +1,17 @@
 {
-  "defaultVar": {}
+  "defaultVar": {},
+  "nullEnumsLabelsStringType": {
+    "variableType": {
+      "type": "StringType",
+      "enums": [],
+      "enumsLabels": null
+    }
+  },
+  "nullEnumsLabelsNumberType": {
+    "variableType": {
+      "type": "NumberType",
+      "enums": [],
+      "enumsLabels": null
+    }
+  }
 }
