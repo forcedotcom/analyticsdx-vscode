@@ -11,6 +11,7 @@ import * as path from 'path';
 import {
   ERRORS,
   jsonPathToString,
+  LINTER_MAX_EXTERNAL_FILE_SIZE,
   TemplateLinter,
   TemplateLinterDiagnosticSeverity,
   TemplateLinterDocument
@@ -19,8 +20,15 @@ import { getDiagnosticsForPath } from '../testutils';
 
 class StringDocument implements TemplateLinterDocument<string> {
   private readonly text: string;
-  constructor(public readonly uri: string, text: string | any[] | object) {
+  public readonly sizeOverride?: number;
+
+  constructor(
+    public readonly uri: string,
+    text: string | any[] | object,
+    { sizeOverride }: { sizeOverride?: number } = {}
+  ) {
     this.text = typeof text === 'string' ? text : JSON.stringify(text, undefined, 2);
+    this.sizeOverride = sizeOverride;
   }
 
   getText(): string {
@@ -61,19 +69,19 @@ class TestLinter extends TemplateLinter<string, StringDocument, Diagnostic> {
     this.relatedFiles = relatedFiles;
   }
 
-  protected uriDirname(uri: string): string {
+  protected override uriDirname(uri: string): string {
     return path.dirname(uri);
   }
 
-  protected uriBasename(uri: string): string {
+  protected override uriBasename(uri: string): string {
     return path.basename(uri);
   }
 
-  protected uriRelPath(dir: string, relpath: string): string {
+  protected override uriRelPath(dir: string, relpath: string): string {
     return path.join(dir, relpath);
   }
 
-  protected async uriIsFile(uri: string): Promise<boolean | undefined> {
+  protected override async uriIsFile(uri: string): Promise<boolean | undefined> {
     try {
       const doc = await this.getDocument(uri);
       return !!doc;
@@ -82,14 +90,23 @@ class TestLinter extends TemplateLinter<string, StringDocument, Diagnostic> {
     }
   }
 
-  protected getDocument(uri: string): Promise<StringDocument> {
+  protected override async uriStat(uri: string): Promise<{ ctime: number; mtime: number; size: number } | undefined> {
+    try {
+      const doc = await this.getDocument(uri);
+      return { ctime: 0, mtime: 0, size: doc.sizeOverride || doc.getText().length };
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  protected override getDocument(uri: string): Promise<StringDocument> {
     const doc =
       (uri === this.templateInfoDoc.uri ? this.templateInfoDoc : undefined) ||
       this.relatedFiles.find(doc => doc.uri === uri);
     return doc ? Promise.resolve(doc) : Promise.reject(new Error(`Unable to find ${uri}`));
   }
 
-  protected createDiagnotic(
+  protected override createDiagnotic(
     doc: StringDocument,
     mesg: string,
     code: string,
@@ -176,6 +193,43 @@ describe('TemplateLinter', () => {
           expect.fail('Expected no file not found diagnostics, got ' + stringifyDiagnostics(diagnostics));
         }
       });
+    });
+
+    it('validates CSV size', async () => {
+      const dir = 'csvSize';
+      linter = new TestLinter(
+        dir,
+        {
+          externalFiles: [
+            {
+              file: 'good.csv',
+              name: 'good',
+              type: 'CSV'
+            },
+            {
+              file: 'bad.csv',
+              name: 'bad',
+              type: 'CSV'
+            },
+            {
+              file: 'small.csv',
+              name: 'small',
+              type: 'CSV'
+            }
+          ]
+        },
+        new StringDocument(path.join(dir, 'good.csv'), '', { sizeOverride: LINTER_MAX_EXTERNAL_FILE_SIZE }),
+        new StringDocument(path.join(dir, 'bad.csv'), '', { sizeOverride: LINTER_MAX_EXTERNAL_FILE_SIZE + 1 }),
+        new StringDocument(path.join(dir, 'small.csv'), '', { sizeOverride: 100 })
+      );
+      await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri)?.filter(
+        d => d.code === ERRORS.TMPL_EXTERNAL_FILE_TOO_BIG
+      );
+      if (diagnostics?.length !== 1) {
+        expect.fail('Expected 1 file size diagnostic, got: ' + stringifyDiagnostics(diagnostics));
+      }
+      expect(diagnostics[0].jsonpath).to.equal('externalFiles[1].file');
     });
   });
 

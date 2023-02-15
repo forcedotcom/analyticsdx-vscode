@@ -46,6 +46,17 @@ export class VscodeTemplateLinter extends TemplateLinter<vscode.Uri, vscode.Text
     }
   }
 
+  protected override async uriStat(
+    uri: vscode.Uri
+  ): Promise<{ ctime: number; mtime: number; size: number } | undefined> {
+    const stat = await uriStat(uri);
+    if (!stat) {
+      return undefined;
+    } else {
+      return { ctime: stat.ctime, mtime: stat.mtime, size: stat.size };
+    }
+  }
+
   protected override async getDocument(uri: vscode.Uri): Promise<vscode.TextDocument> {
     return vscode.workspace.openTextDocument(uri);
   }

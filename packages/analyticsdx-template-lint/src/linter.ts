@@ -6,7 +6,7 @@
  */
 
 import { findNodeAtLocation, JSONPath, Node as JsonNode, parseTree } from 'jsonc-parser';
-import { ERRORS, TEMPLATE_INFO } from './constants';
+import { ERRORS, LINTER_MAX_EXTERNAL_FILE_SIZE, TEMPLATE_INFO } from './constants';
 import {
   fuzzySearcher,
   isValidRelpath,
@@ -149,6 +149,12 @@ export abstract class TemplateLinter<
    * @return true if it's a file, false it's not a file, undefined if it doesn't exist.
    */
   protected abstract uriIsFile(uri: Uri): Promise<boolean | undefined>;
+
+  /** Stat the uri.
+   * @return the stat info, or undfined if it doesn't exist. The times in the return value should be in MS since
+   *   the unix epoch.
+   */
+  protected abstract uriStat(uri: Uri): Promise<{ ctime: number; mtime: number; size: number } | undefined>;
 
   /** Get the document for the specified location.
    * This should return the same object instance per Uri.
@@ -420,7 +426,27 @@ export abstract class TemplateLinter<
         this.lintRelFilePath(this.templateInfoDoc, tree, path)
       ),
       this.lintTemplateInfoByType(this.templateInfoDoc, tree),
-      this.lintTemplateInfoAutoInstallDefinition(this.templateInfoDoc, tree)
+      this.lintTemplateInfoAutoInstallDefinition(this.templateInfoDoc, tree),
+
+      // warning if a CSV is bigger than 10 million bytes
+      ...matchJsonNodesAtPattern(tree, ['externalFiles', '*', 'file']).map(async fileNode => {
+        if (fileNode.type === 'string') {
+          try {
+            const uri = this.uriRelPath(this.dir, fileNode.value);
+            const stat = await this.uriStat(uri);
+            if (stat && stat.size > LINTER_MAX_EXTERNAL_FILE_SIZE) {
+              this.addDiagnostic(
+                this.templateInfoDoc,
+                'External files larger than 10 million bytes will be truncated at app creation time',
+                ERRORS.TMPL_EXTERNAL_FILE_TOO_BIG,
+                fileNode
+              );
+            }
+          } catch (ignore) {
+            // the rel path checking logic will already show a warning on stat error
+          }
+        }
+      })
     ]);
     // while those are going, do these synchronous ones
     this.listTemplateInfoAssetVersion(this.templateInfoDoc, tree);
