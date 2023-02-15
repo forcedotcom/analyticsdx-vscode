@@ -144,28 +144,40 @@ export class FileTemplateValidator extends TemplateLinter<string, TextDocument, 
     }
   }
 
-  public reset() {
+  public override reset() {
     super.reset();
     this.documentCache.clear();
   }
 
-  protected uriDirname(uri: string): string {
+  protected override uriDirname(uri: string): string {
     return path.dirname(uri);
   }
 
-  protected uriBasename(uri: string): string {
+  protected override uriBasename(uri: string): string {
     return path.basename(uri);
   }
 
-  protected uriRelPath(dir: string, relpath: string): string {
+  protected override uriRelPath(dir: string, relpath: string): string {
     return path.join(dir, relpath);
   }
 
-  protected uriIsFile(uri: string): Promise<boolean | undefined> {
+  protected override uriIsFile(uri: string): Promise<boolean | undefined> {
     return pathIsFile(uri);
   }
 
-  protected async getDocument(uri: string): Promise<TextDocument> {
+  protected override async uriStat(uri: string): Promise<{ ctime: number; mtime: number; size: number } | undefined> {
+    try {
+      const stat = await fs.promises.stat(uri);
+      return { ctime: stat.ctimeMs, mtime: stat.mtimeMs, size: stat.size };
+    } catch (error) {
+      if (typeof error === 'object' && (error as any).code === 'ENOENT') {
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  protected override async getDocument(uri: string): Promise<TextDocument> {
     let doc = this.documentCache.get(uri);
     if (!doc) {
       if (!(await this.uriIsFile(uri))) {
@@ -177,7 +189,7 @@ export class FileTemplateValidator extends TemplateLinter<string, TextDocument, 
     return doc;
   }
 
-  protected createDiagnotic(
+  protected override createDiagnotic(
     doc: TextDocument,
     mesg: string,
     code: string,

@@ -28,28 +28,40 @@ class FileDocument implements TemplateLinterDocument<string> {
 export default abstract class FileTemplateLinter<Diagnostic> extends TemplateLinter<string, FileDocument, Diagnostic> {
   private readonly documentCache = new Map<string, FileDocument>();
 
-  public reset() {
+  public override reset() {
     super.reset();
     this.documentCache.clear();
   }
 
-  protected uriDirname(uri: string): string {
+  protected override uriDirname(uri: string): string {
     return path.dirname(uri);
   }
 
-  protected uriBasename(uri: string): string {
+  protected override uriBasename(uri: string): string {
     return path.basename(uri);
   }
 
-  protected uriRelPath(dir: string, relpath: string): string {
+  protected override uriRelPath(dir: string, relpath: string): string {
     return path.join(dir, relpath);
   }
 
-  protected uriIsFile(uri: string): Promise<boolean | undefined> {
+  protected override uriIsFile(uri: string): Promise<boolean | undefined> {
     return pathIsFile(uri);
   }
 
-  protected async getDocument(uri: string): Promise<FileDocument> {
+  protected override async uriStat(uri: string): Promise<{ ctime: number; mtime: number; size: number } | undefined> {
+    try {
+      const stat = await fs.promises.stat(uri);
+      return { ctime: stat.ctimeMs, mtime: stat.mtimeMs, size: stat.size };
+    } catch (error) {
+      if (typeof error === 'object' && (error as any).code === 'ENOENT') {
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  protected override async getDocument(uri: string): Promise<FileDocument> {
     let doc = this.documentCache.get(uri);
     if (!doc) {
       if (!(await this.uriIsFile(uri))) {

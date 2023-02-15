@@ -13,6 +13,8 @@ export const LINTER_SOURCE_ID = 'adx-template';
 export const JSON_SOURCE_ID = 'json';
 /** Diagnostic source id for json schema issues. */
 export const JSON_SCHEMA_SOURCE_ID = 'json-schema';
+/** The maximum supported size of CSV external files (in bytes). */
+export const LINTER_MAX_EXTERNAL_FILE_SIZE = 10_000_000;
 
 // Note: this should be in sync with the paths below
 const assetAttrPaths = [
@@ -139,6 +141,8 @@ export const ERRORS = Object.freeze({
   TMPL_RECIPES_MIN_ASSET_VERSION: 'tmpl-20',
   /** layoutDefinition is only for data templates */
   TMPL_LAYOUT_UNSUPPORTED: 'tmpl-21',
+  /** externalFile csv file is larger then LINTER_MAX_CSV_FILE_SIZE */
+  TMPL_EXTERNAL_FILE_TOO_BIG: 'tmpl-22',
 
   /** Unknown variable in values in autoInstallDefinition. */
   AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',
