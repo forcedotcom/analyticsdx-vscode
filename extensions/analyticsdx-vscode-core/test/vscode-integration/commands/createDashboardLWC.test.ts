@@ -87,7 +87,12 @@ describe('createDashboardLWC.ts', () => {
   afterEach(async () => {
     if (lwcDir) {
       if (await uriExists(lwcDir)) {
-        await vscode.workspace.fs.delete(lwcDir, { recursive: true, useTrash: false });
+        try {
+          await vscode.workspace.fs.delete(lwcDir, { recursive: true, useTrash: false });
+        } catch (ignore) {
+          // these sometimes unrelatedly fail to delete on Windows tests on Github, but we don't really care about it
+          // since we gen a unique name each time and .gitignore them
+        }
       }
     }
   });
