@@ -1,3 +1,10 @@
+# 0.9.3
+
+## Added
+
+- Warn on large CSV `externalFiles` in templates.
+- Added support for `enumsLabels` in `StringType` and `NumberType` template variable types (for Summer '23).
+
 # 0.9.2
 
 ## Added
