@@ -1,5 +1,5 @@
 {
-  "version": "0.9.2",
+  "version": "0.9.3",
   "aiKey": "ec3632a4-df47-47a4-98dc-8134cacbaf7e",
   "preview": true,
   "publisher": "salesforce",
@@ -34,7 +34,7 @@
     "which": "2.0.2"
   },
   "devDependencies": {
-    "@salesforce/analyticsdx-test-utils-vscode": "0.9.2",
+    "@salesforce/analyticsdx-test-utils-vscode": "0.9.3",
     "@types/chai": "4.3.1",
     "@types/glob": "7.2.0",
     "@types/mocha": "9.1.1",
