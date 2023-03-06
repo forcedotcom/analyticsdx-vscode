@@ -3,7 +3,7 @@
 ## Pre-requisites
 
 1.  We are using the same version of Node that the supported release of VSCode uses (see `engines.vscode` in the
-    extensions' `package.json`'s, currently 16.13.0).
+    extensions' `package.json`'s, currently 16.14.2).
     If you need to work with multiple versions of Node (e.g. for other projects), you might consider using
     [nvm](https://github.com/creationix/nvm).
 1.  It is suggested, though not required, that you use the Insiders version of VS

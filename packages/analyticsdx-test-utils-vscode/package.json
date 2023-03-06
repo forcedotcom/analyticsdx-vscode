@@ -9,7 +9,7 @@
     "@types/chai": "4.3.1",
     "@types/glob": "7.2.0",
     "@types/mocha": "9.1.1",
-    "@types/node": "16.11.36",
+    "@types/node": "16.18.14",
     "chai": "4.3.6",
     "decache": "4.6.0",
     "glob": "8.0.3",
@@ -25,7 +25,7 @@
     "mock-spawn": "0.2.6",
     "shx": "0.3.4",
     "source-map-support": "0.5.20",
-    "typescript": "4.6.3"
+    "typescript": "4.9.5"
   },
   "scripts": {
     "compile": "tsc -p ./",

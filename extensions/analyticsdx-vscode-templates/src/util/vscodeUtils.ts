@@ -299,6 +299,10 @@ export class UriExistsDiagnosticCollection implements vscode.DiagnosticCollectio
   public dispose(): void {
     return this.diagnostics.dispose();
   }
+
+  public [Symbol.iterator]() {
+    return this.diagnostics[Symbol.iterator]();
+  }
 }
 
 /** An extension to the base diagnostic so we add some more fields. */
