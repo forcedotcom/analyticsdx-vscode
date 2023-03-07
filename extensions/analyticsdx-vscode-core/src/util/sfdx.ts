@@ -35,7 +35,7 @@ const minAdxPluginVersion = '1.0.22';
 
 export async function isSfdxInstalled(): Promise<boolean> {
   try {
-    return !!(await which('sfdx'));
+    return !!(await which('sfdx', { nothrow: true }));
   } catch (e) {
     return false;
   }
