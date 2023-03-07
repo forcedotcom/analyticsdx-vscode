@@ -10,7 +10,6 @@
 const path = require('path');
 const shell = require('shelljs');
 const fs = require('fs');
-const mkdirp = require('mkdirp');
 
 // Installs a list of extensions passed on the command line
 var isInsiders = process.env.CODE_VERSION === 'insiders';
@@ -37,7 +36,7 @@ const linuxExecutable = path.join(
 
 const extensionsDir = path.join('.vscode-test', 'extensions');
 if (!fs.existsSync(extensionsDir)) {
-  mkdirp.sync(extensionsDir);
+  fs.mkdirSync(extensionsDir, { recursive: true });
 }
 
 const executable =
