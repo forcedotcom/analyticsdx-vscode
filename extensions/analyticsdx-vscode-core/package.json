@@ -29,7 +29,7 @@
     "@salesforce/salesforcedx-utils-vscode": "file:../../lib/salesforcedx-utils-vscode.tgz",
     "@salesforce/templates": "54.7.0",
     "glob": "8.0.3",
-    "semver": "7.3.7",
+    "semver": "7.3.8",
     "tmp": "0.2.1",
     "which": "2.0.2"
   },
@@ -39,7 +39,7 @@
     "@types/glob": "7.2.0",
     "@types/mocha": "10.0.1",
     "@types/node": "16.18.14",
-    "@types/semver": "7.3.9",
+    "@types/semver": "7.3.13",
     "@types/sinon": "10.0.13",
     "@types/tmp": "0.2.2",
     "@types/vscode": "1.74.0",

@@ -29,10 +29,9 @@ import { getRootWorkspacePath, hasRootWorkspace } from './rootWorkspace';
 // The analytics sfdx plugin module name.
 const pluginName = '@salesforce/analytics';
 
-// The minumum version of the @salesforce/analytics plugins our extensions require for everything to work right.
-// The -e arg for analytics:template:list is new in 0.22.0 (it also requires Winter '21 v50.0 release to actually
-// include the embeddedapp templates in the output, but it at least doesn't fail on Summer '20 v49.0)
-const minAdxPluginVersion = '0.22.0';
+// The minumum version of the @salesforce/analytics plugins our extensions require for everything to work right,
+// and that we want folks to be at.
+const minAdxPluginVersion = '1.0.22';
 
 export async function isSfdxInstalled(): Promise<boolean> {
   try {
@@ -42,18 +41,19 @@ export async function isSfdxInstalled(): Promise<boolean> {
   }
 }
 
+// turn off any telemetry for thess call, since we're just seeing if it's installed and not really using it
+const NO_TELEMTRY_ENV = {
+  SFDX_DISABLE_TELEMETRY: 'true',
+  // this used to be the env to turn on off telemetry, just in case they have an old sfdx base install
+  SFDX_DISABLE_INSIGHTS: 'true'
+};
+
 export async function isAnalyticsSfdxPluginInstalled(): Promise<boolean> {
-  // sfdx analytics --help seems to be a functioning command across all of the old versions, and it exits non-zero
-  // if the plugin isn't installed
-  const adxInstalledCmd = new SfdxCommandBuilder().withArg('analytics').withArg('--help');
+  // analtyics:template:list has been in the plugin since the 1st released version
+  const adxInstalledCmd = new SfdxCommandBuilder().withArg('which').withArg('analytics:template:list');
   const execution = new CliCommandExecutor(adxInstalledCmd.build(), {
     cwd: getRootWorkspacePath(),
-    env: {
-      // turn off any telemetry for this call, since we're just seeing if it's installed and not really using it
-      SFDX_DISABLE_TELEMETRY: 'true',
-      // this used to be the env to turn on off telemetry, just in case they have an old sfdx base install
-      SFDX_DISABLE_INSIGHTS: 'true'
-    }
+    env: NO_TELEMTRY_ENV
   }).execute();
   try {
     const code = await getCommandExecutionExitCode(execution);
@@ -65,21 +65,23 @@ export async function isAnalyticsSfdxPluginInstalled(): Promise<boolean> {
 
 export async function getAnalyticsSfdxPluginVersion(): Promise<string | undefined> {
   // since 0.7.0+, sfdx analytics --json will return adxVersion in the results field; in older versions, it would
-  // succeed but return plain text
+  // either succeed but return plain text, or do the prompt for a matching command which will timeout into the
+  // catch block
   const adxVersionCmd = new SfdxCommandBuilder().withArg('analytics').withJson();
   const execution = new CliCommandExecutor(adxVersionCmd.build(), {
-    cwd: getRootWorkspacePath()
+    cwd: getRootWorkspacePath(),
+    env: NO_TELEMTRY_ENV
   }).execute();
-  const jsonStr = await new CommandOutput().getCmdResult(execution);
-  // if it might be json, try to parse it
-  if (jsonStr && jsonStr.trimLeft().startsWith('{') && jsonStr.trimRight().endsWith('}')) {
-    try {
+  try {
+    const jsonStr = await new CommandOutput().getCmdResult(execution);
+    // if it might be json, try to parse it
+    if (jsonStr && jsonStr.trimStart().startsWith('{') && jsonStr.trimEnd().endsWith('}')) {
       const json = JSON.parse(jsonStr);
       if (json?.status === 0) {
         return json.result?.adxVersion;
       }
-    } catch (ignore) {}
-  }
+    }
+  } catch (ignore) {}
 }
 
 class PromptingPreChecker implements PreconditionChecker {
