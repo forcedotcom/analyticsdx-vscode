@@ -7,6 +7,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+const fs = require('fs');
 const path = require('path');
 const cwd = process.cwd();
 const { runTests } = require('@vscode/test-electron');
@@ -15,6 +16,20 @@ const {
   insidersDownloadDirToExecutablePath,
   systemDefaultPlatform
 } = require('@vscode/test-electron/out/util.js');
+
+// cleanup the .vscode-test/user-data folder before the run, otherwise it might fail like:
+// Error: ENOENT: no such file or directory, unlink '.../analyticsdx-vscode/extensions/analyticsdx-vscode-core/.vscode-test/user-data/1.76-main.sock'
+const userDataDir = path.join(cwd, '.vscode-test', 'user-data');
+if (fs.existsSync(userDataDir)) {
+  console.log(`Deleting  ${userDataDir} from previous run...`);
+  fs.rmSync(userDataDir, { force: true, recursive: true });
+}
+// it looks like this can get left if a test run fails and it can also cause the above error, so delete it too
+const userDaFile = path.join(cwd, '.vscode-test', 'user-da');
+if (fs.existsSync(userDaFile)) {
+  console.log(`Deleting  ${userDaFile} from previous run...`);
+  fs.rmSync(userDaFile, { force: true });
+}
 
 // Run vscode tests under your out/test/vscode-integration folder.
 // this assumes you ran download-vscode-for-tests or otherwise have a vscode install under
