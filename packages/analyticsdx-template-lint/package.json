@@ -7,7 +7,7 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "fuse.js": "6.6.2",
-    "jsonc-parser": "3.0.0"
+    "jsonc-parser": "3.2.0"
   },
   "devDependencies": {
     "@types/chai": "4.3.4",
