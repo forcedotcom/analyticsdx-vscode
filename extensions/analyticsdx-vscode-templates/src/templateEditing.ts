@@ -709,11 +709,11 @@ class TemplateJsonLanguageClient extends Disposable {
       errorHandler: {
         error: (error: Error, message: Message, count: number) => {
           this.langOutputChannel.appendLine(`Error (#${count}): ${error.message}`);
-          return ErrorAction.Continue;
+          return { action: ErrorAction.Continue };
         },
         closed: () => {
           this.langOutputChannel.appendLine('Connection closed');
-          return CloseAction.DoNotRestart;
+          return { action: CloseAction.DoNotRestart };
         }
       },
       diagnosticCollectionName: TEMPLATE_JSON_LANG_ID,
@@ -754,7 +754,7 @@ class TemplateJsonLanguageClient extends Disposable {
                 proxyStrictSSL: httpSettings.get('proxyStrictSSL')
               }
             };
-            this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, { settings });
+            return this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, { settings });
           }
         },
         handleDiagnostics: (uri, diagnostics, next) => {
@@ -797,10 +797,10 @@ class TemplateJsonLanguageClient extends Disposable {
     }
 
     // start the client & server
-    this.disposables.push(client.start());
     client
-      .onReady()
+      .start()
       .then(() => {
+        this.disposables.push({ dispose: () => client.stop().finally(() => client.dispose()) });
         const schemaDocuments: { [uri: string]: boolean } = {};
 
         // handle content request
@@ -837,7 +837,7 @@ class TemplateJsonLanguageClient extends Disposable {
 
         const handleContentChange = (uriString: string) => {
           if (schemaDocuments[uriString]) {
-            client.sendNotification(SchemaContentChangeNotification.type, uriString);
+            client.sendNotification(SchemaContentChangeNotification.type, uriString).catch();
             return true;
           }
           return false;
@@ -855,7 +855,7 @@ class TemplateJsonLanguageClient extends Disposable {
         );
 
         // initialize the schema associations
-        client.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations());
+        client.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations()).catch();
 
         // manually register / deregister format provider based on the json.format.enable config, and the
         // json and adx-template-json language specific settings
@@ -895,7 +895,7 @@ class TemplateJsonLanguageClient extends Disposable {
                     return [];
                   },
                   error => {
-                    client.handleFailedRequest(DocumentRangeFormattingRequest.type, error, []);
+                    client.handleFailedRequest(DocumentRangeFormattingRequest.type, token, error, []);
                     return Promise.resolve([]);
                   }
                 );
@@ -931,7 +931,7 @@ class TemplateJsonLanguageClient extends Disposable {
 
   public updateSchemaAssociations() {
     if (this.languageClient && this.clientReady) {
-      this.languageClient.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations());
+      this.languageClient.sendNotification(SchemaAssociationNotification.type, this.getSchemaAssociations()).catch();
     }
   }
 

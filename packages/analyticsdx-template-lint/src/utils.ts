@@ -190,12 +190,11 @@ export function isValidVariableName(name: string): boolean {
 }
 
 const noFuzzyMatch = () => [];
-const fuzzOptions = {
-  // see Fuse.FuseOptions for valid options
-  caseSensitive: false,
-  shouldSort: true,
-  maxPatternLength: 32
+const fuzzOptions: Fuse.IFuseOptions<string> = {
+  isCaseSensitive: false,
+  shouldSort: true
 };
+
 /** Create a function which can perform a fuzzy text search against a list of possible values.
  * Everything is initialized lazily
  * @param values the possible values
@@ -238,11 +237,6 @@ export function fuzzySearcher(
     // lazily create the fuzzer on first call
     if (!fuzzer) {
       fuzzer = new Fuse(list, fuzzOptions);
-    }
-    // fuse.js says it will throw an error if the pattern is longer than maxPatternLength (which defaults to 32),
-    // handle that by just trimming the pattern so it doesn't blow up
-    if (pattern.length > fuzzOptions.maxPatternLength) {
-      pattern = pattern.substring(0, fuzzOptions.maxPatternLength);
     }
     return fuzzer.search(pattern, searchOpts).map(result => result.item);
   };

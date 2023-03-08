@@ -9,12 +9,11 @@
 
 const path = require('path');
 const fs = require('fs');
-const mkdirp = require('mkdirp');
 
 const srcDir = path.join(__dirname, '..', 'extensions');
 const extensionsDir = path.join('.vscode-test', 'extensions');
 if (!fs.existsSync(extensionsDir)) {
-  mkdirp.sync(extensionsDir);
+  fs.mkdirSync(extensionsDir, { recursive: true });
 }
 
 function symlink(src, dest) {
