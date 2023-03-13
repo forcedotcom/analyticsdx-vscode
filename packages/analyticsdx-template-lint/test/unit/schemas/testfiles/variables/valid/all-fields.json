@@ -103,6 +103,123 @@
       "dataType": "xsd:time"
     }
   },
+  "dlo": {
+    "label": "DLO",
+    "description": "DLO",
+    "excludes": ["/.*Account.*/i"],
+    "excludeSelected": true,
+    "required": true,
+    "defaultValue": {
+      "objectName": "SomeDLO"
+    },
+    "variableType": {
+      "type": "DataLakeObjectType"
+    }
+  },
+  "dmo": {
+    "variableType": {
+      "type": "DataModelObjectType"
+    }
+  },
+  "calcInsights": {
+    "variableType": {
+      "type": "CalculatedInsightType"
+    }
+  },
+  "dlostringfield": {
+    "variableType": {
+      "type": "DataLakeObjectFieldType",
+      "dataType": "string"
+    },
+    "defaultValue": { "objectName": "{{Variables.dlo.objectName}}", "fieldName": "" }
+  },
+  "dlonumberfield": {
+    "variableType": {
+      "type": "DataLakeObjectFieldType",
+      "dataType": "number"
+    }
+  },
+  "dlodatefield": {
+    "variableType": {
+      "type": "DataLakeObjectFieldType",
+      "dataType": "date"
+    }
+  },
+  "dlodatetimefield": {
+    "variableType": {
+      "type": "DataLakeObjectFieldType",
+      "dataType": "date_time"
+    }
+  },
+  "dlocapstringfield": {
+    "variableType": {
+      "type": "DataLakeObjectFieldType",
+      "dataType": "STRING" // this is case-insensitive
+    }
+  },
+  "dmostringfield": {
+    "variableType": {
+      "type": "DataModelObjectFieldType",
+      "dataType": "string"
+    }
+  },
+  "dmonumberfield": {
+    "variableType": {
+      "type": "DataModelObjectFieldType",
+      "dataType": "number"
+    }
+  },
+  "dmodatefield": {
+    "variableType": {
+      "type": "DataModelObjectFieldType",
+      "dataType": "date"
+    }
+  },
+  "dmodatetimefield": {
+    "variableType": {
+      "type": "DataModelObjectFieldType",
+      "dataType": "date_time"
+    }
+  },
+  "dmocapstringfield": {
+    "variableType": {
+      "type": "DataModelObjectFieldType",
+      "dataType": "STRING" // this is case-insensitive
+    }
+  },
+  "cistringfield": {
+    "variableType": {
+      "type": "CalculatedInsightFieldType",
+      "dataType": "string",
+      "fieldType": "dimension"
+    }
+  },
+  "cinumberfield": {
+    "variableType": {
+      "type": "CalculatedInsightFieldType",
+      "dataType": "number",
+      "fieldType": "measure"
+    }
+  },
+  "cidatefield": {
+    "variableType": {
+      "type": "CalculatedInsightFieldType",
+      "dataType": "date"
+    }
+  },
+  "cidatetimefield": {
+    "variableType": {
+      "type": "CalculatedInsightFieldType",
+      "dataType": "date_time"
+    }
+  },
+  "cicapstringfield": {
+    "variableType": {
+      "type": "CalculatedInsightFieldType",
+      "dataType": "STRING", // these are case-insensitive
+      "fieldType": "DIMENSION"
+    }
+  },
   "datetime": {
     "label": "DateTime Variable",
     "variableType": {
@@ -280,6 +397,34 @@
       "type": "ArrayType",
       "itemsType": {
         "type": "SobjectType"
+      }
+    }
+  },
+  "dlofieldarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DataLakeObjectFieldType",
+        "dataType": null
+      }
+    }
+  },
+  "dmofieldarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "DataModelObjectFieldType",
+        "dataType": null
+      }
+    }
+  },
+  "cifieldarray": {
+    "variableType": {
+      "type": "ArrayType",
+      "itemsType": {
+        "type": "CalculatedInsightFieldType",
+        "dataType": null,
+        "fieldType": null
       }
     }
   },

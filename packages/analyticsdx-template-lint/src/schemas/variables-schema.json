@@ -61,6 +61,12 @@
             "ArrayType",
             "BooleanType",
             "ConnectorType",
+            "CalculatedInsightType",
+            "CalculatedInsightFieldType",
+            "DataLakeObjectType",
+            "DataLakeObjectFieldType",
+            "DataModelObjectType",
+            "DataModelObjectFieldType",
             "DatasetAnyFieldType",
             "DatasetDateType",
             "DatasetDimensionType",
@@ -72,6 +78,28 @@
             "SobjectType",
             "SobjectFieldType",
             "StringType"
+          ],
+          "enumDescriptions": [
+            "References a list of values, controlled by the `itemsType` variable type.",
+            "References true or false value.",
+            "References connectors defined in the org.",
+            "References calculated insights defined in the org. Only available in Summer '23 release.",
+            "References calculated insight fields in the org. Only available in Summer '23 release.",
+            "References data lake objects in the org. Only available in Summer '23 release.",
+            "References data lake object fields in the org. Only available in Summer '23 release.",
+            "References data model objects in the org. Only available in Summer '23 release.",
+            "References data model object fields in the org. Only available in Summer '23 release.",
+            "References fields from datasets in the org.",
+            "References date fields from datasets in the org.",
+            "References dimensions from dataset in the org.",
+            "References measures from dataset in the org.",
+            "References datasets in the org.",
+            "References date and time values.",
+            "References numeric values.",
+            "References user-defined object values.",
+            "References sObjects in the org.",
+            "References fields from sObejcts in the org.",
+            "References string values."
           ]
         },
         "enums": {
@@ -105,6 +133,9 @@
           "doNotSuggest": true
         },
         "connectorType": {
+          "doNotSuggest": true
+        },
+        "fieldType": {
           "doNotSuggest": true
         }
       },
@@ -175,7 +206,7 @@
               "items": {
                 "type": ["string", "null"]
               },
-              "doNotSuggest": true
+              "doNotSuggest": false
             }
           },
           "required": ["type"]
@@ -201,6 +232,78 @@
                 "xsd:time"
               ],
               "doNotSuggest": false
+            }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "CalculatedInsightFieldType"
+            },
+            "dataType": {
+              "description": "Required data type of underlying calculated insight field.",
+              "doNotSuggest": false,
+              "anyOf": [
+                {
+                  "enum": ["string", "number", "date", "date_time"]
+                },
+                {
+                  "type": ["null", "string"]
+                }
+              ]
+            },
+            "fieldType": {
+              "description": "Limits to this type of calculated insight field.",
+              "doNotSuggest": false,
+              "anyOf": [
+                {
+                  "enum": ["dimension", "measure"]
+                },
+                {
+                  "type": ["null", "string"]
+                }
+              ]
+            }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "DataLakeObjectFieldType"
+            },
+            "dataType": {
+              "description": "Required data type of underlying data lake object field.",
+              "doNotSuggest": false,
+              "anyOf": [
+                {
+                  "enum": ["string", "number", "date", "date_time"]
+                },
+                {
+                  "type": ["null", "string"]
+                }
+              ]
+            }
+          },
+          "required": ["type"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "DataModelObjectFieldType"
+            },
+            "dataType": {
+              "description": "Required data type of underlying data model field.",
+              "doNotSuggest": false,
+              "anyOf": [
+                {
+                  "enum": ["string", "number", "date", "date_time"]
+                },
+                {
+                  "type": ["null", "string"]
+                }
+              ]
             }
           },
           "required": ["type"]
@@ -381,7 +484,17 @@
           "properties": {
             "type": {
               "not": {
-                "enum": ["StringType", "NumberType", "SobjectFieldType", "ArrayType", "ObjectType", "ConnectorType"]
+                "enum": [
+                  "StringType",
+                  "NumberType",
+                  "SobjectFieldType",
+                  "CalculatedInsightFieldType",
+                  "DataLakeObjectFieldType",
+                  "DataModelObjectFieldType",
+                  "ArrayType",
+                  "ObjectType",
+                  "ConnectorType"
+                ]
               }
             }
           }
