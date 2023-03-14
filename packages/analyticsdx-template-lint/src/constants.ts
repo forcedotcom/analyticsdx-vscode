@@ -35,6 +35,7 @@ const definitionFilesPats = [
   ['variableDefinition'] as JSONPath,
   ['uiDefinition'],
   ['layoutDefinition'],
+  ['readinessDefinition'],
   ['folderDefinition'],
   ['autoInstallDefinition'],
   ['ruleDefinition'],
@@ -171,6 +172,9 @@ export const ERRORS = Object.freeze({
   LAYOUT_PAGE_UNKNOWN_VARIABLE: 'lay-1',
   /** Unsupported variable type in layout page */
   LAYOUT_PAGE_UNSUPPORTED_VARIABLE: 'lay-2',
+
+  /** ApexCallback readiness definition but template has no apexCallback */
+  READINESS_NO_APEX_CALLBACK: 'read-1',
 
   /** Duplicate constant in rules file(s) */
   RULES_DUPLICATE_CONSTANT: 'rules-1',

@@ -80,6 +80,7 @@ export class FileTemplateValidator extends TemplateLinter<string, TextDocument, 
         { schema: schemas.folder, jsonpath: ['folderDefinition'] },
         { schema: schemas.ui, jsonpath: ['uiDefinition'] },
         { schema: schemas.layout, jsonpath: ['layoutDefinition'] },
+        { schema: schemas.readiness, jsonpath: ['readinessDefinition'] },
         { schema: schemas.rules, jsonpath: ['ruleDefinition'] },
         { schema: schemas.variables, jsonpath: ['variableDefinition'] }
       ].forEach(({ schema, jsonpath }) => {

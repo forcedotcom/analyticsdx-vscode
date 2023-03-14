@@ -1,0 +1,347 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://schemas.salesforce.com/analytics/templates/readiness.json",
+  "title": "Salesforce Analytics Template Readiness Definition",
+  "description": "",
+  "type": "object",
+  "additionalProperties": false,
+  "allowComments": true,
+  "required": [],
+  "properties": {
+    "values": {
+      "description": "Default values for variables when computing readiness. Any values passed into the readiness check call will override these.",
+      "type": ["null", "object"],
+      "additionalProperties": true,
+      "defaultSnippets": [{ "label": "New values", "body": { "${1}": "${2}" } }]
+    },
+    "templateRequirements": {
+      "description": "Expressions used to determine if the current org meets requirements for this template. The template is considered ready if all these requirements are meet.",
+      "type": ["null", "array"],
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "description": "Expression used to determine if the current org meets requirements for this template.",
+        "additionalProperties": false,
+        "required": ["expression"],
+        "properties": {
+          "expression": {
+            "type": "string",
+            "description": "The ${...} expression to evaluate. This can access variables values as Variables.[name], and computed readiness definition values as Readiness.[name].",
+            "examples": [
+              "${Readiness.sobjectCount > Variables.minimumCount}",
+              "${Readiness.datasetRowCount >= 4000}",
+              "${Readiness.apexResult.name == 'requiredName'}"
+            ]
+          },
+          "type": {
+            "description": "Optional definition type of the requirement. This can be used to badge or group readiness results.",
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "SobjectRowCount",
+                  "OrgDatasetRowCount",
+                  "AppDatasetRowCount",
+                  "OrgPreferenceCheck",
+                  "ApexCallout"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "enumDescriptions": [
+              "A check against the number of objects in the org.",
+              "A check against the number of rows in a dataset in the org",
+              "A check against the number of rows in a dataset that will be created by this template in the app",
+              "",
+              "A check using a method on the template's apexCallback class."
+            ]
+          },
+          "successMessage": {
+            "type": ["null", "string"],
+            "description": "Optional message to return when the check in the expression evaluates to true. This can access variables values as Variables.[name], and computed readiness definition values as Readiness.[name].",
+            "examples": [
+              "Succesfully found ${Readiness.sobjectCount} ${Variables.sobject.objectName} objects.",
+              "Dataset ${App.Datasets.Opptys.Name} has at least ${Readiness.rowCount} rows"
+            ]
+          },
+          "failMessage": {
+            "type": ["null", "string"],
+            "description": "Optional message to return when the check in the expression evaluates to false. This can access variables values as Variables.[name], and computed readiness definition values as Readiness.[name].",
+            "examples": [
+              "Too many ${Variables.sobject.objectName} objects, found ${Readiness.sobjectCount}",
+              "Dataset ${App.Datasets.Opptys.Name} only has ${Readiness.rowCount} rows"
+            ]
+          },
+          "image": {
+            "type": ["null", "object"],
+            "description": "Optional image that can be used when displaying the readiness results.",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "namespace": {
+                "type": ["null", "string"],
+                "description": "The image namespace.",
+                "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
+              },
+              "name": {
+                "type": "string",
+                "description": "The image name."
+              }
+            },
+            "defaultSnippets": [
+              {
+                "label": "New backgroundImage",
+                "body": {
+                  "name": "${1:name}"
+                }
+              }
+            ]
+          },
+          "tags": {
+            "description": "Optional tags to associated with this requirement, which can be used to badge or group readiness results.",
+            "type": ["null", "array"],
+            "minItems": 0,
+            "items": {
+              "type": "string"
+            },
+            "defaultSnippets": [{ "label": "[]", "body": [] }]
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New templateRequirement",
+            "body": {
+              "expression": "${1}",
+              "failMessage": "${2}"
+            }
+          }
+        ]
+      },
+      "defaultSnippets": [{ "label": "[]", "body": [] }]
+    },
+    "definition": {
+      "description": "The readiness definition checks for this template. Each named entry here will be executed during the readiness check and available as ${Readiness.[name]} in the templateRequirements expression, the conditions in template-info, and rules.",
+      "type": ["null", "object"],
+      "additionalProperties": {
+        "description": "A readiness definition.",
+        "$ref": "#/definitions/definitionProps"
+      },
+      "defaultSnippets": [{ "label": "New definition", "body": { "${1}": { "type": "${2}" } } }]
+    }
+  },
+  "definitions": {
+    "definitionProps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The definition type.",
+          "enum": ["SobjectRowCount", "OrgDatasetRowCount", "AppDatasetRowCount", "OrgPreferenceCheck", "ApexCallout"],
+          "enumDescriptions": [
+            "A check against the number of objects in the org.",
+            "A check against the number of rows in a dataset in the org",
+            "A check against the number of rows in a dataset that will be created by this template in the app",
+            "",
+            "A check using a method on the template's apexCallback class."
+          ]
+        },
+        "filters": { "doNotSuggest": true },
+        "sobject": { "doNotSuggest": true },
+        "dataset": { "doNotSuggest": true },
+        "names": { "doNotSuggest": true },
+        "method": { "doNotSuggest": true },
+        "arguments": { "doNotSuggest": true }
+      },
+      "$comment": "Customize the type-specifc fields.",
+      "anyOf": [
+        {
+          "properties": {
+            "type": { "const": "SobjectRowCount" },
+            "sobject": {
+              "type": "string",
+              "description": "The name of the Sobject. This can be a ${...} expression.",
+              "doNotSuggest": false
+            },
+            "filters": {
+              "$ref": "#/definitions/filters",
+              "description": "The query filter to use when counting the number of rows",
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "sobject"]
+        },
+        {
+          "properties": {
+            "type": { "const": "OrgDatasetRowCount" },
+            "dataset": {
+              "type": "string",
+              "description": "The name or id of the dataset in th org. This can be a ${...} expression.",
+              "doNotSuggest": false
+            },
+            "filters": {
+              "$ref": "#/definitions/filters",
+              "description": "The query filter to use when counting the number of rows",
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "dataset"]
+        },
+        {
+          "properties": {
+            "type": { "const": "AppDatasetRowCount" },
+            "dataset": {
+              "type": "string",
+              "description": "The name or id of the dataset that will be created by the template. This can be a ${} expression.",
+              "doNotSuggest": false
+            },
+            "filters": {
+              "$ref": "#/definitions/filters",
+              "description": "The query filter to use when counting the number of rows",
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "dataset"]
+        },
+        {
+          "properties": {
+            "type": { "const": "OrgPreferenceCheck" },
+            "names": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" },
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "names"]
+        },
+        {
+          "properties": {
+            "type": { "const": "ApexCallout" },
+            "method": {
+              "type": "string",
+              "description": "The name of the method on the apexCallback class. This method must be annotated with @InvocableMethod. Return value will be serialized as a Map or primitive value and avaiable as ${Readiness.definitionName}.",
+              "doNotSuggest": false
+            },
+            "arguments": {
+              "type": "object",
+              "description": "The values for the method arguments. The values can use ${...} expressions.",
+              "additionalProperties": true,
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "method", "arguments"]
+        },
+        {
+          "properties": {
+            "type": {
+              "not": {
+                "enum": [
+                  "SobjectRowCount",
+                  "AppDatasetRowCount",
+                  "OrgDatasetRowCount",
+                  "OrgPreferenceCheck",
+                  "ApexCallout"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "New SobjectRowCount definition",
+          "body": {
+            "type": "SobjectRowCount",
+            "sobject": "${0}",
+            "filters": []
+          }
+        },
+        {
+          "label": "New OrgDatasetRowCount definition",
+          "body": {
+            "type": "OrgDatasetRowCount",
+            "dataset": "${0}",
+            "filters": []
+          }
+        },
+        {
+          "label": "New AppDatasetRowCount definition",
+          "body": {
+            "type": "AppDatasetRowCount",
+            "dataset": "${0}",
+            "filters": []
+          }
+        },
+        {
+          "label": "New ApexCallout definition",
+          "body": {
+            "type": "ApexCallout",
+            "method": "${0}",
+            "arguments": {}
+          }
+        },
+        {
+          "label": "New definition",
+          "body": {
+            "type": "${0}"
+          }
+        }
+      ]
+    },
+    "filters": {
+      "type": ["null", "array"],
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "The name of the field. This can use ${...} expressions."
+          },
+          "operator": {
+            "description": "The operator to use. This can be a ${...} expressions.",
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "LessThan",
+                  "LessThanEqual",
+                  "GreaterThan",
+                  "GreaerThanEqual",
+                  "Equal",
+                  "NotEqual",
+                  "In",
+                  "NotIn"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^\\$\\{.*\\}$"
+              }
+            ]
+          },
+          "value": {
+            "type": ["string", "number", "null", "boolean", "array"],
+            "description": "The value to compare against. This can use ${...} expressions."
+          }
+        },
+        "required": ["field", "operator", "value"],
+        "defaultSnippets": [
+          {
+            "label": "New filter",
+            "body": {
+              "field": "${1}",
+              "operator": "${2}",
+              "value": "${3}"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

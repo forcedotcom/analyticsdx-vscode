@@ -9,5 +9,6 @@
   "variableDefinition": "variables.json",
   "uiDefinition": "ui.json",
   "layoutDefinition": "layout.json",
-  "autoInstallDefinition": "auto-install.json"
+  "autoInstallDefinition": "auto-install.json",
+  "readinessDefinition": "readiness.json"
 }

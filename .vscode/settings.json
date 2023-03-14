@@ -46,6 +46,14 @@
       "url": "/packages/analyticsdx-template-lint/src/schemas/layout-schema.json"
     },
     {
+      "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/readiness/**/*.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/readiness-schema.json"
+    },
+    {
+      "fileMatch": ["/test-assets/sfdx-simple/force-app/main/default/waveTemplates/**/readiness.json"],
+      "url": "/packages/analyticsdx-template-lint/src/schemas/readiness-schema.json"
+    },
+    {
       "fileMatch": ["/packages/analyticsdx-template-lint/test/unit/schemas/testfiles/rules/**/*.json"],
       "url": "/packages/analyticsdx-template-lint/src/schemas/rules-schema.json"
     },
