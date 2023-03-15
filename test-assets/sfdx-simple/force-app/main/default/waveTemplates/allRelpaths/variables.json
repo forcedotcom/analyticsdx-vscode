@@ -14,5 +14,24 @@
       "type": "SobjectFieldType",
       "dataType": "xsd:string"
     }
+  },
+  "dlofield": {
+    "variableType": {
+      "type": "DataLakeObjectFieldType",
+      "dataType": null
+    }
+  },
+  "dmofield": {
+    "variableType": {
+      "type": "DataModelObjectFieldType",
+      "dataType": null
+    }
+  },
+  "cifield": {
+    "variableType": {
+      "type": "CalculatedInsightFieldType",
+      "dataType": null,
+      "fieldType": null
+    }
   }
 }

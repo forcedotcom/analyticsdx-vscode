@@ -73,6 +73,12 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
       position,
       '"ArrayType"',
       '"BooleanType"',
+      '"CalculatedInsightType"',
+      '"CalculatedInsightFieldType"',
+      '"DataLakeObjectType"',
+      '"DataLakeObjectFieldType"',
+      '"DataModelObjectType"',
+      '"DataModelObjectFieldType"',
       '"ConnectorType"',
       '"DatasetAnyFieldType"',
       '"DatasetDateType"',
@@ -85,6 +91,23 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
       '"SobjectFieldType"',
       '"SobjectType"',
       '"StringType"'
+    );
+
+    // check for the unused fields in the sobjectfield var
+    node = findNodeAtLocation(tree!, ['sobjectfield']);
+    expect(node, 'sobjectfield').to.not.be.undefined;
+    // this should be right at the opening '{'
+    position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
+    // make sure it has the fields from the schema that aren't in the document
+    await verifyCompletionsContain(
+      doc,
+      position,
+      'defaultValue',
+      'description',
+      'excludes',
+      'excludeSelected',
+      'label',
+      'required'
     );
 
     // find the start of the first "dataType" field in the 2nd variable
@@ -106,22 +129,27 @@ describe('TemplateEditorManager configures variablesDefinition', () => {
       '"xsd:time"'
     );
 
-    // check for the unused fields in the sobjectfield var
-    node = findNodeAtLocation(tree!, ['sobjectfield']);
-    expect(node, 'sobjectfield').to.not.be.undefined;
-    // this should be right at the opening '{'
-    position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
-    // make sure it has the fields from the schema that aren't in the document
-    await verifyCompletionsContain(
-      doc,
-      position,
-      'defaultValue',
-      'description',
-      'excludes',
-      'excludeSelected',
-      'label',
-      'required'
-    );
+    // find the start of the first "dataType" field in the data cloud field variables
+    node = findNodeAtLocation(tree!, ['dlofield', 'variableType', 'dataType']);
+    expect(node, 'dlofield.variableType.dataType').to.not.be.undefined;
+    position = doc.positionAt(node!.offset);
+    await verifyCompletionsContain(doc, position, '"date"', '"date_time"', '"number"', '"string"', 'null');
+
+    node = findNodeAtLocation(tree!, ['dmofield', 'variableType', 'dataType']);
+    expect(node, 'dmofield.variableType.dataType').to.not.be.undefined;
+    position = doc.positionAt(node!.offset);
+    await verifyCompletionsContain(doc, position, '"date"', '"date_time"', '"number"', '"string"', 'null');
+
+    node = findNodeAtLocation(tree!, ['cifield', 'variableType', 'dataType']);
+    expect(node, 'cifield.variableType.dataType').to.not.be.undefined;
+    position = doc.positionAt(node!.offset);
+    await verifyCompletionsContain(doc, position, '"date"', '"date_time"', '"number"', '"string"', 'null');
+
+    // and check calculated insights field fieldType
+    node = findNodeAtLocation(tree!, ['cifield', 'variableType', 'fieldType']);
+    expect(node, 'cifield.variableType.fieldType').to.not.be.undefined;
+    position = doc.positionAt(node!.offset);
+    await verifyCompletionsContain(doc, position, '"dimension"', '"measure"', 'null');
   });
 
   it('json-schema defaultSnippets', async () => {

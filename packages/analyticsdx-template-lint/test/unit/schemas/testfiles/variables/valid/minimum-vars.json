@@ -13,5 +13,20 @@
       "enums": [],
       "enumsLabels": null
     }
+  },
+  "mindlofield": {
+    "variableType": {
+      "type": "DataLakeObjectFieldType"
+    }
+  },
+  "mindmofield": {
+    "variableType": {
+      "type": "DataModelObjectFieldType"
+    }
+  },
+  "mincifield": {
+    "variableType": {
+      "type": "CalculatedInsightFieldType"
+    }
   }
 }
