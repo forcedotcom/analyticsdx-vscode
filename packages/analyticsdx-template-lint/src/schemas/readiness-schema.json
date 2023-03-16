@@ -15,7 +15,7 @@
       "defaultSnippets": [{ "label": "New values", "body": { "${1}": "${2}" } }]
     },
     "templateRequirements": {
-      "description": "Expressions used to determine if the current org meets requirements for this template. The template is considered ready if all these requirements are meet.",
+      "description": "Expressions used to determine if the current org meets the requirements for this template. The template is considered ready if all these requirements are met.",
       "type": ["null", "array"],
       "minItems": 0,
       "items": {
@@ -100,7 +100,7 @@
             ]
           },
           "tags": {
-            "description": "Optional tags to associated with this requirement, which can be used to badge or group readiness results.",
+            "description": "Optional tags to associate with this requirement, which can be used to badge or group readiness results.",
             "type": ["null", "array"],
             "minItems": 0,
             "items": {
