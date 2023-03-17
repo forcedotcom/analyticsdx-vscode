@@ -1,0 +1,23 @@
+{
+  "error": "This should be a warning",
+  "templateRequirements": [
+    {
+      "error": "This should be a warning",
+      "expression": "${true}"
+    },
+    {
+      "expression": "${false}",
+      "image": {
+        "error": "This should be a warning",
+        "name": "name"
+      }
+    }
+  ],
+  "definition": {
+    "foo": {
+      "error": "This should be a warning",
+      "type": "SobjectRowCount",
+      "sobject": "Case"
+    }
+  }
+}

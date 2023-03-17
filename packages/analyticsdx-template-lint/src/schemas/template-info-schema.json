@@ -272,6 +272,16 @@
       "$comment": "This feature is not fully GA for public consumption, so hide it from code-completion for now",
       "doNotSuggest": true
     },
+    "readinessDefinition": {
+      "type": ["null", "string"],
+      "description": "Path to the template org readiness definition file. Only available in Summer '23 release.",
+      "defaultSnippets": [
+        {
+          "label": "\"\"",
+          "body": "${0}"
+        }
+      ]
+    },
     "variableDefinition": {
       "type": ["null", "string"],
       "description": "Path to the variables definition file.",

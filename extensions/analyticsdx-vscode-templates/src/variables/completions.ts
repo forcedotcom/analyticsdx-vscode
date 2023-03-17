@@ -67,6 +67,26 @@ export class NewVariableCompletionItemProviderDelegate implements JsonCompletion
     }
   }
 }
+
+function zeropad(n: number, len = 2) {
+  let s = n.toFixed(0); // we can ignore negatives & decimals since this is for date values
+  const need = len - s.length;
+  for (let i = 0; i < need; i++) {
+    s = '0' + s;
+  }
+  return s;
+}
+
+// convert a date.getTimezoneOffset to an ISO8601 numeric tz
+function toTzStr(offset: number) {
+  // Date.getTimezoneOffset() is a neg offset, so use the opposite sign in the is08601 string
+  const sign = offset < 0 ? '+' : '-';
+  offset = Math.abs(offset);
+  const hours = Math.floor(offset / 60);
+  const mins = offset % 60;
+  return sign + zeropad(hours) + zeropad(mins);
+}
+
 /** Get variable completions for variable ref fields in files. */
 export abstract class VariableRefCompletionItemProviderDelegate implements JsonCompletionItemProviderDelegate {
   constructor(protected readonly templateEditing: TemplateDirEditing) {}
@@ -110,6 +130,95 @@ export abstract class VariableRefCompletionItemProviderDelegate implements JsonC
       }
     }
     return item;
+  }
+
+  /** Append a default value assignment to a snippet string, for inserting a default value for a variable.
+   * @param insertText the snippet string to add to
+   * @param varDefNode the json node of the variable
+   * @return the passed in insertText snippet.
+   */
+  protected appendDefaultValue(
+    insertText: vscode.SnippetString,
+    varDefNode: JsonNode | undefined
+  ): vscode.SnippetString {
+    if (varDefNode?.type === 'object') {
+      const typeNode = findNodeAtLocation(varDefNode, ['variableType', 'type']);
+      const type = typeNode?.type === 'string' && typeof typeNode.value === 'string' ? typeNode.value : undefined;
+      if (type === 'ArrayType') {
+        insertText.appendText('[').appendTabstop().appendText(']');
+      } else if (type === 'BooleanType') {
+        insertText.appendChoice(['true', 'false']);
+      } else if (type === 'DatasetAnyFieldType' || type === 'DatasetDimensionType' || type === 'DatasetMeasureType') {
+        insertText
+          .appendText('{\n\t"datasetId": "')
+          .appendTabstop()
+          .appendText('",\n\t"fieldName": "')
+          .appendTabstop()
+          .appendText('"\n}');
+      } else if (type === 'DatasetDateType') {
+        insertText
+          .appendText('{\n\t"datasetId": "')
+          .appendTabstop()
+          .appendText('",\n\t"dateAlias": "')
+          .appendTabstop()
+          .appendText('"\n}');
+      } else if (type === 'DatasetType') {
+        insertText.appendText('{\n\t"datasetId": "').appendTabstop().appendText('"\n}');
+      } else if (type === 'NumberType') {
+        insertText.appendPlaceholder('0');
+      } else if (type === 'ObjectType') {
+        insertText.appendText('{').appendTabstop().appendText('}');
+      } else if (type === 'SobjectType') {
+        insertText.appendText('{\n\t"sobjectName": "').appendTabstop().appendText('"\n}');
+      } else if (type === 'SobjectFieldType') {
+        insertText
+          .appendText('{\n\t"sobjectName": "')
+          .appendTabstop()
+          .appendText('",\n\t"fieldName": "')
+          .appendTabstop()
+          .appendText('"\n}');
+      } else if (type === 'DataLakeObjectType' || type === 'DataModelObjectType' || type === 'CalculatedInsightType') {
+        insertText.appendText('{\n\t"objectName": "').appendTabstop().appendText('"\n}');
+      } else if (
+        type === 'DataLakeObjectFieldType' ||
+        type === 'DataModelObjectFieldType' ||
+        type === 'CalculatedInsightFieldType'
+      ) {
+        insertText
+          .appendText('{\n\t"objectName": "')
+          .appendTabstop()
+          .appendText('",\n\t"fieldName": "')
+          .appendTabstop()
+          .appendText('"\n}');
+      } else if (type === 'DateTimeType') {
+        const now = new Date();
+        // value needs to be in "yyyy-MM-ddTHH:mm:ssz" format (or a number for UTC secs)
+        insertText
+          .appendText('"')
+          .appendPlaceholder(zeropad(now.getFullYear(), 4))
+          .appendText('-')
+          .appendPlaceholder(zeropad(now.getMonth() + 1))
+          .appendText('-')
+          .appendPlaceholder(zeropad(now.getDate()))
+          .appendText('T')
+          .appendPlaceholder(zeropad(now.getHours()))
+          .appendText(':')
+          .appendPlaceholder(zeropad(now.getMinutes()))
+          .appendText(':')
+          .appendPlaceholder(zeropad(now.getSeconds()))
+          .appendPlaceholder(toTzStr(now.getTimezoneOffset()))
+          .appendText('"');
+      } else {
+        // for no type in var def or anything else, assume a string value -- this covers StringType and ConnectorType
+        // and no type specified (which is StringType);
+        // it also means unknown/invalid types get a string value, which matches what we do for the hover -- they'll have an
+        // error in their variables json file
+        insertText.appendText('"').appendTabstop().appendText('"');
+      }
+    }
+    // REVIEWME: calculate out if we should add a trailing-comma? Typescript doesn't (like in array and object literals)
+    // but would be nice
+    return insertText.appendTabstop(0);
   }
 
   public async getItems(

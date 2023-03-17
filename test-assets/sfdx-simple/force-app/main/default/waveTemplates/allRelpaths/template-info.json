@@ -101,5 +101,6 @@
       "name": "image",
       "file": "images/image.png"
     }
-  ]
+  ],
+  "readinessDefinition": "readiness.json"
 }

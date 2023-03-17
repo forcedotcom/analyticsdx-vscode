@@ -360,7 +360,7 @@ describe('TemplateLinter', () => {
         })
       );
 
-      const errors = await linter.lint();
+      await linter.lint();
       const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
       if (diagnostics.length !== 2) {
         expect.fail('Expected 2 unknown variable errors, got' + stringifyDiagnostics(diagnostics));
@@ -411,7 +411,7 @@ describe('TemplateLinter', () => {
         })
       );
 
-      const errors = await linter.lint();
+      await linter.lint();
       const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
       if (diagnostics.length !== 2) {
         expect.fail('Expected 2 unsupported variable errors, got' + stringifyDiagnostics(diagnostics));
@@ -424,6 +424,36 @@ describe('TemplateLinter', () => {
       diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[1].name');
       expect(diagnostic, 'datetime variable error').to.not.be.undefined;
       expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNSUPPORTED_VARIABLE);
+    });
+  });
+
+  describe('readiness.json', () => {
+    it('validates apexCallback for ApexCallout', async () => {
+      const dir = 'apexCallback';
+      const readinessPath = path.join(dir, 'readiness.json');
+      linter = new TestLinter(
+        dir,
+        {
+          templateType: 'app',
+          readinessDefinition: 'readiness.json'
+        },
+        new StringDocument(readinessPath, {
+          definition: {
+            foo: {
+              type: 'ApexCallout',
+              method: 'foo',
+              arguments: {}
+            }
+          }
+        })
+      );
+
+      await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, readinessPath) || [];
+      if (diagnostics.length !== 1) {
+        expect.fail('Expected 1 ApexCallback error, got ' + stringifyDiagnostics(diagnostics));
+      }
+      expect(diagnostics[0].code).to.equal(ERRORS.READINESS_NO_APEX_CALLBACK);
     });
   });
 });

@@ -1,0 +1,22 @@
+{
+  "values": {
+    "foo": null
+  },
+  "templateRequirements": [
+    {
+      "expression": "${Readiness.accountCheck >= 1}",
+      "failMessage": null,
+      "successMessage": null,
+      "image": null,
+      "type": null,
+      "tags": null
+    }
+  ],
+  "definition": {
+    "accountCheck": {
+      "type": "SobjectRowCount",
+      "sobject": "Account",
+      "filters": null
+    }
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "values": {
+    "a": "b",
+    "bool": true,
+    "num": 123,
+    "obj": { "foo": "bar" },
+    "array": ["baz"],
+    "op": "Equal"
+  },
+  "templateRequirements": [
+    {
+      "expression": "${Readiness.apexResult.name == 'requiredName'}",
+      "failMessage": "Failed on ${Readiness.apexResult.name}",
+      "successMessage": "Good news!",
+      "image": {
+        "name": "default.png",
+        "namespace": "ns"
+      },
+      "type": "ApexCallout",
+      "tags": ["Apex", "Result"]
+    },
+    {
+      "expression": "${Readiness.accountCount >= Variables.num}",
+      "failMessage": "${Readiness.accountCount} < ${Variables.num}",
+      "successMessage": "${Readiness.accountCount} >= ${Variables.num}",
+      "type": "SobjectRowCount",
+      "tags": ["sobjects", "Account"],
+      "image": {
+        "name": "default.png"
+      }
+    },
+    {
+      "expression": "${Readiness.orgDatasetCount >= Variables.num}",
+      "failMessage": "${Readiness.orgDatasetCount} < ${Variables.num}",
+      "successMessage": "${Readiness.orgDatasetCount} >= ${Variables.num}",
+      "type": "OrgDatasetRowCount",
+      "tags": ["Org", "Dataset"]
+    },
+    {
+      "expression": "${Readiness.appDatasetCount >= Variables.num}",
+      "failMessage": "${Readiness.appDatasetCount} < ${Variables.num}",
+      "successMessage": "${Readiness.appDatasetCount} >= ${Variables.num}",
+      "type": "AppDatasetRowCount",
+      "tags": ["App", "Dataset"]
+    },
+    {
+      "expression": "${Readiness.orgPrefs.someName}",
+      "failMessage": "${Readiness.orgPrefs.someName} Nope!",
+      "successMessage": "${Readiness.orgPrefs.someName} Yep!",
+      "type": "OrgPreferenceCheck"
+    }
+  ],
+  "definition": {
+    "apexResult": {
+      "type": "ApexCallout",
+      "method": "someMethod",
+      "arguments": {
+        "strArg": "value",
+        "numArg": 100,
+        "arrayArg": ["${Variables.a"]
+      }
+    },
+    "accountCount": {
+      "type": "SobjectRowCount",
+      "sobject": "Account",
+      "filters": [
+        {
+          "field": "NumberOfEmployees",
+          "operator": "Equal",
+          "value": 1
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "GreaerThanEqual",
+          "value": "1"
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "GreaterThan",
+          "value": "1"
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "In",
+          "value": "${Variables.array}"
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "LessThan",
+          "value": "1"
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "LessThanEqual",
+          "value": "1"
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "NotEqual",
+          "value": "1"
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "NotIn",
+          "value": ["1"]
+        },
+        {
+          "field": "NumberOfEmployees",
+          "operator": "${Variables.op}",
+          "value": "1"
+        }
+      ]
+    },
+    "orgDatasetCount": {
+      "type": "OrgDatasetRowCount",
+      "dataset": "${Variable.selectedDS.datasetId}",
+      "filters": []
+    },
+    "appDatasetCount": {
+      "type": "AppDatasetRowCount",
+      "dataset": "${App.Datasets.Opptys.Name}",
+      "filters": [
+        {
+          "field": "fieldName",
+          "operator": "Equal",
+          "value": "foo"
+        }
+      ]
+    },
+    "orgPrefs": {
+      "type": "OrgPreferenceCheck",
+      "names": ["prefName", "prefName2"]
+    }
+  }
+}

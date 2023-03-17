@@ -67,6 +67,12 @@ suites.push(
   )
 );
 
+suites.push(
+  import('../../../src/schemas/readiness-schema.json').then(schema =>
+    generateJsonSchemaValidFilesTestSuite(schema, 'readiness-schema.json', __dirname, 'testfiles', 'readiness', 'valid')
+  )
+);
+
 // Run them when everything's loaded
 // tslint:disable-next-line: no-floating-promises
 Promise.all(suites).then(run);

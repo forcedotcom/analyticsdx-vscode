@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, salesforce.com, inc.
+ * Copyright (c) 2023, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -11,8 +11,8 @@ import { TemplateDirEditing } from '../templateEditing';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
 
-/** Provide completions items for variables references in configuration.appConfiguration.values */
-export class AutoInstallVariableCompletionItemProviderDelegate extends VariableRefCompletionItemProviderDelegate {
+/** Provide completions items for variables references in values in readiness.json */
+export class ReadinessVariableCompletionItemProviderDelegate extends VariableRefCompletionItemProviderDelegate {
   constructor(templateEditing: TemplateDirEditing) {
     super(templateEditing);
   }
@@ -20,17 +20,17 @@ export class AutoInstallVariableCompletionItemProviderDelegate extends VariableR
   public isSupportedDocument(document: vscode.TextDocument) {
     return (
       isValidRelpath(this.templateEditing.variablesDefinitionPath) &&
-      this.templateEditing.isAutoInstallDefinitionFile(document.uri)
+      this.templateEditing.isReadinessDefinitionFile(document.uri)
     );
   }
 
   public isSupportedLocation(location: Location) {
     return (
       location.isAtPropertyKey &&
-      location.matches(['configuration', 'appConfiguration', 'values', '*']) &&
+      location.matches(['values', '*']) &&
       // this makes sure the completion only show in prop names directly under "values" (and not in prop names in object
       // values under "values")
-      location.path.length === 4
+      location.path.length === 2
     );
   }
 

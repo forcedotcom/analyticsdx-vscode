@@ -1,0 +1,7 @@
+{
+  "values": {
+    "StringTypeVar": "foo",
+    "StringArrayVar": ["bar"],
+    "UnknownVar": 42
+  }
+}

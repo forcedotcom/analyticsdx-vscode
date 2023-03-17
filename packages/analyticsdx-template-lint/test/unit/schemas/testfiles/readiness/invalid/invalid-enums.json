@@ -1,0 +1,16 @@
+{
+  "templateRequirements": [
+    {
+      "expression": "${true}",
+      "type": "error"
+    }
+  ],
+  "definition": {
+    "empty": {
+      "type": ""
+    },
+    "bad": {
+      "type": "error"
+    }
+  }
+}

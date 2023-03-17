@@ -398,6 +398,7 @@ export abstract class TemplateLinter<
         this.lintAutoInstall(tree),
         this.lintVariables(tree),
         this.lintLayout(tree),
+        this.lintReadiness(tree),
         this.lintUi(tree),
         this.lintRules(tree)
       ]);
@@ -1098,6 +1099,33 @@ export abstract class TemplateLinter<
             );
           }
         }
+      });
+    }
+  }
+
+  private async lintReadiness(templateInfo: JsonNode) {
+    const { doc, json: readiness } = await this.loadTemplateRelPathJson(templateInfo, ['readinessDefinition']);
+    if (doc && readiness) {
+      this.lintReadinessApexCallbacks(templateInfo, doc, readiness);
+    }
+  }
+
+  private lintReadinessApexCallbacks(templateInfo: JsonNode, doc: Document, readiness: JsonNode) {
+    // if there's no apexCallback in the template-info, then warn on any ApexCallout definitions
+    const [, apexCallbackNode] = findJsonPrimitiveAttributeValue(templateInfo, 'apexCallback');
+    if (!apexCallbackNode || apexCallbackNode.type === 'null') {
+      matchJsonNodesAtPattern(
+        readiness,
+        ['definition', '*', 'type'],
+        typeNode => typeNode.value === 'ApexCallout'
+      ).forEach(typeNode => {
+        this.addDiagnostic(
+          doc,
+          'No apexCallback specified in template-info.json',
+          ERRORS.READINESS_NO_APEX_CALLBACK,
+          typeNode,
+          { relatedInformation: [{ doc: this.templateInfoDoc, node: apexCallbackNode, mesg: 'template-info.json' }] }
+        );
       });
     }
   }

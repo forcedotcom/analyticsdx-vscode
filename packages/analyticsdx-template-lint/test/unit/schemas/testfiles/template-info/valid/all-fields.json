@@ -8,6 +8,7 @@
   "variableDefinition": "variables.json",
   "uiDefinition": "ui.json",
   "layoutDefinition": "layout.json",
+  "readinessDefinition": "readiness.json",
   "autoInstallDefinition": "auto-install.json",
   "rules": [
     {

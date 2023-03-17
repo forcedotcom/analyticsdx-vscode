@@ -294,6 +294,14 @@ describe('FileTemplateValidator', () => {
           severity: DiagnosticSeverity.Warning,
           source: JSON_SCHEMA_SOURCE_ID
         }
+      ],
+      [path.join(templatePath, 'readiness.json')]: [
+        {
+          message: 'Property error is not allowed.',
+          range: { end: { character: 9, line: 7 }, start: { character: 2, line: 7 } },
+          severity: DiagnosticSeverity.Warning,
+          source: JSON_SCHEMA_SOURCE_ID
+        }
       ]
     });
   });
