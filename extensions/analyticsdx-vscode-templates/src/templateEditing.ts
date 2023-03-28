@@ -49,6 +49,7 @@ import {
   LayoutVariableHoverProvider
 } from './layout';
 import {
+  ReadinessVariableCodeActionProvider,
   ReadinessVariableCompletionItemProviderDelegate,
   ReadinessVariableDefinitionProvider,
   ReadinessVariableHoverProvider
@@ -371,6 +372,11 @@ export class TemplateDirEditing extends Disposable {
           providedCodeActionKinds: AutoInstallVariableCodeActionProvider.providedCodeActionKinds
         }
       ),
+
+      // hookup quick fixes for variable names in readiness.json's
+      vscode.languages.registerCodeActionsProvider(relatedFileSelector, new ReadinessVariableCodeActionProvider(this), {
+        providedCodeActionKinds: ReadinessVariableCodeActionProvider.providedCodeActionKinds
+      }),
 
       // hookup hover text
       vscode.languages.registerHoverProvider(relatedFileSelector, new UiVariableHoverProvider(this)),

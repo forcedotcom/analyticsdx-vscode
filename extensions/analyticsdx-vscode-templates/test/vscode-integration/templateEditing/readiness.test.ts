@@ -5,15 +5,21 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import { ERRORS } from '@salesforce/analyticsdx-template-lint';
 import { expect } from 'chai';
 import { findNodeAtLocation, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { matchJsonNodeAtPattern } from '../../../src/util/jsoncUtils';
 import { jsonpathFrom, uriDirname, uriStat } from '../../../src/util/vscodeUtils';
+import { NEW_VARIABLE_SNIPPETS } from '../../../src/variables';
 import { waitFor } from '../../testutils';
 import {
   closeAllEditors,
+  compareCompletionItems,
+  createTemplateWithRelatedFiles,
   createTempTemplate,
+  getCodeActions,
+  getCompletionItems,
   getDefinitionLocations,
   getHovers,
   getTemplateEditorManager,
@@ -21,7 +27,9 @@ import {
   openFileAndWaitForDiagnostics,
   openTemplateInfoAndWaitForDiagnostics,
   setDocumentText,
+  sortDiagnostics,
   uriFromTestRoot,
+  verifyCompletionsContain,
   waitForDiagnostics,
   waitForTemplateEditorManagerHas,
   waveTemplatesUriPath,
@@ -215,6 +223,211 @@ describe('TemplateEditorManager configures readinessDefinitions', () => {
     locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
     if (locations.length !== 0) {
       expect.fail('Expected 0 locations for UnknownVar, got:\n' + JSON.stringify(locations, undefined, 2));
+    }
+  });
+
+  it('quick fixes on bad variable names', async () => {
+    const readinessJson = {
+      values: {
+        varname: 'a',
+        foo: 'b'
+      }
+    };
+    const [t, [readinessEditor, variablesEditor]] = await createTemplateWithRelatedFiles(
+      {
+        field: 'readinessDefinition',
+        path: 'readiness.json',
+        initialJson: readinessJson
+      },
+      {
+        field: 'variableDefinition',
+        path: 'variables.json',
+        initialJson: {
+          varname1: {
+            variableType: {
+              type: 'StringType'
+            }
+          }
+        }
+      }
+    );
+    tmpdir = t;
+
+    // get the 2 expected diagnostics on the variables in readiness.json
+    const diagnosticFilter = (d: vscode.Diagnostic) => d.code === ERRORS.READINESS_UNKNOWN_VARIABLE;
+    let diagnostics = (
+      await waitForDiagnostics(
+        readinessEditor.document.uri,
+        ds => ds?.filter(diagnosticFilter).length === 2,
+        'Initial 2 invalid variable warnings on readiness.json'
+      )
+    )
+      .filter(diagnosticFilter)
+      .sort(sortDiagnostics);
+    // and there shouldn't be any warnings on variables.json
+    await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
+
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('values.varname');
+    expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal('values.foo');
+
+    // the 1st diagnostic should be for 'varname', which should have just the 2 quickfixes.
+    // Note: they seem to no longer be guarenteed to come in original insert order so sort them by title
+    let actions = (await getCodeActions(readinessEditor.document.uri, diagnostics[0].range)).sort((a1, a2) =>
+      a1.title.localeCompare(a2.title)
+    );
+    if (actions.length !== 2) {
+      expect.fail('Expected 2 code actions, got: [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'varname action[0].title').to.equals("Create variable 'varname'");
+    expect(actions[0].edit, 'varname action[0].edit').to.not.be.undefined;
+    expect(actions[1].title, 'varname action[1].title').to.equals("Switch to 'varname1'");
+    expect(actions[1].edit, 'varname action[1].edit').to.not.be.undefined;
+    // run the Switch to... quick action
+    if (!(await vscode.workspace.applyEdit(actions[1].edit!))) {
+      expect.fail(`Quick fix '${actions[1].title}' failed`);
+    }
+
+    // that should fix that diagnostic, leaving the one on 'foo'
+    diagnostics = (
+      await waitForDiagnostics(
+        readinessEditor.document.uri,
+        ds => ds?.filter(diagnosticFilter).length === 1,
+        '1 invalid variable warning on readiness.json after first quick fix'
+      )
+    )
+      .filter(diagnosticFilter)
+      .sort(sortDiagnostics);
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('values.foo');
+    // and there should just be the Create variable quick fix for 'foo'
+    actions = await getCodeActions(readinessEditor.document.uri, diagnostics[0].range);
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 code actions, got: [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'varname action[0].title').to.equals("Create variable 'foo'");
+    expect(actions[0].edit, 'varname action[0].edit').to.not.be.undefined;
+    // run that Create variable... quick fix
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+    // which should fix the warning on readiness.json
+    await waitForDiagnostics(readinessEditor.document.uri, ds => ds?.filter(diagnosticFilter).length === 0);
+    // and variables.json should be good, too
+    await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
+    // make sure the 'foo' variable got into variables.json
+    const variables = parseTree(variablesEditor.document.getText());
+    const fooNode = variables && findNodeAtLocation(variables, ['foo']);
+    expect(fooNode, 'foo in variables.json').to.not.be.undefined;
+    // and that it's a {} object
+    expect(fooNode!.type, 'foo in variables.json type').to.equal('object');
+  });
+
+  it('code completions in values', async () => {
+    const [t, [readinessEditor, variablesEditor]] = await createTemplateWithRelatedFiles(
+      {
+        field: 'readinessDefinition',
+        path: 'readiness.json',
+        initialJson: {
+          values: {}
+        }
+      },
+      {
+        field: 'variableDefinition',
+        path: 'variables.json',
+        initialJson: {
+          stringvar: {
+            description: 'stringvar description',
+            variableType: {
+              type: 'StringType'
+            }
+          },
+          arrayvar: {
+            label: 'Array label',
+            variableType: {
+              type: 'ArrayType',
+              itemsType: {
+                type: 'NumberType'
+              }
+            }
+          }
+        }
+      }
+    );
+    tmpdir = t;
+
+    // there shouldn't be any warnings on readiness.json and variables.json
+    await waitForDiagnostics(readinessEditor.document.uri, d => d?.length === 0);
+    await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 0);
+    // and editing should be setup
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), tmpdir, true);
+
+    let readinessJson = parseTree(readinessEditor.document.getText());
+    expect(readinessJson, 'readinessJson').to.not.be.undefined;
+    const valuesNode = matchJsonNodeAtPattern(readinessJson, ['values']);
+    expect(valuesNode, 'values node').to.not.be.undefined;
+    // this should be right at the { after "values":
+    let position = readinessEditor.document.positionAt(valuesNode!.offset).translate(0, 1);
+    // make sure we get the completions for each variable to insert a full property
+    let completions = (
+      await verifyCompletionsContain(readinessEditor.document, position, '"arrayvar"', '"stringvar"')
+    ).sort(compareCompletionItems);
+    if (completions.length !== 2) {
+      expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
+    }
+    expect(completions[0].kind, 'arrayvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+    expect(completions[0].detail, 'arrayvar.detail').to.equal('(NumberType[]) Array label');
+    expect(completions[0].documentation, 'arrayvar.documentation').to.be.undefined;
+    expect(completions[0].insertText, 'arrayvar.insertText').to.be.instanceOf(vscode.SnippetString);
+    expect(completions[0].range, 'arrayvar.range').to.be.instanceOf(vscode.Range);
+    expect(completions[1].kind, 'stringvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+    expect(completions[1].detail, 'stringvar.detail').to.equal('(StringType)');
+    expect(completions[1].documentation, 'stringvar.documentation').to.equals('stringvar description');
+    expect(completions[1].insertText, 'stringvar.insertText').to.be.instanceOf(vscode.SnippetString);
+    expect(completions[1].range, 'stringvar.range').to.be.instanceOf(vscode.Range);
+
+    // apply the arrayvar completion to add "arrayvar" to the values
+    if (
+      !(await readinessEditor.insertSnippet(
+        completions[0].insertText as vscode.SnippetString,
+        completions[0]!.range as vscode.Range
+      ))
+    ) {
+      expect.fail(`Failed to apply completion item "${completions[0].label}"`);
+    }
+    // make sure still no diagnostics on readiness.json
+    await waitForDiagnostics(readinessEditor.document.uri, d => d?.length === 0);
+
+    // re-parse and make sure arrayvar is in the appConfiguration.values
+    readinessJson = parseTree(readinessEditor.document.getText());
+    expect(readinessJson, 'readinessJson').to.not.be.undefined;
+    const varNode = matchJsonNodeAtPattern(readinessJson, ['values', 'arrayvar']);
+    expect(varNode, 'arrayvar node').to.not.be.undefined;
+    // make the value of arrayvar is an empty array
+    expect(varNode?.parent?.children?.[1], 'arrayvar value node').to.not.be.undefined;
+    expect(varNode?.parent?.children?.[1].type, 'arrayvar value node type').to.equal('array');
+    expect(varNode?.parent?.children?.[1].children?.length, 'arrayvar value node # children').to.equal(0);
+
+    // this should be right at the first " in "arrayvar": []
+    position = readinessEditor.document.positionAt(varNode!.parent!.children![0].offset);
+    completions = (
+      await verifyCompletionsContain(readinessEditor.document, position, '"arrayvar"', '"stringvar"')
+    ).sort(compareCompletionItems);
+    if (completions.length !== 2) {
+      expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
+    }
+    // we should now get Variable code completions that should just replace the "arrayvar" part
+    expect(completions[0].kind, 'arrayvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+    expect(completions[0].insertText, 'arrayvar.insertText').to.equal('"arrayvar"');
+    expect(completions[1].kind, 'stringvar.kind').to.equal(vscode.CompletionItemKind.Variable);
+    expect(completions[1].insertText, 'stringvar.insertText').to.equal('"stringvar"');
+
+    // also, make sure that other completions items (like the New variable snippet items from
+    // NewVariableCompletionItemProviderDelegate) don't bleed over
+    position = readinessEditor.document.positionAt(readinessJson!.offset).translate(0, 1);
+    completions = (await getCompletionItems(readinessEditor.document.uri, position)).items;
+    if (completions.some(c => NEW_VARIABLE_SNIPPETS.some(s => c.label === s.label))) {
+      expect.fail(
+        'New variable completions items should not be in root completions: ' + completions.map(c => c.label).join(', ')
+      );
     }
   });
 });
