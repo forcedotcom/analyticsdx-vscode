@@ -175,6 +175,8 @@ export const ERRORS = Object.freeze({
 
   /** ApexCallback readiness definition but template has no apexCallback */
   READINESS_NO_APEX_CALLBACK: 'read-1',
+  /** Unknown variable name in values in readinessDefinition  */
+  READINESS_UNKNOWN_VARIABLE: 'read-2',
 
   /** Duplicate constant in rules file(s) */
   RULES_DUPLICATE_CONSTANT: 'rules-1',
