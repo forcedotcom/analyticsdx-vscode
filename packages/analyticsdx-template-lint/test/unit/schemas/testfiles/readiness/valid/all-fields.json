@@ -5,7 +5,8 @@
     "num": 123,
     "obj": { "foo": "bar" },
     "array": ["baz"],
-    "op": "Equal"
+    "op": "Equal",
+    "_": 4.2
   },
   "templateRequirements": [
     {

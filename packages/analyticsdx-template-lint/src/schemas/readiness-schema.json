@@ -11,7 +11,10 @@
     "values": {
       "description": "Default values for variables when computing readiness. Any values passed into the readiness check call will override these.",
       "type": ["null", "object"],
-      "additionalProperties": true,
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z_][a-zA-Z0-9_]*": {}
+      },
       "defaultSnippets": [{ "label": "New values", "body": { "${1}": "${2}" } }]
     },
     "templateRequirements": {

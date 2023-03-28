@@ -1,5 +1,9 @@
 {
   "error": "This should be a warning",
+  "values": {
+    "a": { "sobjectName": "Case" },
+    "-": "bad variable name"
+  },
   "templateRequirements": [
     {
       "error": "This should be a warning",

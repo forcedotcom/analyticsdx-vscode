@@ -203,15 +203,12 @@ export class SchemaErrors {
           }
           this.invalidProps.add(name);
         } else if (error.keyword === 'additionalProperties') {
-          // this means an object has a property that doesn't exist in the schema -- report this as invalid for now
-          let name = this.jsonPointerToJsonpath(error.instancePath);
+          // this means an object has a property that doesn't exist in the schema, or doesn't match the
+          // patternProperties in the schema -- report this as invalid for now
+          let name = this.jsonPointerToJsonpath(error.instancePath + '/' + error.params.additionalProperty);
           if (name.startsWith('.')) {
             name = name.substring(1);
           }
-          if (name) {
-            name += '.';
-          }
-          name += error.params.additionalProperty;
           this.invalidProps.add(name);
         } else if (error.keyword === 'if' && error.instancePath === '') {
           // we'll get this error if any of the top-level fields are missing, we can skip it since we
@@ -225,8 +222,8 @@ export class SchemaErrors {
   }
 
   private jsonPointerToJsonpath(name: string): string {
-    // ajv is going to give us jsonpointers like /foo/bar/1/properties/B A Z/.type; this will try to convert
-    // that to jsop path style foo.bar[1].properties['B A Z'].type
+    // ajv is going to give us jsonpointers like /foo/bar/1/properties/B A Z/type; this will try to convert
+    // that to jsonpath style foo.bar[1].properties['B A Z'].type
     return name.split('/').reduce((path, part) => {
       // Note: this doesn't cover the full jsonpointer syntax (https://datatracker.ietf.org/doc/html/rfc6901),
       // but it should work for the current errors from our schemas during the unit tests.
@@ -234,14 +231,13 @@ export class SchemaErrors {
         if (part.match(/^[0-9]$/)) {
           path += `[${part}]`;
         } else if (part.match(/^([a-zA-Z_][a-zA-Z0-9_]*)$/)) {
-          path += `.${part}`;
+          path += (path ? '.' : '') + `${part}`;
         } else {
-          path += `['${part}'']`;
+          path += `["${part}"]`;
         }
       }
       return path;
     }, '');
-    //return name.replace(/\['([a-zA-Z_][a-zA-Z0-9_]*)'\]/g, '.$1');
   }
 
   public expectMissingProps(exact: boolean, ...names: string[]) {

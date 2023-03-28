@@ -60,6 +60,8 @@ describe('utils', () => {
         'a+b',
         'a b',
         'a/b',
+        '-',
+        'a-b',
         "'ab'",
         '"ab"',
         'true',
@@ -71,7 +73,7 @@ describe('utils', () => {
         'field'
       ];
       expect(jsonPathToString(path)).to.be.equals(
-        'root["000"]["a+b"]["a b"]["a/b"]["\'ab\'"]["\\"ab\\""]["true"]["a.b"]["a,b"]["a:b"]["[]"]["()"].field'
+        'root["000"]["a+b"]["a b"]["a/b"]["-"]["a-b"]["\'ab\'"]["\\"ab\\""]["true"]["a.b"]["a,b"]["a:b"]["[]"]["()"].field'
       );
     });
 
@@ -509,13 +511,13 @@ describe('utils', () => {
   });
 
   describe('isValidVariableName()', () => {
-    ['_a', '_Z', 'b0', 'abcde_g42hi_'].forEach(name => {
+    ['a', '_', '_a', '_Z', 'b0', 'abcde_g42hi_'].forEach(name => {
       it(`matches '${name}'`, () => {
         expect(isValidVariableName(name)).to.be.true;
       });
     });
 
-    ['0abc', '_', ' ', ' a', 'a ', 'a b', 'y+z'].forEach(name => {
+    ['0abc', '-', ' ', ' a', 'a ', 'a b', 'y+z', 'y-z'].forEach(name => {
       it(`doesn't '${name}'`, () => {
         expect(isValidVariableName(name)).to.be.false;
       });

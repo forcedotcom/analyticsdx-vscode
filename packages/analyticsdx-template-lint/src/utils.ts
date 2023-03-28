@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import Fuse from 'fuse.js';
 import { JSONPath, Node as JsonNode } from 'jsonc-parser';
 
-const jsonIdRegex = /^[A-Za-z][-A-Za-z0-9_]*$/;
+const jsonIdRegex = /^[A-Za-z][A-Za-z0-9_]*$/;
 /**
  * Convert the specified path of a node to a an javascript-style expression (e.g. foo.bar[2])
  */
@@ -24,7 +24,7 @@ export function jsonPathToString(path: JSONPath): string {
         }
         buf += part;
       } else {
-        // otherwise do associate-array style, with double-quotes
+        // otherwise do associative-array style, with double-quotes
         buf += '["' + part.replace(/"/g, '\\"') + '"]';
       }
     } else {
@@ -183,7 +183,7 @@ export function isValidRelpath(relpath: string | undefined | null): boolean {
   );
 }
 
-const varNameRegex = /^[a-zA-Z_][a-zA-Z0-9_]+$/;
+const varNameRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 /** Tell if the specified value is a valid template variable name. */
 export function isValidVariableName(name: string): boolean {
   return varNameRegex.test(name);
