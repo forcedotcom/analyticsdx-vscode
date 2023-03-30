@@ -386,7 +386,7 @@ export abstract class TemplateLinter<
     if (valuesNode?.type === 'object' && valuesNode.children && valuesNode.children.length > 0) {
       const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
       const fuzzySearch = fuzzySearcher({
-        // make an iterable, to lazily call Object.keys() on if fuzzySearch is called
+        // make an iterable, to lazily call Object.keys() only if fuzzySearch is called
         [Symbol.iterator]: () => Object.keys(variableTypes).filter(isValidVariableName)[Symbol.iterator]()
       });
       valuesNode.children.forEach(valueNode => {
