@@ -233,6 +233,48 @@ describe('TemplateLinter', () => {
     });
   });
 
+  describe('autoinstall.json', () => {
+    it('validates variable names in values', async () => {
+      const dir = 'variableNames';
+      const autoInstallPath = path.join(dir, 'auto-install.json');
+      linter = new TestLinter(
+        dir,
+        {
+          templateType: 'app',
+          variableDefinition: 'variables.json',
+          autoInstallDefinition: 'auto-install.json'
+        },
+        new StringDocument(path.join(dir, 'variables.json'), { foo: {}, bar: {} }),
+        new StringDocument(autoInstallPath, {
+          hooks: [{ type: 'PackageInstall' }],
+          configuration: {
+            appConfiguration: {
+              values: {
+                foo: 'exact match',
+                baz: 'should fuzzy match on bar',
+                thing: 'should not fuzzy match anything'
+              }
+            }
+          }
+        })
+      );
+      await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, autoInstallPath) || [];
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 unknown variable errors, got ' + stringifyDiagnostics(diagnostics));
+      }
+      expect(diagnostics[0].code, 'diagnostics[0].code').to.equal(ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE);
+      expect(diagnostics[0].jsonpath, 'diagnostics[0].jsonpath').to.equal('configuration.appConfiguration.values.baz');
+      expect(diagnostics[0].args?.match, 'diagnostics[0].args.match').to.equal('bar');
+
+      expect(diagnostics[1].code, 'diagnostics[1].code').to.equal(ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE);
+      expect(diagnostics[1].jsonpath, 'diagnostics[1].jsonpath').to.equal(
+        'configuration.appConfiguration.values.thing'
+      );
+      expect(diagnostics[1].args?.match, 'diagnostics[1].args.match').to.be.undefined;
+    });
+  });
+
   describe('ui.json', () => {
     [
       { templateType: 'data', numErrors: 0, type: 'DatasetAnyFieldType', isArray: false },
@@ -428,6 +470,39 @@ describe('TemplateLinter', () => {
   });
 
   describe('readiness.json', () => {
+    it('validates variable names in values', async () => {
+      const dir = 'variableNames';
+      const readinessPath = path.join(dir, 'readiness.json');
+      linter = new TestLinter(
+        dir,
+        {
+          templateType: 'app',
+          variableDefinition: 'variables.json',
+          readinessDefinition: 'readiness.json'
+        },
+        new StringDocument(path.join(dir, 'variables.json'), { foo: {}, bar: {} }),
+        new StringDocument(readinessPath, {
+          values: {
+            foo: 'exact match',
+            baz: 'should fuzzy match on bar',
+            thing: 'should not fuzzy match anything'
+          }
+        })
+      );
+      await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, readinessPath) || [];
+      if (diagnostics.length !== 2) {
+        expect.fail('Expected 2 unknown variable errors, got ' + stringifyDiagnostics(diagnostics));
+      }
+      expect(diagnostics[0].code, 'diagnostics[0].code').to.equal(ERRORS.READINESS_UNKNOWN_VARIABLE);
+      expect(diagnostics[0].jsonpath, 'diagnostics[0].jsonpath').to.equal('values.baz');
+      expect(diagnostics[0].args?.match, 'diagnostics[0].args.match').to.equal('bar');
+
+      expect(diagnostics[1].code, 'diagnostics[1].code').to.equal(ERRORS.READINESS_UNKNOWN_VARIABLE);
+      expect(diagnostics[1].jsonpath, 'diagnostics[1].jsonpath').to.equal('values.thing');
+      expect(diagnostics[1].args?.match, 'diagnostics[1].args.match').to.be.undefined;
+    });
+
     it('validates apexCallback for ApexCallout', async () => {
       const dir = 'apexCallback';
       const readinessPath = path.join(dir, 'readiness.json');

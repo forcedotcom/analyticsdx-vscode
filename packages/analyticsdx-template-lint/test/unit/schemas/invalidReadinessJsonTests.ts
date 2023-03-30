@@ -25,6 +25,7 @@ describe('readiness-schema.json finds errors in', () => {
     errors.expectInvalidProps(
       false,
       'error',
+      'values["-"]',
       'templateRequirements[0].error',
       'templateRequirements[1].image.error',
       'definition.foo.error'

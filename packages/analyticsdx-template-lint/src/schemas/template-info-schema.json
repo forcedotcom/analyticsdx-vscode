@@ -1165,7 +1165,8 @@
           },
           "name": {
             "type": "string",
-            "description": "The dependent template name."
+            "description": "The dependent template name.",
+            "minLength": 1
           },
           "templateVersion": {
             "type": ["null", "string"],

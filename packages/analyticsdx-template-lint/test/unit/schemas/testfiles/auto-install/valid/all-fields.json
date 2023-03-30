@@ -13,7 +13,9 @@
       "deleteAppOnConstructionFailure": true,
       "values": {
         "value1": "testString",
-        "value2": false
+        "value2": false,
+        "a": { "sobjectName": "Case" },
+        "_": []
       }
     },
     "parentRequestIds": ["one", "two", "three"]

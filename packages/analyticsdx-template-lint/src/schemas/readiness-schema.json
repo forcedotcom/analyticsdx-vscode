@@ -11,7 +11,10 @@
     "values": {
       "description": "Default values for variables when computing readiness. Any values passed into the readiness check call will override these.",
       "type": ["null", "object"],
-      "additionalProperties": true,
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z_][a-zA-Z0-9_]*$": {}
+      },
       "defaultSnippets": [{ "label": "New values", "body": { "${1}": "${2}" } }]
     },
     "templateRequirements": {
@@ -26,10 +29,10 @@
         "properties": {
           "expression": {
             "type": "string",
-            "description": "The ${...} expression to evaluate. This can access variables values as Variables.[name], and computed readiness definition values as Readiness.[name].",
+            "description": "The ${...} expression to evaluate. This can access variable values as Variables.[name], constants from templateToApp rules files as Constants.[name], and computed readiness definition values as Readiness.[name].",
             "examples": [
               "${Readiness.sobjectCount > Variables.minimumCount}",
-              "${Readiness.datasetRowCount >= 4000}",
+              "${Readiness.datasetRowCount >= Constants.minNumRows}",
               "${Readiness.apexResult.name == 'requiredName'}"
             ]
           },
@@ -60,18 +63,18 @@
           },
           "successMessage": {
             "type": ["null", "string"],
-            "description": "Optional message to return when the check in the expression evaluates to true. This can access variables values as Variables.[name], and computed readiness definition values as Readiness.[name].",
+            "description": "Optional message to return when the expression evaluates to true. This can access variable values as Variables.[name], constants from templateToApp rules files as Constants.[name], and computed readiness definition values as Readiness.[name].",
             "examples": [
               "Succesfully found ${Readiness.sobjectCount} ${Variables.sobject.objectName} objects.",
-              "Dataset ${App.Datasets.Opptys.Name} has at least ${Readiness.rowCount} rows"
+              "Dataset ${App.Datasets.Opptys.Name} has at least ${Constants.rowCount} rows"
             ]
           },
           "failMessage": {
             "type": ["null", "string"],
-            "description": "Optional message to return when the check in the expression evaluates to false. This can access variables values as Variables.[name], and computed readiness definition values as Readiness.[name].",
+            "description": "Optional message to return when the expression evaluates to false. This can access variable values as Variables.[name], constants from templateToApp rules files as Constants.[name], and computed readiness definition values as Readiness.[name].",
             "examples": [
               "Too many ${Variables.sobject.objectName} objects, found ${Readiness.sobjectCount}",
-              "Dataset ${App.Datasets.Opptys.Name} only has ${Readiness.rowCount} rows"
+              "${App.Datasets.Opptys.Name} only has ${Readiness.rowCount} rows, expected ${Constants.minRowCount}"
             ]
           },
           "image": {
@@ -122,7 +125,7 @@
       "defaultSnippets": [{ "label": "[]", "body": [] }]
     },
     "definition": {
-      "description": "The readiness definition checks for this template. Each named entry here will be executed during the readiness check and available as ${Readiness.[name]} in the templateRequirements expression, the conditions in template-info, and rules.",
+      "description": "The readiness definition checks for this template. Each named entry here will be executed during the readiness check and available as Readiness.[name] in the templateRequirements expression, the conditions in template-info.json, and rules.",
       "type": ["null", "object"],
       "additionalProperties": {
         "description": "A readiness definition.",
@@ -195,7 +198,7 @@
             "type": { "const": "AppDatasetRowCount" },
             "dataset": {
               "type": "string",
-              "description": "The name or id of the dataset that will be created by the template. This can be a ${} expression.",
+              "description": "The name or id of the dataset that will be created by the template. This can be a ${...} expression.",
               "doNotSuggest": false
             },
             "filters": {
@@ -223,7 +226,8 @@
             "type": { "const": "ApexCallout" },
             "method": {
               "type": "string",
-              "description": "The name of the method on the apexCallback class. This method must be annotated with @InvocableMethod. Return value will be serialized as a Map or primitive value and avaiable as ${Readiness.definitionName}.",
+              "description": "The name of the method on the apexCallback class. This method must non-static and global. Return value will be serialized as a Map or primitive value and avaiable as ${Readiness.[definitionName]}.",
+              "minLength": 0,
               "doNotSuggest": false
             },
             "arguments": {

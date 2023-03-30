@@ -85,7 +85,10 @@
             },
             "values": {
               "type": "object",
-              "additionalProperties": true,
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-zA-Z_][a-zA-Z0-9_]*$": {}
+              },
               "description": "Variable values for the app. Names should match variables defined in the variableDefinition file."
             }
           }

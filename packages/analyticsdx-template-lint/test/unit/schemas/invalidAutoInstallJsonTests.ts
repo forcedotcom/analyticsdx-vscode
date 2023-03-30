@@ -22,7 +22,8 @@ describe('auto-install-schema.json finds errors in', () => {
       'error',
       'hooks[0].error',
       'configuration.error',
-      'configuration.appConfiguration.error'
+      'configuration.appConfiguration.error',
+      'configuration.appConfiguration.values["-"]'
     );
     errors.expectNoMissingProps();
     errors.expectNoUnrecognizedErrors();

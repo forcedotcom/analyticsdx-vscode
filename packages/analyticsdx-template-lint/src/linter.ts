@@ -376,6 +376,38 @@ export abstract class TemplateLinter<
     });
   }
 
+  private async lintVariablesNamesInObject(
+    templateInfo: JsonNode,
+    doc: Document,
+    valuesNode: JsonNode | undefined,
+    // errorCode should one of the values in ERRORS
+    errorCode: typeof ERRORS[keyof typeof ERRORS]
+  ) {
+    if (valuesNode?.type === 'object' && valuesNode.children && valuesNode.children.length > 0) {
+      const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
+      const fuzzySearch = fuzzySearcher({
+        // make an iterable, to lazily call Object.keys() only if fuzzySearch is called
+        [Symbol.iterator]: () => Object.keys(variableTypes).filter(isValidVariableName)[Symbol.iterator]()
+      });
+      valuesNode.children.forEach(valueNode => {
+        const nameNode = valueNode.children?.[0];
+        if (nameNode?.type === 'string' && typeof nameNode.value === 'string') {
+          const name = nameNode.value;
+          if (!variableTypes[name]) {
+            let mesg = `Cannot find variable '${name}'`;
+            const [match] = fuzzySearch(name);
+            const args: Record<string, any> = { name };
+            if (match && match.length > 0) {
+              args.match = match;
+              mesg += `, did you mean '${match}'`;
+            }
+            this.addDiagnostic(doc, mesg, errorCode, nameNode, { args });
+          }
+        }
+      });
+    }
+  }
+
   // TODO: figure out how to do incremental linting (or if we even should)
   // Currently, this and #opened() always starts with the template-info.json at-or-above the modified file, and then
   // does a full lint of the whole template folder, which ends up parsing the template-info and every related file to
@@ -887,48 +919,16 @@ export abstract class TemplateLinter<
   private async lintAutoInstall(templateInfo: JsonNode): Promise<void> {
     const { doc, json: autoInstall } = await this.loadTemplateRelPathJson(templateInfo, ['autoInstallDefinition']);
     if (doc && autoInstall) {
-      await this.lintAutoInstallAppConfigurationValues(templateInfo, doc, autoInstall);
-    }
-  }
+      await this.lintVariablesNamesInObject(
+        templateInfo,
+        doc,
+        matchJsonNodeAtPattern(autoInstall, ['configuration', 'appConfiguration', 'values']),
+        ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE
+      );
 
-  private async lintAutoInstallAppConfigurationValues(
-    templateInfo: JsonNode,
-    doc: Document,
-    autoInstall: JsonNode
-  ): Promise<void> {
-    const valuesNode = matchJsonNodeAtPattern(autoInstall, ['configuration', 'appConfiguration', 'values']);
-    // if there's values specified, load the variableDefinition file and make sure they line up
-    if (valuesNode && valuesNode.children && valuesNode.children.length > 0) {
-      const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
-      const fuzzySearch = fuzzySearcher({
-        // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
-        [Symbol.iterator]: () =>
-          Object.keys(variableTypes)
-            // also, only include valid variable names in the fuzzy search
-            .filter(isValidVariableName)
-            [Symbol.iterator]()
-      });
-      valuesNode.children.forEach(valueNode => {
-        const nameNode = valueNode.children?.[0];
-        if (nameNode && nameNode.type === 'string' && typeof nameNode.value === 'string') {
-          const name = nameNode.value;
-          if (!variableTypes[name]) {
-            let mesg = `Cannot find variable '${name}'`;
-            // see if there's a variable w/ a similar name
-            const [match] = fuzzySearch(name);
-            const args: Record<string, any> = { name };
-            if (match && match.length > 0) {
-              args.match = match;
-              mesg += `, did you mean '${match}'?`;
-            }
-            this.addDiagnostic(doc, mesg, ERRORS.AUTO_INSTALL_UNKNOWN_VARIABLE, nameNode, { args });
-          }
-        }
-      });
+      // TODO: if variableDefinition has variable w/o a defaultValue and no apexCallback specified, and
+      // if that variable isn't specified in the autoInstall values, we should warn on that
     }
-
-    // TODO: if variableDefinition has variable w/o a defaultValue and no apexCallback specified, and
-    // if that variable isn't specified in the autoInstall values, we should warn on that
   }
 
   private async lintVariables(templateInfo: JsonNode): Promise<void> {
@@ -1106,7 +1106,17 @@ export abstract class TemplateLinter<
   private async lintReadiness(templateInfo: JsonNode) {
     const { doc, json: readiness } = await this.loadTemplateRelPathJson(templateInfo, ['readinessDefinition']);
     if (doc && readiness) {
+      // start this one
+      const p = this.lintVariablesNamesInObject(
+        templateInfo,
+        doc,
+        matchJsonNodeAtPattern(readiness, ['values']),
+        ERRORS.READINESS_UNKNOWN_VARIABLE
+      );
+      // run this one
       this.lintReadinessApexCallbacks(templateInfo, doc, readiness);
+      // wait for the async one
+      return p;
     }
   }
 

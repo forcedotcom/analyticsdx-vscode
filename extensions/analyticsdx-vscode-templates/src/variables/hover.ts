@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import { isValidVariableName } from '@salesforce/analyticsdx-template-lint';
 import {
   findNodeAtLocation,
   findNodeAtOffset,
@@ -56,22 +57,19 @@ export function hoverMarkdownForVariable(
 export class VariableHoverProvider implements vscode.HoverProvider {
   constructor(private readonly templateEditing: TemplateDirEditing) {}
 
-  public provideHover(
-    document: vscode.TextDocument,
-    position: vscode.Position,
-    token: vscode.CancellationToken
-  ): vscode.Hover | undefined {
+  public provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover | undefined {
     if (this.templateEditing.isVariablesDefinitionFile(document.uri)) {
       // note: we can't use getLocation() since that doesn't return a full node structure,
       // so we can't get to the variable definition object from it and we need to do a real
       // full parse
       const tree = parseTree(document.getText());
       const node = tree && findNodeAtOffset(tree, document.offsetAt(position));
-      // if they're hovering the string-key part of a top-level property def (e.g. "here": {})
+      // if they're hovering the string-key part of a valid top-level property def (e.g. "here": {})
       if (
         node?.type === 'string' &&
         typeof node.value === 'string' &&
         node.value &&
+        isValidVariableName(node.value) &&
         node.parent &&
         node.parent.type === 'property' &&
         node.parent.children &&
@@ -100,12 +98,16 @@ export abstract class VariableRefHoverProvider implements vscode.HoverProvider {
       const location = getLocation(document.getText(), document.offsetAt(position));
       if (this.isSupportedLocation(location) && typeof location.previousNode?.value === 'string') {
         const varname = location.previousNode.value;
-        const varUri = vscode.Uri.joinPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
-        const varDoc = await vscode.workspace.openTextDocument(varUri);
-        const tree = parseTree(varDoc.getText());
-        const txt = hoverMarkdownForVariable(varname, tree && findNodeAtLocation(tree, [varname]));
-        if (txt) {
-          return new vscode.Hover(txt, rangeForNode(location.previousNode, document));
+        // don't show a hover if the variable name is invalid (which should be showing as an error), even if it's in
+        // the variables.json (where it should be showing as an error also)
+        if (isValidVariableName(varname)) {
+          const varUri = vscode.Uri.joinPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
+          const varDoc = await vscode.workspace.openTextDocument(varUri);
+          const tree = parseTree(varDoc.getText());
+          const txt = hoverMarkdownForVariable(varname, tree && findNodeAtLocation(tree, [varname]));
+          if (txt) {
+            return new vscode.Hover(txt, rangeForNode(location.previousNode, document));
+          }
         }
       }
     }
