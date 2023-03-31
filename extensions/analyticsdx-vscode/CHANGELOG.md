@@ -1,3 +1,18 @@
+# 0.10.0
+
+## Added
+
+- Added support for org readiness configuration in templates (for Summer '23).
+- Added support for Data Cloud variable types in templates (for Summer '23).
+- Warn on empty `name`s in `templateDependencies` in template-info.json files.
+
+## Fixed
+
+- Fixed template variable name validation:
+  - Support valid single character names.
+  - Warn on names with dashes in them.
+- Fixed analytics CLI plugin detection for install/upgrade to work with newer versions of the CLI.
+
 # 0.9.3
 
 ## Added
