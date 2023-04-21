@@ -11,6 +11,6 @@
     // Formatting
     "esbenp.prettier-vscode",
     // .github/workflows yml files schema
-    "me-dutour-mathieu.vscode-github-actions"
+    "github.vscode-github-actions"
   ]
 }
