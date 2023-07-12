@@ -25,7 +25,8 @@
       "label": "name",
       "name": "name",
       "condition": null,
-      "overwriteOnUpgrade": null
+      "overwriteOnUpgrade": null,
+      "onFailure": null
     }
   ],
   "dashboards": [
@@ -34,7 +35,10 @@
       "label": "name",
       "name": "name",
       "condition": null,
-      "overwriteOnUpgrade": null
+      "overwriteOnUpgrade": null,
+      "onFailure": {
+        "defaultStatus": null
+      }
     }
   ],
   "components": [
@@ -43,7 +47,8 @@
       "label": "name",
       "name": "name",
       "condition": null,
-      "overwriteOnUpgrade": null
+      "overwriteOnUpgrade": null,
+      "onFailure": null
     }
   ],
   "eltDataflows": [
@@ -52,7 +57,8 @@
       "label": "name",
       "name": "name",
       "condition": null,
-      "overwriteOnUpgrade": null
+      "overwriteOnUpgrade": null,
+      "onFailure": null
     }
   ],
   "recipes": [
@@ -62,7 +68,8 @@
       "name": "name",
       "condition": null,
       "overwriteOnUpgrade": null,
-      "executeCondition": null
+      "executeCondition": null,
+      "onFailure": null
     }
   ],
   "datasetFiles": [
@@ -72,7 +79,8 @@
       "userXmd": null,
       "condition": null,
       "overwriteOnUpgrade": null,
-      "file": null
+      "file": null,
+      "onFailure": null
     }
   ],
   "storedQueries": [
@@ -81,7 +89,8 @@
       "label": "name",
       "name": "name",
       "condition": null,
-      "overwriteOnUpgrade": null
+      "overwriteOnUpgrade": null,
+      "onFailure": null
     }
   ],
   "imageFiles": [
@@ -90,7 +99,8 @@
       "name": "name",
       "condition": null,
       "overwriteOnUpgrade": null,
-      "label": null
+      "label": null,
+      "onFailure": null
     }
   ],
   "extendedTypes": {
@@ -100,7 +110,8 @@
         "label": "name",
         "name": "name",
         "condition": null,
-        "overwriteOnUpgrade": null
+        "overwriteOnUpgrade": null,
+        "onFailure": null
       }
     ],
     "predictiveScoring": [
@@ -109,7 +120,8 @@
         "label": "name",
         "name": "name",
         "condition": null,
-        "overwriteOnUpgrade": null
+        "overwriteOnUpgrade": null,
+        "onFailure": null
       }
     ]
   },

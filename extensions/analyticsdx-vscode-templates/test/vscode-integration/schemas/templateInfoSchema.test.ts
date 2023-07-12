@@ -127,11 +127,13 @@ describe('template-info-schema.json hookup', () => {
         await testCompletions(`{\n  "extendedTypes": {\n    "${name}": []\n  }\n}`, '[', 2, `New ${completionName}`);
       });
     });
+
     ['appBadge', 'templateBadge', 'templateDetail'].forEach(name => {
       it(`icons.${name}`, async () => {
         await testCompletions(`{\n  "icons": {\n    "${name}": \n  }\n}`, ':', 2, 'New icon');
       });
     });
+
     it('icons.templatePreviews', async () => {
       await testCompletions('{\n  "icons": {\n    "templatePreviews": []\n  }\n}', '[', 2, 'New icon');
     });
@@ -165,37 +167,43 @@ describe('template-info-schema.json hookup', () => {
           condition: null,
           rows: null,
           overwriteOnUpgrade: null,
-          label: null
+          label: null,
+          onFailure: { defaultStatus: null }
         }
       ],
       lenses: [
         {
           condition: null,
-          overwriteOnUpgrade: null
+          overwriteOnUpgrade: null,
+          onFailure: null
         }
       ],
       dashboards: [
         {
           condition: null,
-          overwriteOnUpgrade: null
+          overwriteOnUpgrade: null,
+          onFailure: null
         }
       ],
       components: [
         {
           condition: null,
-          overwriteOnUpgrade: null
+          overwriteOnUpgrade: null,
+          onFailure: null
         }
       ],
       eltDataflows: [
         {
           condition: null,
-          overwriteOnUpgrade: null
+          overwriteOnUpgrade: null,
+          onFailure: null
         }
       ],
       recipes: [
         {
           condition: null,
-          overwriteOnUpgrade: null
+          overwriteOnUpgrade: null,
+          onFailure: null
         }
       ],
       datasetFiles: [
@@ -203,33 +211,38 @@ describe('template-info-schema.json hookup', () => {
           userXmd: null,
           condition: null,
           overwriteOnUpgrade: null,
-          file: null
+          file: null,
+          onFailure: null
         }
       ],
       storedQueries: [
         {
           condition: null,
-          overwriteOnUpgrade: null
+          overwriteOnUpgrade: null,
+          onFailure: null
         }
       ],
       imageFiles: [
         {
           condition: null,
           overwriteOnUpgrade: null,
-          label: null
+          label: null,
+          onFailure: null
         }
       ],
       extendedTypes: {
         discoveryStories: [
           {
             condition: null,
-            overwriteOnUpgrade: null
+            overwriteOnUpgrade: null,
+            onFailure: null
           }
         ],
         predictiveScoring: [
           {
             condition: null,
-            overwriteOnUpgrade: null
+            overwriteOnUpgrade: null,
+            onFailure: null
           }
         ]
       },
@@ -296,44 +309,55 @@ describe('template-info-schema.json hookup', () => {
       { jsonpath: ['externalFiles', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['externalFiles', 0, 'rows'], completions: ['5'] },
       { jsonpath: ['externalFiles', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['externalFiles', 0, 'onFailure', 'defaultStatus'], completions: ['"Fail"', '"Skip"', '"Warn"'] },
       { jsonpath: ['lenses'], completions: ['[]'] },
       { jsonpath: ['lenses', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['lenses', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['lenses', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['dashboards'], completions: ['[]'] },
       { jsonpath: ['dashboards', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['dashboards', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['dashboards', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['components'], completions: ['[]'] },
       { jsonpath: ['components', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['components', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['components', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['eltDataflows'], completions: ['[]'] },
       { jsonpath: ['eltDataflows', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['eltDataflows', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['eltDataflows', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['recipes'], completions: ['[]'] },
       { jsonpath: ['recipes', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['recipes', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['recipes', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['datasetFiles'], completions: ['[]'] },
       { jsonpath: ['datasetFiles', 0, 'userXmd'], completions: ['""'] },
       { jsonpath: ['datasetFiles', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['datasetFiles', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
       { jsonpath: ['datasetFiles', 0, 'file'], completions: ['""'] },
+      { jsonpath: ['datasetFiles', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['storedQueries'], completions: ['[]'] },
       { jsonpath: ['storedQueries', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['storedQueries', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['storedQueries', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['imageFiles'], completions: ['[]'] },
       { jsonpath: ['imageFiles', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['imageFiles', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
       { jsonpath: ['imageFiles', 0, 'label'], completions: ['""'] },
+      { jsonpath: ['imageFiles', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['extendedTypes'], completions: ['{}'] },
       { jsonpath: ['extendedTypes', 'discoveryStories', 0, 'condition'], completions: ['""', '${...} expression'] },
       {
         jsonpath: ['extendedTypes', 'discoveryStories', 0, 'overwriteOnUpgrade'],
         completions: ['${...} expression']
       },
+      { jsonpath: ['extendedTypes', 'discoveryStories', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['extendedTypes', 'predictiveScoring', 0, 'condition'], completions: ['""', '${...} expression'] },
       {
         jsonpath: ['extendedTypes', 'predictiveScoring', 0, 'overwriteOnUpgrade'],
         completions: ['${...} expression']
       },
+      { jsonpath: ['extendedTypes', 'predictiveScoring', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['icons'], completions: ['{}'] },
       { jsonpath: ['icons', 'appBadge', 'namespace'], completions: ['""'] },
       { jsonpath: ['icons', 'templateBadge', 'namespace'], completions: ['""'] },
