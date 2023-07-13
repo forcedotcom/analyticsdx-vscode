@@ -11,6 +11,17 @@
     },
     "bad": {
       "type": "error"
+    },
+    "filterOp": {
+      "type": "SobjectRowCount",
+      "sobject": "foo",
+      "filters": [
+        {
+          "field": "field",
+          "operator": "Invalid Operator",
+          "value": ""
+        }
+      ]
     }
   }
 }

@@ -54,6 +54,7 @@ describe('readiness-schema.json hookup', () => {
       { type: 'SobjectRowCount', expected: ['sobject', 'filters'] },
       { type: 'OrgDatasetRowCount', expected: ['dataset', 'filters'] },
       { type: 'AppDatasetRowCount', expected: ['dataset', 'filters'] },
+      { type: 'DataCloudRowCount', expected: ['object', 'filters'] },
       { type: 'OrgPreferenceCheck', expected: ['names'] },
       { type: 'ApexCallout', expected: ['method', 'arguments'] }
     ].forEach(({ type, expected }) => {

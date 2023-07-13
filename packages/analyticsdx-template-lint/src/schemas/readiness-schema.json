@@ -45,6 +45,7 @@
                   "SobjectRowCount",
                   "OrgDatasetRowCount",
                   "AppDatasetRowCount",
+                  "DataCloudRowCount",
                   "OrgPreferenceCheck",
                   "ApexCallout"
                 ]
@@ -57,6 +58,7 @@
               "A check against the number of objects in the org.",
               "A check against the number of rows in a dataset in the org",
               "A check against the number of rows in a dataset that will be created by this template in the app",
+              "A check against the number of Data Cloud objects in the org. Only available in Winter '24 release.",
               "",
               "A check using a method on the template's apexCallback class."
             ]
@@ -143,17 +145,26 @@
         "type": {
           "type": "string",
           "description": "The definition type.",
-          "enum": ["SobjectRowCount", "OrgDatasetRowCount", "AppDatasetRowCount", "OrgPreferenceCheck", "ApexCallout"],
+          "enum": [
+            "SobjectRowCount",
+            "OrgDatasetRowCount",
+            "AppDatasetRowCount",
+            "DataCloudRowCount",
+            "OrgPreferenceCheck",
+            "ApexCallout"
+          ],
           "enumDescriptions": [
             "A check against the number of objects in the org.",
             "A check against the number of rows in a dataset in the org",
             "A check against the number of rows in a dataset that will be created by this template in the app",
+            "A check against the number of Data Cloud objects in the org. Only available in Winter '24 release.",
             "",
             "A check using a method on the template's apexCallback class."
           ]
         },
         "filters": { "doNotSuggest": true },
         "sobject": { "doNotSuggest": true },
+        "object": { "doNotSuggest": true },
         "dataset": { "doNotSuggest": true },
         "names": { "doNotSuggest": true },
         "method": { "doNotSuggest": true },
@@ -167,11 +178,12 @@
             "sobject": {
               "type": "string",
               "description": "The name of the Sobject. This can be a ${...} expression.",
+              "minLength": 1,
               "doNotSuggest": false
             },
             "filters": {
               "$ref": "#/definitions/filters",
-              "description": "The query filter to use when counting the number of rows",
+              "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
             }
           },
@@ -183,11 +195,12 @@
             "dataset": {
               "type": "string",
               "description": "The name or id of the dataset in th org. This can be a ${...} expression.",
+              "minLength": 1,
               "doNotSuggest": false
             },
             "filters": {
               "$ref": "#/definitions/filters",
-              "description": "The query filter to use when counting the number of rows",
+              "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
             }
           },
@@ -199,15 +212,33 @@
             "dataset": {
               "type": "string",
               "description": "The name or id of the dataset that will be created by the template. This can be a ${...} expression.",
+              "minLength": 1,
               "doNotSuggest": false
             },
             "filters": {
               "$ref": "#/definitions/filters",
-              "description": "The query filter to use when counting the number of rows",
+              "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
             }
           },
           "required": ["type", "dataset"]
+        },
+        {
+          "properties": {
+            "type": { "const": "DataCloudRowCount" },
+            "object": {
+              "type": "string",
+              "description": "The name of the Data Cloud object. This can be a ${...} expression.",
+              "minLength": 1,
+              "doNotSuggest": false
+            },
+            "filters": {
+              "$ref": "#/definitions/filters",
+              "description": "The query filter to use when counting the number of rows.",
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "object"]
         },
         {
           "properties": {
@@ -247,6 +278,7 @@
                   "SobjectRowCount",
                   "AppDatasetRowCount",
                   "OrgDatasetRowCount",
+                  "DataCloudRowCount",
                   "OrgPreferenceCheck",
                   "ApexCallout"
                 ]
@@ -305,7 +337,8 @@
         "properties": {
           "field": {
             "type": "string",
-            "description": "The name of the field. This can use ${...} expressions."
+            "description": "The name of the field. This can use ${...} expressions.",
+            "minLength": 1
           },
           "operator": {
             "description": "The operator to use. This can be a ${...} expressions.",
@@ -345,7 +378,19 @@
             }
           }
         ]
-      }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New filters",
+          "body": [
+            {
+              "field": "${1}",
+              "operator": "${2}",
+              "value": "${3}"
+            }
+          ]
+        }
+      ]
     }
   }
 }

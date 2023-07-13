@@ -18,10 +18,29 @@
     }
   ],
   "definition": {
-    "foo": {
+    "sobject": {
       "error": "This should be a warning",
       "type": "SobjectRowCount",
-      "sobject": "Case"
+      "sobject": "",
+      "filters": [
+        {
+          "field": "",
+          "operator": "Equal",
+          "value": ""
+        }
+      ]
+    },
+    "dataset": {
+      "type": "OrgDatasetRowCount",
+      "dataset": ""
+    },
+    "appDataset": {
+      "type": "AppDatasetRowCount",
+      "dataset": ""
+    },
+    "datacloud": {
+      "type": "DataCloudRowCount",
+      "object": ""
     }
   }
 }
