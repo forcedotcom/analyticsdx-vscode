@@ -360,18 +360,11 @@
             "description": "The dashboard name. Must match the 'name' attribute in the dashboard file."
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the dashboard is created in the app. If not met, the dashboard is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the dashboard is created in the app. If not met, the dashboard is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
@@ -412,18 +405,11 @@
             "description": "The dashboard component name. Must match the 'name' attribute in the dashboard component file."
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the dashboard component is created in the app. If not met, the dashboard component is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the dashboard component is created in the app. If not met, the dashboard component is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
@@ -464,18 +450,11 @@
             "description": "The lens name. Must match the 'name' attribute in the lens file."
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the lens is created in the app. If not met, the lens is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the lens is created in the app. If not met, the lens is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
@@ -516,18 +495,11 @@
             "description": "The dataflow name. Must match the 'name' attribute in the dataflow file."
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the dataflow is created in the app. If not, the dataflow is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the dataflow is created in the app. If not, the dataflow is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
@@ -568,18 +540,11 @@
             "description": "The recipe name. Must match the 'name' attribute in the recipe file."
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the recipe is created in the app. If not, the recipe is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the recipe is created in the app. If not, the recipe is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "executeCondition": {
             "description": "Controls if the recipe syncs and executes during app creation. Value must be 'CreateSyncExecute', 'CreateExecute', 'CreateOnly', or a ${...} expression against variables that evaluates to one of those.",
@@ -673,18 +638,11 @@
             ]
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the external file is created in the app. If not, the external file is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the external file is created in the app. If not, the external file is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "rows": {
             "type": ["null", "number"],
@@ -751,18 +709,11 @@
             ]
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the dataset is created in the app. If not met, the dataset is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the dataset is created in the app. If not met, the dataset is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
@@ -837,18 +788,13 @@
             "description": "The image name."
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the image is created in the app. If not, the image is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the image is created in the app. If not, the image is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure",
+            "$comment": "It's schema valid on imageFiles, but it is ignored in the server",
+            "doNotSuggest": true
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
@@ -900,18 +846,11 @@
             "description": "The stored query name."
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the stored query is created in the app. If not, the stored query is not created.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the stored query is created in the app. If not, the stored query is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
           },
           "overwriteOnUpgrade": {
             "$ref": "#/definitions/overwriteOnUpgrade"
@@ -957,18 +896,11 @@
                 "description": "The discovery story name."
               },
               "condition": {
-                "type": ["null", "string"],
-                "description": "If met, the discovery story is created in the app. If not, the discovery story is not created.",
-                "defaultSnippets": [
-                  {
-                    "label": "\"\"",
-                    "body": "${0}"
-                  },
-                  {
-                    "label": "${...} expression",
-                    "body": "${Variables.${1:varname}}"
-                  }
-                ]
+                "$ref": "#/definitions/condition",
+                "description": "If met, the discovery story is created in the app. If not, the discovery story is not created."
+              },
+              "onFailure": {
+                "$ref": "#/definitions/onFailure"
               },
               "overwriteOnUpgrade": {
                 "$ref": "#/definitions/overwriteOnUpgrade"
@@ -1010,18 +942,11 @@
                 "description": "The prediction definition name."
               },
               "condition": {
-                "type": ["null", "string"],
-                "description": "If met, the prediction is created and run in the app. If not, the prediction is not created.",
-                "defaultSnippets": [
-                  {
-                    "label": "\"\"",
-                    "body": "${0}"
-                  },
-                  {
-                    "label": "${...} expression",
-                    "body": "${Variables.${1:varname}}"
-                  }
-                ]
+                "$ref": "#/definitions/condition",
+                "description": "If met, the prediction is created and run in the app. If not, the prediction is not created."
+              },
+              "onFailure": {
+                "$ref": "#/definitions/onFailure"
               },
               "overwriteOnUpgrade": {
                 "$ref": "#/definitions/overwriteOnUpgrade"
@@ -1180,18 +1105,8 @@
             ]
           },
           "condition": {
-            "type": ["null", "string"],
-            "description": "If met, the template dependency is required and available in expressions.",
-            "defaultSnippets": [
-              {
-                "label": "\"\"",
-                "body": "${0}"
-              },
-              {
-                "label": "${...} expression",
-                "body": "${Variables.${1:varname}}"
-              }
-            ]
+            "$ref": "#/definitions/condition",
+            "description": "If met, the template dependency is required and available in expressions."
           }
         },
         "defaultSnippets": [
@@ -1207,6 +1122,50 @@
     }
   },
   "definitions": {
+    "condition": {
+      "type": ["null", "string"],
+      "defaultSnippets": [
+        {
+          "label": "\"\"",
+          "body": "${0}"
+        },
+        {
+          "label": "${...} expression",
+          "body": "${Variables.${1:varname}}"
+        }
+      ]
+    },
+    "onFailure": {
+      "type": ["null", "object"],
+      "description": "Controls how to handle failures when processing this asset. Only available in Winter '24 release.",
+      "additionalProperties": false,
+      "properties": {
+        "defaultStatus": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "enum": ["Fail", "Warn", "Skip"],
+              "enumDescriptions": [
+                "Fail and stop the app creation.",
+                "Warn about the failure but let the app creation continue.",
+                "Skip this asset and let the app creation continue."
+              ]
+            }
+          ]
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New onFailure",
+          "body": {
+            "defaultStatus": "${0}"
+          }
+        }
+      ]
+    },
     "icon": {
       "type": "object",
       "additionalProperties": false,

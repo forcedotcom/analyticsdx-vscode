@@ -23,6 +23,9 @@
       "name": "name",
       "file": "external_files/name.csv",
       "type": "CSV",
+      "onFailure": {
+        "error": "This should trigger a warning"
+      },
       "error": "This should trigger a warning"
     }
   ],
@@ -31,7 +34,10 @@
       "file": "lenses/name.json",
       "label": "name",
       "name": "name",
-      "error": "This should trigger a warning"
+      "error": "This should trigger a warning",
+      "onFailure": {
+        "defaultStatus": "Invalid value"
+      }
     }
   ],
   "dashboards": [
@@ -39,7 +45,11 @@
       "file": "dashboards/name.json",
       "label": "name",
       "name": "name",
-      "error": "This should trigger a warning"
+      "error": "This should trigger a warning",
+      "onFailure": {
+        // empty should be error
+        "defaultStatus": ""
+      }
     }
   ],
   "components": [
