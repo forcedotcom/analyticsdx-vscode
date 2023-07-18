@@ -6,7 +6,6 @@
  */
 
 import { expect } from 'chai';
-import exp from 'constants';
 import { getNodePath, Node as JsonNode } from 'jsonc-parser';
 import * as path from 'path';
 import {
