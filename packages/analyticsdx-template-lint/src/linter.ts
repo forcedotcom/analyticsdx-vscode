@@ -796,11 +796,11 @@ export abstract class TemplateLinter<
     const [autoInstallDef, autoInstallDefNode] = findJsonPrimitiveAttributeValue(tree, 'autoInstallDefinition');
     if (autoInstallDefNode && typeof autoInstallDef === 'string') {
       const [templateType, templateTypeNode] = findJsonPrimitiveAttributeValue(tree, 'templateType');
-      // only app and embeddedapp templates can specify an autoInstallDefinition
-      if (templateTypeNode && templateType !== 'app' && templateType !== 'embeddedapp') {
+      // only app, data and embeddedapp templates can specify an autoInstallDefinition
+      if (templateTypeNode && templateType !== 'app' && templateType !== 'embeddedapp' && templateType !== 'data') {
         this.addDiagnostic(
           doc,
-          "Only 'app' and 'embeddedapp' templates can use an 'autoInstallDefinition'",
+          "Only 'app', 'data' or 'embeddedapp' templates can use an 'autoInstallDefinition'",
           ERRORS.TMPL_NON_APP_WITH_AUTO_INSTALL,
           autoInstallDefNode.parent || autoInstallDefNode,
           { relatedInformation: [{ doc, node: templateTypeNode, mesg: '"templateType" specification' }] }
