@@ -6,6 +6,7 @@
  */
 
 import { expect } from 'chai';
+import exp from 'constants';
 import { getNodePath, Node as JsonNode } from 'jsonc-parser';
 import * as path from 'path';
 import {
@@ -191,6 +192,44 @@ describe('TemplateLinter', () => {
           ) || [];
         if (diagnostics.length !== 0) {
           expect.fail('Expected no file not found diagnostics, got ' + stringifyDiagnostics(diagnostics));
+        }
+      });
+    });
+
+    [
+      { templateType: 'data', errorExpected: false },
+      { templateType: 'app', errorExpected: false },
+      { templateType: 'embeddedapp', errorExpected: false },
+      { templateType: 'dashboard', errorExpected: true },
+      { templateType: 'lens', errorExpected: true }
+    ].forEach(({ templateType, errorExpected }) => {
+      it(`validates autoInstallDefinition for ${templateType} type template`, async () => {
+        const dir = 'autoInstall';
+        const autoInstallPath = path.join(dir, 'auto-install.json');
+        linter = new TestLinter(
+          dir,
+          {
+            templateType,
+            autoInstallDefinition: 'auto-install.json'
+          },
+          new StringDocument(autoInstallPath, {
+            hooks: [{ type: 'PackageInstall' }],
+            configuration: {
+              appConfiguration: {
+                values: {}
+              }
+            }
+          })
+        );
+        await linter.lint();
+        const diagnostics =
+          getDiagnosticsForPath(linter.diagnostics, path.join(linter.dir, 'template-info.json'))?.filter(
+            d => d.code === ERRORS.TMPL_NON_APP_WITH_AUTO_INSTALL
+          ) || [];
+        if (!errorExpected) {
+          expect(diagnostics.length === 0);
+        } else {
+          expect(diagnostics[0].code, 'diagnostics[0].code').to.equal(ERRORS.TMPL_NON_APP_WITH_AUTO_INSTALL);
         }
       });
     });
