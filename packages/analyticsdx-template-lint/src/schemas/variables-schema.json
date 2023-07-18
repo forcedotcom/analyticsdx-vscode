@@ -166,11 +166,10 @@
             "enumsLabels": {
               "type": ["array", "null"],
               "minItems": 0,
-              "description": "The optional display labels for the enumerated values. Only available in Summer '23 release.",
+              "description": "The optional display labels for the enumerated values.",
               "items": {
                 "type": ["string", "null"]
-              },
-              "doNotSuggest": true
+              }
             }
           },
           "required": ["type"]

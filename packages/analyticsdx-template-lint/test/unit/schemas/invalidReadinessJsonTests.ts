@@ -17,7 +17,13 @@ describe('readiness-schema.json finds errors in', () => {
 
   it('invalid-enums.json', async () => {
     const errors = await validate('invalid-enums.json');
-    errors.expectInvalidProps(false, 'templateRequirements[0].type', 'definition.empty.type', 'definition.bad.type');
+    errors.expectInvalidProps(
+      false,
+      'templateRequirements[0].type',
+      'definition.empty.type',
+      'definition.bad.type',
+      'definition.filterOp.filters[0].operator'
+    );
   });
 
   it('invalid-fields.json', async () => {
@@ -28,7 +34,12 @@ describe('readiness-schema.json finds errors in', () => {
       'values["-"]',
       'templateRequirements[0].error',
       'templateRequirements[1].image.error',
-      'definition.foo.error'
+      'definition.sobject.error',
+      'definition.sobject.sobject',
+      'definition.sobject.filters[0].field',
+      'definition.dataset.dataset',
+      'definition.appDataset.dataset',
+      'definition.datacloud.object'
     );
   });
 });

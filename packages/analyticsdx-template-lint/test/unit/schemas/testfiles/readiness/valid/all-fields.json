@@ -117,6 +117,17 @@
       "dataset": "${Variable.selectedDS.datasetId}",
       "filters": []
     },
+    "dataCloudCount": {
+      "type": "DataCloudRowCount",
+      "object": "SomeObject_dmo",
+      "filters": [
+        {
+          "field": "SomeObject_c",
+          "operator": "Equal",
+          "value": ""
+        }
+      ]
+    },
     "appDatasetCount": {
       "type": "AppDatasetRowCount",
       "dataset": "${App.Datasets.Opptys.Name}",

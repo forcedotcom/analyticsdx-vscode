@@ -56,8 +56,12 @@ describe('variables-schema.json hookup', () => {
     // make sure the doNotSuggest logic in variables-schema.json for the type-specific fields in variableType works
     [
       // these types should see some available completions in the variableType {}
-      { type: 'StringType', expected: ['enums'] } as { type: string; expected: string[]; initialErrorsCount?: number },
-      { type: 'NumberType', expected: ['enums', 'min', 'max'] },
+      { type: 'StringType', expected: ['enums', 'enumsLabels'] } as {
+        type: string;
+        expected: string[];
+        initialErrorsCount?: number;
+      },
+      { type: 'NumberType', expected: ['enums', 'enumsLabels', 'min', 'max'] },
       { type: 'SobjectFieldType', expected: ['dataType'] },
       { type: 'DataLakeObjectFieldType', expected: ['dataType'] },
       { type: 'DataModelObjectFieldType', expected: ['dataType'] },

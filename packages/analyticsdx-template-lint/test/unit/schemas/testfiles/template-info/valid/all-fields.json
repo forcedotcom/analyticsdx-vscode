@@ -38,7 +38,10 @@
       "schema": "externalFiles/file_schema.json",
       "userXmd": "externalfiles/file_xmd.json",
       "overwriteOnUpgrade": "IfDifferent",
-      "label": "not used"
+      "label": "not used",
+      "onFailure": {
+        "defaultStatus": "Fail"
+      }
     }
   ],
   "lenses": [
@@ -47,7 +50,10 @@
       "label": "blah",
       "overwriteOnUpgrade": "Always",
       "condition": "${Variables.Has_Product == 'Yes'}",
-      "name": "foo"
+      "name": "foo",
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
     }
   ],
   "dashboards": [
@@ -56,12 +62,16 @@
       "name": "New_dashboard_tp",
       "condition": "${Variables.Overrides.createAllDashboards}",
       "file": "dashboards/New_dashboard.json",
-      "overwriteOnUpgrade": "Never"
+      "overwriteOnUpgrade": "Never",
+      "onFailure": {
+        "defaultStatus": "Warn"
+      }
     },
     {
       "label": "foo",
       "name": "foo",
-      "file": "dashboards/foo_dashboard.json"
+      "file": "dashboards/foo_dashboard.json",
+      "onFailure": {}
     }
   ],
   "components": [
@@ -70,7 +80,10 @@
       "name": "New_component_tp",
       "condition": "${Variables.Overrides.createAllDashboards}",
       "file": "components/New_component.json",
-      "overwriteOnUpgrade": "IfDifferent"
+      "overwriteOnUpgrade": "IfDifferent",
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
     }
   ],
   "eltDataflows": [
@@ -79,7 +92,10 @@
       "name": "dataflow",
       "label": "dataflow",
       "condition": "${Variables.Has_Product == 'Yes'}",
-      "overwriteOnUpgrade": "${Variables.Has_Product == 'Yes'}"
+      "overwriteOnUpgrade": "${Variables.Has_Product == 'Yes'}",
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
     }
   ],
   "recipes": [
@@ -89,7 +105,10 @@
       "name": "recipe",
       "condition": "${'No'}",
       "overwriteOnUpgrade": "Always",
-      "executeCondition": "CreateSyncExecute"
+      "executeCondition": "CreateSyncExecute",
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
     },
     {
       "file": "recipes/recipe2.json",
@@ -105,7 +124,10 @@
       "overwriteOnUpgrade": "IfDifferent",
       "file": "not_used",
       "condition": "${Variables.Has_Product == 'Yes'}",
-      "userXmd": "foo.json"
+      "userXmd": "foo.json",
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
     },
     {
       "label": "My Snowflake Dataset",
@@ -122,7 +144,10 @@
       "label": "query",
       "overwriteOnUpgrade": "IfDifferent",
       "condition": "${Variables.Has_Product == 'Yes'}",
-      "name": "query"
+      "name": "query",
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
     }
   ],
   "imageFiles": [
@@ -131,7 +156,11 @@
       "name": "image.png",
       "overwriteOnUpgrade": "IfDifferent",
       "condition": "${Variables.Has_Product == 'No'}",
-      "label": "not used"
+      "label": "not used",
+      // it's schema valid here, although it's not currently used in the server
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
     }
   ],
   "extendedTypes": {
@@ -141,7 +170,10 @@
         "name": "Some_Story",
         "file": "stories/story.json",
         "condition": "${Variables.Has_Product == 'Yes'}",
-        "overwriteOnUpgrade": "Never"
+        "overwriteOnUpgrade": "Never",
+        "onFailure": {
+          "defaultStatus": "Skip"
+        }
       }
     ],
     "predictiveScoring": [
@@ -150,7 +182,10 @@
         "label": "Some Prediction",
         "name": "some_prediction",
         "condition": "${Variables.Has_Predictions}",
-        "overwriteOnUpgrade": "${Variables.RerunOnUpgrade == 'Yes' ? 'Always' : 'IfDifferent'}"
+        "overwriteOnUpgrade": "${Variables.RerunOnUpgrade == 'Yes' ? 'Always' : 'IfDifferent'}",
+        "onFailure": {
+          "defaultStatus": "Skip"
+        }
       }
     ]
   },
