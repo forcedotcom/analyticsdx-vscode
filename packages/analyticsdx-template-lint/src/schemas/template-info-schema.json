@@ -1143,9 +1143,6 @@
         "defaultStatus": {
           "oneOf": [
             {
-              "type": "null"
-            },
-            {
               "type": "string",
               "enum": ["Fail", "Warn", "Skip"],
               "enumDescriptions": [
@@ -1153,6 +1150,9 @@
                 "Warn about the failure but let the app creation continue.",
                 "Skip this asset and let the app creation continue."
               ]
+            },
+            {
+              "type": "null"
             }
           ]
         }
