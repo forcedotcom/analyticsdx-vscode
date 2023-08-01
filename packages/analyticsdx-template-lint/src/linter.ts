@@ -611,12 +611,13 @@ export abstract class TemplateLinter<
     templateType: 'app' | 'embeddedapp',
     templateTypeNode: JsonNode | undefined
   ): Promise<void> {
-    // for app templates, it needs to have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified,
-    // so accumulate the total of each (handling the -1 meaning no node) and the property nodes for each
-    // empty array field
+    // for app templates, it needs to have at least 1 dashboard, dataflow, dataTransforms, externalFile, lens, or
+    // recipe specified, so accumulate the total of each (handling the -1 meaning no node) and the property nodes
+    // for each empty array field
     const { count, nodes } = [
       { data: lengthJsonArrayAttributeValue(tree, 'dashboards'), name: 'dashboards' },
       { data: lengthJsonArrayAttributeValue(tree, 'eltDataflows'), name: 'dataflows' },
+      { data: lengthJsonArrayAttributeValue(tree, 'dataTransforms'), name: 'data transforms' },
       { data: lengthJsonArrayAttributeValue(tree, 'externalFiles'), name: 'externalFiles' },
       { data: lengthJsonArrayAttributeValue(tree, 'lenses'), name: 'lenses' },
       { data: lengthJsonArrayAttributeValue(tree, 'recipes'), name: 'recipes' }
@@ -643,7 +644,7 @@ export abstract class TemplateLinter<
           : undefined;
       this.addDiagnostic(
         doc,
-        'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified',
+        'App templates must have at least 1 dashboard, dataflow, dataTransform, externalFile, lens, or recipe specified',
         ERRORS.TMPL_APP_MISSING_OBJECTS,
         // put the warning on the "templateType": "app" property
         templateTypeNode && templateTypeNode.parent,

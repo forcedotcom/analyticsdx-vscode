@@ -519,7 +519,7 @@
     },
     "dataTransforms": {
       "type": ["null", "array"],
-      "description": "List of data transforms to include in the template. This feature is currently in pilot in Summer '23 release. If you're interested in participating in the pilot program, ask your Salesforce Account Executive.",
+      "description": "List of data transforms to include in the template. This feature is currently in pilot in Winter '24 release. If you're interested in participating in the pilot program, ask your Salesforce Account Executive.",
       "doNotSuggest": true,
       "minItems": 0,
       "examples": [[]],
