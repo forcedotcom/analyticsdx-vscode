@@ -9,6 +9,7 @@
   "components": [{}],
   "lenses": [{}],
   "eltDataflows": [{}],
+  "dataTransforms": [{}],
   "recipes": [{}],
   "externalFiles": [{}],
   "datasetFiles": [{}],

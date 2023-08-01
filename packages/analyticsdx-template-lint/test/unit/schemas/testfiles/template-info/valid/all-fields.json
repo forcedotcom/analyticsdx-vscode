@@ -98,6 +98,18 @@
       }
     }
   ],
+  "dataTransforms": [
+    {
+      "file": "dataTransform.json",
+      "name": "dataTransform",
+      "label": "dataTransform",
+      "condition": "${Variables.Overrides.createAllDataTransforms}",
+      "overwriteOnUpgrade": "Never",
+      "onFailure": {
+        "defaultStatus": "Warn"
+      }
+    }
+  ],
   "recipes": [
     {
       "file": "recipes/recipe.json",
