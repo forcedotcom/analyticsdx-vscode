@@ -53,6 +53,13 @@
       "file": "components/missing-component.json"
     }
   ],
+  "dataTransforms": [
+    {
+      "file": "dataTransforms/-data-transform.json",
+      "label": "missing-data-transform",
+      "name": "missing-data-transform"
+    }
+  ],
   "eltDataflows": [
     {
       "label": "missing-dataflow",

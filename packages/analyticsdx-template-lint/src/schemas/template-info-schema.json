@@ -553,9 +553,9 @@
         },
         "defaultSnippets": [
           {
-            "label": "New dataflow",
+            "label": "New dataTransform",
             "body": {
-              "file": "dataflows/${1:name}.json",
+              "file": "${1:name}.json",
               "label": "${1}",
               "name": "${1}"
             }
@@ -602,6 +602,12 @@
                 "examples": [
                   "${Variables.doSync ? 'CreateSyncExecute' : 'CreateExecute'}",
                   "${Variables.runRecipes == 'Yes' ? 'CreateSyncExecute' : 'CreateOnly'}"
+                ],
+                "defaultSnippets": [
+                  {
+                    "label": "${...} expression",
+                    "body": "${Variables.${1:varname}}"
+                  }
                 ]
               },
               {

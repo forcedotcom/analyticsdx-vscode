@@ -272,6 +272,13 @@ describe('TemplateLinterManager lints template-info.json', () => {
           name: 'lens'
         }
       ],
+      dataTransforms: [
+        {
+          file: 'file.json',
+          label: 'dataflow',
+          name: 'dataflow'
+        }
+      ],
       eltDataflows: [
         {
           file: 'file.json',
@@ -313,6 +320,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'dashboards[0].file',
       'lenses[0].file',
       'eltDataflows[0].file',
+      'dataTransforms[0].file',
       'storedQueries[0].file',
       'extendedTypes.discoveryStories[0].file',
       'extendedTypes.predictiveScoring[0].file'
@@ -346,6 +354,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       lenses: [{ name: 'lens' }, { name: 'lens' }, { name: 'dashboard' }, { name: 'component' }],
       components: [{ name: 'component' }, { name: 'component' }, { name: 'dashboard' }, { name: 'lens' }],
       eltDataflows: [{ name: 'dataflow' }, { name: 'dataflow' }],
+      dataTransforms: [{ name: 'datatransform' }, { name: 'datatransform' }],
       recipes: [{ name: 'recipe' }, { name: 'recipe' }],
       datasetFiles: [{ name: 'dataset' }, { name: 'dataset' }],
       externalFiles: [{ name: 'file' }, { name: 'file' }],
@@ -372,6 +381,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'components[3].name',
       'eltDataflows[0].name',
       'eltDataflows[1].name',
+      'dataTransforms[0].name',
+      'dataTransforms[1].name',
       'recipes[0].name',
       'recipes[1].name',
       'datasetFiles[0].name',
@@ -417,6 +428,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       lenses: [{ label: 'lens' }, { label: 'lens' }],
       components: [{ label: 'component' }, { label: 'component' }],
       eltDataflows: [{ label: 'dataflow' }, { label: 'dataflow' }],
+      dataTransforms: [{ label: 'datatransform' }, { label: 'datatransform' }],
       recipes: [{ label: 'recipe' }, { label: 'recipe' }],
       datasetFiles: [{ label: 'dataset' }, { label: 'dataset' }],
       storedQueries: [{ label: 'stored-query' }, { label: 'stored-query' }],
@@ -435,6 +447,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'components[1].label',
       'eltDataflows[0].label',
       'eltDataflows[1].label',
+      'dataTransforms[0].label',
+      'dataTransforms[1].label',
       'recipes[0].label',
       'recipes[1].label',
       'datasetFiles[0].label',
@@ -594,6 +608,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'dashboards[0].file',
       'components[0].file',
       'eltDataflows[0].file',
+      'dataTransforms[0].file',
       'recipes[0].file',
       'extendedTypes.predictiveScoring[0].file'
     ].forEach(path => {

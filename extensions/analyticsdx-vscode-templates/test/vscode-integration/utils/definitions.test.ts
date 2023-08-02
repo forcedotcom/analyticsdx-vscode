@@ -47,6 +47,7 @@ describe('JsonAttributeRelFilePathDefinitionProvider', () => {
       [['lenses', 0, 'file'], 'lenses/lens.json'],
       [['dashboards', 0, 'file'], 'dashboards/dashboard.json'],
       [['eltDataflows', 0, 'file'], 'dataflows/dataflow.json'],
+      [['dataTransforms', 0, 'file'], 'dataTransforms/dataTransform.json'],
       [['storedQueries', 0, 'file'], 'queries/query.json'],
       [['recipes', 0, 'file'], 'recipes/recipe.json'],
       [['datasetFiles', 0, 'userXmd'], 'datasets/userXmd.json'],

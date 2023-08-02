@@ -360,6 +360,7 @@ describe('FileTemplateValidator', () => {
       ['lenses', 0, 'file'],
       ['dashboards', 0, 'file'],
       ['components', 0, 'file'],
+      ['dataTransforms', 0, 'file'],
       ['eltDataflows', 0, 'file'],
       ['recipes', 0, 'file'],
       ['extendedTypes', 'predictiveScoring', 0, 'file']

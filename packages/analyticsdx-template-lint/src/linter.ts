@@ -508,6 +508,7 @@ export abstract class TemplateLinter<
         path: [['dashboards', '*', 'name'] as JSONPath, ['components', '*', 'name'], ['lenses', '*', 'name']]
       },
       { type: 'dataflow', path: ['eltDataflows', '*', 'name'] as JSONPath },
+      { type: 'data transform', path: ['dataTransforms', '*', 'name'] as JSONPath },
       { type: 'recipe', path: ['recipes', '*', 'name'] },
       { type: 'dataset', path: ['datasetFiles', '*', 'name'] },
       { type: 'external file', path: ['externalFiles', '*', 'name'] },
@@ -532,6 +533,7 @@ export abstract class TemplateLinter<
       { type: 'components', path: ['components', '*', 'label'] },
       { type: 'lens', path: ['lenses', '*', 'label'] },
       { type: 'dataflow', path: ['eltDataflows', '*', 'label'] },
+      { type: 'data trasnform', path: ['dataTransforms', '*', 'label'] },
       { type: 'recipe', path: ['recipes', '*', 'label'] },
       { type: 'dataset', path: ['datasetFiles', '*', 'label'] },
       { type: 'storedQuery', path: ['storedQueries', '*', 'label'] },
