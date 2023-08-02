@@ -132,10 +132,6 @@ describe('TemplateLinterManager lints template-info.json', () => {
     const d = map.get('templateType');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
-    );
-    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // on the missing fields, there shouldn't be any relatedInformations
     expect(d!.relatedInformation, 'relatedInformation').to.be.undefined;
     map.delete('templateType');
@@ -149,10 +145,6 @@ describe('TemplateLinterManager lints template-info.json', () => {
     // there should be a diagnostic on the templateType field for not having values
     const d = map.get('templateType');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
-    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
-    );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // there should be related information for each field being empty
     expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;
@@ -176,10 +168,6 @@ describe('TemplateLinterManager lints template-info.json', () => {
     // since the file doesn't have templateType, there should be a diagnostic on the root object for not having the fields
     const d = map.get('');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
-    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
-    );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // there should be relatedInformations for dashboards, externalFiles, and lenses
     expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;

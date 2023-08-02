@@ -87,7 +87,7 @@ describe('FileTemplateValidator', () => {
       lintWarning: {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
         message:
-          'App templates must have at least 1 dashboard, dataflow, dataTransform, externalFile, lens, or recipe specified',
+          'App templates must have at least 1 component, dataflow, dataset, dataTransform, dashboard, externalFile, lens, predictions, recipe, or story specified',
         code: ERRORS.TMPL_APP_MISSING_OBJECTS
       }
     },
@@ -97,7 +97,7 @@ describe('FileTemplateValidator', () => {
       lintWarning: {
         range: { start: { line: 1, character: 2 }, end: { line: 1, character: 23 } },
         message:
-          'App templates must have at least 1 dashboard, dataflow, dataTransform, externalFile, lens, or recipe specified',
+          'App templates must have at least 1 component, dataflow, dataset, dataTransform, dashboard, externalFile, lens, predictions, recipe, or story specified',
         code: ERRORS.TMPL_APP_MISSING_OBJECTS
       }
     },

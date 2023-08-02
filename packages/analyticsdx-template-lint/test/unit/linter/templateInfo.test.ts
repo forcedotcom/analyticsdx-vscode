@@ -7,7 +7,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { ERRORS, LINTER_MAX_EXTERNAL_FILE_SIZE } from '../../../src';
-import { getDiagnosticsForPath } from '../../testutils';
+import { getDiagnosticsForPath, set } from '../../testutils';
 import { StringDocument, stringifyDiagnostics, TestLinter } from './testlinter';
 
 // tslint:disable: no-unused-expression
@@ -17,6 +17,74 @@ describe('TemplateLinter template-info.json', () => {
   afterEach(() => {
     linter?.reset();
     linter = undefined;
+  });
+
+  [
+    'components',
+    'datasetFiles',
+    'dashboards',
+    'eltDataflows',
+    'dataTransforms',
+    'externalFiles',
+    'lenses',
+    'recipes',
+    'extendedTypes.discoveryStories',
+    'extendedTypes.predictiveScoring'
+  ].forEach(fieldName => {
+    it(`validates app template minimum assets with ${fieldName}`, async () => {
+      const dir = 'minassets';
+      const json: Record<string, unknown> = {
+        templateType: 'app'
+      };
+      set(json, fieldName, [{ file: 'file.json', label: 'label', name: 'name' }]);
+      linter = new TestLinter(dir, json, new StringDocument(path.join(dir, 'file.json'), {}));
+      await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri);
+      expect(diagnostics).to.be.undefined;
+    });
+  });
+
+  it('validates app template with no assets', async () => {
+    const dir = 'minassets';
+    linter = new TestLinter(dir, { templateType: 'app' });
+    await linter.lint();
+    const diagnostics = getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri)?.filter(
+      d => d.code === ERRORS.TMPL_APP_MISSING_OBJECTS
+    );
+    expect(diagnostics?.length).to.equal(1);
+  });
+
+  ['datasetFiles', 'externalFiles', 'recipes'].forEach(fieldName => {
+    it(`validates data template minimum assets with ${fieldName}`, async () => {
+      const dir = 'minassets';
+      linter = new TestLinter(
+        dir,
+        {
+          templateType: 'app',
+          [fieldName]: [
+            {
+              file: 'file.json',
+              label: 'label',
+              name: 'name'
+            }
+          ]
+        },
+        new StringDocument(path.join(dir, 'file.json'), {})
+      );
+      await linter.lint();
+      const diagnostics = getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri);
+      expect(diagnostics).to.be.undefined;
+    });
+  });
+
+  it('validates data template with no assets', async () => {
+    const dir = 'minassets';
+    linter = new TestLinter(dir, { templateType: 'data' });
+    await linter.lint();
+    const diagnostics = getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri)?.filter(
+      d => d.code === ERRORS.TMPL_DATA_MISSING_OBJECTS
+    );
+    expect(diagnostics?.length).to.equal(1);
   });
 
   it('validates recipe assetVersion', async () => {
