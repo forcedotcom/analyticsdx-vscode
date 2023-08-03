@@ -649,7 +649,7 @@ export abstract class TemplateLinter<
           : undefined;
       this.addDiagnostic(
         doc,
-        'App templates must have at least 1 component, dataflow, dataset, dataTransform, dashboard, externalFile, lens, predictions, recipe, or story specified',
+        'App templates must have at least 1 component, dataflow, dataset, dataTransform, dashboard, externalFile, lens, prediction, recipe, or story specified',
         ERRORS.TMPL_APP_MISSING_OBJECTS,
         // put the warning on the "templateType": "app" property
         templateTypeNode && templateTypeNode.parent,
