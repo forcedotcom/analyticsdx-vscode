@@ -508,6 +508,7 @@ export abstract class TemplateLinter<
         path: [['dashboards', '*', 'name'] as JSONPath, ['components', '*', 'name'], ['lenses', '*', 'name']]
       },
       { type: 'dataflow', path: ['eltDataflows', '*', 'name'] as JSONPath },
+      { type: 'data transform', path: ['dataTransforms', '*', 'name'] as JSONPath },
       { type: 'recipe', path: ['recipes', '*', 'name'] },
       { type: 'dataset', path: ['datasetFiles', '*', 'name'] },
       { type: 'external file', path: ['externalFiles', '*', 'name'] },
@@ -532,6 +533,7 @@ export abstract class TemplateLinter<
       { type: 'components', path: ['components', '*', 'label'] },
       { type: 'lens', path: ['lenses', '*', 'label'] },
       { type: 'dataflow', path: ['eltDataflows', '*', 'label'] },
+      { type: 'data trasnform', path: ['dataTransforms', '*', 'label'] },
       { type: 'recipe', path: ['recipes', '*', 'label'] },
       { type: 'dataset', path: ['datasetFiles', '*', 'label'] },
       { type: 'storedQuery', path: ['storedQueries', '*', 'label'] },
@@ -611,15 +613,19 @@ export abstract class TemplateLinter<
     templateType: 'app' | 'embeddedapp',
     templateTypeNode: JsonNode | undefined
   ): Promise<void> {
-    // for app templates, it needs to have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified,
-    // so accumulate the total of each (handling the -1 meaning no node) and the property nodes for each
-    // empty array field
+    // for app templates, it needs to have at least 1 ones of these specified, so accumulate the total of each
+    // (handling the -1 meaning no node) and the property nodes for each empty array field
     const { count, nodes } = [
+      { data: lengthJsonArrayAttributeValue(tree, 'components'), name: 'components' },
+      { data: lengthJsonArrayAttributeValue(tree, 'datasetFiles'), name: 'datasets' },
       { data: lengthJsonArrayAttributeValue(tree, 'dashboards'), name: 'dashboards' },
       { data: lengthJsonArrayAttributeValue(tree, 'eltDataflows'), name: 'dataflows' },
+      { data: lengthJsonArrayAttributeValue(tree, 'dataTransforms'), name: 'data transforms' },
       { data: lengthJsonArrayAttributeValue(tree, 'externalFiles'), name: 'externalFiles' },
       { data: lengthJsonArrayAttributeValue(tree, 'lenses'), name: 'lenses' },
-      { data: lengthJsonArrayAttributeValue(tree, 'recipes'), name: 'recipes' }
+      { data: lengthJsonArrayAttributeValue(tree, 'recipes'), name: 'recipes' },
+      { data: lengthJsonArrayAttributeValue(tree, 'extendedTypes', 'discoveryStories'), name: 'stories' },
+      { data: lengthJsonArrayAttributeValue(tree, 'extendedTypes', 'predictiveScoring'), name: 'predictions' }
     ].reduce(
       (all, { data, name }) => {
         if (data[0] > 0) {
@@ -643,7 +649,7 @@ export abstract class TemplateLinter<
           : undefined;
       this.addDiagnostic(
         doc,
-        'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified',
+        'App templates must have at least 1 component, dataflow, dataset, dataTransform, dashboard, externalFile, lens, prediction, recipe, or story specified',
         ERRORS.TMPL_APP_MISSING_OBJECTS,
         // put the warning on the "templateType": "app" property
         templateTypeNode && templateTypeNode.parent,

@@ -132,10 +132,6 @@ describe('TemplateLinterManager lints template-info.json', () => {
     const d = map.get('templateType');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
-    );
-    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // on the missing fields, there shouldn't be any relatedInformations
     expect(d!.relatedInformation, 'relatedInformation').to.be.undefined;
     map.delete('templateType');
@@ -149,10 +145,6 @@ describe('TemplateLinterManager lints template-info.json', () => {
     // there should be a diagnostic on the templateType field for not having values
     const d = map.get('templateType');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
-    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
-    );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // there should be related information for each field being empty
     expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;
@@ -176,10 +168,6 @@ describe('TemplateLinterManager lints template-info.json', () => {
     // since the file doesn't have templateType, there should be a diagnostic on the root object for not having the fields
     const d = map.get('');
     expect(d, 'missing dashboard diagnostic').to.be.not.undefined;
-    expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
-    expect(d!.message, 'message').to.be.equals(
-      'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified'
-    );
     expect(d!.code, 'code').to.be.equal(ERRORS.TMPL_APP_MISSING_OBJECTS);
     // there should be relatedInformations for dashboards, externalFiles, and lenses
     expect(d!.relatedInformation, 'relatedInformation').to.be.not.undefined;
@@ -284,6 +272,13 @@ describe('TemplateLinterManager lints template-info.json', () => {
           name: 'lens'
         }
       ],
+      dataTransforms: [
+        {
+          file: 'file.json',
+          label: 'dataflow',
+          name: 'dataflow'
+        }
+      ],
       eltDataflows: [
         {
           file: 'file.json',
@@ -325,6 +320,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'dashboards[0].file',
       'lenses[0].file',
       'eltDataflows[0].file',
+      'dataTransforms[0].file',
       'storedQueries[0].file',
       'extendedTypes.discoveryStories[0].file',
       'extendedTypes.predictiveScoring[0].file'
@@ -358,6 +354,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       lenses: [{ name: 'lens' }, { name: 'lens' }, { name: 'dashboard' }, { name: 'component' }],
       components: [{ name: 'component' }, { name: 'component' }, { name: 'dashboard' }, { name: 'lens' }],
       eltDataflows: [{ name: 'dataflow' }, { name: 'dataflow' }],
+      dataTransforms: [{ name: 'datatransform' }, { name: 'datatransform' }],
       recipes: [{ name: 'recipe' }, { name: 'recipe' }],
       datasetFiles: [{ name: 'dataset' }, { name: 'dataset' }],
       externalFiles: [{ name: 'file' }, { name: 'file' }],
@@ -384,6 +381,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'components[3].name',
       'eltDataflows[0].name',
       'eltDataflows[1].name',
+      'dataTransforms[0].name',
+      'dataTransforms[1].name',
       'recipes[0].name',
       'recipes[1].name',
       'datasetFiles[0].name',
@@ -429,6 +428,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       lenses: [{ label: 'lens' }, { label: 'lens' }],
       components: [{ label: 'component' }, { label: 'component' }],
       eltDataflows: [{ label: 'dataflow' }, { label: 'dataflow' }],
+      dataTransforms: [{ label: 'datatransform' }, { label: 'datatransform' }],
       recipes: [{ label: 'recipe' }, { label: 'recipe' }],
       datasetFiles: [{ label: 'dataset' }, { label: 'dataset' }],
       storedQueries: [{ label: 'stored-query' }, { label: 'stored-query' }],
@@ -447,6 +447,8 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'components[1].label',
       'eltDataflows[0].label',
       'eltDataflows[1].label',
+      'dataTransforms[0].label',
+      'dataTransforms[1].label',
       'recipes[0].label',
       'recipes[1].label',
       'datasetFiles[0].label',
@@ -606,6 +608,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'dashboards[0].file',
       'components[0].file',
       'eltDataflows[0].file',
+      'dataTransforms[0].file',
       'recipes[0].file',
       'extendedTypes.predictiveScoring[0].file'
     ].forEach(path => {

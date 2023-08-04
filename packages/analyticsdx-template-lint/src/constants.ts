@@ -21,6 +21,7 @@ const assetAttrPaths = [
   ['dashboards'] as JSONPath,
   ['components'],
   ['lenses'],
+  ['dataTransforms'],
   ['eltDataflows'],
   ['storedQueries'],
   ['extendedTypes', 'discoveryStories'],
@@ -44,6 +45,7 @@ const definitionFilesPats = [
   ['components', '*', 'file'],
   ['lenses', '*', 'file'],
   ['eltDataflows', '*', 'file'],
+  ['dataTransforms', '*', 'file'],
   ['storedQueries', '*', 'file'],
   ['extendedTypes', '*', '*', 'file'],
   ['recipes', '*', 'file']

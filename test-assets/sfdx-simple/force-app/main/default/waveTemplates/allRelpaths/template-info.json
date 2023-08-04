@@ -60,6 +60,13 @@
       "file": "dataflows/dataflow.json"
     }
   ],
+  "dataTransforms": [
+    {
+      "file": "dataTransforms/dataTransform.json",
+      "label": "data_transform",
+      "name": "data_transform"
+    }
+  ],
   "recipes": [
     {
       "label": "recipe",

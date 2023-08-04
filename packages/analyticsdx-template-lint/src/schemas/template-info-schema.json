@@ -517,6 +517,52 @@
         ]
       }
     },
+    "dataTransforms": {
+      "type": ["null", "array"],
+      "description": "List of data transforms to include in the template. This feature is currently in pilot in Winter '24 release. If you're interested in participating in the pilot program, ask your Salesforce Account Executive.",
+      "doNotSuggest": true,
+      "minItems": 0,
+      "examples": [[]],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "name", "label"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the data transform json file."
+          },
+          "label": {
+            "type": "string",
+            "description": "The data transform label. Must match the 'label' attribute in the data transform file."
+          },
+          "name": {
+            "type": "string",
+            "description": "The data transform name. Must match the 'name' attribute in the data transform file."
+          },
+          "condition": {
+            "$ref": "#/definitions/condition",
+            "description": "If met, the data transform is created in the app. If not, the data transform is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure"
+          },
+          "overwriteOnUpgrade": {
+            "$ref": "#/definitions/overwriteOnUpgrade"
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New dataTransform",
+            "body": {
+              "file": "${1:name}.json",
+              "label": "${1}",
+              "name": "${1}"
+            }
+          }
+        ]
+      }
+    },
     "recipes": {
       "type": ["null", "array"],
       "description": "List of recipes to include in the template.",
@@ -556,6 +602,12 @@
                 "examples": [
                   "${Variables.doSync ? 'CreateSyncExecute' : 'CreateExecute'}",
                   "${Variables.runRecipes == 'Yes' ? 'CreateSyncExecute' : 'CreateOnly'}"
+                ],
+                "defaultSnippets": [
+                  {
+                    "label": "${...} expression",
+                    "body": "${Variables.${1:varname}}"
+                  }
                 ]
               },
               {

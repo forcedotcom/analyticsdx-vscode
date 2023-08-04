@@ -61,6 +61,16 @@
       "onFailure": null
     }
   ],
+  "dataTransforms": [
+    {
+      "file": "dataTransforms/transform.json",
+      "label": "label",
+      "name": "name",
+      "condition": null,
+      "overwriteOnUpgrade": null,
+      "onFailure": null
+    }
+  ],
   "recipes": [
     {
       "file": "recipes/name.json",

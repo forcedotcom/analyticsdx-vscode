@@ -24,6 +24,7 @@
   "dashboards": null,
   "components": null,
   "eltDataflows": null,
+  "dataTransforms": null,
   "recipes": null,
   "datasetFiles": null,
   "storedQueries": null,

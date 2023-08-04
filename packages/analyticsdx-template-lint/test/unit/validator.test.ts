@@ -86,7 +86,8 @@ describe('FileTemplateValidator', () => {
       missingField: 'releaseInfo',
       lintWarning: {
         range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
-        message: 'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified',
+        message:
+          'App templates must have at least 1 component, dataflow, dataset, dataTransform, dashboard, externalFile, lens, prediction, recipe, or story specified',
         code: ERRORS.TMPL_APP_MISSING_OBJECTS
       }
     },
@@ -95,7 +96,8 @@ describe('FileTemplateValidator', () => {
       missingField: 'releaseInfo',
       lintWarning: {
         range: { start: { line: 1, character: 2 }, end: { line: 1, character: 23 } },
-        message: 'App templates must have at least 1 dashboard, dataflow, externalFile, lens, or recipe specified',
+        message:
+          'App templates must have at least 1 component, dataflow, dataset, dataTransform, dashboard, externalFile, lens, prediction, recipe, or story specified',
         code: ERRORS.TMPL_APP_MISSING_OBJECTS
       }
     },
@@ -358,6 +360,7 @@ describe('FileTemplateValidator', () => {
       ['lenses', 0, 'file'],
       ['dashboards', 0, 'file'],
       ['components', 0, 'file'],
+      ['dataTransforms', 0, 'file'],
       ['eltDataflows', 0, 'file'],
       ['recipes', 0, 'file'],
       ['extendedTypes', 'predictiveScoring', 0, 'file']

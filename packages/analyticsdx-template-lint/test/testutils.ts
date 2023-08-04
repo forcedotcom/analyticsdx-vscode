@@ -13,6 +13,19 @@ import * as path from 'path';
 import * as readdirp from 'readdirp';
 import { promisify } from 'util';
 
+/** Set an object field based on a '.'-seperated name. */
+export function set(o: Record<string, unknown>, names: string, value: unknown) {
+  let currentObject = o;
+  names.split('.').forEach((name, i, all) => {
+    if (i === all.length - 1) {
+      currentObject[name] = value;
+    } else {
+      currentObject[name] = {};
+      currentObject = currentObject[name] as Record<string, unknown>;
+    }
+  });
+}
+
 /** The file path to the sfdx-simple test project. */
 export const sfdxTestProjectPath = path.join(__dirname, '..', '..', '..', '..', 'test-assets', 'sfdx-simple');
 /** The file path to waveTemplates/ directory in the sfdx-simple test project. */

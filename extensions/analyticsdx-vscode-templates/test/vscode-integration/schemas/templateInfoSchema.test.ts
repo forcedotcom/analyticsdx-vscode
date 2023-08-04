@@ -107,6 +107,7 @@ describe('template-info-schema.json hookup', () => {
       ['recipes', 'recipe'],
       ['eltDataflows', 'dataflow'],
       ['externalFiles', 'externalFile'],
+      ['dataTransforms', 'dataTransform'],
       ['datasetFiles', 'dataset'],
       ['imageFiles', 'imageFile'],
       ['storedQueries', 'storedQuery'],
@@ -199,11 +200,19 @@ describe('template-info-schema.json hookup', () => {
           onFailure: null
         }
       ],
-      recipes: [
+      dataTransforms: [
         {
           condition: null,
           overwriteOnUpgrade: null,
           onFailure: null
+        }
+      ],
+      recipes: [
+        {
+          condition: null,
+          overwriteOnUpgrade: null,
+          onFailure: null,
+          executeCondition: null
         }
       ],
       datasetFiles: [
@@ -326,10 +335,18 @@ describe('template-info-schema.json hookup', () => {
       { jsonpath: ['eltDataflows', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['eltDataflows', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
       { jsonpath: ['eltDataflows', 0, 'onFailure'], completions: ['New onFailure'] },
+      { jsonpath: ['dataTransforms'], completions: ['[]'] },
+      { jsonpath: ['dataTransforms', 0, 'condition'], completions: ['""', '${...} expression'] },
+      { jsonpath: ['dataTransforms', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
+      { jsonpath: ['dataTransforms', 0, 'onFailure'], completions: ['New onFailure'] },
       { jsonpath: ['recipes'], completions: ['[]'] },
       { jsonpath: ['recipes', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['recipes', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
       { jsonpath: ['recipes', 0, 'onFailure'], completions: ['New onFailure'] },
+      {
+        jsonpath: ['recipes', 0, 'executeCondition'],
+        completions: ['${...} expression', '"CreateSyncExecute"', '"CreateExecute"', '"CreateOnly"']
+      },
       { jsonpath: ['datasetFiles'], completions: ['[]'] },
       { jsonpath: ['datasetFiles', 0, 'userXmd'], completions: ['""'] },
       { jsonpath: ['datasetFiles', 0, 'condition'], completions: ['""', '${...} expression'] },
