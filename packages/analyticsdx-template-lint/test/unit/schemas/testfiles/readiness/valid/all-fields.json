@@ -72,7 +72,7 @@
         },
         {
           "field": "NumberOfEmployees",
-          "operator": "GreaerThanEqual",
+          "operator": "GreaterThanEqual",
           "value": "1"
         },
         {
