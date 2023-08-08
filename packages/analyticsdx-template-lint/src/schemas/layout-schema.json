@@ -299,39 +299,7 @@
                   "Displays a group of items"
                 ]
               },
-              "visibility": {
-                "description": "Controls if this item is visible. Value must be 'Disabled' (valid only for Variable items), 'Hidden', 'Visible', or a {{...}} expression against variables that evaluates to one of those or true (Visible) or false (Hidden).",
-                "oneOf": [
-                  {
-                    "type": "string",
-                    "pattern": "^\\{\\{.+\\}\\}$",
-                    "patternErrorMessage": "Value must be 'Disabled', 'Hidden', 'Visible', or a {{...}} expression.",
-                    "examples": [
-                      "{{Variables.booleanVariable}}",
-                      "{{Variables.booleanVariable ? 'Visible' : 'Disabled'}}",
-                      "{{Variables.stringVariable == 'Yes' ? 'Visible' : 'Hidden'}}",
-                      "{{Variables.numberVariable == 5 ? 'Visible' : 'Hidden'}}",
-                      "{{Variables.stringArray contains 'X' ? 'Visible' : 'Hidden'}}",
-                      "{{Variables.numberArray contains 5 ? 'Visible' : 'Hidden'}}"
-                    ]
-                  },
-                  {
-                    "type": "string",
-                    "default": "Visible",
-                    "enum": ["Disabled", "Hidden", "Visible"],
-                    "enumDescriptions": [
-                      "The variable shows as disabled",
-                      "The item is hidden.",
-                      "The item is visible."
-                    ]
-                  },
-                  {
-                    "type": "string",
-                    "$comment": "json-schema does not support case-insensitive enums, so this simulates it, using a lower-case 1st char to avoid a double schema match.",
-                    "pattern": "^(d[Ii][Ss][Aa][Bb][Ll][Ee][Dd]|h[Ii][Dd][Dd][Ee][Nn]|v[Ii][Ss][Ii][Bb][Ll][Ee])$"
-                  }
-                ]
-              },
+              "visibility": { "$ref": "#/definitions/visibility" },
               "name": {
                 "doNotSuggest": true
               },
@@ -349,62 +317,9 @@
               }
             },
             "anyOf": [
-              {
-                "properties": {
-                  "type": { "const": "Variable" },
-                  "name": {
-                    "type": "string",
-                    "description": "Variable name. Must match name of variable defined in variableDefinition file.",
-                    "$comment": "The variableDefinition file's fields have to match this regex, so match it here, too.",
-                    "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
-                    "doNotSuggest": false
-                  }
-                },
-                "required": ["type", "name"]
-              },
-              {
-                "properties": {
-                  "type": { "const": "Text" },
-                  "text": {
-                    "type": "string",
-                    "description": "The text to display in this item.",
-                    "doNotSuggest": false
-                  }
-                },
-                "required": ["type", "text"]
-              },
-              {
-                "properties": {
-                  "type": { "const": "Image" },
-                  "image": {
-                    "type": "object",
-                    "description": "The image to display in this item.",
-                    "doNotSuggest": false,
-                    "additionalProperties": false,
-                    "required": ["name"],
-                    "properties": {
-                      "namespace": {
-                        "type": ["null", "string"],
-                        "description": "The image namespace.",
-                        "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "The image name."
-                      }
-                    },
-                    "defaultSnippets": [
-                      {
-                        "label": "New image",
-                        "body": {
-                          "name": "${1:name}"
-                        }
-                      }
-                    ]
-                  }
-                },
-                "required": ["type", "image"]
-              },
+              { "$ref": "#/definitions/variableItem" },
+              { "$ref": "#/definitions/textItem" },
+              { "$ref": "#/definitions/imageItem" },
               {
                 "properties": {
                   "type": { "const": "GroupBox" },
@@ -434,39 +349,7 @@
                           "enum": ["Variable", "Text", "Image"],
                           "enumDescriptions": ["Displays a template variable.", "Displays text.", "Displays an image."]
                         },
-                        "visibility": {
-                          "description": "Controls if this item is visible. Value must be 'Disabled' (valid only for Variable items), 'Hidden', 'Visible', or a {{...}} expression against variables that evaluates to one of those or true (Visible) or false (Hidden).",
-                          "oneOf": [
-                            {
-                              "type": "string",
-                              "pattern": "^\\{\\{.+\\}\\}$",
-                              "patternErrorMessage": "Value must be 'Disabled', 'Hidden', 'Visible', or a {{...}} expression.",
-                              "examples": [
-                                "{{Variables.booleanVariable}}",
-                                "{{Variables.booleanVariable ? 'Visible' : 'Disabled'}}",
-                                "{{Variables.stringVariable == 'Yes' ? 'Visible' : 'Hidden'}}",
-                                "{{Variables.numberVariable == 5 ? 'Visible' : 'Hidden'}}",
-                                "{{Variables.stringArray contains 'X' ? 'Visible' : 'Hidden'}}",
-                                "{{Variables.numberArray contains 5 ? 'Visible' : 'Hidden'}}"
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "default": "Visible",
-                              "enum": ["Disabled", "Hidden", "Visible"],
-                              "enumDescriptions": [
-                                "The variable shows as disabled",
-                                "The item is hidden.",
-                                "The item is visible."
-                              ]
-                            },
-                            {
-                              "type": "string",
-                              "$comment": "json-schema does not support case-insensitive enums, so this simulates it, using a lower-case 1st char to avoid a double schema match.",
-                              "pattern": "^(d[Ii][Ss][Aa][Bb][Ll][Ee][Dd]|h[Ii][Dd][Dd][Ee][Nn]|v[Ii][Ss][Ii][Bb][Ll][Ee])$"
-                            }
-                          ]
-                        },
+                        "visibility": { "$ref": "#/definitions/visibility" },
                         "name": {
                           "doNotSuggest": true
                         },
@@ -478,62 +361,9 @@
                         }
                       },
                       "anyOf": [
-                        {
-                          "properties": {
-                            "type": { "const": "Variable" },
-                            "name": {
-                              "type": "string",
-                              "description": "Variable name. Must match name of variable defined in variableDefinition file.",
-                              "$comment": "The variableDefinition file's fields have to match this regex, so match it here, too.",
-                              "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
-                              "doNotSuggest": false
-                            }
-                          },
-                          "required": ["type", "name"]
-                        },
-                        {
-                          "properties": {
-                            "type": { "const": "Text" },
-                            "text": {
-                              "type": "string",
-                              "description": "The text to display in this item.",
-                              "doNotSuggest": false
-                            }
-                          },
-                          "required": ["type", "text"]
-                        },
-                        {
-                          "properties": {
-                            "type": { "const": "Image" },
-                            "image": {
-                              "type": "object",
-                              "description": "The image to display in this item.",
-                              "doNotSuggest": false,
-                              "additionalProperties": false,
-                              "required": ["name"],
-                              "properties": {
-                                "namespace": {
-                                  "type": ["null", "string"],
-                                  "description": "The image namespace.",
-                                  "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-                                },
-                                "name": {
-                                  "type": "string",
-                                  "description": "The image name."
-                                }
-                              },
-                              "defaultSnippets": [
-                                {
-                                  "label": "New image",
-                                  "body": {
-                                    "name": "${1:name}"
-                                  }
-                                }
-                              ]
-                            }
-                          },
-                          "required": ["type", "image"]
-                        }
+                        { "$ref": "#/definitions/variableItem" },
+                        { "$ref": "#/definitions/textItem" },
+                        { "$ref": "#/definitions/imageItem" }
                       ],
                       "defaultSnippets": [
                         {
@@ -630,6 +460,91 @@
           }
         }
       ]
+    },
+    "visibility": {
+      "description": "Controls if this item is visible. Value must be 'Disabled' (valid only for Variable items), 'Hidden', 'Visible', or a {{...}} expression against variables that evaluates to one of those or true (Visible) or false (Hidden).",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^\\{\\{.+\\}\\}$",
+          "patternErrorMessage": "Value must be 'Disabled', 'Hidden', 'Visible', or a {{...}} expression.",
+          "examples": [
+            "{{Variables.booleanVariable}}",
+            "{{Variables.booleanVariable ? 'Visible' : 'Disabled'}}",
+            "{{Variables.stringVariable == 'Yes' ? 'Visible' : 'Hidden'}}",
+            "{{Variables.numberVariable == 5 ? 'Visible' : 'Hidden'}}",
+            "{{Variables.stringArray contains 'X' ? 'Visible' : 'Hidden'}}",
+            "{{Variables.numberArray contains 5 ? 'Visible' : 'Hidden'}}"
+          ]
+        },
+        {
+          "type": "string",
+          "default": "Visible",
+          "enum": ["Disabled", "Hidden", "Visible"],
+          "enumDescriptions": ["The variable shows as disabled", "The item is hidden.", "The item is visible."]
+        },
+        {
+          "type": "string",
+          "$comment": "json-schema does not support case-insensitive enums, so this simulates it, using a lower-case 1st char to avoid a double schema match.",
+          "pattern": "^(d[Ii][Ss][Aa][Bb][Ll][Ee][Dd]|h[Ii][Dd][Dd][Ee][Nn]|v[Ii][Ss][Ii][Bb][Ll][Ee])$"
+        }
+      ]
+    },
+    "variableItem": {
+      "properties": {
+        "type": { "const": "Variable" },
+        "name": {
+          "type": "string",
+          "description": "Variable name. Must match name of variable defined in variableDefinition file.",
+          "$comment": "The variableDefinition file's fields have to match this regex, so match it here, too.",
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "doNotSuggest": false
+        }
+      },
+      "required": ["type", "name"]
+    },
+    "textItem": {
+      "properties": {
+        "type": { "const": "Text" },
+        "text": {
+          "type": "string",
+          "description": "The text to display in this item.",
+          "doNotSuggest": false
+        }
+      },
+      "required": ["type", "text"]
+    },
+    "imageItem": {
+      "properties": {
+        "type": { "const": "Image" },
+        "image": {
+          "type": "object",
+          "description": "The image to display in this item.",
+          "doNotSuggest": false,
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "namespace": {
+              "type": ["null", "string"],
+              "description": "The image namespace.",
+              "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
+            },
+            "name": {
+              "type": "string",
+              "description": "The image name."
+            }
+          },
+          "defaultSnippets": [
+            {
+              "label": "New image",
+              "body": {
+                "name": "${1:name}"
+              }
+            }
+          ]
+        }
+      },
+      "required": ["type", "image"]
     }
   }
 }
