@@ -437,12 +437,9 @@
                   "description": "${2}",
                   "items": [
                     {
-                      "label": "New Variable item",
-                      "body": {
-                        "type": "Variable",
-                        "name": "${3}",
-                        "visibility": "${4:Visible}"
-                      }
+                      "type": "Variable",
+                      "name": "${3}",
+                      "visibility": "${4:Visible}"
                     }
                   ],
                   "visibility": "${5:Visible}"
