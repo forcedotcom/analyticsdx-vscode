@@ -114,6 +114,15 @@
         "max": {
           "doNotSuggest": true
         },
+        "format": {
+          "type": "string",
+          "doNotSuggest": true,
+          "enum": ["Decimal", "Currency", "Percent", "PercentFixed"]
+        },
+        "scale": {
+          "type": "number",
+          "doNotSuggest": true
+        },
         "dataType": {
           "doNotSuggest": true
         },

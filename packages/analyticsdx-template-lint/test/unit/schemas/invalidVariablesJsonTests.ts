@@ -39,7 +39,9 @@ describe('variables-schema.json finds errors in', () => {
       'stringvar.variableType.error',
       'objvar.variableType.properties.foo.error',
       'arrayvar.variableType.itemsType.error',
-      'arrayvar.variableType.sizeLimit.error'
+      'arrayvar.variableType.sizeLimit.error',
+      'numbar.variableType.format.error',
+      'numbar.variableType.scale.error'
     );
   });
 
