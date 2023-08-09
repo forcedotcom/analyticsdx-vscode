@@ -30,7 +30,8 @@ describe('TemplateLinter layout.json', () => {
         variableDefinition: 'variables.json'
       },
       new StringDocument(path.join(dir, 'variables.json'), {
-        foo: { variableType: { type: 'StringType' } }
+        foo: { variableType: { type: 'StringType' } },
+        groupBar: { variableType: { type: 'StringType' } }
       }),
       new StringDocument(layoutPath, {
         pages: [
@@ -41,7 +42,14 @@ describe('TemplateLinter layout.json', () => {
               center: {
                 items: [
                   { type: 'Variable', name: 'foo' },
-                  { type: 'Variable', name: 'food' }
+                  { type: 'Variable', name: 'food' },
+                  {
+                    type: 'GroupBox',
+                    items: [
+                      { type: 'Variable', name: 'groupFoo' },
+                      { type: 'Variable', name: 'groupBar' }
+                    ]
+                  }
                 ]
               }
             }
@@ -67,8 +75,8 @@ describe('TemplateLinter layout.json', () => {
 
     await linter.lint();
     const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
-    if (diagnostics.length !== 2) {
-      expect.fail('Expected 2 unknown variable errors, got' + stringifyDiagnostics(diagnostics));
+    if (diagnostics.length !== 3) {
+      expect.fail('Expected 3 unknown variable errors, got' + stringifyDiagnostics(diagnostics));
     }
 
     let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[1].name');
@@ -76,10 +84,15 @@ describe('TemplateLinter layout.json', () => {
     expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
     expect(diagnostic!.args).to.deep.equal({ name: 'food', match: 'foo' });
 
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[2].items[0].name');
+    expect(diagnostic, 'groupFoo variable error').to.not.be.undefined;
+    expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+    expect(diagnostic!.args).to.deep.equal({ name: 'groupFoo', match: 'groupBar' });
+
     diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].layout.left.items[0].name');
     expect(diagnostic, 'bar variable error').to.not.be.undefined;
     expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
-    expect(diagnostic!.args).to.deep.equal({ name: 'bar' });
+    expect(diagnostic!.args).to.deep.equal({ name: 'bar', match: 'groupBar' });
   });
 
   it('validates variable types', async () => {
