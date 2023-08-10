@@ -138,4 +138,34 @@ describe('variables-schema.json hookup', () => {
       '""'
     );
   });
+
+  it('has code-completions for format', async () => {
+    const variablesEditor = await createTemplateWithVariables({
+      error: 'an initial error to look for',
+      numVar: { variableType: { type: 'NumberType', format: 'Decimal' } }
+    });
+    await waitFor(
+      () => variablesEditor.document.languageId,
+      lang => lang === TEMPLATE_JSON_LANG_ID,
+      { timeoutMessage: 'timeout waiting for variables.json languageId' }
+    );
+    await waitForDiagnostics(variablesEditor.document.uri, d => d?.length === 1, 'initial error on variables.json');
+    const tree = parseTree(variablesEditor.document.getText());
+    // find the variableType {} in the json
+    const numVarFormat = tree && findNodeAtLocation(tree, ['numVar', 'variableType', 'format']);
+    expect(numVarFormat, `format node`).to.not.be.undefined;
+    expect(numVarFormat!.parent, `format prop node`).to.not.be.undefined;
+    expect(numVarFormat!.parent!.colonOffset, `format colonOffset`).to.not.be.undefined;
+    // go right after the colon
+    const position = variablesEditor.document.positionAt(numVarFormat!.parent!.colonOffset! + 1);
+    // check that it has some of the known connector types from the schema
+    await verifyCompletionsContain(
+      variablesEditor.document,
+      position,
+      '"Currency"',
+      '"Decimal"',
+      '"Percent"',
+      '"PercentFixed"'
+    );
+  });
 });
