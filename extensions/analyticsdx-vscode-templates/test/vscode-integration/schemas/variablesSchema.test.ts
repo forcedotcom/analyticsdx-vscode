@@ -61,7 +61,7 @@ describe('variables-schema.json hookup', () => {
         expected: string[];
         initialErrorsCount?: number;
       },
-      { type: 'NumberType', expected: ['enums', 'enumsLabels', 'min', 'max'] },
+      { type: 'NumberType', expected: ['enums', 'enumsLabels', 'min', 'max', 'format', 'scale'] },
       { type: 'SobjectFieldType', expected: ['dataType'] },
       { type: 'DataLakeObjectFieldType', expected: ['dataType'] },
       { type: 'DataModelObjectFieldType', expected: ['dataType'] },
