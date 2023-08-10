@@ -1,6 +1,6 @@
 {
   "array": {
-    "description": "Missng variableType.itemsType",
+    "description": "Missing variableType.itemsType",
     "variableType": {
       "type": "ArrayType"
     }

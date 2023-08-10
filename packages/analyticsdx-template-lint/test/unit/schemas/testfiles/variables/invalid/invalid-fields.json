@@ -28,5 +28,16 @@
         "error": "This should trigger a warning"
       }
     }
+  },
+  "numvar": {
+    "variableType": {
+      "type": "NumberType",
+      "format": {
+        "error": "This should trigger a warning"
+      },
+      "scale": {
+        "error": "This should trigger a warning"
+      }
+    }
   }
 }

@@ -114,6 +114,12 @@
         "max": {
           "doNotSuggest": true
         },
+        "format": {
+          "doNotSuggest": true
+        },
+        "scale": {
+          "doNotSuggest": true
+        },
         "dataType": {
           "doNotSuggest": true
         },
@@ -187,6 +193,15 @@
             "max": {
               "type": ["number", "integer"],
               "description": "Maximum numeric value.",
+              "doNotSuggest": false
+            },
+            "format": {
+              "type": "string",
+              "doNotSuggest": false,
+              "enum": ["Decimal", "Currency", "Percent", "PercentFixed"]
+            },
+            "scale": {
+              "type": "number",
               "doNotSuggest": false
             },
             "enums": {
