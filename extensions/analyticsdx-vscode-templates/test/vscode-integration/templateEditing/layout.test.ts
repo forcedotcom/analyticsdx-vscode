@@ -136,6 +136,23 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       expect.fail("Expected to find '[' after '\"items\":'");
     }
     position = scan.end.translate({ characterDelta: 1 });
+    await verifyCompletionsContain(
+      doc,
+      position,
+      'New Image item',
+      'New Text item',
+      'New Variable item',
+      'New Groupbox item'
+    );
+
+    // go to just after the [ in items[3] (a GroupBox item type) "items"
+    node = findNodeAtLocation(tree!, ['pages', 0, 'layout', 'center', 'items', 3, 'items']);
+    expect(node, 'pages[0].layout.center.items[3].items').to.not.be.undefined;
+    scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
+    if (scan.ch !== '[') {
+      expect.fail("Expected to find '[' after '\"items[3].items\":'");
+    }
+    position = scan.end.translate({ characterDelta: 1 });
     await verifyCompletionsContain(doc, position, 'New Image item', 'New Text item', 'New Variable item');
 
     // go right after the [ in "displayMessages"
