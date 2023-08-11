@@ -140,7 +140,7 @@
                   }
                 }
               ],
-              "visibility": "Visible"
+              "visibility": "{{Variables.booleanVar ? 'Visible' : 'Hidden'}}"
             }
           ]
         }

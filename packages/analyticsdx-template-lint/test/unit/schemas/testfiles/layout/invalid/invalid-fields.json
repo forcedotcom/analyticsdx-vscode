@@ -26,6 +26,27 @@
                 "error": "This should trigger a warning",
                 "name": "PositivePossum"
               }
+            },
+            {
+              "type": "GroupBox",
+              "text": "Invalid empty groupBox",
+              "description": "This should trigger a warning",
+              "items": []
+            },
+            {
+              "type": "GroupBox",
+              "error": "This should trigger a warning",
+              "items": [
+                {
+                  "error": "This should trigger a warning",
+                  "description": "This should trigger a warning",
+                  "type": "Image",
+                  "image": {
+                    "error": "This should trigger a warning",
+                    "name": "PositivePossum"
+                  }
+                }
+              ]
             }
           ]
         }
