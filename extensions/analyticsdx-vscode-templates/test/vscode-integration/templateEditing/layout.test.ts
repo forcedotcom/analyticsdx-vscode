@@ -300,11 +300,11 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     }
   });
 
-  it('go to definition support for variable names', async () => {
+  it.only('go to definition support for variable names', async () => {
     const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'layout.json');
     const [doc] = await openFile(uri, true);
-    // we should see the 2 warnings about the bad var types
-    await waitForDiagnostics(uri, d => d && d.length >= 2);
+    // we should see the 4 warnings about the bad var types
+    await waitForDiagnostics(uri, d => d && d.length >= 4);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
 
     const position = findPositionByJsonPath(doc, ['pages', 0, 'layout', 'center', 'items', 0, 'name']);
@@ -317,13 +317,35 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     expect(locations[0].uri.fsPath, 'location path').to.equal(
       vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
     );
+
+    // Go to definition for variable defined in groupbox
+    const groupBoxVarPosition = findPositionByJsonPath(doc, [
+      'pages',
+      0,
+      'layout',
+      'center',
+      'items',
+      4,
+      'items',
+      0,
+      'name'
+    ]);
+    expect(groupBoxVarPosition, 'pages[0].layout.center.items[4].items[0].name').to.not.be.undefined;
+
+    const groupBoxVarlocations = await getDefinitionLocations(uri, groupBoxVarPosition!.translate(undefined, 1));
+    if (groupBoxVarlocations.length !== 1) {
+      expect.fail('Expected 1 location, got:\n' + JSON.stringify(groupBoxVarlocations, undefined, 2));
+    }
+    expect(groupBoxVarlocations[0].uri.fsPath, 'location path').to.equal(
+      vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
+    );
   });
 
   it('code completions for variable names', async () => {
     const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'layout.json');
     const [doc] = await openFile(uri, true);
-    // we should see the 2 warnings about the bad var types
-    await waitForDiagnostics(uri, d => d && d.length >= 2);
+    // we should see the 4 warnings about the bad var types
+    await waitForDiagnostics(uri, d => d && d.length >= 4);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
 
     const position = findPositionByJsonPath(doc, ['pages', 0, 'layout', 'center', 'items', 0, 'name']);
@@ -366,6 +388,62 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       }
     ].forEach(({ detail, docs }, i) => {
       const item = completions[i];
+      expect(item.kind, `${item.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
+      expect(item.detail, `${item.label} details`).to.equal(detail);
+      expect(item.documentation, `${item.label} documentation`).to.equal(docs);
+    });
+
+    // Check for variable code completitons inside groupBox
+    const groupBoxPosition = findPositionByJsonPath(doc, [
+      'pages',
+      0,
+      'layout',
+      'center',
+      'items',
+      4,
+      'items',
+      0,
+      'name'
+    ]);
+    expect(groupBoxPosition, 'pages[0].layout.center.items[4].items[0].name').to.not.be.undefined;
+    const groupBoxCompletions = (
+      await verifyCompletionsContain(
+        doc,
+        groupBoxPosition!,
+        '"DatasetAnyFieldTypeVar"',
+        '"DateTimeTypeVar"',
+        '"ObjectTypeVar"',
+        '"StringArrayVar"',
+        '"StringTypeVar"'
+      )
+    ).sort(compareCompletionItems);
+    if (groupBoxCompletions.length !== 5) {
+      expect.fail('Expected 5 completions, got: ' + groupBoxCompletions.map(i => i.label).join(', '));
+    }
+    // check some more stuff on the completion items
+    [
+      {
+        detail: '(DatasetAnyFieldType) A dataset any field variable',
+        docs: "This can't be put in a non-vfpage page"
+      },
+      {
+        detail: '(DateTimeType) A datetime variable',
+        docs: "This can't be put in a non-vfpage page"
+      },
+      {
+        detail: '(ObjectType) An object variable',
+        docs: "This can't be put in a non-vfpage page"
+      },
+      {
+        detail: '(StringType[])',
+        docs: undefined
+      },
+      {
+        detail: '(StringType) A string variable',
+        docs: 'String variable description'
+      }
+    ].forEach(({ detail, docs }, i) => {
+      const item = groupBoxCompletions[i];
       expect(item.kind, `${item.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
       expect(item.detail, `${item.label} details`).to.equal(detail);
       expect(item.documentation, `${item.label} documentation`).to.equal(docs);

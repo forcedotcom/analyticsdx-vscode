@@ -11,7 +11,15 @@
             { "type": "Variable", "name": "ObjectTypeVar" },
             // this should be fine
             { "type": "Variable", "name": "DatasetAnyFieldTypeVar" },
-            { "type": "Variable", "name": "StringTypeVar" }
+            { "type": "Variable", "name": "StringTypeVar" },
+            // this should get errors about the type
+            {
+              "type": "GroupBox",
+              "items": [
+                { "type": "Variable", "name": "DateTimeTypeVar" },
+                { "type": "Variable", "name": "ObjectTypeVar" }
+              ]
+            }
           ]
         }
       }
