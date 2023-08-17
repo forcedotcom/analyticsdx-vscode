@@ -67,7 +67,8 @@ function findAllItemsForLayoutDefinition(layoutJson: JsonNode): JsonNode[] {
 function findAllVariableNamesForLayoutDefinition(layoutJson: JsonNode): Array<{ name: string; nameNode: JsonNode }> {
   return findAllItemsForLayoutDefinition(layoutJson).reduce((items, item) => {
     const variableItems = findAllVariableItemsForLayoutItem(item);
-    return [...items, ...variableItems];
+    items.push(...variableItems);
+    return items;
   }, [] as Array<{ name: string; nameNode: JsonNode }>);
 }
 
