@@ -373,7 +373,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
         docs: "This can't be put in a non-vfpage page"
       },
       {
-        detail: '(DateTimeType) A datetime variable',
+        detail: '(DateTimeType) A datetime variable for groupbox',
         docs: "This can't be put in a non-vfpage page"
       },
       {
@@ -381,7 +381,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
         docs: "This can't be put in a non-vfpage page"
       },
       {
-        detail: '(ObjectType) An object variable',
+        detail: '(ObjectType) An object variable for groupbox',
         docs: "This can't be put in a non-vfpage page"
       },
       {
@@ -439,7 +439,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
         docs: "This can't be put in a non-vfpage page"
       },
       {
-        detail: '(DateTimeType) A datetime variable',
+        detail: '(DateTimeType) A datetime variable for groupbox',
         docs: "This can't be put in a non-vfpage page"
       },
       {
@@ -447,7 +447,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
         docs: "This can't be put in a non-vfpage page"
       },
       {
-        detail: '(ObjectType) An object variable',
+        detail: '(ObjectType) An object variable for groupbox',
         docs: "This can't be put in a non-vfpage page"
       },
       {
