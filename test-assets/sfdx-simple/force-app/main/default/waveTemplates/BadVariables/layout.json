@@ -16,8 +16,9 @@
             {
               "type": "GroupBox",
               "items": [
-                { "type": "Variable", "name": "DateTimeTypeVar" },
-                { "type": "Variable", "name": "ObjectTypeVar" }
+                // these should get errors about the type
+                { "type": "Variable", "name": "DateTimeTypeVar2" },
+                { "type": "Variable", "name": "ObjectTypeVar2" }
               ]
             }
           ]

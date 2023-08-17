@@ -300,7 +300,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     }
   });
 
-  it.only('go to definition support for variable names', async () => {
+  it('go to definition support for variable names', async () => {
     const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'layout.json');
     const [doc] = await openFile(uri, true);
     // we should see the 4 warnings about the bad var types
