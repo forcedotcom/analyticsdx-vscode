@@ -22,7 +22,7 @@
       "required": ["one"]
     }
   },
-  "ObjectTypeVar2": {
+  "ObjectTypeGroupBoxVar": {
     "label": "An object variable for groupbox",
     "description": "This can't be put in a non-vfpage page",
     "defaultValue": {
@@ -45,7 +45,7 @@
       "type": "DateTimeType"
     }
   },
-  "DateTimeTypeVar2": {
+  "DateTimeTypeGroupBoxVar": {
     "label": "A datetime variable for groupbox",
     "description": "This can't be put in a non-vfpage page",
     "variableType": {
