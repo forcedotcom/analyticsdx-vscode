@@ -488,6 +488,7 @@
       ]
     },
     "variableItem": {
+      "type": "object",
       "properties": {
         "type": { "const": "Variable" },
         "name": {
@@ -501,6 +502,7 @@
       "required": ["type", "name"]
     },
     "textItem": {
+      "type": "object",
       "properties": {
         "type": { "const": "Text" },
         "text": {
@@ -512,6 +514,7 @@
       "required": ["type", "text"]
     },
     "imageItem": {
+      "type": "object",
       "properties": {
         "type": { "const": "Image" },
         "image": {
