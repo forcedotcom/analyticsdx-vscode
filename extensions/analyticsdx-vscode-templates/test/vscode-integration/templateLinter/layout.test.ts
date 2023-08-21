@@ -162,14 +162,14 @@ describe('TemplateLinterManager lints layout.json', () => {
 
     const [doc] = await openFile(uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'layout.json'));
     const diagnostics = (
-      await waitForDiagnostics(doc.uri, d => d && d.filter(varFilter).length >= 2, 'initial diagnostics on layout.json')
+      await waitForDiagnostics(doc.uri, d => d && d.filter(varFilter).length >= 4, 'initial diagnostics on layout.json')
     )
       .filter(varFilter)
       .sort(sortDiagnostics);
-    if (diagnostics.length !== 2) {
-      expect.fail('Expected 2 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+    if (diagnostics.length !== 4) {
+      expect.fail('Expected 4 initial diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
     }
-    // make sure we get the 2 expected errors
+    // make sure we get the 2 expected errors for variables not under a groupbox
     ['DateTimeType', 'ObjectType'].forEach((type, i) => {
       const diagnostic = diagnostics[i];
       expect(diagnostic, `diagnostics[${i}]`).to.be.not.undefined;
@@ -179,6 +179,22 @@ describe('TemplateLinterManager lints layout.json', () => {
       expect(diagnostic.code, `diagnostics[${i}].code`).to.equal(ERRORS.LAYOUT_PAGE_UNSUPPORTED_VARIABLE);
       expect(jsonpathFrom(diagnostic), `diagnostics[${i}].jsonpath`).to.equal(
         `pages[0].layout.center.items[${i}].name`
+      );
+    });
+
+    // make sure we get the 2 expected errors for variables under groupbox
+    ['DateTimeType', 'ObjectType'].forEach((type, i) => {
+      const groupBoxVarIndex = i + 2;
+      const diagnostic = diagnostics[groupBoxVarIndex];
+      expect(diagnostic, `diagnostics[${groupBoxVarIndex}]`).to.be.not.undefined;
+      expect(diagnostic.message, `diagnostics[${groupBoxVarIndex}].message`).to.equal(
+        `${type} variable '${type}GroupBoxVar' is not supported in layout pages`
+      );
+      expect(diagnostic.code, `diagnostics[${groupBoxVarIndex}].code`).to.equal(
+        ERRORS.LAYOUT_PAGE_UNSUPPORTED_VARIABLE
+      );
+      expect(jsonpathFrom(diagnostic), `diagnostics[${groupBoxVarIndex}].jsonpath`).to.equal(
+        `pages[0].layout.center.items[4].items[${i}].name`
       );
     });
   });

@@ -73,7 +73,8 @@ describe('layout-schema.json hookup', () => {
       // these types should see some available completions in the item (plus visibility)
       { type: 'Variable', expected: ['name'] },
       { type: 'Image', expected: ['image'] },
-      { type: 'Text', expected: ['text'] }
+      { type: 'Text', expected: ['text'] },
+      { type: 'GroupBox', expected: ['text', 'description', 'items'] }
     ].forEach(({ type, expected }) => {
       it(type, async () => {
         const layoutEditor = await createTemplateWithItemType(type);

@@ -295,14 +295,16 @@ describe('TemplateEditorManager configures uiDefinition', () => {
         doc,
         position!,
         '"DatasetAnyFieldTypeVar"',
+        '"DateTimeTypeGroupBoxVar"',
         '"DateTimeTypeVar"',
+        '"ObjectTypeGroupBoxVar"',
         '"ObjectTypeVar"',
         '"StringArrayVar"',
         '"StringTypeVar"'
       )
     ).sort(compareCompletionItems);
-    if (completions.length !== 5) {
-      expect.fail('Expected 5 completions, got: ' + completions.map(i => i.label).join(', '));
+    if (completions.length !== 7) {
+      expect.fail('Expected 7 completions, got: ' + completions.map(i => i.label).join(', '));
     }
     // check some more stuff on the completion items
     [
@@ -311,7 +313,15 @@ describe('TemplateEditorManager configures uiDefinition', () => {
         docs: "This can't be put in a non-vfpage page"
       },
       {
+        detail: '(DateTimeType) A datetime variable for groupbox',
+        docs: "This can't be put in a non-vfpage page"
+      },
+      {
         detail: '(DateTimeType) A datetime variable',
+        docs: "This can't be put in a non-vfpage page"
+      },
+      {
+        detail: '(ObjectType) An object variable for groupbox',
         docs: "This can't be put in a non-vfpage page"
       },
       {

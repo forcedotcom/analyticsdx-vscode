@@ -16,7 +16,21 @@
               "type": "Image",
               "image": { "name": "someimage" }
             },
-            { "type": "Text", "text": "Some text here", "visibility": "{{Variables.booleanVariable}}" }
+            { "type": "Text", "text": "Some text here", "visibility": "{{Variables.booleanVariable}}" },
+            {
+              "type": "GroupBox",
+              "text": "test groupbox header",
+              "description": "test groupbox header description",
+              "items": [
+                { "type": "Variable", "name": "sobjectfield", "visibility": "Hidden" },
+                {
+                  "type": "Image",
+                  "image": { "name": "someimage" }
+                },
+                { "type": "Text", "text": "Some text here", "visibility": "{{Variables.booleanVariable}}" }
+              ],
+              "visibility": "Visible"
+            }
           ]
         }
       }

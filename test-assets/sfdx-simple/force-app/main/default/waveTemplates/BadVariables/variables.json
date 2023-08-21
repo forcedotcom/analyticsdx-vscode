@@ -22,8 +22,31 @@
       "required": ["one"]
     }
   },
+  "ObjectTypeGroupBoxVar": {
+    "label": "An object variable for groupbox",
+    "description": "This can't be put in a non-vfpage page",
+    "defaultValue": {
+      "one": "1"
+    },
+    "variableType": {
+      "type": "ObjectType",
+      "properties": {
+        "one": {
+          "type": "StringType"
+        }
+      },
+      "required": ["one"]
+    }
+  },
   "DateTimeTypeVar": {
     "label": "A datetime variable",
+    "description": "This can't be put in a non-vfpage page",
+    "variableType": {
+      "type": "DateTimeType"
+    }
+  },
+  "DateTimeTypeGroupBoxVar": {
+    "label": "A datetime variable for groupbox",
     "description": "This can't be put in a non-vfpage page",
     "variableType": {
       "type": "DateTimeType"

@@ -33,6 +33,24 @@
               "type": "Variable",
               "name": "multiNumber",
               "visibility": "Visible"
+            },
+            {
+              "type": "GroupBox",
+              "text": "test groupbox header",
+              "description": "test groupbox header description",
+              "items": [
+                {
+                  "type": "Variable",
+                  "name": "groupedVar1",
+                  "visibility": "Visible"
+                },
+                {
+                  "type": "Variable",
+                  "name": "groupedVar2",
+                  "visibility": "Disabled"
+                }
+              ],
+              "visibility": "Visible"
             }
           ]
         }
@@ -65,6 +83,18 @@
               "type": "Variable",
               "name": "booleanVar",
               "visibility": "Visible"
+            },
+            {
+              "type": "GroupBox",
+              "text": "test groupbox header",
+              "description": "test groupbox header description",
+              "items": [
+                {
+                  "type": "Text",
+                  "text": "Some text in groupbox"
+                }
+              ],
+              "visibility": "Visible"
             }
           ]
         },
@@ -95,6 +125,21 @@
             {
               "type": "Variable",
               "name": "selectedNumber",
+              "visibility": "{{Variables.booleanVar ? 'Visible' : 'Hidden'}}"
+            },
+            {
+              "type": "GroupBox",
+              "text": "test groupbox header",
+              "description": "test groupbox header description",
+              "items": [
+                {
+                  "type": "Image",
+                  "visibility": "{{Variables.booleanVar ? 'Visible' : 'Hidden'}}",
+                  "image": {
+                    "name": "GroupBoxImage"
+                  }
+                }
+              ],
               "visibility": "{{Variables.booleanVar ? 'Visible' : 'Hidden'}}"
             }
           ]

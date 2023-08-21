@@ -13,6 +13,25 @@
             {
               "type": "",
               "visibility": ""
+            },
+            {
+              "type": "GroupBox",
+              "items": [
+                {
+                  "type": "GroupBox",
+                  "text": "Invalid nested groupBox"
+                },
+                {
+                  "type": "badValue",
+                  "text": "Invalid type",
+                  "visibility": "badvalue"
+                },
+                {
+                  "type": "",
+                  "visibility": "",
+                  "name": ""
+                }
+              ]
             }
           ]
         }

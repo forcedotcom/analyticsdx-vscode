@@ -66,15 +66,25 @@ function findAllItemsForLayoutDefinition(layoutJson: JsonNode): JsonNode[] {
  */
 function findAllVariableNamesForLayoutDefinition(layoutJson: JsonNode): Array<{ name: string; nameNode: JsonNode }> {
   return findAllItemsForLayoutDefinition(layoutJson).reduce((items, item) => {
-    const type = findJsonPrimitiveAttributeValue(item, 'type')[0];
-    if (type === 'Variable') {
-      const [name, nameNode] = findJsonPrimitiveAttributeValue(item, 'name');
-      if (typeof name === 'string' && nameNode) {
-        items.push({ name, nameNode });
-      }
-    }
+    const variableItems = findAllVariableItemsForLayoutItem(item);
+    items.push(...variableItems);
     return items;
   }, [] as Array<{ name: string; nameNode: JsonNode }>);
+}
+
+function findAllVariableItemsForLayoutItem(item: JsonNode): Array<{ name: string; nameNode: JsonNode }> {
+  const type = findJsonPrimitiveAttributeValue(item, 'type')[0];
+  if (type === 'Variable') {
+    const [name, nameNode] = findJsonPrimitiveAttributeValue(item, 'name');
+    if (typeof name === 'string' && nameNode) {
+      return [{ name, nameNode }];
+    }
+  } else if (type === 'GroupBox') {
+    const [nodes, node] = findJsonArrayAttributeValue(item, 'items');
+    const childrenVariableItems = nodes?.flatMap(n => findAllVariableItemsForLayoutItem(n));
+    return childrenVariableItems ? childrenVariableItems : [];
+  }
+  return [];
 }
 
 export type TemplateLinterUri = {

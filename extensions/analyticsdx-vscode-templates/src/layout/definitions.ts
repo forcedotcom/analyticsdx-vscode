@@ -35,7 +35,10 @@ export class LayoutVariableDefinitionProvider extends VariableRefDefinitionProvi
       // TODO: make these more specific to the layout type (e.g. only 'center' if SingleColumn)
       (location.matches(['pages', '*', 'layout', 'center', 'items', '*', 'name']) ||
         location.matches(['pages', '*', 'layout', 'right', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'left', 'items', '*', 'name']))
+        location.matches(['pages', '*', 'layout', 'left', 'items', '*', 'name']) ||
+        location.matches(['pages', '*', 'layout', 'center', 'items', '*', 'items', '*', 'name']) ||
+        location.matches(['pages', '*', 'layout', 'right', 'items', '*', 'items', '*', 'name']) ||
+        location.matches(['pages', '*', 'layout', 'left', 'items', '*', 'items', '*', 'name']))
     );
   }
 }

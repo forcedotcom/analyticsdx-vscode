@@ -21,7 +21,7 @@ would for NPM modules.
 
 For vscode extension packages, place your strict unit tests in the `test/unit` directory of your package and create an
 npm script in your package.json like `"test:unit": "./node_modules/.bin/_mocha --recursive out/test/unit"`
-for running the tests. Check out the `"test:unit"` scripts in extensions/analyticsdx-vscode-templates/package.json file
+for running the tests. Check out the `"test:unit"` scripts in `extensions/analyticsdx-vscode-templates/package.json` file
 to see examples of how to configure code coverage reporting when running the tests.
 
 These tests should not require a VS Code instance or a Salesforce server connection, and
