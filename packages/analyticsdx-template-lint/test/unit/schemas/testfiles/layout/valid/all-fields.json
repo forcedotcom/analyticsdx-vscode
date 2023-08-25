@@ -35,6 +35,29 @@
               "visibility": "Visible"
             },
             {
+              "type": "Variable",
+              "name": "stringTiles",
+              "description": "",
+              "label": "",
+              "variant": "CheckboxTiles",
+              "tiles": {
+                "foo": {
+                  "label": "tile label",
+                  "description": "tile description",
+                  "badge": "tile badge",
+                  "iconName": "utility:food_and_drink"
+                }
+              }
+            },
+            {
+              "type": "Variable",
+              "name": "stringTiles2",
+              "visibility": "Visible",
+              "label": "variable label",
+              "description": "variable description",
+              "variant": "CenteredCheckboxTiles"
+            },
+            {
               "type": "GroupBox",
               "text": "test groupbox header",
               "description": "test groupbox header description",
@@ -48,6 +71,19 @@
                   "type": "Variable",
                   "name": "groupedVar2",
                   "visibility": "Disabled"
+                },
+                {
+                  "type": "Variable",
+                  "name": "groupedTilesVar",
+                  "variant": "CheckboxTiles",
+                  "tiles": {
+                    "foo": {
+                      "badge": "badge",
+                      "description": "description",
+                      "iconName": "utilty:settings",
+                      "label": "label"
+                    }
+                  }
                 }
               ],
               "visibility": "Visible"
