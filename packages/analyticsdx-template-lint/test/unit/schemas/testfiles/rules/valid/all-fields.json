@@ -64,6 +64,10 @@
           "type": "dashboard"
         },
         {
+          "type": "dataTransform",
+          "name": "*"
+        },
+        {
           "type": "discoveryStories"
         },
         {
