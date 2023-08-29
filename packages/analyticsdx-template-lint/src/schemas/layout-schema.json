@@ -89,12 +89,12 @@
                 "properties": {
                   "text": {
                     "type": ["null", "string"],
-                    "description": "Header text.",
+                    "description": "Header text. This can contain {{...}} expressions.",
                     "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
                   },
                   "description": {
                     "type": ["null", "string"],
-                    "description": "Header description text, displayed under the header text.",
+                    "description": "Header description text, displayed under the header text. This can contain {{...}} expressions.",
                     "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
                   }
                 },
@@ -334,12 +334,12 @@
                   "type": { "const": "GroupBox" },
                   "text": {
                     "type": "string",
-                    "description": "The header text to display for the groupbox",
+                    "description": "The header text to display for the groupbox. This can contain {{...}} expressions.",
                     "doNotSuggest": false
                   },
                   "description": {
                     "type": "string",
-                    "description": "The helper text to display for the groupbox header",
+                    "description": "The helper text to display for the groupbox header. This can contain {{...}} expressions.",
                     "doNotSuggest": false
                   },
                   "items": {
@@ -556,22 +556,22 @@
             "properties": {
               "label": {
                 "type": ["string", "null"],
-                "description": "Label to use for the tile. If not specified, defaults to the enum label or the enum value itself.",
+                "description": "Label to use for the tile. If not specified, defaults to the enum label or the enum value itself. This can contain {{...}} expressions.",
                 "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
               },
               "description": {
                 "type": ["string", "null"],
-                "description": "Description text to display in the middle of the tile.",
+                "description": "Description text to display in the middle of the tile. This can contain {{...}} expressions.",
                 "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
               },
               "iconName": {
                 "type": ["string", "null"],
-                "description": "Name of the SLDS icon to display in the tile. See https://www.lightningdesignsystem.com/icons/ for the available icon names.",
+                "description": "Name of the SLDS icon to display in the tile. See https://www.lightningdesignsystem.com/icons/ for the available icon names. This can be a {{...}} expressions.",
                 "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
               },
               "badge": {
                 "type": ["string", "null"],
-                "description": "Text to display as badge in the tile.",
+                "description": "Text to display as badge in the tile. This can contain {{...}} expressions. This can contain {{...}} expressions.",
                 "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
               }
             },
@@ -588,7 +588,7 @@
         "type": { "const": "Text" },
         "text": {
           "type": "string",
-          "description": "The text to display in this item.",
+          "description": "The text to display in this item. This can contain {{...}} expressions.",
           "doNotSuggest": false
         }
       },
