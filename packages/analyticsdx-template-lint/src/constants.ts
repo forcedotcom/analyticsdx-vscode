@@ -174,6 +174,12 @@ export const ERRORS = Object.freeze({
   LAYOUT_PAGE_UNKNOWN_VARIABLE: 'lay-1',
   /** Unsupported variable type in layout page */
   LAYOUT_PAGE_UNSUPPORTED_VARIABLE: 'lay-2',
+  /** (Centered)CheckboxTiles must point to a non-array string or number variable. */
+  LAYOUT_INVALID_TILES_VARIABLE_TYPE: 'lay-3',
+  /** (Centered)CheckboxTiles must point to a variable with a non-empty enums array. */
+  LAYOUT_TILES_EMPTY_ENUMS_VARAIBLE: 'lay-4',
+  /** A tile name doesn't point to one of the variable's enums value. */
+  LAYOUT_INVALID_TILE_NAME: 'lay-5',
 
   /** ApexCallback readiness definition but template has no apexCallback */
   READINESS_NO_APEX_CALLBACK: 'read-1',
@@ -186,6 +192,6 @@ export const ERRORS = Object.freeze({
   RULES_DUPLICATE_RULE_NAME: 'rules-2',
   /** Duplciate macro namespace:name in rules file(s) */
   RULES_DUPLICATE_MACRO: 'rules-3',
-  /** Macro will no return nor actions */
+  /** Macro with no return nor actions */
   RULES_NOOP_MACRO: 'rules-4'
 });

@@ -252,15 +252,16 @@ export abstract class TemplateLinter<
     return { doc: undefined, uri: undefined, json: undefined };
   }
 
-  /** Load the variableDefinition file and return a map of variableName -> variableType + isArray, or undefined if
+  /** Load the variableDefinition file and return a map of variableName -> variableType + isArray + node, or undefined if
    * variablesDefinition isn't specified or can't be read.
    */
-  protected async loadVariableTypesForTemplate(
-    templateInfo: JsonNode
-  ): Promise<Record<string, { type: string; isArray: boolean }> | undefined> {
-    const { json: varJson } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
-    if (varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
-      const variableTypes: Record<string, { type: string; isArray: boolean }> = {};
+  protected async loadVariableTypesForTemplate(templateInfo: JsonNode): Promise<{
+    doc: Document | undefined;
+    variableTypes: Record<string, { type: string; isArray: boolean; node: JsonNode }> | undefined;
+  }> {
+    const { json: varJson, doc } = await this.loadTemplateRelPathJson(templateInfo, ['variableDefinition']);
+    if (doc && varJson && varJson.type === 'object' && varJson.children && varJson.children.length > 0) {
+      const variableTypes: Record<string, { type: string; isArray: boolean; node: JsonNode }> = {};
       varJson.children.forEach(prop => {
         if (
           prop.type === 'property' &&
@@ -276,15 +277,21 @@ export abstract class TemplateLinter<
             const [itemsType] = findJsonPrimitiveAttributeValue(prop.children[1], 'variableType', 'itemsType', 'type');
             variableTypes[name] = {
               type: typeof itemsType === 'string' && itemsType ? itemsType : 'StringType',
-              isArray: true
+              isArray: true,
+              node: prop.children[1]
             };
           } else {
-            variableTypes[name] = { type: typeof type === 'string' && type ? type : 'StringType', isArray: false };
+            variableTypes[name] = {
+              type: typeof type === 'string' && type ? type : 'StringType',
+              isArray: false,
+              node: prop.children[1]
+            };
           }
         }
       });
-      return variableTypes;
+      return { doc, variableTypes };
     }
+    return { doc: undefined, variableTypes: undefined };
   }
 
   private addDiagnostic(
@@ -394,7 +401,7 @@ export abstract class TemplateLinter<
     errorCode: typeof ERRORS[keyof typeof ERRORS]
   ) {
     if (valuesNode?.type === 'object' && valuesNode.children && valuesNode.children.length > 0) {
-      const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
+      const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo))?.variableTypes || {};
       const fuzzySearch = fuzzySearcher({
         // make an iterable, to lazily call Object.keys() only if fuzzySearch is called
         [Symbol.iterator]: () => Object.keys(variableTypes).filter(isValidVariableName)[Symbol.iterator]()
@@ -1080,20 +1087,21 @@ export abstract class TemplateLinter<
   }
 
   private async lintLayoutCheckVariables(templateInfo: JsonNode, doc: Document, layoutJson: JsonNode) {
-    const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
+    const { doc: variablesDoc, variableTypes } = await this.loadVariableTypesForTemplate(templateInfo);
     // go through the variables items in the pages' layouts
     const variables = findAllVariableNamesForLayoutDefinition(layoutJson);
     if (variables.length > 0) {
       const fuzzySearch = fuzzySearcher({
         // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
         [Symbol.iterator]: () =>
-          Object.keys(variableTypes)
+          Object.keys(variableTypes || {})
             // also, only include valid variable names in the fuzzy search
             .filter(isValidVariableName)
             [Symbol.iterator]()
       });
       variables.forEach(({ name, nameNode }) => {
-        if (!variableTypes[name]) {
+        const variableType = variableTypes?.[name];
+        if (!variableType) {
           let mesg = `Cannot find variable '${name}'`;
           // see if there's a variable w/ a similar name
           const [match] = fuzzySearch(name);
@@ -1104,8 +1112,9 @@ export abstract class TemplateLinter<
           }
           this.addDiagnostic(doc, mesg, ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE, nameNode, { args });
         } else {
-          // the variable exists, so check that the variable type is supported
-          const type = variableTypes[name].type;
+          // the variable exists, so check various things about the variable
+          const type = variableType.type;
+          // these are not supported in layout.json currently
           if (type === 'ObjectType' || type === 'DateTimeType') {
             this.addDiagnostic(
               doc,
@@ -1113,6 +1122,59 @@ export abstract class TemplateLinter<
               ERRORS.LAYOUT_PAGE_UNSUPPORTED_VARIABLE,
               nameNode
             );
+          }
+
+          // check the variant (nameNode.parent is the name="varname" node; nameNode.parent.parent should be the item in the
+          // layout)
+          const variableItemNode = nameNode.parent!.parent!;
+          const [variant, variantNode] = findJsonPrimitiveAttributeValue(variableItemNode, 'variant');
+          if (variant === 'CheckboxTiles' || variant === 'CenteredCheckboxTiles') {
+            // checkboxtiles must point to a non-array string or number
+            if ((type !== 'StringType' && type !== 'NumberType') || variableType.isArray) {
+              this.addDiagnostic(
+                doc,
+                `${type} variable '${name}' is not supported with the ${variant} variant`,
+                ERRORS.LAYOUT_INVALID_TILES_VARIABLE_TYPE,
+                nameNode,
+                { relatedInformation: [{ node: variantNode, doc, mesg: 'Variant' }] }
+              );
+            } else {
+              // make sure that the variable def has enums defined as well
+              const [enums, enumsNode] = findJsonArrayAttributeValue(variableType.node, 'variableType', 'enums');
+              if (!enums || enums.length <= 0) {
+                const enumsRelatedInfo =
+                  enumsNode && variablesDoc ? [{ node: enumsNode, doc: variablesDoc, mesg: 'Enums array' }] : undefined;
+                this.addDiagnostic(
+                  doc,
+                  `${type} variable '${name}' does not have enums for the ${variant} variant`,
+                  ERRORS.LAYOUT_TILES_EMPTY_ENUMS_VARAIBLE,
+                  nameNode,
+                  { relatedInformation: enumsRelatedInfo }
+                );
+              } else {
+                // make sure that each key in `tiles` is an enum value
+                const enumValues = enums
+                  .map(e => (e.type === 'string' || e.type === 'number' ? String(e.value) : undefined))
+                  .filter((e): e is string => e !== undefined);
+                const tiles = matchJsonNodeAtPattern(variableItemNode, ['tiles']);
+                if (tiles?.type === 'object') {
+                  tiles.children?.forEach(tileProp => {
+                    // tileProp should be the "enumValue": { ... } item, so tileProp.children[0] should be the enumValue
+                    const tileNameNode = tileProp.children?.[0];
+                    const tileEnumValue = tileNameNode?.value;
+                    if (!enumValues.includes(tileEnumValue)) {
+                      this.addDiagnostic(
+                        doc,
+                        `'${tileEnumValue}' is not in the enums of variable '${name}'`,
+                        ERRORS.LAYOUT_INVALID_TILE_NAME,
+                        tileNameNode || nameNode,
+                        { relatedInformation: [{ node: enumsNode, doc: variablesDoc!, mesg: 'Enums array' }] }
+                      );
+                    }
+                  });
+                }
+              }
+            }
           }
         }
       });
@@ -1207,7 +1269,7 @@ export abstract class TemplateLinter<
 
   private async lintUiCheckVariables(templateInfo: JsonNode, uiDoc: Document, ui: JsonNode) {
     // find all the variable names & types in the variables file
-    const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo)) || {};
+    const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo))?.variableTypes || {};
     // go through the ui pages
     const pages = findNodeAtLocation(ui, ['pages']);
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
