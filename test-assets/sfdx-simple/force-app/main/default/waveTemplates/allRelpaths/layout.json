@@ -30,6 +30,112 @@
                 { "type": "Text", "text": "Some text here", "visibility": "{{Variables.booleanVariable}}" }
               ],
               "visibility": "Visible"
+            },
+            // these are here for checking tiles completions in layout.test.ts
+            {
+              "type": "Variable",
+              "name": "stringEnum",
+              "variant": "CenteredCheckboxTiles",
+              "tiles": {}
+            },
+            {
+              "type": "Variable",
+              "name": "numberEnum",
+              "variant": "CenteredCheckboxTiles",
+              "tiles": {}
+            },
+            {
+              "type": "GroupBox",
+              "text": "testing tiles completions",
+              "items": [
+                {
+                  "type": "Variable",
+                  "name": "stringEnum",
+                  "variant": "CenteredCheckboxTiles",
+                  "tiles": {}
+                },
+                {
+                  "type": "Variable",
+                  "name": "numberEnum",
+                  "variant": "CenteredCheckboxTiles",
+                  "tiles": {}
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Page 2",
+      "layout": {
+        "type": "TwoColumn",
+        // these are here for checking tiles completions in layout.test.ts
+        "left": {
+          "items": [
+            {
+              "type": "Variable",
+              "name": "stringEnum",
+              "variant": "CenteredCheckboxTiles",
+              "tiles": {}
+            },
+            {
+              "type": "Variable",
+              "name": "numberEnum",
+              "variant": "CenteredCheckboxTiles",
+              "tiles": {}
+            },
+            {
+              "type": "GroupBox",
+              "text": "testing tiles completions",
+              "items": [
+                {
+                  "type": "Variable",
+                  "name": "stringEnum",
+                  "variant": "CenteredCheckboxTiles",
+                  "tiles": {}
+                },
+                {
+                  "type": "Variable",
+                  "name": "numberEnum",
+                  "variant": "CenteredCheckboxTiles",
+                  "tiles": {}
+                }
+              ]
+            }
+          ]
+        },
+        "right": {
+          "items": [
+            {
+              "type": "Variable",
+              "name": "stringEnum",
+              "variant": "CenteredCheckboxTiles",
+              "tiles": {}
+            },
+            {
+              "type": "Variable",
+              "name": "numberEnum",
+              "variant": "CenteredCheckboxTiles",
+              "tiles": {}
+            },
+            {
+              "type": "GroupBox",
+              "text": "testing tiles completions",
+              "items": [
+                {
+                  "type": "Variable",
+                  "name": "stringEnum",
+                  "variant": "CenteredCheckboxTiles",
+                  "tiles": {}
+                },
+                {
+                  "type": "Variable",
+                  "name": "numberEnum",
+                  "variant": "CenteredCheckboxTiles",
+                  "tiles": {}
+                }
+              ]
             }
           ]
         }

@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefDefinitionProvider } from '../variables';
+import { matchesLayoutItem } from './utils';
 
 /** Handle CMD+Click from a variable name in layout.json to the variable in variables.json. */
 export class LayoutVariableDefinitionProvider extends VariableRefDefinitionProvider {
@@ -32,13 +33,7 @@ export class LayoutVariableDefinitionProvider extends VariableRefDefinitionProvi
       location.previousNode?.type === 'string' &&
       location.previousNode.value &&
       // and that it's in a variable name field
-      // TODO: make these more specific to the layout type (e.g. only 'center' if SingleColumn)
-      (location.matches(['pages', '*', 'layout', 'center', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'right', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'left', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'center', 'items', '*', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'right', 'items', '*', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'left', 'items', '*', 'items', '*', 'name']))
+      matchesLayoutItem(location, 'name')
     );
   }
 }

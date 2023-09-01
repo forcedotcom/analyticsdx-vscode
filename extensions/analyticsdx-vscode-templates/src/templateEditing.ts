@@ -46,7 +46,8 @@ import {
   LayoutVariableCodeActionProvider,
   LayoutVariableCompletionItemProviderDelegate,
   LayoutVariableDefinitionProvider,
-  LayoutVariableHoverProvider
+  LayoutVariableHoverProvider,
+  LayoutVariableTileCompletionItemProviderDelegate
 } from './layout';
 import {
   ReadinessVariableCodeActionProvider,
@@ -345,7 +346,9 @@ export class TemplateDirEditing extends Disposable {
           new UiVariableCompletionItemProviderDelegate(this),
           // hookup code-completion for variables names in page in layout.json's
           new LayoutVariableCompletionItemProviderDelegate(this),
-          // hoookup completion for variables in appConfiguration.values
+          // hookup completions for tile names in variable items in layout.json's
+          new LayoutVariableTileCompletionItemProviderDelegate(this),
+          // hookup completion for variables in appConfiguration.values
           new AutoInstallVariableCompletionItemProviderDelegate(this),
           // hookup completes for variables in values in readiness.json's
           new ReadinessVariableCompletionItemProviderDelegate(this),
