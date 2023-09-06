@@ -215,14 +215,14 @@ describe('TemplateLinter layout.json', () => {
     expect(
       diagnostic!.relatedInformation![0].doc.uri,
       'stringEmptyEnum variable error related information uri'
-    ).to.match(/\/variables\.json$/);
+    ).to.match(/variables\.json$/);
 
     diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[2].name');
     expect(diagnostic, 'stringArray variable error').to.not.be.undefined;
     expect(diagnostic!.code, 'stringArray variable error code').to.equal(ERRORS.LAYOUT_INVALID_TILES_VARIABLE_TYPE);
     expect(diagnostic!.relatedInformation, 'stringArray variable error related information').to.not.be.undefined;
     expect(diagnostic!.relatedInformation![0].doc.uri, 'stringArray variable error related information uri').to.match(
-      /\/layout\.json$/
+      /layout\.json$/
     );
 
     diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[3].name');
@@ -242,7 +242,7 @@ describe('TemplateLinter layout.json', () => {
     expect(diagnostic!.code, 'stringEnum tile error code').to.equal(ERRORS.LAYOUT_INVALID_TILE_NAME);
     expect(diagnostic!.relatedInformation, 'stringEnum tile related error information').to.have.length(1);
     expect(diagnostic!.relatedInformation![0].doc.uri, 'stringEnum tile error related information uri').to.match(
-      /\/variables\.json$/
+      /variables\.json$/
     );
     expect(diagnostic!.args, 'numberEnum tile error args').to.deep.equal({ name: 'C', match: 'c' });
 
@@ -251,7 +251,7 @@ describe('TemplateLinter layout.json', () => {
     expect(diagnostic!.code, 'numberEnum tile error code').to.equal(ERRORS.LAYOUT_INVALID_TILE_NAME);
     expect(diagnostic!.relatedInformation, 'numberEnum tile related error information').to.have.length(1);
     expect(diagnostic!.relatedInformation![0].doc.uri, 'numberEnum tile error related information uri').to.match(
-      /\/variables\.json$/
+      /variables\.json$/
     );
     expect(diagnostic!.args, 'numberEnum tile error args').to.deep.equal({ name: '30', match: '3' });
 
