@@ -6,7 +6,7 @@
  */
 
 import { matchJsonNodeAtPattern } from '@salesforce/analyticsdx-template-lint';
-import { JSONPath, Location, parseTree } from 'jsonc-parser';
+import { Location, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { codeCompletionUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
@@ -14,7 +14,7 @@ import { JsonCompletionItemProviderDelegate, newCompletionItem } from '../util/c
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
-import { matchesLayoutItem } from './utils';
+import { getLayoutItemVariableName, isInTilesEnumKey, matchesLayoutItem } from './utils';
 
 /** Get variable names for the variable name in the pages in ui.json. */
 export class LayoutVariableCompletionItemProviderDelegate extends VariableRefCompletionItemProviderDelegate {
@@ -51,22 +51,12 @@ export class LayoutVariableTileCompletionItemProviderDelegate implements JsonCom
   }
 
   public isSupportedLocation(location: Location, context: vscode.CompletionContext) {
-    return (
-      // make sure it's directly in the keys of the "tiles" field
-      location.isAtPropertyKey &&
-      matchesLayoutItem(location, 'tiles') &&
-      // when it's directly in the keys of 'tiles', then the path will be like [..., 'tiles', ''] or
-      // [..., 'tiles', 'enumValue'], so only trigger then (to avoid triggering when down the tree in the
-      // tile def objects). also, check the path length to avoid triggering when a tile enumValue is
-      // literally "tiles"
-      ((location.path.length === 8 && location.path[6] === 'tiles') ||
-        (location.path.length === 10 && location.path[8] === 'tiles'))
-    );
+    return isInTilesEnumKey(location);
   }
 
   public async getItems(range: vscode.Range | undefined, location: Location, document: vscode.TextDocument) {
-    // get the variable name for this layout item
-    const variableName = this.getVariableName(document, location.path);
+    // find that variable name, then the variable definition
+    const variableName = getLayoutItemVariableName(document, location.path.slice(0, location.path.length - 2));
     if (variableName && isValidVariableName(variableName)) {
       // find the enums for that variable in the variable.json
       const varUri = vscode.Uri.joinPath(this.templateEditing.dir, this.templateEditing.variablesDefinitionPath!);
@@ -90,21 +80,6 @@ export class LayoutVariableTileCompletionItemProviderDelegate implements JsonCom
         }
       }
       return items;
-    }
-  }
-
-  // find the "name" in the item above the passed in "tiles" location, if the item type="Variable"
-  private getVariableName(document: vscode.TextDocument, tilesPath: JSONPath): string | undefined {
-    const tree = parseTree(document.getText());
-    // go up one from the tiles to the item
-    const item =
-      tree?.type === 'object' ? matchJsonNodeAtPattern(tree, tilesPath.slice(0, tilesPath.length - 2)) : undefined;
-    if (item) {
-      const typeNode = matchJsonNodeAtPattern(item, ['type']);
-      if (typeNode?.value === 'Variable') {
-        const nameNode = matchJsonNodeAtPattern(item, ['name']);
-        return typeof nameNode?.value === 'string' ? nameNode.value : undefined;
-      }
     }
   }
 }

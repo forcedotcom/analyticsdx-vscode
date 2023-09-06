@@ -36,13 +36,17 @@
               "type": "Variable",
               "name": "stringEnum",
               "variant": "CenteredCheckboxTiles",
-              "tiles": {}
+              "tiles": {
+                "C": {}
+              }
             },
             {
               "type": "Variable",
               "name": "numberEnum",
               "variant": "CenteredCheckboxTiles",
-              "tiles": {}
+              "tiles": {
+                "3": {}
+              }
             },
             {
               "type": "GroupBox",
@@ -52,13 +56,17 @@
                   "type": "Variable",
                   "name": "stringEnum",
                   "variant": "CenteredCheckboxTiles",
-                  "tiles": {}
+                  "tiles": {
+                    "B": {}
+                  }
                 },
                 {
                   "type": "Variable",
                   "name": "numberEnum",
                   "variant": "CenteredCheckboxTiles",
-                  "tiles": {}
+                  "tiles": {
+                    "2": {}
+                  }
                 }
               ]
             }

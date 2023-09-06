@@ -362,6 +362,38 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     );
   });
 
+  it('go to definition support for variable tiles keys', async () => {
+    const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'layout.json');
+    const [doc] = await openFile(uri, true);
+    // we should see the warnings about the bad var types
+    await waitForDiagnostics(uri, d => d && d.length >= 1);
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+    const verifyDefinition = async (...jsonpath: JSONPath) => {
+      const position = findPositionByJsonPath(doc, jsonpath);
+      const jsonpathStr = jsonPathToString(jsonpath);
+      expect(position, jsonpathStr).to.not.be.undefined;
+
+      // position will be the start of the tile key's {}, so go back 3 chars to the tile key
+      const locations = await getDefinitionLocations(uri, position!.translate({ characterDelta: -3 }));
+      if (locations.length !== 1) {
+        expect.fail(`Expected 1 location for ${jsonpathStr}, got:\n` + JSON.stringify(locations, undefined, 2));
+      }
+      expect(locations[0].uri.fsPath, `${jsonpathStr} location path`).to.equal(
+        vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
+      );
+    };
+
+    // check string enum tile
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 4, 'tiles', 'C');
+    // check number enum tile
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 5, 'tiles', '3');
+    // check string enum tile in groupbox
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 6, 'items', 0, 'tiles', 'B');
+    // check number enum tile in groupbox
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 6, 'items', 1, 'tiles', '2');
+  });
+
   it('code completions for variable names', async () => {
     const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'layout.json');
     const [doc] = await openFile(uri, true);

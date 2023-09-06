@@ -47,7 +47,8 @@ import {
   LayoutVariableCompletionItemProviderDelegate,
   LayoutVariableDefinitionProvider,
   LayoutVariableHoverProvider,
-  LayoutVariableTileCompletionItemProviderDelegate
+  LayoutVariableTileCompletionItemProviderDelegate,
+  LayoutVariableTileDefinitionProvider
 } from './layout';
 import {
   ReadinessVariableCodeActionProvider,
@@ -334,6 +335,8 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new UiVariableDefinitionProvider(this)),
       // hookup Go To Definition from variable name in layout.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new LayoutVariableDefinitionProvider(this)),
+      // hookup Go To Definition from variable tiles key in layout.json to variables.json
+      vscode.languages.registerDefinitionProvider(relatedFileSelector, new LayoutVariableTileDefinitionProvider(this)),
       // hookup Go To Definition from varaibles name in auto-install.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new AutoInstallVariableDefinitionProvider(this)),
       // hookup Go To Definition from varaibles name in auto-install.json to readiness.json
