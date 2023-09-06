@@ -185,12 +185,12 @@ describe('TemplateLinter layout.json', () => {
                   { type: 'Variable', variant: 'CenteredCheckboxTiles', name: 'numberEmptyEnums' },
                   { type: 'Variable', variant: 'CheckboxTiles', name: 'sobject' },
                   // these should have warnings on the invalid tile
-                  { type: 'Variable', variant: 'CheckboxTiles', name: 'stringEnum', tiles: { a: {}, invalid: {} } },
+                  { type: 'Variable', variant: 'CheckboxTiles', name: 'stringEnum', tiles: { a: {}, C: {} } },
                   {
                     type: 'Variable',
                     variant: 'CenteredCheckboxTiles',
                     name: 'numberEnum',
-                    tiles: { 1: {}, 42: {} }
+                    tiles: { 1: {}, 30: {} }
                   }
                 ]
               }
@@ -237,21 +237,23 @@ describe('TemplateLinter layout.json', () => {
     expect(diagnostic, 'sobject variable error').to.not.be.undefined;
     expect(diagnostic!.code, 'sobject variable error code').to.equal(ERRORS.LAYOUT_INVALID_TILES_VARIABLE_TYPE);
 
-    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[6].tiles.invalid');
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[6].tiles.C');
     expect(diagnostic, 'stringEnum tile error').to.not.be.undefined;
     expect(diagnostic!.code, 'stringEnum tile error code').to.equal(ERRORS.LAYOUT_INVALID_TILE_NAME);
     expect(diagnostic!.relatedInformation, 'stringEnum tile related error information').to.have.length(1);
     expect(diagnostic!.relatedInformation![0].doc.uri, 'stringEnum tile error related information uri').to.match(
       /\/variables\.json$/
     );
+    expect(diagnostic!.args, 'numberEnum tile error args').to.deep.equal({ name: 'C', match: 'c' });
 
-    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[7].tiles["42"]');
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[7].tiles["30"]');
     expect(diagnostic, 'numberEnum tile error').to.not.be.undefined;
     expect(diagnostic!.code, 'numberEnum tile error code').to.equal(ERRORS.LAYOUT_INVALID_TILE_NAME);
     expect(diagnostic!.relatedInformation, 'numberEnum tile related error information').to.have.length(1);
     expect(diagnostic!.relatedInformation![0].doc.uri, 'numberEnum tile error related information uri').to.match(
       /\/variables\.json$/
     );
+    expect(diagnostic!.args, 'numberEnum tile error args').to.deep.equal({ name: '30', match: '3' });
 
     if (diagnostics.length !== 8) {
       expect.fail('Expected 8 invalid variable errors, got ' + stringifyDiagnostics(diagnostics));

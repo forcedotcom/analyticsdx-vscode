@@ -47,6 +47,7 @@ import {
   LayoutVariableCompletionItemProviderDelegate,
   LayoutVariableDefinitionProvider,
   LayoutVariableHoverProvider,
+  LayoutVariableTileCodeActionProvider,
   LayoutVariableTileCompletionItemProviderDelegate,
   LayoutVariableTileDefinitionProvider
 } from './layout';
@@ -369,6 +370,15 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new LayoutVariableCodeActionProvider(this), {
         providedCodeActionKinds: LayoutVariableCodeActionProvider.providedCodeActionKinds
       }),
+
+      // hookup quick fixes for variable tile keys in layout.json's
+      vscode.languages.registerCodeActionsProvider(
+        relatedFileSelector,
+        new LayoutVariableTileCodeActionProvider(this),
+        {
+          providedCodeActionKinds: LayoutVariableTileCodeActionProvider.providedCodeActionKinds
+        }
+      ),
 
       // hookup quick fixes for variable names in auto-install.json's
       vscode.languages.registerCodeActionsProvider(

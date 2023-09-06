@@ -15,6 +15,20 @@ import {
   matchJsonNodesAtPattern
 } from './utils';
 
+function lazyFuzzySearcher(
+  o: Record<string, unknown> | (() => string[]) | string[] | undefined,
+  filter?: (key: string) => boolean
+) {
+  return fuzzySearcher({
+    // make an Iterable, to lazily get the values from the input object/function/array only when the return
+    // method is called
+    [Symbol.iterator]: () =>
+      (typeof o === 'function' ? o() : Array.isArray(o) ? o : Object.keys(o || {}))
+        .filter(key => !filter || filter(key))
+        [Symbol.iterator]()
+  });
+}
+
 /** Find the value for the first attribute found at the pattern.
  * @returns the value (string, boolean, number, or null), or undefined if not found or found node's value is not
  *          a primitive (e.g. an array or object); and the attribute node.
@@ -402,10 +416,7 @@ export abstract class TemplateLinter<
   ) {
     if (valuesNode?.type === 'object' && valuesNode.children && valuesNode.children.length > 0) {
       const variableTypes = (await this.loadVariableTypesForTemplate(templateInfo))?.variableTypes || {};
-      const fuzzySearch = fuzzySearcher({
-        // make an iterable, to lazily call Object.keys() only if fuzzySearch is called
-        [Symbol.iterator]: () => Object.keys(variableTypes).filter(isValidVariableName)[Symbol.iterator]()
-      });
+      const fuzzySearch = lazyFuzzySearcher(variableTypes, isValidVariableName);
       valuesNode.children.forEach(valueNode => {
         const nameNode = valueNode.children?.[0];
         if (nameNode?.type === 'string' && typeof nameNode.value === 'string') {
@@ -1091,14 +1102,7 @@ export abstract class TemplateLinter<
     // go through the variables items in the pages' layouts
     const variables = findAllVariableNamesForLayoutDefinition(layoutJson);
     if (variables.length > 0) {
-      const fuzzySearch = fuzzySearcher({
-        // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
-        [Symbol.iterator]: () =>
-          Object.keys(variableTypes || {})
-            // also, only include valid variable names in the fuzzy search
-            .filter(isValidVariableName)
-            [Symbol.iterator]()
-      });
+      const fuzzySearch = lazyFuzzySearcher(variableTypes, isValidVariableName);
       variables.forEach(({ name, nameNode }) => {
         const variableType = variableTypes?.[name];
         if (!variableType) {
@@ -1157,19 +1161,25 @@ export abstract class TemplateLinter<
                   .map(e => (e.type === 'string' || e.type === 'number' ? String(e.value) : undefined))
                   .filter((e): e is string => e !== undefined);
                 const tiles = matchJsonNodeAtPattern(variableItemNode, ['tiles']);
-                if (tiles?.type === 'object') {
+                if (tiles?.type === 'object' && tiles.children && tiles.children.length > 0) {
+                  const fuzzySearch = lazyFuzzySearcher(enumValues);
                   tiles.children?.forEach(tileProp => {
                     // tileProp should be the "enumValue": { ... } item, so tileProp.children[0] should be the enumValue
-                    const tileNameNode = tileProp.children?.[0];
-                    const tileEnumValue = tileNameNode?.value;
+                    const tileEnumNode = tileProp.children?.[0];
+                    const tileEnumValue = tileEnumNode?.value;
                     if (!enumValues.includes(tileEnumValue)) {
-                      this.addDiagnostic(
-                        doc,
-                        `'${tileEnumValue}' is not in the enums of variable '${name}'`,
-                        ERRORS.LAYOUT_INVALID_TILE_NAME,
-                        tileNameNode || nameNode,
-                        { relatedInformation: [{ node: enumsNode, doc: variablesDoc!, mesg: 'Enums array' }] }
-                      );
+                      let mesg = `'${tileEnumValue}' is not in the enums of variable '${name}'`;
+                      // see if there's an enum value that's close to what they put there
+                      const [match] = fuzzySearch(tileEnumValue);
+                      const args: Record<string, string> = { name: tileEnumValue };
+                      if (match && match.length > 0) {
+                        args.match = match;
+                        mesg += `, did you mean '${match}'?`;
+                      }
+                      this.addDiagnostic(doc, mesg, ERRORS.LAYOUT_INVALID_TILE_NAME, tileEnumNode || nameNode, {
+                        args,
+                        relatedInformation: [{ node: enumsNode, doc: variablesDoc!, mesg: 'Enums array' }]
+                      });
                     }
                   });
                 }
@@ -1273,14 +1283,7 @@ export abstract class TemplateLinter<
     // go through the ui pages
     const pages = findNodeAtLocation(ui, ['pages']);
     if (pages && pages.type === 'array' && pages.children && pages.children.length > 0) {
-      const fuzzySearch = fuzzySearcher({
-        // make an Iterable, to lazily call Object.keys() only if fuzzySearch is called
-        [Symbol.iterator]: () =>
-          Object.keys(variableTypes)
-            // also, only include valid variable names in the fuzzy search
-            .filter(isValidVariableName)
-            [Symbol.iterator]()
-      });
+      const fuzzySearch = lazyFuzzySearcher(variableTypes, isValidVariableName);
       const [templateType] = findJsonPrimitiveAttributeValue(templateInfo, 'templateType');
       // find all the variable objects
       matchJsonNodesAtPattern(pages.children, ['variables', '*', 'name']).forEach(nameNode => {

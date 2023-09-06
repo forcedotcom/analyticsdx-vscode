@@ -686,4 +686,122 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       expectedNumberEnumCompletions
     );
   });
+
+  it('quick fixes on bad variable tile keys', async () => {
+    const layoutJson = {
+      pages: [
+        {
+          title: 'Test Title',
+          layout: {
+            type: 'SingleColumn',
+            center: {
+              items: [
+                { type: 'Variable', name: 'stringEnum', variant: 'CheckboxTiles', tiles: { c: {} } },
+                {
+                  type: 'GroupBox',
+                  text: 'test',
+                  items: [{ type: 'Variable', name: 'numberEnum', variant: 'CenteredCheckboxTiles', tiles: { 20: {} } }]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    };
+    const [t, [layoutEditor, variablesEditor]] = await createTemplateWithRelatedFiles(
+      {
+        field: 'layoutDefinition',
+        path: 'layout.json',
+        initialJson: layoutJson
+      },
+      {
+        field: 'variableDefinition',
+        path: 'variables.json',
+        initialJson: {
+          stringEnum: {
+            variableType: {
+              type: 'StringType',
+              enums: ['A', 'B', 'C']
+            }
+          },
+          numberEnum: {
+            variableType: {
+              type: 'NumberType',
+              enums: [1, 2, 3]
+            }
+          }
+        }
+      }
+    );
+    tmpdir = t;
+
+    // get the 2 expected diagnostics on the tiles in layout.json
+    const diagnosticFilter = (d: vscode.Diagnostic) => d.code === ERRORS.LAYOUT_INVALID_TILE_NAME;
+    let diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 2,
+        'Initial 2 invalid tiles warnings on layout.json'
+      )
+    )
+      .filter(diagnosticFilter)
+      .sort(sortDiagnostics);
+    // and there shouldn't be any warnings on variables.json
+    await waitForDiagnostics(variablesEditor.document.uri, d => d && d.length === 0);
+
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[0].layout.center.items[0].tiles.c');
+    expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal(
+      'pages[0].layout.center.items[1].items[0].tiles["20"]'
+    );
+
+    let actions = await getCodeActions(layoutEditor.document.uri, diagnostics[0].range);
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 code action, got [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'stringEnum action title').to.equal("Switch to 'C'");
+    expect(actions[0].edit, 'stringEnum action edit').to.not.be.undefined;
+    // run the action
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+    // that should that diagnostic, leaving the one on numberEnum
+    diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 1,
+        '1 invalid tiles warnings on layout.json'
+      )
+    ).filter(diagnosticFilter);
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal(
+      'pages[0].layout.center.items[1].items[0].tiles["20"]'
+    );
+
+    actions = await getCodeActions(layoutEditor.document.uri, diagnostics[0].range);
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 code action, got [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'numberEnum action title').to.equal("Switch to '2'");
+    expect(actions[0].edit, 'numberEnum action edit').to.not.be.undefined;
+    // run that action
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+    // that should fix all the warnings
+    await waitForDiagnostics(
+      layoutEditor.document.uri,
+      ds => ds && ds.filter(diagnosticFilter).length === 0,
+      'No more diagnostics on layout.json'
+    );
+    // and the tile keys should have been updated
+    const layoutTree = parseTree(layoutEditor.document.getText());
+    expect(layoutTree, 'layout.json').to.not.be.undefined;
+    expect(
+      findNodeAtLocation(layoutTree!, ['pages', 0, 'layout', 'center', 'items', 0, 'tiles', 'C']),
+      'stringEnum tile'
+    ).to.not.be.undefined;
+    expect(
+      findNodeAtLocation(layoutTree!, ['pages', 0, 'layout', 'center', 'items', 1, 'items', 0, 'tiles', '2']),
+      'stringEnum tile'
+    ).to.not.be.undefined;
+  });
 });
