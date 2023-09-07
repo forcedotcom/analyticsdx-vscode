@@ -190,22 +190,27 @@
             "type": "object",
             "description": "The guidance panel specification for the page",
             "additionalProperties": false,
+            "required": ["title"],
             "properties": {
               "title": {
                 "type": "string",
                 "description": "Guidance panel title",
                 "doNotSuggest": false
               },
-              "background": {
+              "backgroundImage": {
                 "type": "object",
                 "description": "Image to display in the background of this guidance panel. It should be a horizontal image and it will be fixed at the bottom of the guidance panel",
                 "additionalProperties": false,
                 "doNotSuggest": false,
-                "required": ["name"],
                 "properties": {
                   "name": {
                     "type": "string",
                     "description": "The image name."
+                  },
+                  "namespace": {
+                    "type": ["null", "string"],
+                    "description": "The image namespace.",
+                    "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
                   }
                 },
                 "defaultSnippets": [
@@ -233,6 +238,9 @@
                       "enumDescriptions": ["Displays text.", "Displays an image.", "Displays a link item."]
                     },
                     "text": {
+                      "doNotSuggest": true
+                    },
+                    "variant": {
                       "doNotSuggest": true
                     },
                     "image": {
@@ -263,8 +271,10 @@
                         },
                         "variant": {
                           "type": "string",
-                          "description": "The bolded sub-header text to display in this item.",
-                          "doNotSuggest": false
+                          "description": "The text variant to display",
+                          "doNotSuggest": false,
+                          "enum": ["SubHeader"],
+                          "enumDescriptions": ["Text is displayed in bolded sub-header format."]
                         }
                       }
                     },
@@ -369,7 +379,7 @@
                 "label": "New guidance panel",
                 "body": {
                   "title": "${1}",
-                  "background": {
+                  "backgroundImage": {
                     "name": "${2}"
                   },
                   "items": []
