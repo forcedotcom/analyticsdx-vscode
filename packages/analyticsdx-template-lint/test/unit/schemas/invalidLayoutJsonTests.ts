@@ -76,4 +76,22 @@ describe('layout-schema.json finds errors in', () => {
     errors.expectInvalidProps(true, 'displayMessages');
     errors.expectNoUnrecognizedErrors();
   });
+
+  it('invalid-appDetails.json', async () => {
+    const errors = await validate('invalid-appDetails.json');
+    errors.expectInvalidProps(true, 'appDetails.unknownProperty');
+    errors.expectNoUnrecognizedErrors();
+  });
+
+  it('invalid-navigationPanel.json', async () => {
+    const errors = await validate('invalid-navigationPanel.json');
+    errors.expectInvalidProps(true, 'navigationPanel.unknownProperty');
+    errors.expectNoUnrecognizedErrors();
+  });
+
+  it('invalid-navigation.json', async () => {
+    const errors = await validate('invalid-navigation.json');
+    errors.expectInvalidProps(true, 'pages[0].navigation.unknownProperty', 'appDetails.navigation.unknownProperty');
+    errors.expectNoUnrecognizedErrors();
+  });
 });

@@ -1,0 +1,5 @@
+{
+  "appDetails": {
+    "unknownProperty": "This should trigger a warning"
+  }
+}

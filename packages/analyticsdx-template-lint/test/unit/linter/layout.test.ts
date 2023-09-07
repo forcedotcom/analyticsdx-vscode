@@ -259,4 +259,49 @@ describe('TemplateLinter layout.json', () => {
       expect.fail('Expected 8 invalid variable errors, got ' + stringifyDiagnostics(diagnostics));
     }
   });
+
+  it('validates unnecessary navigation objections', async () => {
+    const dir = 'layoutVariables';
+    const layoutPath = path.join(dir, 'layout.json');
+    linter = new TestLinter(
+      dir,
+      {
+        templateType: 'data',
+        layoutDefinition: 'layout.json'
+      },
+      new StringDocument(layoutPath, {
+        pages: [
+          {
+            title: '',
+            layout: {
+              type: 'SingleColumn',
+              center: {
+                items: [{ type: 'Text', text: 'text' }]
+              }
+            },
+            navigation: {} // This should get a warning since there is no `navigationPanel`
+          }
+        ],
+        appDetails: {
+          navigation: {} // Ditto
+        }
+      })
+    );
+
+    await linter.lint();
+    const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
+    if (diagnostics.length !== 2) {
+      expect.fail('Expected 2 unsupported variable errors, got' + stringifyDiagnostics(diagnostics));
+    }
+
+    let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].navigation');
+    expect(diagnostic, 'navigation has no effect unless a navigationPanel is defined as part of the layout.').to.not.be
+      .undefined;
+    expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT);
+
+    diagnostic = diagnostics.find(d => d.jsonpath === 'appDetails.navigation');
+    expect(diagnostic, 'navigation has no effect unless a navigationPanel is defined as part of the layout.').to.not.be
+      .undefined;
+    expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT);
+  });
 });

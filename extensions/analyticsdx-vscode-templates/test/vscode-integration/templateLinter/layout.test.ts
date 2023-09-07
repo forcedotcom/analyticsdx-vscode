@@ -198,4 +198,47 @@ describe('TemplateLinterManager lints layout.json', () => {
       );
     });
   });
+
+  it('shows problems on unnecessary navigation objects', async () => {
+    const layoutJson = {
+      pages: [
+        {
+          title: 'Page1',
+          layout: {
+            type: 'SingleColumn',
+            right: {
+              items: [{ type: 'Text', text: 'text' }]
+            }
+          },
+          navigation: {} // This should get a warning since there is no `navigationPanel`
+        }
+      ],
+      appDetails: {
+        navigation: {} // Ditto
+      }
+    };
+    const [layoutEditor] = await createTemplateWithRelatedFiles({
+      field: 'layoutDefinition',
+      path: 'layout.json',
+      initialJson: layoutJson
+    });
+
+    let diagnostics = (
+      await waitForDiagnostics(layoutEditor.document.uri, undefined, 'Navigation object warnings')
+    ).sort(sortDiagnostics);
+    if (diagnostics.length !== 2) {
+      expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+    }
+    expect(diagnostics[0], 'diagnostics[0]').to.be.not.undefined;
+    expect(diagnostics[0].message, 'diagnostics[0].message').to.equal(
+      'navigation has no effect unless a navigationPanel is defined as part of the layout.'
+    );
+    expect(diagnostics[0].code, 'diagnostics[0].message').to.equal(ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT);
+
+    expect(diagnostics[1], 'diagnostics[1]').to.be.not.undefined;
+    expect(diagnostics[1].message, 'diagnostics[1].message').to.equal(
+      'navigation has no effect unless a navigationPanel is defined as part of the layout.'
+    );
+    expect(diagnostics[1].code, 'diagnostics[1].message').to.equal(ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT);
+  });
 });
