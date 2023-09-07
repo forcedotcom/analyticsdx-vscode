@@ -69,6 +69,33 @@
             }
           ]
         }
+      },
+      "guidancePanel": {
+        "error": "This should trigger a warning",
+        "backgroundImage": {
+          "error": "This should trigger a warning"
+        },
+        "items": [
+          {
+            "type": "Text",
+            "text": "PositivePossum",
+            "error": "This should trigger a warning"
+          },
+          {
+            "type": "Image",
+            "image": {
+              "name": "PositivePossum",
+              "error": "This should trigger a warning"
+            },
+            "error": "This should trigger a warning"
+          },
+          {
+            "type": "LinkBox",
+            "text": "PositivePossum",
+            "url": "https://salesforce.com/",
+            "error": "This should trigger a warning"
+          }
+        ]
       }
     }
   ],

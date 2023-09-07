@@ -28,7 +28,13 @@ describe('layout-schema.json finds errors in', () => {
       'pages[0].layout.center.items[2].items[2].name',
       'pages[0].layout.center.items[3].variant',
       'pages[1].layout.type',
-      'displayMessages[0].location'
+      'displayMessages[0].location',
+      'pages[0].guidancePanel.items[0].type',
+      'pages[0].guidancePanel.items[0].variant',
+      'pages[0].guidancePanel.items[1].type',
+      'pages[0].guidancePanel.items[1].variant',
+      'pages[0].guidancePanel.items[2].type',
+      'pages[0].guidancePanel.items[2].variant'
     );
   });
 
@@ -50,13 +56,24 @@ describe('layout-schema.json finds errors in', () => {
       'pages[0].layout.center.items[2].items[0].image.error',
       'pages[0].layout.center.items[2].items[1].tiles.bar.error',
       'pages[0].layout.center.items[3].tiles.foo.error',
-      'displayMessages[0].error'
+      'displayMessages[0].error',
+      'pages[0].guidancePanel.error',
+      'pages[0].guidancePanel.backgroundImage.error',
+      'pages[0].guidancePanel.items[0].error',
+      'pages[0].guidancePanel.items[1].image.error',
+      'pages[0].guidancePanel.items[1].error',
+      'pages[0].guidancePanel.items[2].error'
     );
   });
 
   it('invalid-pages.json', async () => {
     const errors = await validate('invalid-pages.json');
-    errors.expectInvalidProps(false, 'pages[0].layout.center.items[1].name');
+    errors.expectInvalidProps(
+      false,
+      'pages[0].layout.center.items[1].name',
+      'pages[0].guidancePanel.title',
+      'pages[0].guidancePanel.backgroundImage'
+    );
     errors.expectMissingProps(
       false,
       'pages[0].layout.center.items[0].type',
@@ -66,7 +83,13 @@ describe('layout-schema.json finds errors in', () => {
       'pages[0].layout.center.items[5].image.name',
       'pages[1].layout.center',
       'pages[2].layout.left',
-      'pages[2].layout.right'
+      'pages[2].layout.right',
+      'pages[0].guidancePanel.items[0].type',
+      'pages[0].guidancePanel.items[1].text',
+      'pages[0].guidancePanel.items[2].image',
+      'pages[0].guidancePanel.items[3].text',
+      'pages[0].guidancePanel.items[3].url',
+      'pages[0].guidancePanel.items[4].image.name'
     );
   });
 

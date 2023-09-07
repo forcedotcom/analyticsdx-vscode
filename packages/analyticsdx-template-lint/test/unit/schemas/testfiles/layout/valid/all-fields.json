@@ -94,6 +94,34 @@
             }
           ]
         }
+      },
+      "guidancePanel": {
+        "title": "Documentation",
+        "backgroundImage": {
+          "name": "GuidancePanelBackground",
+          "namespace": "ns"
+        },
+        "items": [
+          {
+            "type": "Text",
+            "text": "A Sub Header",
+            "variant": "SubHeader"
+          },
+          {
+            "type": "Image",
+            "image": {
+              "name": "PositivePossum",
+              "namespace": "ns"
+            }
+          },
+          {
+            "type": "LinkBox",
+            "text": "A Link",
+            "url": "https://salesforce.com",
+            "icon": "standard:knowledge",
+            "title": "Link Title"
+          }
+        ]
       }
     },
     {

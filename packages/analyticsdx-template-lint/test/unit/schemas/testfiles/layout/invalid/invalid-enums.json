@@ -40,6 +40,26 @@
             }
           ]
         }
+      },
+      "guidancePanel": {
+        "title": "Guidance Panel title",
+        "items": [
+          {
+            "type": "badValue",
+            "text": "Invalid type",
+            "variant": "badValue"
+          },
+          {
+            "type": "",
+            "text": "Invalid type",
+            "variant": "CheckboxTiles"
+          },
+          {
+            "type": "Variable",
+            "text": "Invalid type",
+            "variant": "CenteredCheckboxTiles"
+          }
+        ]
       }
     },
     {

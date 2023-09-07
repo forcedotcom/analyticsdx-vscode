@@ -26,6 +26,26 @@
             }
           ]
         }
+      },
+      "guidancePanel": {
+        "title": {},
+        "backgroundImage": "bad image",
+        "items": [
+          {},
+          {
+            "type": "Text"
+          },
+          {
+            "type": "Image"
+          },
+          {
+            "type": "LinkBox"
+          },
+          {
+            "type": "Image",
+            "image": {}
+          }
+        ]
       }
     },
     {
