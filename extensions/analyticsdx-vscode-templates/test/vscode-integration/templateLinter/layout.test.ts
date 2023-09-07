@@ -223,7 +223,7 @@ describe('TemplateLinterManager lints layout.json', () => {
       initialJson: layoutJson
     });
 
-    let diagnostics = (
+    const diagnostics = (
       await waitForDiagnostics(layoutEditor.document.uri, undefined, 'Navigation object warnings')
     ).sort(sortDiagnostics);
     if (diagnostics.length !== 2) {
