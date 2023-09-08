@@ -1203,7 +1203,8 @@ export abstract class TemplateLinter<
           doc,
           'navigation has no effect unless a navigationPanel is defined as part of the layout.',
           ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT,
-          node
+          node,
+          { severity: TemplateLinterDiagnosticSeverity.Information }
         );
       };
       matchJsonNodesAtPattern(layoutJson, ['pages', '*', 'navigation'], addDiagnosticForUnnecessaryNavigationObject);
