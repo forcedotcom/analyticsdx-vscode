@@ -334,9 +334,9 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new LayoutVariableDefinitionProvider(this)),
       // hookup Go To Definition from variable tiles key in layout.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new LayoutVariableTileDefinitionProvider(this)),
-      // hookup Go To Definition from varaibles name in auto-install.json to variables.json
+      // hookup Go To Definition from variables name in auto-install.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new AutoInstallVariableDefinitionProvider(this)),
-      // hookup Go To Definition from varaibles name in auto-install.json to readiness.json
+      // hookup Go To Definition from variables name in auto-install.json to readiness.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new ReadinessVariableDefinitionProvider(this)),
 
       vscode.languages.registerCompletionItemProvider(
@@ -373,6 +373,15 @@ export class TemplateDirEditing extends Disposable {
         new LayoutVariableTileCodeActionProvider(this),
         {
           providedCodeActionKinds: LayoutVariableTileCodeActionProvider.providedCodeActionKinds
+        }
+      ),
+
+      // hookup quick fixes for removing unnecessary navigation objects in layout.json
+      vscode.languages.registerCodeActionsProvider(
+        relatedFileSelector,
+        new RemoveJsonPropertyDiagnosticCodeActionProvider(ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT),
+        {
+          providedCodeActionKinds: RemoveJsonPropertyDiagnosticCodeActionProvider.providedCodeActionKinds
         }
       ),
 

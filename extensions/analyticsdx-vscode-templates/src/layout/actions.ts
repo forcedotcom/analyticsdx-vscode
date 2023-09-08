@@ -36,7 +36,7 @@ export class LayoutVariableCodeActionProvider extends VariableRefCodeActionProvi
   }
 }
 
-/** Provide quick fixes for unrecongized variable tile keys in layout.json's. */
+/** Provide quick fixes for unrecognized variable tile keys in layout.json's. */
 export class LayoutVariableTileCodeActionProvider implements vscode.CodeActionProvider {
   public static readonly providedCodeActionKinds = [vscode.CodeActionKind.QuickFix];
 

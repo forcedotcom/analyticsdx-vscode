@@ -804,4 +804,75 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       'stringEnum tile'
     ).to.not.be.undefined;
   });
+
+  it('quick fixes on unnecessary navigation objects', async () => {
+    const layoutJson = {
+      pages: [
+        {
+          title: 'Test Title',
+          navigation: {
+            label: 'Test Label'
+          },
+          layout: {
+            type: 'SingleColumn',
+            center: {
+              items: [
+                {
+                  type: 'GroupBox',
+                  text: 'test',
+                  items: []
+                }
+              ]
+            }
+          }
+        }
+      ]
+    };
+    const [t, [layoutEditor]] = await createTemplateWithRelatedFiles({
+      field: 'layoutDefinition',
+      path: 'layout.json',
+      initialJson: layoutJson
+    });
+    tmpdir = t;
+
+    // get the 1 expected diagnostics on the tiles in layout.json
+    const diagnosticFilter = (d: vscode.Diagnostic) => d.code === ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT;
+    let diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 1,
+        'Initial 1 warning on layout.json'
+      )
+    )
+      .filter(diagnosticFilter)
+      .sort(sortDiagnostics);
+
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[0].navigation');
+
+    const actions = await getCodeActions(layoutEditor.document.uri, diagnostics[0].range);
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 code action, got [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'quick fix action title').to.equal('Remove pages[0].navigation');
+    expect(actions[0].edit, 'quick fix action edit').to.not.be.undefined;
+    // run the action
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+
+    // that should take care of that diagnostic
+    diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 0,
+        'No more diagnostics on layout.json'
+      )
+    ).filter(diagnosticFilter);
+
+    // and the tile keys should have been updated
+    const layoutTree = parseTree(layoutEditor.document.getText());
+    expect(layoutTree, 'layout.json').to.not.be.undefined;
+    console.log(findNodeAtLocation(layoutTree!, ['pages', 0, 'navigation']));
+    expect(findNodeAtLocation(layoutTree!, ['pages', 0, 'navigation']), 'navigation node').to.be.undefined;
+  });
 });
