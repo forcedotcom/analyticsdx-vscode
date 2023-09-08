@@ -686,7 +686,7 @@
     },
     "guidancePanel": {
       "type": "object",
-      "description": "The guidance panel specification for the page",
+      "description": "The guidance panel specification for the page.",
       "additionalProperties": false,
       "required": ["title"],
       "properties": {
@@ -697,7 +697,7 @@
         },
         "backgroundImage": {
           "type": "object",
-          "description": "Image to display in the background of this guidance panel. It should be a horizontal image and it will be fixed at the bottom of the guidance panel",
+          "description": "Image to display in the background of this guidance panel. It should be a horizontal image and it will be fixed at the bottom of the guidance panel.",
           "additionalProperties": false,
           "doNotSuggest": false,
           "properties": {
@@ -769,7 +769,7 @@
                   },
                   "variant": {
                     "type": "string",
-                    "description": "The text variant to display",
+                    "description": "The text variant to display.",
                     "doNotSuggest": false,
                     "enum": ["SubHeader"],
                     "enumDescriptions": ["Text is displayed in bolded sub-header format."]
@@ -791,12 +791,12 @@
                   },
                   "icon": {
                     "type": "string",
-                    "description": "The icon to display in this linkBox.",
+                    "description": "The icon to display in this LinkBox.",
                     "doNotSuggest": false
                   },
                   "title": {
                     "type": "string",
-                    "description": "The title to display in this linkBox.",
+                    "description": "The title to display in this LinkBox.",
                     "doNotSuggest": false
                   },
                   "url": {
