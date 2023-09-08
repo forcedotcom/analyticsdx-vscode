@@ -58,18 +58,14 @@ import {
   ReadinessVariableHoverProvider
 } from './readiness';
 import { telemetryService } from './telemetry';
-import {
-  CreateFolderShareCodeActionProvider,
-  CreateRelPathFileCodeActionProvider,
-  RemoveJsonPropertyDiagnosticCodeActionProvider
-} from './templateInfo/actions';
+import { CreateFolderShareCodeActionProvider, CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
   UiVariableDefinitionProvider,
   UiVariableHoverProvider
 } from './ui';
-import { RemoveJsonPropertyCodeActionProvider } from './util/actions';
+import { RemoveJsonPropertyCodeActionProvider, RemoveJsonPropertyDiagnosticCodeActionProvider } from './util/actions';
 import { JsonCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';

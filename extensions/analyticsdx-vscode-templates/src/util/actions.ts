@@ -6,6 +6,7 @@
  */
 import {
   findNodeAtOffset,
+  getLocation,
   getNodePath,
   JSONPath,
   modify as jsonModify,
@@ -79,5 +80,42 @@ export class RemoveJsonPropertyCodeActionProvider implements vscode.CodeActionPr
   public isSupportedAttributeNode(node: JsonNode, path: JSONPath): boolean {
     const nodePath = getNodePath(node);
     return pathPartsAreEquals(path, nodePath);
+  }
+}
+
+/** Remove the json property in the document for an associated diagnostic. */
+export class RemoveJsonPropertyDiagnosticCodeActionProvider implements vscode.CodeActionProvider {
+  public static readonly providedCodeActionKinds = [vscode.CodeActionKind.QuickFix];
+
+  /** The set of diagnostic codes to match on */
+  public readonly codes: Set<string>;
+
+  constructor(...codes: string[]) {
+    this.codes = new Set(codes);
+  }
+
+  public provideCodeActions(
+    document: vscode.TextDocument,
+    range: vscode.Range | vscode.Selection,
+    context: vscode.CodeActionContext,
+    token: vscode.CancellationToken
+  ): vscode.ProviderResult<vscode.CodeAction[]> {
+    const actions: vscode.CodeAction[] = [];
+    for (const d of context.diagnostics) {
+      if (typeof d.code === 'string' && this.codes.has(d.code)) {
+        // use the diagnostic's range start, which should give the property node in the json
+        const location = getLocation(document.getText(), document.offsetAt(d.range.start));
+        const jsonPathStr = jsonPathToString(location.path);
+        const fix = new vscode.CodeAction(
+          `Remove ${jsonPathStr}`,
+          RemoveJsonPropertyDiagnosticCodeActionProvider.providedCodeActionKinds[0]
+        );
+        fix.edit = RemoveJsonPropertyCodeActionProvider.createRemoveJsonPropertyWorkspaceEdit(location.path, document);
+        fix.command = quickFixUsedTelemetryCommand(fix.title, jsonPathStr, document.uri);
+        actions.push(fix);
+      }
+    }
+
+    return actions;
   }
 }
