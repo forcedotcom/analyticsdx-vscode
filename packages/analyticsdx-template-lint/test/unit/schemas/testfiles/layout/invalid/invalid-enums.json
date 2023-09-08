@@ -32,6 +32,11 @@
                   "name": ""
                 }
               ]
+            },
+            {
+              "type": "Variable",
+              "name": "tiles",
+              "variant": "badValue"
             }
           ]
         }

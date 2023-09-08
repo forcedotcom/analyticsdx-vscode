@@ -9,6 +9,7 @@ import { Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
 import { VariableRefHoverProvider } from '../variables';
+import { matchesLayoutItem } from './utils';
 
 /** Get hover text for a variable from the name in a page in a layout.json file. */
 export class LayoutVariableHoverProvider extends VariableRefHoverProvider {
@@ -21,13 +22,6 @@ export class LayoutVariableHoverProvider extends VariableRefHoverProvider {
   }
 
   protected override isSupportedLocation(location: Location) {
-    return (
-      !location.isAtPropertyKey &&
-      location.previousNode?.type === 'string' &&
-      // TODO: make these more specific to the layout type (e.g. only 'center' if SingleColumn)
-      (location.matches(['pages', '*', 'layout', 'center', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'right', 'items', '*', 'name']) ||
-        location.matches(['pages', '*', 'layout', 'left', 'items', '*', 'name']))
-    );
+    return !location.isAtPropertyKey && location.previousNode?.type === 'string' && matchesLayoutItem(location, 'name');
   }
 }

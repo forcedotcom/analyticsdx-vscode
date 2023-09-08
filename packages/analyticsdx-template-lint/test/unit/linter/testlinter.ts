@@ -52,7 +52,7 @@ export function stringifyDiagnostics(diagnostics: Diagnostic[] | undefined): str
       jsonpath: d.jsonpath,
       severity: TemplateLinterDiagnosticSeverity[d.severity],
       args: d.args,
-      relatedInformation: d.relatedInformation
+      relatedInformation: d.relatedInformation?.map(ri => ({ uri: ri.doc.uri, mesg: ri.mesg }))
     })),
     undefined,
     2

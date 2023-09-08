@@ -46,7 +46,10 @@ import {
   LayoutVariableCodeActionProvider,
   LayoutVariableCompletionItemProviderDelegate,
   LayoutVariableDefinitionProvider,
-  LayoutVariableHoverProvider
+  LayoutVariableHoverProvider,
+  LayoutVariableTileCodeActionProvider,
+  LayoutVariableTileCompletionItemProviderDelegate,
+  LayoutVariableTileDefinitionProvider
 } from './layout';
 import {
   ReadinessVariableCodeActionProvider,
@@ -333,6 +336,8 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new UiVariableDefinitionProvider(this)),
       // hookup Go To Definition from variable name in layout.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new LayoutVariableDefinitionProvider(this)),
+      // hookup Go To Definition from variable tiles key in layout.json to variables.json
+      vscode.languages.registerDefinitionProvider(relatedFileSelector, new LayoutVariableTileDefinitionProvider(this)),
       // hookup Go To Definition from varaibles name in auto-install.json to variables.json
       vscode.languages.registerDefinitionProvider(relatedFileSelector, new AutoInstallVariableDefinitionProvider(this)),
       // hookup Go To Definition from varaibles name in auto-install.json to readiness.json
@@ -345,7 +350,9 @@ export class TemplateDirEditing extends Disposable {
           new UiVariableCompletionItemProviderDelegate(this),
           // hookup code-completion for variables names in page in layout.json's
           new LayoutVariableCompletionItemProviderDelegate(this),
-          // hoookup completion for variables in appConfiguration.values
+          // hookup completions for tile names in variable items in layout.json's
+          new LayoutVariableTileCompletionItemProviderDelegate(this),
+          // hookup completion for variables in appConfiguration.values
           new AutoInstallVariableCompletionItemProviderDelegate(this),
           // hookup completes for variables in values in readiness.json's
           new ReadinessVariableCompletionItemProviderDelegate(this),
@@ -363,6 +370,15 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new LayoutVariableCodeActionProvider(this), {
         providedCodeActionKinds: LayoutVariableCodeActionProvider.providedCodeActionKinds
       }),
+
+      // hookup quick fixes for variable tile keys in layout.json's
+      vscode.languages.registerCodeActionsProvider(
+        relatedFileSelector,
+        new LayoutVariableTileCodeActionProvider(this),
+        {
+          providedCodeActionKinds: LayoutVariableTileCodeActionProvider.providedCodeActionKinds
+        }
+      ),
 
       // hookup quick fixes for variable names in auto-install.json's
       vscode.languages.registerCodeActionsProvider(

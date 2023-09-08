@@ -5,8 +5,9 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import { jsonPathToString } from '@salesforce/analyticsdx-template-lint';
 import { expect } from 'chai';
-import { findNodeAtLocation, parseTree } from 'jsonc-parser';
+import { findNodeAtLocation, JSONPath, Node as JsonNode, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { ERRORS } from '../../../src/constants';
 import { jsonpathFrom, scanLinesUntil, uriDirname, uriStat } from '../../../src/util/vscodeUtils';
@@ -268,36 +269,56 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     expect(diagnostics[0].range.start.line, 'diagnostic line').to.equal(2);
   });
 
-  it('hover text on variable names', async () => {
-    const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'layout.json');
-    const [doc] = await openFile(uri, true);
-    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
-    const tree = parseTree(doc.getText());
-    const node = tree && findNodeAtLocation(tree, ['pages', 0, 'layout', 'center', 'items', 3, 'name'])?.parent;
-    expect(node, 'pages[0].layout.center.items[3].name propNode').to.be.not.undefined;
+  async function testHover(
+    doc: vscode.TextDocument,
+    uri: vscode.Uri,
+    tree: JsonNode,
+    jsonpath: JSONPath,
+    expectedHoverText: string
+  ) {
+    const node = tree && findNodeAtLocation(tree, jsonpath)?.parent;
+    const jsonpathStr = jsonPathToString(jsonpath);
+    expect(node, `${jsonpathStr} propNode`).to.be.not.undefined;
     const nameNode = node!.children?.[0];
-    expect(nameNode, 'nameNode').to.not.be.undefined;
+    expect(nameNode, `${jsonpathStr} nameNode`).to.not.be.undefined;
     let hovers = await getHovers(uri, doc.positionAt(nameNode!.offset));
-    expect(hovers, 'nameNode hovers').to.not.be.undefined;
+    expect(hovers, `${jsonpathStr} nameNode hovers`).to.not.be.undefined;
     // on the name field, it should just return the hover from the schema
-    expect(hovers.length, 'nameNode hovers.length').to.equal(1);
+    expect(hovers.length, `${jsonpathStr} nameNode hovers.length`).to.equal(1);
 
     const valueNode = node!.children?.[1];
-    expect(valueNode, 'valueNode').to.not.be.undefined;
+    expect(valueNode, `${jsonpathStr} valueNode`).to.not.be.undefined;
     hovers = await waitFor(
       () => getHovers(uri, doc.positionAt(valueNode!.offset)),
       hovers => hovers.length >= 2,
       {
         timeoutMessage: hovers =>
-          'Timed out waiting for both hovers on valueNode, got hovers:' + JSON.stringify(hovers, undefined, 2)
+          `Timed out waiting for both hovers on ${jsonpathStr} valueNode, got hovers:` +
+          JSON.stringify(hovers, undefined, 2)
       }
     );
-    expect(hovers, 'valueNode hovers').to.not.be.undefined;
+    expect(hovers, `${jsonpathStr} valueNode hovers`).to.not.be.undefined;
     // on the value field, it should have the schema hover and the hover from our provider
-    expect(hovers.length, 'valueNode hovers.length').to.equal(2);
-    if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf('StringTypeVar') >= 0))) {
-      expect.fail("Expected at least one hover to contain 'StringTypeVar'");
+    expect(hovers.length, `${jsonpathStr} valueNode hovers.length`).to.equal(2);
+    if (!hovers.some(h => h.contents.some(c => typeof c === 'object' && c.value.indexOf(expectedHoverText) >= 0))) {
+      expect.fail(`Expected at least one ${jsonpathStr} hover to contain '${expectedHoverText}'`);
     }
+  }
+
+  it('hover text on variable names', async () => {
+    const uri = uriFromTestRoot(waveTemplatesUriPath, 'BadVariables', 'layout.json');
+    const [doc] = await openFile(uri, true);
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+    const tree = parseTree(doc.getText());
+    expect(tree, 'BadVariables/layout.json json tree').to.not.be.undefined;
+    await testHover(doc, uri, tree!, ['pages', 0, 'layout', 'center', 'items', 3, 'name'], 'StringTypeVar');
+    await testHover(
+      doc,
+      uri,
+      tree!,
+      ['pages', 0, 'layout', 'center', 'items', 4, 'items', 0, 'name'],
+      'DateTimeTypeGroupBoxVar'
+    );
   });
 
   it('go to definition support for variable names', async () => {
@@ -339,6 +360,38 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     expect(groupBoxVarlocations[0].uri.fsPath, 'location path').to.equal(
       vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
     );
+  });
+
+  it('go to definition support for variable tiles keys', async () => {
+    const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'layout.json');
+    const [doc] = await openFile(uri, true);
+    // we should see the warnings about the bad var types
+    await waitForDiagnostics(uri, d => d && d.length >= 1);
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+    const verifyDefinition = async (...jsonpath: JSONPath) => {
+      const position = findPositionByJsonPath(doc, jsonpath);
+      const jsonpathStr = jsonPathToString(jsonpath);
+      expect(position, jsonpathStr).to.not.be.undefined;
+
+      // position will be the start of the tile key's {}, so go back 3 chars to the tile key
+      const locations = await getDefinitionLocations(uri, position!.translate({ characterDelta: -3 }));
+      if (locations.length !== 1) {
+        expect.fail(`Expected 1 location for ${jsonpathStr}, got:\n` + JSON.stringify(locations, undefined, 2));
+      }
+      expect(locations[0].uri.fsPath, `${jsonpathStr} location path`).to.equal(
+        vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
+      );
+    };
+
+    // check string enum tile
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 4, 'tiles', 'C');
+    // check number enum tile
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 5, 'tiles', '3');
+    // check string enum tile in groupbox
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 6, 'items', 0, 'tiles', 'B');
+    // check number enum tile in groupbox
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 6, 'items', 1, 'tiles', '2');
   });
 
   it('code completions for variable names', async () => {
@@ -573,5 +626,182 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     expect(fooNode, 'foo in variables.json').to.not.be.undefined;
     // and that it's a {} object
     expect(fooNode!.type, 'foo in variables.json type').to.equal('object');
+  });
+
+  it('code completions for tiles keys', async () => {
+    const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'layout.json');
+    const [doc] = await openFile(uri, true);
+    // we should see the warnings about the bad var types
+    await waitForDiagnostics(uri, d => d && d.length >= 1);
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+    const verifyTilesCompletions = async (jsonPath: JSONPath, expected: string[]) => {
+      const jsonPathStr = jsonPathToString(jsonPath);
+      // go the inside of tiles' "{}"
+      const position = findPositionByJsonPath(doc, jsonPath)?.translate({ characterDelta: 1 });
+      expect(position, jsonPathStr).to.not.be.undefined;
+      const completions = (await verifyCompletionsContain(doc, position!, ...expected)).sort(compareCompletionItems);
+      if (completions.length !== expected.length) {
+        expect.fail(`Expected ${expected.length} completions, got: ` + completions.map(i => i.label).join(', '));
+      }
+    };
+    const expectedStringEnumCompletions = ['"A"', '"B"', '"C"'];
+    const expectedNumberEnumCompletions = ['"1"', '"2"', '"3"'];
+
+    // SingleColumn page
+    await verifyTilesCompletions(['pages', 0, 'layout', 'center', 'items', 4, 'tiles'], expectedStringEnumCompletions);
+    await verifyTilesCompletions(['pages', 0, 'layout', 'center', 'items', 5, 'tiles'], expectedNumberEnumCompletions);
+    // in GroupBox in SingleColumn page
+    await verifyTilesCompletions(
+      ['pages', 0, 'layout', 'center', 'items', 6, 'items', 0, 'tiles'],
+      expectedStringEnumCompletions
+    );
+    await verifyTilesCompletions(
+      ['pages', 0, 'layout', 'center', 'items', 6, 'items', 1, 'tiles'],
+      expectedNumberEnumCompletions
+    );
+
+    // TwoColumn page left
+    await verifyTilesCompletions(['pages', 1, 'layout', 'left', 'items', 0, 'tiles'], expectedStringEnumCompletions);
+    await verifyTilesCompletions(['pages', 1, 'layout', 'left', 'items', 1, 'tiles'], expectedNumberEnumCompletions);
+    // in GroupBox in SingleColumn page
+    await verifyTilesCompletions(
+      ['pages', 1, 'layout', 'left', 'items', 2, 'items', 0, 'tiles'],
+      expectedStringEnumCompletions
+    );
+    await verifyTilesCompletions(
+      ['pages', 1, 'layout', 'left', 'items', 2, 'items', 1, 'tiles'],
+      expectedNumberEnumCompletions
+    );
+    // TwoColumn page right
+    await verifyTilesCompletions(['pages', 1, 'layout', 'right', 'items', 0, 'tiles'], expectedStringEnumCompletions);
+    await verifyTilesCompletions(['pages', 1, 'layout', 'right', 'items', 1, 'tiles'], expectedNumberEnumCompletions);
+    // in GroupBox in SingleColumn page
+    await verifyTilesCompletions(
+      ['pages', 1, 'layout', 'right', 'items', 2, 'items', 0, 'tiles'],
+      expectedStringEnumCompletions
+    );
+    await verifyTilesCompletions(
+      ['pages', 1, 'layout', 'right', 'items', 2, 'items', 1, 'tiles'],
+      expectedNumberEnumCompletions
+    );
+  });
+
+  it('quick fixes on bad variable tile keys', async () => {
+    const layoutJson = {
+      pages: [
+        {
+          title: 'Test Title',
+          layout: {
+            type: 'SingleColumn',
+            center: {
+              items: [
+                { type: 'Variable', name: 'stringEnum', variant: 'CheckboxTiles', tiles: { c: {} } },
+                {
+                  type: 'GroupBox',
+                  text: 'test',
+                  items: [{ type: 'Variable', name: 'numberEnum', variant: 'CenteredCheckboxTiles', tiles: { 20: {} } }]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    };
+    const [t, [layoutEditor, variablesEditor]] = await createTemplateWithRelatedFiles(
+      {
+        field: 'layoutDefinition',
+        path: 'layout.json',
+        initialJson: layoutJson
+      },
+      {
+        field: 'variableDefinition',
+        path: 'variables.json',
+        initialJson: {
+          stringEnum: {
+            variableType: {
+              type: 'StringType',
+              enums: ['A', 'B', 'C']
+            }
+          },
+          numberEnum: {
+            variableType: {
+              type: 'NumberType',
+              enums: [1, 2, 3]
+            }
+          }
+        }
+      }
+    );
+    tmpdir = t;
+
+    // get the 2 expected diagnostics on the tiles in layout.json
+    const diagnosticFilter = (d: vscode.Diagnostic) => d.code === ERRORS.LAYOUT_INVALID_TILE_NAME;
+    let diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 2,
+        'Initial 2 invalid tiles warnings on layout.json'
+      )
+    )
+      .filter(diagnosticFilter)
+      .sort(sortDiagnostics);
+    // and there shouldn't be any warnings on variables.json
+    await waitForDiagnostics(variablesEditor.document.uri, d => d && d.length === 0);
+
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[0].layout.center.items[0].tiles.c');
+    expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal(
+      'pages[0].layout.center.items[1].items[0].tiles["20"]'
+    );
+
+    let actions = await getCodeActions(layoutEditor.document.uri, diagnostics[0].range);
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 code action, got [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'stringEnum action title').to.equal("Switch to 'C'");
+    expect(actions[0].edit, 'stringEnum action edit').to.not.be.undefined;
+    // run the action
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+    // that should that diagnostic, leaving the one on numberEnum
+    diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 1,
+        '1 invalid tiles warnings on layout.json'
+      )
+    ).filter(diagnosticFilter);
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal(
+      'pages[0].layout.center.items[1].items[0].tiles["20"]'
+    );
+
+    actions = await getCodeActions(layoutEditor.document.uri, diagnostics[0].range);
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 code action, got [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'numberEnum action title').to.equal("Switch to '2'");
+    expect(actions[0].edit, 'numberEnum action edit').to.not.be.undefined;
+    // run that action
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+    // that should fix all the warnings
+    await waitForDiagnostics(
+      layoutEditor.document.uri,
+      ds => ds && ds.filter(diagnosticFilter).length === 0,
+      'No more diagnostics on layout.json'
+    );
+    // and the tile keys should have been updated
+    const layoutTree = parseTree(layoutEditor.document.getText());
+    expect(layoutTree, 'layout.json').to.not.be.undefined;
+    expect(
+      findNodeAtLocation(layoutTree!, ['pages', 0, 'layout', 'center', 'items', 0, 'tiles', 'C']),
+      'stringEnum tile'
+    ).to.not.be.undefined;
+    expect(
+      findNodeAtLocation(layoutTree!, ['pages', 0, 'layout', 'center', 'items', 1, 'items', 0, 'tiles', '2']),
+      'stringEnum tile'
+    ).to.not.be.undefined;
   });
 });

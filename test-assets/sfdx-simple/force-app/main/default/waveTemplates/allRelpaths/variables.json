@@ -33,5 +33,17 @@
       "dataType": null,
       "fieldType": null
     }
+  },
+  "stringEnum": {
+    "variableType": {
+      "type": "StringType",
+      "enums": ["A", "B", "C"]
+    }
+  },
+  "numberEnum": {
+    "variableType": {
+      "type": "NumberType",
+      "enums": [1, 2, 3]
+    }
   }
 }

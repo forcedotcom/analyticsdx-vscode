@@ -22,7 +22,53 @@
           "description": null
         },
         "center": {
-          "items": []
+          "items": [
+            {
+              "type": "Variable",
+              "name": "var",
+              "variant": null,
+              "description": null,
+              "label": null,
+              "tiles": null
+            },
+            {
+              "type": "Variable",
+              "name": "var2",
+              "tiles": {
+                "foo": null,
+                "bar": {
+                  "badge": null,
+                  "description": null,
+                  "iconName": null,
+                  "label": null
+                }
+              }
+            },
+            {
+              "type": "GroupBox",
+              "text": "",
+              "description": "",
+              "items": [
+                {
+                  "type": "Variable",
+                  "name": "foo",
+                  "variant": null,
+                  "description": null,
+                  "label": null,
+                  "tiles": {
+                    "foo": null,
+                    "bar": {
+                      "badge": null,
+                      "description": null,
+                      "iconName": null,
+                      "label": null
+                    }
+                  }
+                }
+              ],
+              "visibility": "Visible"
+            }
+          ]
         }
       }
     }

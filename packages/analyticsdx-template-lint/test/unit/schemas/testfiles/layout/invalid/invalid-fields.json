@@ -39,14 +39,33 @@
               "items": [
                 {
                   "error": "This should trigger a warning",
-                  "description": "This should trigger a warning",
                   "type": "Image",
                   "image": {
                     "error": "This should trigger a warning",
                     "name": "PositivePossum"
                   }
+                },
+                {
+                  "type": "Variable",
+                  "name": "groupedBoxTiles",
+                  "variant": "CheckboxTiles",
+                  "tiles": {
+                    "bar": {
+                      "error": "This should trigger a warning"
+                    }
+                  }
                 }
               ]
+            },
+            {
+              "type": "Variable",
+              "name": "tiles",
+              "variant": "CenteredCheckboxTiles",
+              "tiles": {
+                "foo": {
+                  "error": "This should trigger a warning"
+                }
+              }
             }
           ]
         }
