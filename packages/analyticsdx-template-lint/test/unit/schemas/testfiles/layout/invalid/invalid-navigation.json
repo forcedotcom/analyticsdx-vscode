@@ -1,0 +1,26 @@
+{
+  "pages": [
+    {
+      "title": "test title",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": [
+            {
+              "type": "Text",
+              "text": "test text"
+            }
+          ]
+        }
+      },
+      "navigation": {
+        "unknownProperty": "This should trigger a warning"
+      }
+    }
+  ],
+  "appDetails": {
+    "navigation": {
+      "unknownProperty": "This should trigger a warning"
+    }
+  }
+}

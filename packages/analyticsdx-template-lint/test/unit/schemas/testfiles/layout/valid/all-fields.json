@@ -8,6 +8,10 @@
       "condition": "{{true}}",
       "title": "Primitive Array Variables",
       "helpUrl": "https://salesforce.com/",
+      "navigation": {
+        "label": "test label",
+        "parentLabel": "test parent label"
+      },
       "layout": {
         "type": "SingleColumn",
         "header": {
@@ -188,5 +192,14 @@
       "text": "display message",
       "location": "AppLandingPage"
     }
-  ]
+  ],
+  "navigationPanel": {
+    "title": "Navigation Panel title"
+  },
+  "appDetails": {
+    "navigation": {
+      "label": "test label",
+      "parentLabel": "test parent label"
+    }
+  }
 }

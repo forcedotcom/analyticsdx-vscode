@@ -181,6 +181,10 @@
                 }
               }
             ]
+          },
+          "navigation": {
+            "$ref": "#/definitions/navigation",
+            "description": "Configure the node in the navigation panel for this page."
           }
         },
         "defaultSnippets": [
@@ -271,6 +275,36 @@
           ]
         }
       ]
+    },
+    "navigationPanel": {
+      "type": "object",
+      "description": "Controls whether the navigation panel appears and its title.",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title to be displayed at the top of the navigation panel."
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New navigation panel",
+          "body": {
+            "title": "$0"
+          }
+        }
+      ]
+    },
+    "appDetails": {
+      "type": "object",
+      "description": "Configuration for the app details page.",
+      "additionalProperties": false,
+      "properties": {
+        "navigation": {
+          "$ref": "#/definitions/navigation",
+          "description": "Configure the app details page node in the navigation panel."
+        }
+      }
     }
   },
   "definitions": {
@@ -626,6 +660,28 @@
         }
       },
       "required": ["type", "image"]
+    },
+    "navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parentLabel": {
+          "type": "string",
+          "description": "Nest this node in the navigation panel under a parent node with this label."
+        },
+        "label": {
+          "type": "string",
+          "description": "Override the label for this node in the navigation panel."
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New navigation",
+          "body": {
+            "label": "${1:Label override}"
+          }
+        }
+      ]
     }
   }
 }

@@ -1091,13 +1091,14 @@ export abstract class TemplateLinter<
   private async lintLayout(templateInfo: JsonNode) {
     const { doc, json: layout } = await this.loadTemplateRelPathJson(templateInfo, ['layoutDefinition']);
     if (doc && layout) {
-      // start this one
-      const p = this.lintLayoutCheckVariables(templateInfo, doc, layout);
-      return p;
+      await Promise.all([
+        this.lintLayoutCheckVariables(templateInfo, doc, layout),
+        this.lintLayoutCheckNavigationObjects(doc, layout)
+      ]);
     }
   }
 
-  private async lintLayoutCheckVariables(templateInfo: JsonNode, doc: Document, layoutJson: JsonNode) {
+  private async lintLayoutCheckVariables(templateInfo: JsonNode, doc: Document, layoutJson: JsonNode): Promise<void> {
     const { doc: variablesDoc, variableTypes } = await this.loadVariableTypesForTemplate(templateInfo);
     // go through the variables items in the pages' layouts
     const variables = findAllVariableNamesForLayoutDefinition(layoutJson);
@@ -1188,6 +1189,26 @@ export abstract class TemplateLinter<
           }
         }
       });
+    }
+  }
+
+  private async lintLayoutCheckNavigationObjects(doc: Document, layoutJson: JsonNode): Promise<void> {
+    // Check to see if there is a navigationPanel object
+    const navigationPanelNode = matchJsonNodeAtPattern(layoutJson, ['navigationPanel']);
+    if (!navigationPanelNode) {
+      // If there is no navigationPanel defined, make sure there are no
+      // navigation objects defined on pages because they will have no effect.
+      const addDiagnosticForUnnecessaryNavigationObject = (node: JsonNode) => {
+        this.addDiagnostic(
+          doc,
+          'navigation has no effect unless a navigationPanel is defined as part of the layout.',
+          ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT,
+          node,
+          { severity: TemplateLinterDiagnosticSeverity.Information }
+        );
+      };
+      matchJsonNodesAtPattern(layoutJson, ['pages', '*', 'navigation'], addDiagnosticForUnnecessaryNavigationObject);
+      matchJsonNodesAtPattern(layoutJson, ['appDetails', 'navigation'], addDiagnosticForUnnecessaryNavigationObject);
     }
   }
 
