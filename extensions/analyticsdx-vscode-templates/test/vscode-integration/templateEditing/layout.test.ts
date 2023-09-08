@@ -98,6 +98,22 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
     // make sure it has the fields from the schema that aren't in the document
     await verifyCompletionsContain(doc, position, 'header');
+
+    // find the start of the first page guidance panel
+    node = findNodeAtLocation(tree!, ['pages', 0, 'guidancePanel']);
+    expect(node, 'pages[0].guidancePanel').to.not.be.undefined;
+    // this should be right the opening '{'
+    position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
+    // make sure it has the fields from the schema that aren't in the document
+    await verifyCompletionsContain(doc, position, 'backgroundImage');
+
+    // find the start of the second page
+    node = findNodeAtLocation(tree!, ['pages', 1]);
+    expect(node, 'pages').to.not.be.undefined;
+    // this should be right the opening '{'
+    position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
+    // make sure it has the fields from the schema that aren't in the document
+    await verifyCompletionsContain(doc, position, 'condition', 'helpUrl', 'backgroundImage', 'guidancePanel');
   });
 
   it('json-schema defaultSnippets', async () => {
@@ -165,6 +181,36 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     }
     position = scan.end.translate({ characterDelta: 1 });
     await verifyCompletionsContain(doc, position, 'New displayMessage');
+
+    // go to just before the { in "guidancePanel"
+    node = findNodeAtLocation(tree!, ['pages', 0, 'guidancePanel']);
+    expect(node, 'pages[0].guidancePanel').to.not.be.undefined;
+    scan = scanLinesUntil(doc, ch => ch === '{', doc.positionAt(node!.offset));
+    if (scan.ch !== '{') {
+      expect.fail("Expected to find '{' after '\"guidancePanel\":'");
+    }
+    position = scan.end.translate({ characterDelta: -1 });
+    await verifyCompletionsContain(doc, position, 'New guidance panel');
+
+    // go to just after the [ in "guidancePanel.items"
+    node = findNodeAtLocation(tree!, ['pages', 0, 'guidancePanel', 'items']);
+    expect(node, 'pages[0].guidancePanel.items').to.not.be.undefined;
+    scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
+    if (scan.ch !== '[') {
+      expect.fail("Expected to find '[' after '\"items\":'");
+    }
+    position = scan.end.translate({ characterDelta: 1 });
+    await verifyCompletionsContain(doc, position, 'New Image item', 'New Text item', 'New LinkBox item');
+
+    //  go to just before the { in "guidancePanel.backgroundImage" on page 3
+    node = findNodeAtLocation(tree!, ['pages', 2, 'guidancePanel', 'backgroundImage']);
+    expect(node, 'pages[0].guidancePanel.backgroundImage').to.not.be.undefined;
+    scan = scanLinesUntil(doc, ch => ch === '{', doc.positionAt(node!.offset));
+    if (scan.ch !== '{') {
+      expect.fail("Expected to find '{' after '\"pages[2].guidancePanel.backgroundImage\":'");
+    }
+    position = scan.end.translate({ characterDelta: -1 });
+    await verifyCompletionsContain(doc, position, 'New background image');
   });
 
   it('on change of path value', async () => {

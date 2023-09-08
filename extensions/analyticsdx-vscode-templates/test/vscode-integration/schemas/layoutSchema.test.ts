@@ -100,4 +100,59 @@ describe('layout-schema.json hookup', () => {
       });
     });
   });
+
+  describe('has correct code completions for guidance panel item type', () => {
+    async function createTemplateWithItemType(type: string) {
+      const initialJson: any = {
+        error: 'This should cause a schema error to look for',
+        pages: [
+          {
+            title: '',
+            layout: {
+              type: 'SingleColumn',
+              center: {
+                items: []
+              }
+            },
+            guidancePanel: {
+              title: 'Guidance Panel Title',
+              items: [{ type }]
+            }
+          }
+        ]
+      };
+      return createTemplateWithLayout(initialJson);
+    }
+
+    // make sure the doNotSuggest logic in layout-schema.json for the type-specific fields in guidance panel items works
+    [
+      // these types should see some available completions in the item
+      { type: 'Image', expected: ['image'] },
+      { type: 'Text', expected: ['text'] },
+      { type: 'LinkBox', expected: ['text', 'url', 'title', 'icon'] }
+    ].forEach(({ type, expected }) => {
+      it(type, async () => {
+        const layoutEditor = await createTemplateWithItemType(type);
+        await waitFor(
+          () => layoutEditor.document.languageId,
+          lang => lang === TEMPLATE_JSON_LANG_ID,
+          { timeoutMessage: 'timeout waiting for layout.json languageId' }
+        );
+        await waitForDiagnostics(
+          layoutEditor.document.uri,
+          // there should be the 'error' error and one about the missing item field
+          d => d && d.length >= 2,
+          'initial errors on layout.json'
+        );
+
+        const tree = parseTree(layoutEditor.document.getText());
+        // find the variableType {} in the json
+        const typeNode = tree && findNodeAtLocation(tree, ['pages', 0, 'guidancePanel', 'items', 0, 'type']);
+        expect(typeNode, 'name').to.not.be.undefined;
+        // go right at the start of the item's json (just before "type": "...")
+        const position = layoutEditor.document.positionAt(typeNode!.parent!.offset + 1);
+        await verifyCompletionsContain(layoutEditor.document, position, ...expected);
+      });
+    });
+  });
 });

@@ -147,6 +147,53 @@
             }
           ]
         }
+      },
+      "guidancePanel": {
+        "title": "Documentation",
+        "items": [
+          {
+            "type": "Text",
+            "text": "A Sub Header",
+            "variant": "SubHeader"
+          },
+          {
+            "type": "Image",
+            "image": {
+              "name": "PositivePossum",
+              "namespace": "ns"
+            }
+          },
+          {
+            "type": "LinkBox",
+            "text": "A Link",
+            "url": "https://salesforce.com",
+            "icon": "standard:knowledge",
+            "title": "Link Title"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Page 2",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": []
+        }
+      }
+    },
+    {
+      "title": "Page 3",
+      "layout": {
+        "type": "SingleColumn",
+        "center": {
+          "items": []
+        }
+      },
+      "guidancePanel": {
+        "title": "Documentation",
+        "backgroundImage": {},
+        "items": []
       }
     }
   ],

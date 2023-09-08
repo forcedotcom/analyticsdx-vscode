@@ -88,6 +88,14 @@
                       "label": "label"
                     }
                   }
+                },
+                {
+                  "type": "Image",
+                  "image": {
+                    "name": "PositivePossum",
+                    "namespace": "ns"
+                  },
+                  "visibility": "Hidden"
                 }
               ],
               "visibility": "Visible"
