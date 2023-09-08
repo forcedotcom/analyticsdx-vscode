@@ -89,7 +89,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     // this should be right the opening '{'
     position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
     // make sure it has the fields from the schema that aren't in the document
-    await verifyCompletionsContain(doc, position, 'condition', 'helpUrl', 'backgroundImage');
+    await verifyCompletionsContain(doc, position, 'condition', 'helpUrl', 'backgroundImage', 'guidancePanel');
 
     // find the start of the first page layout
     node = findNodeAtLocation(tree!, ['pages', 0, 'layout']);
@@ -99,21 +99,13 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     // make sure it has the fields from the schema that aren't in the document
     await verifyCompletionsContain(doc, position, 'header');
 
-    // find the start of the first page guidance panel
-    node = findNodeAtLocation(tree!, ['pages', 0, 'guidancePanel']);
-    expect(node, 'pages[0].guidancePanel').to.not.be.undefined;
+    // find the start of the second page guidance panel
+    node = findNodeAtLocation(tree!, ['pages', 1, 'guidancePanel']);
+    expect(node, 'pages[1].guidancePanel').to.not.be.undefined;
     // this should be right the opening '{'
     position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
     // make sure it has the fields from the schema that aren't in the document
     await verifyCompletionsContain(doc, position, 'backgroundImage');
-
-    // find the start of the second page
-    node = findNodeAtLocation(tree!, ['pages', 1]);
-    expect(node, 'pages').to.not.be.undefined;
-    // this should be right the opening '{'
-    position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
-    // make sure it has the fields from the schema that aren't in the document
-    await verifyCompletionsContain(doc, position, 'condition', 'helpUrl', 'backgroundImage', 'guidancePanel');
   });
 
   it('json-schema defaultSnippets', async () => {
@@ -182,9 +174,9 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     position = scan.end.translate({ characterDelta: 1 });
     await verifyCompletionsContain(doc, position, 'New displayMessage');
 
-    // go to just before the { in "guidancePanel"
-    node = findNodeAtLocation(tree!, ['pages', 0, 'guidancePanel']);
-    expect(node, 'pages[0].guidancePanel').to.not.be.undefined;
+    // go to just before the { in "guidancePanel" on page 2
+    node = findNodeAtLocation(tree!, ['pages', 1, 'guidancePanel']);
+    expect(node, 'pages[1].guidancePanel').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '{', doc.positionAt(node!.offset));
     if (scan.ch !== '{') {
       expect.fail("Expected to find '{' after '\"guidancePanel\":'");
@@ -193,8 +185,8 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New guidance panel');
 
     // go to just after the [ in "guidancePanel.items"
-    node = findNodeAtLocation(tree!, ['pages', 0, 'guidancePanel', 'items']);
-    expect(node, 'pages[0].guidancePanel.items').to.not.be.undefined;
+    node = findNodeAtLocation(tree!, ['pages', 1, 'guidancePanel', 'items']);
+    expect(node, 'pages[1].guidancePanel.items').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '[', doc.positionAt(node!.offset));
     if (scan.ch !== '[') {
       expect.fail("Expected to find '[' after '\"items\":'");
@@ -204,7 +196,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
 
     //  go to just before the { in "guidancePanel.backgroundImage" on page 3
     node = findNodeAtLocation(tree!, ['pages', 2, 'guidancePanel', 'backgroundImage']);
-    expect(node, 'pages[0].guidancePanel.backgroundImage').to.not.be.undefined;
+    expect(node, 'pages[2].guidancePanel.backgroundImage').to.not.be.undefined;
     scan = scanLinesUntil(doc, ch => ch === '{', doc.positionAt(node!.offset));
     if (scan.ch !== '{') {
       expect.fail("Expected to find '{' after '\"pages[2].guidancePanel.backgroundImage\":'");

@@ -174,15 +174,6 @@
       }
     },
     {
-      "title": "Page 2",
-      "layout": {
-        "type": "SingleColumn",
-        "center": {
-          "items": []
-        }
-      }
-    },
-    {
       "title": "Page 3",
       "layout": {
         "type": "SingleColumn",
