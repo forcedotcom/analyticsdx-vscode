@@ -333,7 +333,6 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "additionalProperties": false,
         "properties": {
           "field": {
             "type": "string",
@@ -361,10 +360,26 @@
                 "pattern": "^\\$\\{.*\\}$"
               }
             ]
-          },
-          "value": {
-            "type": ["string", "number", "null", "boolean", "array"],
-            "description": "The value to compare against. This can use ${...} expressions."
+          }
+        },
+        "if": {
+          "properties": { "operator": { "enum": ["Equal", "NotEqual"] } },
+          "required": ["operator"]
+        },
+        "then": {
+          "properties": {
+            "value": {
+              "type": ["string", "number", "null", "boolean", "array"],
+              "description": "The value to compare against. This can use ${...} expressions."
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "value": {
+              "type": ["string", "number", "boolean", "array"],
+              "description": "The value to compare against. This can use ${...} expressions."
+            }
           }
         },
         "required": ["field", "operator", "value"],
