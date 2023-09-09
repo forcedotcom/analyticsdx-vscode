@@ -1,0 +1,52 @@
+{
+  "templateRequirements": [
+    {
+      "expression": "${true}",
+      "type": "error"
+    }
+  ],
+  "definition": {
+    "empty": {
+      "type": ""
+    },
+    "bad": {
+      "type": "error"
+    },
+    "filterOp": {
+      "type": "SobjectRowCount",
+      "sobject": "foo",
+      "filters": [
+        {
+          "field": "field",
+          "operator": "GreaterThan",
+          "value": null
+        },
+        {
+          "field": "field",
+          "operator": "GreaterThanEqual",
+          "value": null
+        },
+        {
+          "field": "field",
+          "operator": "LessThan",
+          "value": null
+        },
+        {
+          "field": "field",
+          "operator": "LessThanEqual",
+          "value": null
+        },
+        {
+          "field": "field",
+          "operator": "NotIn",
+          "value": null
+        },
+        {
+          "field": "field",
+          "operator": "In",
+          "value": null
+        }
+      ]
+    }
+  }
+}
