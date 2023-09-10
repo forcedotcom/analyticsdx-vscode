@@ -54,7 +54,8 @@ const jsonPats = [
   ...definitionFilesPats,
   ['externalFiles', '*', 'schema'],
   ['externalFiles', '*', 'userXmd'],
-  ['datasetFiles', '*', 'userXmd']
+  ['datasetFiles', '*', 'userXmd'],
+  ['datasetFiles', '*', 'conversionMetadata']
 ];
 const htmlPats = [['releaseInfo', 'notesFile'] as JSONPath];
 const imagePats = [['imageFiles', '*', 'file'] as JSONPath];

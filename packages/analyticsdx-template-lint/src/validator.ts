@@ -104,7 +104,8 @@ export class FileTemplateValidator extends TemplateLinter<string, TextDocument, 
         ['recipes', '*', 'file'],
         ['externalFiles', '*', 'schema'],
         ['externalFiles', '*', 'userXmd'],
-        ['datasetFiles', '*', 'userXmd']
+        ['datasetFiles', '*', 'userXmd'],
+        ['datasetFiles', '*', 'conversionMetadata']
       ].forEach(jsonpath => {
         matchJsonNodesAtPattern(templateInfo, jsonpath).forEach(file => {
           const p = FileTemplateValidator.schemaValidateRelPath(jsonSvc, linter, templateInfo, schemas.base, file);

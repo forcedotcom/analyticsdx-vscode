@@ -218,6 +218,7 @@ describe('template-info-schema.json hookup', () => {
       datasetFiles: [
         {
           userXmd: null,
+          conversionMetadata: null,
           condition: null,
           overwriteOnUpgrade: null,
           file: null,
@@ -349,6 +350,7 @@ describe('template-info-schema.json hookup', () => {
       },
       { jsonpath: ['datasetFiles'], completions: ['[]'] },
       { jsonpath: ['datasetFiles', 0, 'userXmd'], completions: ['""'] },
+      { jsonpath: ['datasetFiles', 0, 'conversionMetadata'], completions: ['""'] },
       { jsonpath: ['datasetFiles', 0, 'condition'], completions: ['""', '${...} expression'] },
       { jsonpath: ['datasetFiles', 0, 'overwriteOnUpgrade'], completions: ['${...} expression'] },
       { jsonpath: ['datasetFiles', 0, 'file'], completions: ['""'] },

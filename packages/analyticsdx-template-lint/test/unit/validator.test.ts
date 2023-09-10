@@ -363,6 +363,7 @@ describe('FileTemplateValidator', () => {
       ['dataTransforms', 0, 'file'],
       ['eltDataflows', 0, 'file'],
       ['recipes', 0, 'file'],
+      ['datasetFiles', 0, 'conversionMetadata'],
       ['extendedTypes', 'predictiveScoring', 0, 'file']
     ].map(jsonpath => jsonpathLineNum(templateInfo, jsonpath, doc));
 

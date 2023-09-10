@@ -807,6 +807,12 @@
                 }
               }
             ]
+          },
+          "conversionMetadata": {
+            "type": ["string", "null"],
+            "description": "Path to the definition file for converting a data model object to this dataset. This feature is currently in pilot in Winter '24 release. If you're interested in participating in the pilot program, ask your Salesforce Account Executive.",
+            "doNotSuggest": true,
+            "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
           }
         },
         "defaultSnippets": [

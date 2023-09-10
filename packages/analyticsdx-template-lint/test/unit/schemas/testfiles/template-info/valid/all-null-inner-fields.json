@@ -90,7 +90,8 @@
       "condition": null,
       "overwriteOnUpgrade": null,
       "file": null,
-      "onFailure": null
+      "onFailure": null,
+      "conversionMetadata": null
     }
   ],
   "storedQueries": [

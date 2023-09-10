@@ -84,7 +84,8 @@
     {
       "label": "dataset",
       "name": "dataset",
-      "userXmd": "datasets/userXmd.json"
+      "userXmd": "datasets/userXmd.json",
+      "conversionMetadata": "datasets/conversion.json"
     }
   ],
   "extendedTypes": {

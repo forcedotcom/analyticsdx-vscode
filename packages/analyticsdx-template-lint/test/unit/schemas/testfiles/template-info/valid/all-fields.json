@@ -137,6 +137,7 @@
       "file": "not_used",
       "condition": "${Variables.Has_Product == 'Yes'}",
       "userXmd": "foo.json",
+      "conversionMetadata": "bar.json",
       "onFailure": {
         "defaultStatus": "Skip"
       }

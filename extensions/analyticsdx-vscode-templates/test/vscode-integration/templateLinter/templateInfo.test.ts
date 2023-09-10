@@ -610,6 +610,7 @@ describe('TemplateLinterManager lints template-info.json', () => {
       'eltDataflows[0].file',
       'dataTransforms[0].file',
       'recipes[0].file',
+      'datasetFiles[0].conversionMetadata',
       'extendedTypes.predictiveScoring[0].file'
     ].forEach(path => {
       const d = map.get(path);
