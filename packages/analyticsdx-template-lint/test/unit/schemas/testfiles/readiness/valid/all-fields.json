@@ -98,7 +98,7 @@
         {
           "field": "NumberOfEmployees",
           "operator": "NotEqual",
-          "value": null
+          "value": "1"
         },
         {
           "field": "NumberOfEmployees",
