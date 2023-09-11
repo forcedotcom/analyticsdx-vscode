@@ -333,6 +333,7 @@
       "minItems": 0,
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "field": {
             "type": "string",
@@ -360,6 +361,10 @@
                 "pattern": "^\\$\\{.*\\}$"
               }
             ]
+          },
+          "value": {
+            "type": ["string", "number", "null", "boolean", "array"],
+            "description": "The value to compare against. This can use ${...} expressions."
           }
         },
         "if": {
