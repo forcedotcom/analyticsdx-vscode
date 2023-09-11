@@ -106,6 +106,14 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
     // make sure it has the fields from the schema that aren't in the document
     await verifyCompletionsContain(doc, position, 'backgroundImage');
+
+    // find the start of the app details page
+    node = findNodeAtLocation(tree!, ['appDetails']);
+    expect(node, 'appDetails').to.not.be.undefined;
+    // this should be right the opening '{'
+    position = doc.positionAt(node!.offset).translate({ characterDelta: 1 });
+    // make sure it has the fields from the schema that aren't in the document
+    await verifyCompletionsContain(doc, position, 'guidancePanel', 'navigation');
   });
 
   it('json-schema defaultSnippets', async () => {

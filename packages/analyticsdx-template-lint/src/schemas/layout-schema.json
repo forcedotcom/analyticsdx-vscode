@@ -43,29 +43,9 @@
             "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
           },
           "backgroundImage": {
-            "type": ["null", "object"],
-            "description": "Image to display in the background of this page. It should be a horizontal image and it will be fixed at the bottom of the page",
-            "additionalProperties": false,
-            "required": ["name"],
-            "properties": {
-              "namespace": {
-                "type": ["null", "string"],
-                "description": "The image namespace.",
-                "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-              },
-              "name": {
-                "type": "string",
-                "description": "The image name."
-              }
-            },
-            "defaultSnippets": [
-              {
-                "label": "New backgroundImage",
-                "body": {
-                  "name": "${1:name}"
-                }
-              }
-            ]
+            "$ref": "#/definitions/backgroundImage",
+            "description": "Image to display in the background of this page. It should be a horizontal image and it will be fixed at the bottom of the page.",
+            "required": ["name"]
           },
           "layout": {
             "type": "object",
@@ -186,7 +166,10 @@
             "$ref": "#/definitions/navigation",
             "description": "Configure the node in the navigation panel for this page."
           },
-          "guidancePanel": { "$ref": "#/definitions/guidancePanel" }
+          "guidancePanel": {
+            "$ref": "#/definitions/guidancePanel",
+            "description": "The guidance panel specification for this page."
+          }
         },
         "defaultSnippets": [
           {
@@ -304,6 +287,10 @@
         "navigation": {
           "$ref": "#/definitions/navigation",
           "description": "Configure the app details page node in the navigation panel."
+        },
+        "guidancePanel": {
+          "$ref": "#/definitions/guidancePanel",
+          "description": "The guidance panel specification for the app details page."
         }
       }
     }
@@ -662,6 +649,58 @@
       },
       "required": ["type", "image"]
     },
+    "backgroundImage": {
+      "type": ["null", "object"],
+      "additionalProperties": false,
+      "properties": {
+        "namespace": {
+          "type": ["null", "string"],
+          "description": "The image namespace.",
+          "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
+        },
+        "name": {
+          "type": "string",
+          "description": "The image name."
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New backgroundImage",
+          "body": {
+            "name": "${1:name}"
+          }
+        }
+      ]
+    },
+    "linkBoxItem": {
+      "type": "object",
+      "required": ["type", "text", "url"],
+      "doNotSuggest": false,
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "LinkBox" },
+        "text": {
+          "type": "string",
+          "description": "The text to display for the link. This can contain {{...}} expressions.",
+          "doNotSuggest": false
+        },
+        "icon": {
+          "type": "string",
+          "description": "The icon to display in this LinkBox. This can contain {{...}} expressions.",
+          "doNotSuggest": false
+        },
+        "title": {
+          "type": "string",
+          "description": "The title to display in this LinkBox. This can contain {{...}} expressions.",
+          "doNotSuggest": false
+        },
+        "url": {
+          "type": "string",
+          "description": "The link url.",
+          "doNotSuggest": false
+        }
+      }
+    },
     "navigation": {
       "type": "object",
       "additionalProperties": false,
@@ -686,39 +725,17 @@
     },
     "guidancePanel": {
       "type": "object",
-      "description": "The guidance panel specification for the page.",
       "additionalProperties": false,
       "required": ["title"],
       "properties": {
         "title": {
           "type": "string",
-          "description": "Guidance panel title",
+          "description": "Guidance panel title.",
           "doNotSuggest": false
         },
         "backgroundImage": {
-          "type": "object",
-          "description": "Image to display in the background of this guidance panel. It should be a horizontal image and it will be fixed at the bottom of the guidance panel.",
-          "additionalProperties": false,
-          "doNotSuggest": false,
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "The image name."
-            },
-            "namespace": {
-              "type": ["null", "string"],
-              "description": "The image namespace.",
-              "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-            }
-          },
-          "defaultSnippets": [
-            {
-              "label": "New background image",
-              "body": {
-                "name": "${1:name}"
-              }
-            }
-          ]
+          "$ref": "#/definitions/backgroundImage",
+          "description": "Image to display in the background of this guidance panel. It should be a horizontal image and it will be fixed at the bottom of the guidance panel."
         },
         "items": {
           "type": "array",
@@ -764,7 +781,7 @@
                   "type": { "const": "Text" },
                   "text": {
                     "type": "string",
-                    "description": "The text to display in this item.",
+                    "description": "The text to display in this item. This can contain {{...}} expressions.",
                     "doNotSuggest": false
                   },
                   "variant": {
@@ -777,35 +794,7 @@
                 }
               },
               { "$ref": "#/definitions/imageItem" },
-              {
-                "type": "object",
-                "required": ["type", "text", "url"],
-                "doNotSuggest": false,
-                "additionalProperties": false,
-                "properties": {
-                  "type": { "const": "LinkBox" },
-                  "text": {
-                    "type": "string",
-                    "description": "The text to display for the link.",
-                    "doNotSuggest": false
-                  },
-                  "icon": {
-                    "type": "string",
-                    "description": "The icon to display in this LinkBox.",
-                    "doNotSuggest": false
-                  },
-                  "title": {
-                    "type": "string",
-                    "description": "The title to display in this LinkBox.",
-                    "doNotSuggest": false
-                  },
-                  "url": {
-                    "type": "string",
-                    "description": "The link url.",
-                    "doNotSuggest": false
-                  }
-                }
-              }
+              { "$ref": "#/definitions/linkBoxItem" }
             ],
             "defaultSnippets": [
               {

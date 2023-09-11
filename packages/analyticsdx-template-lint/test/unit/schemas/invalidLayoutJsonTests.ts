@@ -62,7 +62,8 @@ describe('layout-schema.json finds errors in', () => {
       'pages[0].guidancePanel.items[0].error',
       'pages[0].guidancePanel.items[1].image.error',
       'pages[0].guidancePanel.items[1].error',
-      'pages[0].guidancePanel.items[2].error'
+      'pages[0].guidancePanel.items[2].error',
+      'appDetails.error'
     );
   });
 

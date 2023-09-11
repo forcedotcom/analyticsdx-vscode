@@ -105,5 +105,8 @@
       "text": "display message",
       "location": "AppLandingPage"
     }
-  ]
+  ],
+  "appDetails": {
+    "error": "This should trigger a warning"
+  }
 }
