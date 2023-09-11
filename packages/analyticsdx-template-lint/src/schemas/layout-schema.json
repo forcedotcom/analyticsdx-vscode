@@ -781,7 +781,7 @@
         },
         "backgroundImage": {
           "$ref": "#/definitions/backgroundImage",
-          "description": "Image to display in the background of this guidance panel. It should be a horizontal image and it will be fixed at the bottom of the guidance panel."
+          "description": "Image to display in the background of this guidance panel. It should be a vertical image and it will be fixed at the bottom of the guidance panel."
         },
         "items": {
           "type": "array",
