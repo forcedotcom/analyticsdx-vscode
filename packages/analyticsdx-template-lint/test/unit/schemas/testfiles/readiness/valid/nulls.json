@@ -17,6 +17,17 @@
       "type": "SobjectRowCount",
       "sobject": "Account",
       "filters": null
+    },
+    "filterOp": {
+      "type": "SobjectRowCount",
+      "sobject": "foo",
+      "filters": [
+        {
+          "field": "field",
+          "operator": "Equal",
+          "value": null
+        }
+      ]
     }
   }
 }

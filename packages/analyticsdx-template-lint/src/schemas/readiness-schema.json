@@ -367,6 +367,20 @@
             "description": "The value to compare against. This can use ${...} expressions."
           }
         },
+        "if": {
+          "properties": {
+            "operator": { "enum": ["LessThan", "LessThanEqual", "GreaterThan", "GreaterThanEqual", "In", "NotIn"] }
+          },
+          "required": ["operator"]
+        },
+        "then": {
+          "properties": {
+            "value": {
+              "type": ["string", "number", "boolean", "array"],
+              "description": "The value to compare against. This can use ${...} expressions."
+            }
+          }
+        },
         "required": ["field", "operator", "value"],
         "defaultSnippets": [
           {

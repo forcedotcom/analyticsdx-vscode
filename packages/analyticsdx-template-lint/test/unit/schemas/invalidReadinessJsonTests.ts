@@ -42,4 +42,20 @@ describe('readiness-schema.json finds errors in', () => {
       'definition.datacloud.object'
     );
   });
+
+  it('invalid-values.json', async () => {
+    const errors = await validate('invalid-values.json');
+    errors.expectInvalidProps(
+      false,
+      'templateRequirements[0].type',
+      'definition.empty.type',
+      'definition.bad.type',
+      'definition.filterOp.filters[0].value',
+      'definition.filterOp.filters[1].value',
+      'definition.filterOp.filters[2].value',
+      'definition.filterOp.filters[3].value',
+      'definition.filterOp.filters[4].value',
+      'definition.filterOp.filters[5].value'
+    );
+  });
 });
