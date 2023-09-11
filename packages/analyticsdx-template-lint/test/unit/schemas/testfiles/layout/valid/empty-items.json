@@ -7,6 +7,9 @@
         "center": {
           "items": []
         }
+      },
+      "guidancePanel": {
+        "title": "Guidance panel title"
       }
     },
     {
@@ -19,6 +22,10 @@
         "right": {
           "items": []
         }
+      },
+      "guidancePanel": {
+        "title": "Guidance panel title",
+        "items": []
       }
     }
   ]
