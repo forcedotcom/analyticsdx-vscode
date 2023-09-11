@@ -159,7 +159,8 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       'New Image item',
       'New Text item',
       'New Variable item',
-      'New Groupbox item'
+      'New GroupBox item',
+      'New LinkBox item'
     );
 
     // go to just after the [ in items[3] (a GroupBox item type) "items"
@@ -170,7 +171,14 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       expect.fail("Expected to find '[' after '\"items[3].items\":'");
     }
     position = scan.end.translate({ characterDelta: 1 });
-    await verifyCompletionsContain(doc, position, 'New Image item', 'New Text item', 'New Variable item');
+    await verifyCompletionsContain(
+      doc,
+      position,
+      'New Image item',
+      'New Text item',
+      'New Variable item',
+      'New LinkBox item'
+    );
 
     // go right after the [ in "displayMessages"
     node = findNodeAtLocation(tree!, ['displayMessages']);
@@ -210,7 +218,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       expect.fail("Expected to find '{' after '\"pages[2].guidancePanel.backgroundImage\":'");
     }
     position = scan.end.translate({ characterDelta: -1 });
-    await verifyCompletionsContain(doc, position, 'New background image');
+    await verifyCompletionsContain(doc, position, 'New background image', 'null');
   });
 
   it('on change of path value', async () => {

@@ -313,12 +313,13 @@
               "type": {
                 "type": "string",
                 "description": "The item type.",
-                "enum": ["Variable", "Text", "Image", "GroupBox"],
+                "enum": ["Variable", "Text", "Image", "GroupBox", "LinkBox"],
                 "enumDescriptions": [
                   "Displays a template variable.",
                   "Displays text.",
                   "Displays an image.",
-                  "Displays a group of items"
+                  "Displays a group of items",
+                  "Displays a link item."
                 ]
               },
               "visibility": { "$ref": "#/definitions/visibility" },
@@ -345,12 +346,22 @@
               },
               "tiles": {
                 "doNotSuggest": true
+              },
+              "title": {
+                "doNotSuggest": true
+              },
+              "icon": {
+                "doNotSuggest": true
+              },
+              "url": {
+                "doNotSuggest": true
               }
             },
             "anyOf": [
               { "$ref": "#/definitions/variableItem" },
               { "$ref": "#/definitions/textItem" },
               { "$ref": "#/definitions/imageItem" },
+              { "$ref": "#/definitions/linkBoxItem" },
               {
                 "properties": {
                   "type": { "const": "GroupBox" },
@@ -377,8 +388,13 @@
                         "type": {
                           "type": "string",
                           "description": "The item type.",
-                          "enum": ["Variable", "Text", "Image"],
-                          "enumDescriptions": ["Displays a template variable.", "Displays text.", "Displays an image."]
+                          "enum": ["Variable", "Text", "Image", "LinkBox"],
+                          "enumDescriptions": [
+                            "Displays a template variable.",
+                            "Displays text.",
+                            "Displays an image.",
+                            "Displays a link item."
+                          ]
                         },
                         "visibility": { "$ref": "#/definitions/visibility" },
                         "name": {
@@ -401,12 +417,22 @@
                         },
                         "tiles": {
                           "doNotSuggest": true
+                        },
+                        "title": {
+                          "doNotSuggest": true
+                        },
+                        "icon": {
+                          "doNotSuggest": true
+                        },
+                        "url": {
+                          "doNotSuggest": true
                         }
                       },
                       "anyOf": [
                         { "$ref": "#/definitions/variableItem" },
                         { "$ref": "#/definitions/textItem" },
-                        { "$ref": "#/definitions/imageItem" }
+                        { "$ref": "#/definitions/imageItem" },
+                        { "$ref": "#/definitions/linkBoxItem" }
                       ],
                       "defaultSnippets": [
                         {
@@ -433,6 +459,16 @@
                               "name": "${1}"
                             },
                             "visibility": "${2:Visible}"
+                          }
+                        },
+                        {
+                          "label": "New LinkBox item",
+                          "body": {
+                            "type": "LinkBox",
+                            "text": "${1}",
+                            "url": "${2}",
+                            "icon": "${3}",
+                            "title": "${4}"
                           }
                         }
                       ]
@@ -473,7 +509,7 @@
                 }
               },
               {
-                "label": "New Groupbox item",
+                "label": "New GroupBox item",
                 "body": {
                   "type": "GroupBox",
                   "text": "${1}",
@@ -486,6 +522,16 @@
                     }
                   ],
                   "visibility": "${5:Visible}"
+                }
+              },
+              {
+                "label": "New LinkBox item",
+                "body": {
+                  "type": "LinkBox",
+                  "text": "${1}",
+                  "url": "${2}",
+                  "icon": "${3}",
+                  "title": "${4}"
                 }
               }
             ]
@@ -649,29 +695,6 @@
       },
       "required": ["type", "image"]
     },
-    "backgroundImage": {
-      "type": ["null", "object"],
-      "additionalProperties": false,
-      "properties": {
-        "namespace": {
-          "type": ["null", "string"],
-          "description": "The image namespace.",
-          "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-        },
-        "name": {
-          "type": "string",
-          "description": "The image name."
-        }
-      },
-      "defaultSnippets": [
-        {
-          "label": "New backgroundImage",
-          "body": {
-            "name": "${1:name}"
-          }
-        }
-      ]
-    },
     "linkBoxItem": {
       "type": "object",
       "required": ["type", "text", "url"],
@@ -700,6 +723,29 @@
           "doNotSuggest": false
         }
       }
+    },
+    "backgroundImage": {
+      "type": ["null", "object"],
+      "additionalProperties": false,
+      "properties": {
+        "namespace": {
+          "type": ["null", "string"],
+          "description": "The image namespace.",
+          "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
+        },
+        "name": {
+          "type": "string",
+          "description": "The image name."
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New background image",
+          "body": {
+            "name": "${1:name}"
+          }
+        }
+      ]
     },
     "navigation": {
       "type": "object",

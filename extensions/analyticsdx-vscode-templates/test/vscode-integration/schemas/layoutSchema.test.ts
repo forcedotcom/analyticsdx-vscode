@@ -74,6 +74,7 @@ describe('layout-schema.json hookup', () => {
       { type: 'Variable', expected: ['name'] },
       { type: 'Image', expected: ['image'] },
       { type: 'Text', expected: ['text'] },
+      { type: 'LinkBox', expected: ['text', 'url', 'title', 'icon'] },
       { type: 'GroupBox', expected: ['text', 'description', 'items'] }
     ].forEach(({ type, expected }) => {
       it(type, async () => {

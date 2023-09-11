@@ -27,7 +27,14 @@
                   "type": "Image",
                   "image": { "name": "someimage" }
                 },
-                { "type": "Text", "text": "Some text here", "visibility": "{{Variables.booleanVariable}}" }
+                { "type": "Text", "text": "Some text here", "visibility": "{{Variables.booleanVariable}}" },
+                {
+                  "type": "LinkBox",
+                  "text": "A Link",
+                  "url": "https://salesforce.com",
+                  "icon": "standard:knowledge",
+                  "title": "Link Title"
+                }
               ],
               "visibility": "Visible"
             },
@@ -69,6 +76,13 @@
                   }
                 }
               ]
+            },
+            {
+              "type": "LinkBox",
+              "text": "A Link",
+              "url": "https://salesforce.com",
+              "icon": "standard:knowledge",
+              "title": "Link Title"
             }
           ]
         }

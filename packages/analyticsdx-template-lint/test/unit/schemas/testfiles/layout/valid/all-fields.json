@@ -96,9 +96,23 @@
                     "namespace": "ns"
                   },
                   "visibility": "Hidden"
+                },
+                {
+                  "type": "LinkBox",
+                  "text": "A Link",
+                  "url": "https://salesforce.com",
+                  "icon": "standard:knowledge",
+                  "title": "Link Title"
                 }
               ],
               "visibility": "Visible"
+            },
+            {
+              "type": "LinkBox",
+              "text": "A Link",
+              "url": "https://salesforce.com",
+              "icon": "standard:knowledge",
+              "title": "Link Title"
             }
           ]
         }
