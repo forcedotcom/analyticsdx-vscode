@@ -478,7 +478,7 @@
                 "required": ["type", "items"]
               },
               {
-                "properties": { "type": { "not": { "enum": ["Variable", "Text", "Image", "GroupBox"] } } }
+                "properties": { "type": { "not": { "enum": ["Variable", "Text", "Image", "GroupBox", "LinkBox"] } } }
               }
             ],
             "defaultSnippets": [

@@ -86,9 +86,9 @@ describe('layout-schema.json hookup', () => {
         );
         await waitForDiagnostics(
           layoutEditor.document.uri,
-          // there should be the 'error' error and one about the missing item field
+          // there should be the 'error' error and one about the missing required item field/property
           d => d && d.length >= 2,
-          'initial errors on layout.json'
+          'initial errors on layout.json. There should be at least two diagnotics found.'
         );
 
         const tree = parseTree(layoutEditor.document.getText());
@@ -141,9 +141,9 @@ describe('layout-schema.json hookup', () => {
         );
         await waitForDiagnostics(
           layoutEditor.document.uri,
-          // there should be the 'error' error and one about the missing item field
+          // there should be the 'error' error and one about the missing required item field/property
           d => d && d.length >= 2,
-          'initial errors on layout.json'
+          'initial errors on layout.json. There should be at least two diagnotics found.'
         );
 
         const tree = parseTree(layoutEditor.document.getText());
