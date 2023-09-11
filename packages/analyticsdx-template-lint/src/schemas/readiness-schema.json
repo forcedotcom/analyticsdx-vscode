@@ -368,18 +368,12 @@
           }
         },
         "if": {
-          "properties": { "operator": { "enum": ["Equal", "NotEqual"] } },
+          "properties": {
+            "operator": { "enum": ["LessThan", "LessThanEqual", "GreaterThan", "GreaterThanEqual", "In", "NotIn"] }
+          },
           "required": ["operator"]
         },
         "then": {
-          "properties": {
-            "value": {
-              "type": ["string", "number", "null", "boolean", "array"],
-              "description": "The value to compare against. This can use ${...} expressions."
-            }
-          }
-        },
-        "else": {
           "properties": {
             "value": {
               "type": ["string", "number", "boolean", "array"],
