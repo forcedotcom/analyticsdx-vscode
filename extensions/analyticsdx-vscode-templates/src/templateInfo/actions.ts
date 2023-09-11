@@ -5,12 +5,11 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { getLocation, modify as jsonModify } from 'jsonc-parser';
+import { modify as jsonModify } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { ERRORS, imageFileFilter, jsonFileFilter, LINTER_SOURCE_ID } from '../constants';
 import { quickFixUsedTelemetryCommand } from '../telemetry';
-import { RemoveJsonPropertyCodeActionProvider } from '../util/actions';
-import { jsonPathToString, jsonStringifyWithOptions } from '../util/jsoncUtils';
+import { jsonStringifyWithOptions } from '../util/jsoncUtils';
 import { isValidRelpath } from '../util/utils';
 import {
   argsFrom,
@@ -146,42 +145,5 @@ export class CreateFolderShareCodeActionProvider implements vscode.CodeActionPro
 
     fix.command = quickFixUsedTelemetryCommand(fix.title, d, templateInfoDoc.uri);
     return fix;
-  }
-}
-
-/** Remove the json property in the document for an associated diagnostic. */
-export class RemoveJsonPropertyDiagnosticCodeActionProvider implements vscode.CodeActionProvider {
-  public static readonly providedCodeActionKinds = [vscode.CodeActionKind.QuickFix];
-
-  /** The set of diagnostic codes to match on */
-  public readonly codes: Set<string>;
-
-  constructor(...codes: string[]) {
-    this.codes = new Set(codes);
-  }
-
-  public provideCodeActions(
-    document: vscode.TextDocument,
-    range: vscode.Range | vscode.Selection,
-    context: vscode.CodeActionContext,
-    token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.CodeAction[]> {
-    const actions: vscode.CodeAction[] = [];
-    for (const d of context.diagnostics) {
-      if (typeof d.code === 'string' && this.codes.has(d.code)) {
-        // use the diagnostic's range start, which should give the property node in the json
-        const location = getLocation(document.getText(), document.offsetAt(d.range.start));
-        const jsonPathStr = jsonPathToString(location.path);
-        const fix = new vscode.CodeAction(
-          `Remove ${jsonPathStr}`,
-          RemoveJsonPropertyDiagnosticCodeActionProvider.providedCodeActionKinds[0]
-        );
-        fix.edit = RemoveJsonPropertyCodeActionProvider.createRemoveJsonPropertyWorkspaceEdit(location.path, document);
-        fix.command = quickFixUsedTelemetryCommand(fix.title, jsonPathStr, document.uri);
-        actions.push(fix);
-      }
-    }
-
-    return actions;
   }
 }

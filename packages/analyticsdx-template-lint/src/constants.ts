@@ -180,6 +180,8 @@ export const ERRORS = Object.freeze({
   LAYOUT_TILES_EMPTY_ENUMS_VARAIBLE: 'lay-4',
   /** A tile name doesn't point to one of the variable's enums value. */
   LAYOUT_INVALID_TILE_NAME: 'lay-5',
+  /** Unsupported variable type in layout page */
+  LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT: 'lay-6',
 
   /** ApexCallback readiness definition but template has no apexCallback */
   READINESS_NO_APEX_CALLBACK: 'read-1',
