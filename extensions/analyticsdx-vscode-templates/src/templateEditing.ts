@@ -47,7 +47,6 @@ import {
   LayoutVariableCompletionItemProviderDelegate,
   LayoutVariableDefinitionProvider,
   LayoutVariableHoverProvider,
-  LayoutVariableTileCodeActionProvider,
   LayoutVariableTileCompletionItemProviderDelegate,
   LayoutVariableTileDefinitionProvider
 } from './layout';
@@ -59,13 +58,19 @@ import {
 } from './readiness';
 import { telemetryService } from './telemetry';
 import { CreateFolderShareCodeActionProvider, CreateRelPathFileCodeActionProvider } from './templateInfo/actions';
+import { DMODatasetCompletionItemProviderDelegate } from './templateInfo/completions';
+import { DMODatasetDefinitionProvider } from './templateInfo/definitions';
 import {
   UiVariableCodeActionProvider,
   UiVariableCompletionItemProviderDelegate,
   UiVariableDefinitionProvider,
   UiVariableHoverProvider
 } from './ui';
-import { RemoveJsonPropertyCodeActionProvider, RemoveJsonPropertyDiagnosticCodeActionProvider } from './util/actions';
+import {
+  FuzzyMatchCodeActionProvider,
+  RemoveJsonPropertyCodeActionProvider,
+  RemoveJsonPropertyDiagnosticCodeActionProvider
+} from './util/actions';
 import { JsonCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
@@ -287,13 +292,23 @@ export class TemplateDirEditing extends Disposable {
       newRelativeFilepathDelegate({
         isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(l.matches),
         filter: csvFileFilter
-      })
+      }),
+      // dataModeObjects' dataset field
+      new DMODatasetCompletionItemProviderDelegate()
     );
     this.disposables.push(vscode.languages.registerCompletionItemProvider(templateInfoSelector, fileCompleter));
 
     // hook up Go To/Peek Defintion for relative-path fields in template-info.json
-    const defProvider = new JsonAttributeRelFilePathDefinitionProvider(TEMPLATE_INFO.allRelFilePathLocationPatterns);
-    this.disposables.push(vscode.languages.registerDefinitionProvider(templateInfoSelector, defProvider));
+    this.disposables.push(
+      vscode.languages.registerDefinitionProvider(
+        templateInfoSelector,
+        new JsonAttributeRelFilePathDefinitionProvider(TEMPLATE_INFO.allRelFilePathLocationPatterns)
+      )
+    );
+    // and for dataModelObject dataset attributes
+    this.disposables.push(
+      vscode.languages.registerDefinitionProvider(templateInfoSelector, new DMODatasetDefinitionProvider())
+    );
 
     // hook up quick fixes for deprecated elements that can simply be removed as a fix
     const deprecatedFieldsActionsProvider = new RemoveJsonPropertyCodeActionProvider(
@@ -320,6 +335,14 @@ export class TemplateDirEditing extends Disposable {
         new RemoveJsonPropertyDiagnosticCodeActionProvider(ERRORS.TMPL_DATA_UNSUPPORTED_OBJECT),
         {
           providedCodeActionKinds: RemoveJsonPropertyDiagnosticCodeActionProvider.providedCodeActionKinds
+        }
+      ),
+      // and quick fixes for template-info diagnostics that support a fuzzy match replacement
+      vscode.languages.registerCodeActionsProvider(
+        templateInfoSelector,
+        new FuzzyMatchCodeActionProvider(ERRORS.TMPL_UNKNOWN_DMO_DATASET_NAME),
+        {
+          providedCodeActionKinds: FuzzyMatchCodeActionProvider.providedCodeActionKinds
         }
       )
     );
@@ -357,6 +380,16 @@ export class TemplateDirEditing extends Disposable {
         )
       ),
 
+      // hookup quick fixes for related file diagnostics that support a fuzzy match replacement (minus the
+      // various variable ref replacements, which are handled separately)
+      vscode.languages.registerCodeActionsProvider(
+        relatedFileSelector,
+        new FuzzyMatchCodeActionProvider(ERRORS.LAYOUT_INVALID_TILE_NAME),
+        {
+          providedCodeActionKinds: FuzzyMatchCodeActionProvider.providedCodeActionKinds
+        }
+      ),
+
       // hookup quick fixes for variable names in ui.json's
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
         providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
@@ -366,15 +399,6 @@ export class TemplateDirEditing extends Disposable {
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new LayoutVariableCodeActionProvider(this), {
         providedCodeActionKinds: LayoutVariableCodeActionProvider.providedCodeActionKinds
       }),
-
-      // hookup quick fixes for variable tile keys in layout.json's
-      vscode.languages.registerCodeActionsProvider(
-        relatedFileSelector,
-        new LayoutVariableTileCodeActionProvider(this),
-        {
-          providedCodeActionKinds: LayoutVariableTileCodeActionProvider.providedCodeActionKinds
-        }
-      ),
 
       // hookup quick fixes for removing unnecessary navigation objects in layout.json
       vscode.languages.registerCodeActionsProvider(

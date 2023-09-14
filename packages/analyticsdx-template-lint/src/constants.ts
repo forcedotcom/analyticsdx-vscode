@@ -147,6 +147,8 @@ export const ERRORS = Object.freeze({
   TMPL_LAYOUT_UNSUPPORTED: 'tmpl-21',
   /** externalFile csv file is larger then LINTER_MAX_CSV_FILE_SIZE */
   TMPL_EXTERNAL_FILE_TOO_BIG: 'tmpl-22',
+  /** dataModelObject dataset not found in datasetFiles' names */
+  TMPL_UNKNOWN_DMO_DATASET_NAME: 'tmpl-23',
 
   /** Unknown variable in values in autoInstallDefinition. */
   AUTO_INSTALL_UNKNOWN_VARIABLE: 'auto-1',

@@ -110,6 +110,17 @@
       }
     }
   ],
+  "dataModelObjects": [
+    {
+      "label": "dmo",
+      "name": "dmo__dlm_tp",
+      "dataset": "bar",
+      "condition": "${true}",
+      "onFailure": {
+        "defaultStatus": "Skip"
+      }
+    }
+  ],
   "recipes": [
     {
       "file": "recipes/recipe.json",

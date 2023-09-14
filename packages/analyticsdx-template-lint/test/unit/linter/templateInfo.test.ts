@@ -219,4 +219,72 @@ describe('TemplateLinter template-info.json', () => {
     }
     expect(diagnostics[0].jsonpath).to.equal('externalFiles[1].file');
   });
+
+  it('validates dataModelObject dataset names', async () => {
+    const dir = 'dataModelObjectDatasetNames';
+    linter = new TestLinter(
+      dir,
+      {
+        datasetFiles: [
+          {
+            label: 'dataset 1',
+            name: 'dataset1',
+            userXmd: 'xmd.json'
+          }
+        ],
+        dataModelObjects: [
+          // these should have errors
+          {
+            label: 'dmo0',
+            name: 'dmo0',
+            dataset: ''
+          },
+          {
+            label: 'dmo1',
+            name: 'dmo1',
+            dataset: 'totally_wrong'
+          },
+          {
+            label: 'dmo2',
+            name: 'dmo2',
+            // this one should get a fuzzy match
+            dataset: 'dataset'
+          },
+          // these should not have errors
+          {
+            label: 'dmo3',
+            name: 'dmo03'
+          },
+          {
+            label: 'dmo4',
+            name: 'dmo4',
+            dataset: 'dataset1'
+          }
+        ]
+      },
+      new StringDocument(path.join(dir, 'xmd.json'), '{}')
+    );
+    await linter.lint();
+    const diagnostics = getDiagnosticsForPath(linter.diagnostics, linter.templateInfoDoc.uri)?.filter(
+      d => d.code === ERRORS.TMPL_UNKNOWN_DMO_DATASET_NAME
+    );
+    if (diagnostics?.length !== 3) {
+      expect.fail('Expected 3 dataset name diagnostics, got: ' + stringifyDiagnostics(diagnostics));
+    }
+
+    expect(diagnostics[0].jsonpath, 'diagnotic[0].jsonpath').to.equal('dataModelObjects[0].dataset');
+    expect(diagnostics[0].mesg, 'diagnotic[0].mesg').to.not.contain('dataset1');
+    expect(diagnostics[0].args, 'diagnotic[0].args').to.deep.equal({ name: '' });
+    expect(diagnostics[0].relatedInformation, 'diagnotic[0].relatedInformation').to.have.length(1);
+
+    expect(diagnostics[1].jsonpath, 'diagnotic[1].jsonpath').to.equal('dataModelObjects[1].dataset');
+    expect(diagnostics[1].mesg, 'diagnotic[1].mesg').to.not.contain('dataset1');
+    expect(diagnostics[1].args, 'diagnotic[1].args').to.deep.equal({ name: 'totally_wrong' });
+    expect(diagnostics[1].relatedInformation, 'diagnotic[1].relatedInformation').to.have.length(1);
+
+    expect(diagnostics[2].jsonpath, 'diagnotic[2].jsonpath').to.equal('dataModelObjects[2].dataset');
+    expect(diagnostics[2].mesg, 'diagnotic[2].mesg').to.contain('dataset1');
+    expect(diagnostics[2].args, 'diagnotic[2].args').to.deep.equal({ name: 'dataset', match: 'dataset1' });
+    expect(diagnostics[2].relatedInformation, 'diagnotic[2].relatedInformation').to.have.length(1);
+  });
 });

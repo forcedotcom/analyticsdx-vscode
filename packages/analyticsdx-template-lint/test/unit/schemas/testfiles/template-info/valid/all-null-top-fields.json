@@ -25,6 +25,7 @@
   "components": null,
   "eltDataflows": null,
   "dataTransforms": null,
+  "dataModelObjects": null,
   "recipes": null,
   "datasetFiles": null,
   "storedQueries": null,

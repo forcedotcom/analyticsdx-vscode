@@ -16,7 +16,12 @@ import {
 import * as vscode from 'vscode';
 import { quickFixUsedTelemetryCommand } from '../telemetry';
 import { findPropertyNodeFor, jsonPathToString, pathPartsAreEquals } from './jsoncUtils';
-import { findEditorForDocument, getFormattingOptionsForEditor, jsonEditsToWorkspaceEdit } from './vscodeUtils';
+import {
+  argsFrom,
+  findEditorForDocument,
+  getFormattingOptionsForEditor,
+  jsonEditsToWorkspaceEdit
+} from './vscodeUtils';
 
 // TODO: refactor this into a controller (which does the parse) and delegates,
 // to avoid parsing the json multiple times and to register only one action provider
@@ -117,5 +122,81 @@ export class RemoveJsonPropertyDiagnosticCodeActionProvider implements vscode.Co
     }
 
     return actions;
+  }
+}
+
+/** Provide quick fixes for diagnostics with certain codes, to replace the error range with new text. */
+export abstract class SwitchRangeCodeActionProvider implements vscode.CodeActionProvider {
+  public static readonly providedCodeActionKinds = [vscode.CodeActionKind.QuickFix];
+
+  /** The set of diagnostic codes to match on */
+  private readonly codes: Set<string>;
+
+  constructor(...codes: string[]) {
+    this.codes = new Set(codes);
+  }
+
+  public provideCodeActions(
+    document: vscode.TextDocument,
+    range: vscode.Range | vscode.Selection,
+    context: vscode.CodeActionContext,
+    token: vscode.CancellationToken
+  ) {
+    // convert invalid tile diagnostics into quick fixes that will replace the bad tile key with the suggested text
+    // from the linter
+    return context.diagnostics
+      .map(diagnostic => {
+        if (typeof diagnostic.code === 'string' && this.codes.has(diagnostic.code)) {
+          const match = this.newValue(diagnostic);
+          if (typeof match === 'string') {
+            const fix = new vscode.CodeAction(
+              this.quickFixTitle(match),
+              SwitchRangeCodeActionProvider.providedCodeActionKinds[0]
+            );
+            fix.command = this.telemetryCommand(fix.title, match, diagnostic, document);
+            fix.isPreferred = true;
+            fix.edit = new vscode.WorkspaceEdit();
+            fix.edit.replace(document.uri, this.rangeToReplace(diagnostic, document), match);
+            return fix;
+          }
+        }
+      })
+      .filter((fix): fix is vscode.CodeAction => !!fix);
+  }
+
+  /** Implement to return the new value to use, or undefined to this diagnostic. */
+  protected abstract newValue(diagnostic: vscode.Diagnostic): string | undefined;
+
+  /** Override to change the default quick fix title. */
+  protected quickFixTitle(match: string): string {
+    return `Switch to '${match}'`;
+  }
+
+  /** Override to change the default telemetry command to fire when the quick fix is selected.
+   */
+  protected telemetryCommand(
+    title: string,
+    match: string,
+    diagnostic: vscode.Diagnostic,
+    document: vscode.TextDocument
+  ): vscode.Command | undefined {
+    return quickFixUsedTelemetryCommand(title, diagnostic, document.uri, diagnostic.code, {
+      match
+    });
+  }
+
+  /** Override to change the default range to replace. */
+  protected rangeToReplace(diagnostic: vscode.Diagnostic, doc: vscode.TextDocument): vscode.Range {
+    return diagnostic.range;
+  }
+}
+
+/** Provide quick fixes for diagnostic the support a fuzzy match replacement, via a `match` arg on the diagnostic. */
+export class FuzzyMatchCodeActionProvider extends SwitchRangeCodeActionProvider {
+  protected newValue(diagnostic: vscode.Diagnostic) {
+    const args = argsFrom(diagnostic);
+    if (typeof args?.match === 'string') {
+      return args.match;
+    }
   }
 }

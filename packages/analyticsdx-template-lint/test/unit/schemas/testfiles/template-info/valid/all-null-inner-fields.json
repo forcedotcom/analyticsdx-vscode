@@ -71,6 +71,15 @@
       "onFailure": null
     }
   ],
+  "dataModelObjects": [
+    {
+      "label": "dmo",
+      "name": "dmo__dlm_tp",
+      "dataset": null,
+      "condition": null,
+      "onFailure": null
+    }
+  ],
   "recipes": [
     {
       "file": "recipes/name.json",
