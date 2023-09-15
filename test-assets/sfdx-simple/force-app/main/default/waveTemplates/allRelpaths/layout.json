@@ -197,7 +197,9 @@
       },
       "guidancePanel": {
         "title": "Documentation",
-        "backgroundImage": {},
+        "backgroundImage": {
+          "name": "image.jpg"
+        },
         "items": []
       }
     }
