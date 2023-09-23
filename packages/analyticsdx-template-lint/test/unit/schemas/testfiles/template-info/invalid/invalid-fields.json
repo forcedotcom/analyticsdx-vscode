@@ -76,6 +76,13 @@
       "error": "This should trigger a warning"
     }
   ],
+  "dataModelObjects": [
+    {
+      "label": "name",
+      "name": "name__dlm_tp",
+      "error": "This should trigger a warning"
+    }
+  ],
   "recipes": [
     {
       "file": "recipes/name.json",

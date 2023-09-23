@@ -510,6 +510,7 @@ export abstract class TemplateLinter<
       })
     ]);
     // while those are going, do these synchronous ones
+    this.lintTemplateInfoDataModelObjects(this.templateInfoDoc, tree);
     this.listTemplateInfoAssetVersion(this.templateInfoDoc, tree);
     this.lintTemplateInfoDevName(this.templateInfoDoc, tree);
     this.lintTemplateInfoRulesAndRulesDefinition(this.templateInfoDoc, tree);
@@ -861,6 +862,46 @@ export abstract class TemplateLinter<
           );
         }
       }
+    }
+  }
+
+  private lintTemplateInfoDataModelObjects(doc: Document, tree: JsonNode) {
+    // find the dataModelObjects 'dataset' node that have a string value, to make sure they match up with a datasetFile
+    // name
+    const dmoDatasetNodes = matchJsonNodesAtPattern(
+      tree,
+      ['dataModelObjects', '*', 'dataset'],
+      datasetNode => typeof datasetNode.value === 'string'
+    );
+    if (dmoDatasetNodes && dmoDatasetNodes.length > 0) {
+      // save off the datasetFiles node so we can use it in relatedInfo
+      const datasetFilesNode = matchJsonNodeAtPattern(tree, ['datasetFiles']);
+      // load up the non-enmpty names from the datasetFiles
+      const datasetNames = matchJsonNodesAtPattern(
+        datasetFilesNode,
+        ['*', 'name'],
+        nameNode => typeof nameNode.value === 'string' && nameNode.value
+      ).map(nameNode => nameNode.value as string);
+      const datasetNamesSet = new Set(datasetNames);
+      const fuzzySearch = lazyFuzzySearcher(datasetNames);
+      dmoDatasetNodes.forEach(dmoDatasetNode => {
+        const dmoDatasetName = dmoDatasetNode.value as string;
+        if (!datasetNamesSet.has(dmoDatasetName)) {
+          let mesg = `Cannot find dataset with name '${dmoDatasetName}'`;
+          const [match] = fuzzySearch(dmoDatasetName);
+          const args: Record<string, any> = { name: dmoDatasetName };
+          if (match && match.length > 0) {
+            args.match = match;
+            mesg += `, did you mean '${match}'?`;
+          }
+          this.addDiagnostic(doc, mesg, ERRORS.TMPL_UNKNOWN_DMO_DATASET_NAME, dmoDatasetNode, {
+            args,
+            relatedInformation: datasetFilesNode
+              ? [{ doc, node: datasetFilesNode, mesg: 'Existing datasetFiles' }]
+              : undefined
+          });
+        }
+      });
     }
   }
 

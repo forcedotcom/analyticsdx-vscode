@@ -807,6 +807,12 @@
                 }
               }
             ]
+          },
+          "conversionMetadata": {
+            "type": ["string", "null"],
+            "description": "Path to the definition file for converting a data model object to this dataset. This feature is currently in pilot in Winter '24 release. If you're interested in participating in the pilot program, ask your Salesforce Account Executive.",
+            "doNotSuggest": true,
+            "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
           }
         },
         "defaultSnippets": [
@@ -816,6 +822,51 @@
               "label": "${1}",
               "name": "${1:name}",
               "userXmd": "datasets/${1}_Xmd.json"
+            }
+          }
+        ]
+      }
+    },
+    "dataModelObjects": {
+      "type": ["null", "array"],
+      "description": "List of data model objects to be used in the template. This feature is currently in pilot in Winter '24 release. If you're interested in participating in the pilot program, ask your Salesforce Account Executive.",
+      "doNotSuggest": true,
+      "minItems": 0,
+      "examples": [[]],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "name"],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "The data model object label."
+          },
+          "name": {
+            "type": "string",
+            "description": "The data model object name."
+          },
+          "dataset": {
+            "type": ["null", "string"],
+            "description": "The dataset mapped to this data model object. If specified, must match the 'name' attribute of one of the datasets in this template."
+          },
+          "condition": {
+            "$ref": "#/definitions/condition",
+            "description": "If met, the data model is created in the app. If not met, the data model is not created."
+          },
+          "onFailure": {
+            "$ref": "#/definitions/onFailure",
+            "$comment": "This field is technically valid in the schema, but is not used in the server.",
+            "doNotSuggest": true
+          }
+        },
+        "defaultSnippets": [
+          {
+            "label": "New data model object",
+            "body": {
+              "label": "${1:name}",
+              "name": "${1:name}__dlm_tp",
+              "dataset": "${0}"
             }
           }
         ]

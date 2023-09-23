@@ -20,6 +20,7 @@ import {
   findPositionByJsonPath,
   getCodeActions,
   getCompletionItems,
+  getDefinitionLocations,
   getTemplateEditorManager,
   openTemplateInfo,
   openTemplateInfoAndWaitForDiagnostics,
@@ -130,6 +131,56 @@ describe('TemplateEditorManager configures template-info.json', () => {
 
   it('image file completions', async () => {
     await testCompletions(TEMPLATE_INFO.imageRelFilePathLocationPatterns[0], 'images/image.png');
+  });
+
+  it('dataModelObjects dataset completions', async () => {
+    const [t, doc, editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await setDocumentText(editor, {
+      templateType: 'app',
+      datasetFiles: [{ name: 'dataset1' }, { name: 'otherdataset' }],
+      dataModelObjects: [{ name: 'dmo0', label: 'dmo0', dataset: '' }]
+    });
+    // await for the warning on dmo0.dataset
+    await waitForDiagnostics(
+      doc.uri,
+      ds =>
+        ds &&
+        ds.filter(
+          d => d.code === ERRORS.TMPL_UNKNOWN_DMO_DATASET_NAME && jsonpathFrom(d) === 'dataModelObjects[0].dataset'
+        ).length >= 1,
+      'initial warning on dataModelObjects'
+    );
+    // move into the empty ""
+    const position = findPositionByJsonPath(doc, ['dataModelObjects', 0, 'dataset'])?.translate({ characterDelta: 1 });
+    expect(position, 'position').to.not.be.undefined;
+    const completionLabels = (await getCompletionItems(doc.uri, position!)).items.map(
+      item => item.detail || item.label
+    );
+    // the literal null completion comes from the json-schema
+    expect(completionLabels, 'completions').to.deep.equal(['"dataset1"', '"otherdataset"', 'null']);
+  });
+
+  it('dataModeLObjects dataset definition support', async () => {
+    const [t, doc, editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await setDocumentText(editor, {
+      templateType: 'app',
+      datasetFiles: [{ name: 'dataset1' }, { name: 'otherdataset' }],
+      dataModelObjects: [{ name: 'dmo0', label: 'dmo0', dataset: 'otherdataset' }]
+    });
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), t, true);
+    const position = findPositionByJsonPath(doc, ['dataModelObjects', 0, 'dataset'])?.translate({ characterDelta: 1 });
+    expect(position, 'position').to.not.be.undefined;
+    const locations = await getDefinitionLocations(doc.uri, position!);
+    expect(locations.length, 'locations.length').to.equal(1);
+    // make sure the location is the same template-info.json file
+    expect(locations[0].uri.path, 'location path').to.equal(doc.uri.path);
+    // and points to the "otherdataset" name attribute
+    const datasetNamePosition = findPositionByJsonPath(doc, ['datasetFiles', 1, 'name']);
+    expect(datasetNamePosition, 'dataset name position').to.not.be.undefined;
+    expect(locations[0].range.start.line, 'location line').to.equal(datasetNamePosition!.line);
+    expect(locations[0].range.start.character, 'location character').to.equal(datasetNamePosition!.character);
   });
 
   it('quick fix to remove deprecated icon fields', async () => {
@@ -380,6 +431,52 @@ describe('TemplateEditorManager configures template-info.json', () => {
     const json = jsoncParse(doc.getText());
     expect(json, 'template-info.json').to.not.be.undefined;
     expect(json.lenses, 'lenses').to.be.undefined;
+  });
+
+  it('quick fix to update dataModelObjects dataset field', async () => {
+    const [t, doc, editor] = await createTempTemplate(true);
+    tmpdir = t;
+    await setDocumentText(editor, {
+      templateType: 'app',
+      datasetFiles: [{ name: 'dataset1' }, { name: 'otherdataset' }],
+      dataModelObjects: [
+        // this one should have a quickfix to switch to 'dataset1'
+        { name: 'dmo0', label: 'dmo0', dataset: 'dataset' },
+        // this one is fine
+        { name: 'dmo0', label: 'dmo0', dataset: 'otherdataset' }
+      ]
+    });
+    // wait for the warning
+    const dmoFilter = (d: vscode.Diagnostic) => d.code === ERRORS.TMPL_UNKNOWN_DMO_DATASET_NAME;
+    const diagnostics = (
+      await waitForDiagnostics(
+        doc.uri,
+        d => d && d.filter(dmoFilter).length >= 1,
+        'initial warning on dataModelObjects'
+      )
+    )
+      .filter(dmoFilter)
+      .sort(sortDiagnostics);
+    if (diagnostics.length !== 1) {
+      expect.fail('Expected 1 diagnostic, got: ' + JSON.stringify(diagnostics, undefined, 2));
+    }
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostic[0].jsonpath').to.equal('dataModelObjects[0].dataset');
+    // get the quick fix actions
+    const actions = await getCodeActions(doc.uri, diagnostics[0].range);
+    if (actions.length !== 1) {
+      expect.fail('Expected 1 code action, got: [' + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].edit, 'action.edit').to.not.be.undefined;
+    // run the quick fix
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+    // make sure the warning went away
+    await waitForDiagnostics(doc.uri, d => d?.filter(dmoFilter).length === 0, 'no warnings lenses after quick fix');
+    // make sure the json got updated
+    const json = jsoncParse(doc.getText());
+    expect(json, 'template-info.json').to.not.be.undefined;
+    expect(json.dataModelObjects[0].dataset, 'dataModelObjects[0].dataset').to.equal('dataset1');
   });
 
   // TODO: tests for definitionProvider, actionProvider, etc.

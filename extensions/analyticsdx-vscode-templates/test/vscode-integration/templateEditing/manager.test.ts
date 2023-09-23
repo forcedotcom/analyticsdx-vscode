@@ -139,6 +139,7 @@ describe('TemplateEditorManager', () => {
       'dataflows/dataflow.json',
       'queries/query.json',
       'datasets/userXmd.json',
+      'datasets/conversion.json',
       'stories/story.json'
     ].forEach(relpath => {
       it(`on ${relpath}`, async () => {

@@ -84,7 +84,8 @@
     {
       "label": "dot-dot-dataset",
       "name": "dot-dot-dataset",
-      "userXmd": "datasets/foo/../dot-dot-dataset.json"
+      "userXmd": "datasets/foo/../dot-dot-dataset.json",
+      "conversionMetadata": "datasets/missing-conversion.json"
     }
   ],
   "extendedTypes": {

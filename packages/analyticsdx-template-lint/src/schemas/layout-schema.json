@@ -44,8 +44,7 @@
           },
           "backgroundImage": {
             "$ref": "#/definitions/backgroundImage",
-            "description": "Image to display in the background of this page. It should be a horizontal image and it will be fixed at the bottom of the page.",
-            "required": ["name"]
+            "description": "Image to display in the background of this page. It should be a horizontal image and it will be fixed at the bottom of the page."
           },
           "layout": {
             "type": "object",
@@ -727,6 +726,7 @@
     "backgroundImage": {
       "type": ["null", "object"],
       "additionalProperties": false,
+      "required": ["name"],
       "properties": {
         "namespace": {
           "type": ["null", "string"],
