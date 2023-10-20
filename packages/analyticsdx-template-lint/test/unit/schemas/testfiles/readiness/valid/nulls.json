@@ -55,6 +55,11 @@
       "type": "OrgPreferenceCheck",
       "names": ["pref1", "pref2"],
       "valueOnError": null
+    },
+    "access": {
+      "type": "AccessCheck",
+      "expression": "foo",
+      "valueOnError": null
     }
   }
 }

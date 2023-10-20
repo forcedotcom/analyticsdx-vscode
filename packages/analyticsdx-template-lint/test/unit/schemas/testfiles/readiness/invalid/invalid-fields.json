@@ -57,6 +57,11 @@
       "valueOnError": {
         "name": "only booleans"
       }
+    },
+    "access": {
+      "type": "AccessCheck",
+      "expression": "foo",
+      "valueOnError": "only boolean"
     }
   }
 }

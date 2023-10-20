@@ -150,16 +150,18 @@
             "OrgDatasetRowCount",
             "AppDatasetRowCount",
             "DataCloudRowCount",
+            "ApexCallout",
             "OrgPreferenceCheck",
-            "ApexCallout"
+            "AccessCheck"
           ],
           "enumDescriptions": [
             "A check against the number of objects in the org.",
             "A check against the number of rows in a dataset in the org",
             "A check against the number of rows in a dataset that will be created by this template in the app",
             "A check against the number of Data Cloud objects in the org. Only available in Winter '24 release.",
+            "A check using a method on the template's apexCallback class.",
             "",
-            "A check using a method on the template's apexCallback class."
+            ""
           ]
         },
         "valueOnError": {},
@@ -169,7 +171,8 @@
         "dataset": { "doNotSuggest": true },
         "names": { "doNotSuggest": true },
         "method": { "doNotSuggest": true },
-        "arguments": { "doNotSuggest": true }
+        "arguments": { "doNotSuggest": true },
+        "expression": { "doNotSuggest": true }
       },
       "$comment": "Customize the type-specifc fields.",
       "anyOf": [
@@ -189,7 +192,7 @@
             },
             "valueOnError": {
               "description": "Numeric value to return instead if an error occurs at runtime.",
-              "type": ["null", "integer"],
+              "type": ["integer", "null"],
               "examples": [-1, 0]
             }
           },
@@ -211,7 +214,7 @@
             },
             "valueOnError": {
               "description": "Numeric value to return instead if an error occurs at runtime.",
-              "type": ["null", "integer"],
+              "type": ["integer", "null"],
               "examples": [-1, 0]
             }
           },
@@ -233,7 +236,7 @@
             },
             "valueOnError": {
               "description": "Numeric value to return instead if an error occurs at runtime.",
-              "type": ["null", "integer"],
+              "type": ["integer", "null"],
               "examples": [-1, 0]
             }
           },
@@ -255,7 +258,7 @@
             },
             "valueOnError": {
               "description": "Numeric value to return instead if an error occurs at runtime.",
-              "type": ["null", "integer"],
+              "type": ["integer", "null"],
               "examples": [-1, 0]
             }
           },
@@ -272,7 +275,7 @@
             },
             "valueOnError": {
               "description": "Value to return instead if an error occurs at runtime. If non-null, should be a map of name to boolean value for each pref requested.",
-              "type": ["null", "object"],
+              "type": ["object", "null"],
               "additionalProperties": {
                 "type": "boolean"
               },
@@ -307,6 +310,21 @@
         },
         {
           "properties": {
+            "type": { "const": "AccessCheck" },
+            "expression": {
+              "type": "string",
+              "minLength": 1,
+              "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Value to return instead if an error occurs at runtime.",
+              "type": ["boolean", "null"]
+            }
+          },
+          "required": ["type", "expression"]
+        },
+        {
+          "properties": {
             "type": {
               "not": {
                 "enum": [
@@ -315,7 +333,8 @@
                   "OrgDatasetRowCount",
                   "DataCloudRowCount",
                   "OrgPreferenceCheck",
-                  "ApexCallout"
+                  "ApexCallout",
+                  "AccessCheck"
                 ]
               }
             }

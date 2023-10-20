@@ -154,6 +154,11 @@
         "prefName": true,
         "prefName2": false
       }
+    },
+    "access": {
+      "type": "AccessCheck",
+      "expression": "foo",
+      "valueOnError": false
     }
   }
 }

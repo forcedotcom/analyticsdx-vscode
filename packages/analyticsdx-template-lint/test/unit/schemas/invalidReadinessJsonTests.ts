@@ -45,7 +45,8 @@ describe('readiness-schema.json finds errors in', () => {
       'definition.datacloud.object',
       'definition.datacloud.valueOnError',
       'definition.prefs1.valueOnError',
-      'definition.prefs2.valueOnError.name'
+      'definition.prefs2.valueOnError.name',
+      'definition.access.valueOnError'
     );
   });
 
