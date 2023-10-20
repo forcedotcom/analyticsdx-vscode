@@ -162,6 +162,7 @@
             "A check using a method on the template's apexCallback class."
           ]
         },
+        "valueOnError": {},
         "filters": { "doNotSuggest": true },
         "sobject": { "doNotSuggest": true },
         "object": { "doNotSuggest": true },
@@ -185,6 +186,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["null", "integer"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "sobject"]
@@ -202,6 +208,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["null", "integer"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "dataset"]
@@ -219,6 +230,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["null", "integer"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "dataset"]
@@ -236,6 +252,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["null", "integer"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "object"]
@@ -248,6 +269,14 @@
               "minItems": 1,
               "items": { "type": "string" },
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Value to return instead if an error occurs at runtime. If non-null, should be a map of name to boolean value for each pref requested.",
+              "type": ["null", "object"],
+              "additionalProperties": {
+                "type": "boolean"
+              },
+              "examples": [{}]
             }
           },
           "required": ["type", "names"]
@@ -266,6 +295,12 @@
               "description": "The values for the method arguments. The values can use ${...} expressions.",
               "additionalProperties": true,
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Value to return instead if an error occurs at runtime.",
+              "type": ["array", "boolean", "null", "number", "object", "string"],
+              "examples": [[], {}, 0],
+              "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
             }
           },
           "required": ["type", "method", "arguments"]
@@ -309,6 +344,14 @@
           "body": {
             "type": "AppDatasetRowCount",
             "dataset": "${0}",
+            "filters": []
+          }
+        },
+        {
+          "label": "New DataCloudRowCount definition",
+          "body": {
+            "type": "DataCloudRowCount",
+            "object": "${0}",
             "filters": []
           }
         },

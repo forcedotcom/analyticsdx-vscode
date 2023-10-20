@@ -197,6 +197,7 @@ export class SchemaErrors {
           (error.keyword === 'const' ||
             error.keyword === 'pattern' ||
             error.keyword === 'oneOf' ||
+            error.keyword === 'anyOf' ||
             error.keyword === 'type' ||
             error.keyword === 'enum' ||
             error.keyword === 'not' ||
