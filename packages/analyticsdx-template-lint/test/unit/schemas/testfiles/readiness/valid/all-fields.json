@@ -49,6 +49,12 @@
       "failMessage": "${Readiness.orgPrefs.someName} Nope!",
       "successMessage": "${Readiness.orgPrefs.someName} Yep!",
       "type": "OrgPreferenceCheck"
+    },
+    {
+      "expression": "${Readiness.access}",
+      "failMessage": "${Readiness.access} Nope!",
+      "successMessage": "${Readiness.access} Yep!",
+      "type": "AccessCheck"
     }
   ],
   "definition": {
