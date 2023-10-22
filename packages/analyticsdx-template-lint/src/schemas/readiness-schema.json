@@ -59,7 +59,7 @@
               "A check against the number of objects in the org.",
               "A check against the number of rows in a dataset in the org",
               "A check against the number of rows in a dataset that will be created by this template in the app",
-              "A check against the number of Data Cloud objects in the org. Only available in Winter '24 release.",
+              "A check against the number of Data Cloud objects in the org.",
               "A check using a method on the template's apexCallback class.",
               "",
               ""
@@ -160,7 +160,7 @@
             "A check against the number of objects in the org.",
             "A check against the number of rows in a dataset in the org",
             "A check against the number of rows in a dataset that will be created by this template in the app",
-            "A check against the number of Data Cloud objects in the org. Only available in Winter '24 release.",
+            "A check against the number of Data Cloud objects in the org.",
             "A check using a method on the template's apexCallback class.",
             "",
             ""

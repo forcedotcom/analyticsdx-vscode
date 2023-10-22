@@ -83,12 +83,12 @@
             "References a list of values, controlled by the `itemsType` variable type.",
             "References true or false value.",
             "References connectors defined in the org.",
-            "References calculated insights defined in the org. Only available in Summer '23 release.",
-            "References calculated insight fields in the org. Only available in Summer '23 release.",
-            "References data lake objects in the org. Only available in Summer '23 release.",
-            "References data lake object fields in the org. Only available in Summer '23 release.",
-            "References data model objects in the org. Only available in Summer '23 release.",
-            "References data model object fields in the org. Only available in Summer '23 release.",
+            "References calculated insights defined in the org.",
+            "References calculated insight fields in the org.",
+            "References data lake objects in the org.",
+            "References data lake object fields in the org.",
+            "References data model objects in the org.",
+            "References data model object fields in the org.",
             "References fields from datasets in the org.",
             "References date fields from datasets in the org.",
             "References dimensions from dataset in the org.",
@@ -216,7 +216,7 @@
             "enumsLabels": {
               "type": ["array", "null"],
               "minItems": 0,
-              "description": "The optional display labels for the enumerated values. Only available in Summer '23 release.",
+              "description": "The optional display labels for the enumerated values.",
               "items": {
                 "type": ["string", "null"]
               },
