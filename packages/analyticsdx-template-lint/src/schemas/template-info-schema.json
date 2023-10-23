@@ -274,7 +274,7 @@
     },
     "readinessDefinition": {
       "type": ["null", "string"],
-      "description": "Path to the template org readiness definition file. Only available in Summer '23 release.",
+      "description": "Path to the template org readiness definition file.",
       "defaultSnippets": [
         {
           "label": "\"\"",
@@ -304,7 +304,7 @@
     },
     "autoInstallDefinition": {
       "type": ["null", "string"],
-      "description": "Path to the auto install configuration file. Only available for app and embeddedapp template types. Available in Winter '21 release.",
+      "description": "Path to the auto install configuration file. Only available for app and embeddedapp template types.",
       "defaultSnippets": [
         {
           "label": "\"\"",
@@ -1240,7 +1240,7 @@
     },
     "onFailure": {
       "type": ["null", "object"],
-      "description": "Controls how to handle failures when processing this asset. Only available in Winter '24 release.",
+      "description": "Controls how to handle failures when processing this asset.",
       "additionalProperties": false,
       "properties": {
         "defaultStatus": {

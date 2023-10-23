@@ -49,6 +49,12 @@
       "failMessage": "${Readiness.orgPrefs.someName} Nope!",
       "successMessage": "${Readiness.orgPrefs.someName} Yep!",
       "type": "OrgPreferenceCheck"
+    },
+    {
+      "expression": "${Readiness.access}",
+      "failMessage": "${Readiness.access} Nope!",
+      "successMessage": "${Readiness.access} Yep!",
+      "type": "AccessCheck"
     }
   ],
   "definition": {
@@ -59,6 +65,10 @@
         "strArg": "value",
         "numArg": 100,
         "arrayArg": ["${Variables.a"]
+      },
+      "valueOnError": {
+        "foo": "bar",
+        "baz": [42]
       }
     },
     "accountCount": {
@@ -110,12 +120,14 @@
           "operator": "${Variables.op}",
           "value": "1"
         }
-      ]
+      ],
+      "valueOnError": -1
     },
     "orgDatasetCount": {
       "type": "OrgDatasetRowCount",
       "dataset": "${Variable.selectedDS.datasetId}",
-      "filters": []
+      "filters": [],
+      "valueOnError": 0
     },
     "dataCloudCount": {
       "type": "DataCloudRowCount",
@@ -126,7 +138,8 @@
           "operator": "Equal",
           "value": ""
         }
-      ]
+      ],
+      "valueOnError": 10000000
     },
     "appDatasetCount": {
       "type": "AppDatasetRowCount",
@@ -137,11 +150,21 @@
           "operator": "Equal",
           "value": "foo"
         }
-      ]
+      ],
+      "valueOnError": 42
     },
     "orgPrefs": {
       "type": "OrgPreferenceCheck",
-      "names": ["prefName", "prefName2"]
+      "names": ["prefName", "prefName2"],
+      "valueOnError": {
+        "prefName": true,
+        "prefName2": false
+      }
+    },
+    "access": {
+      "type": "AccessCheck",
+      "expression": "foo",
+      "valueOnError": false
     }
   }
 }

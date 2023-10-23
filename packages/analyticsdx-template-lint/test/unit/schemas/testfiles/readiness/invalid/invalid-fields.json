@@ -28,19 +28,40 @@
           "operator": "Equal",
           "value": ""
         }
-      ]
+      ],
+      "valueOnError": "only numbers"
     },
     "dataset": {
       "type": "OrgDatasetRowCount",
-      "dataset": ""
+      "dataset": "",
+      "valueOnError": "only numbers"
     },
     "appDataset": {
       "type": "AppDatasetRowCount",
-      "dataset": ""
+      "dataset": "",
+      "valueOnError": "only numbers"
     },
     "datacloud": {
       "type": "DataCloudRowCount",
-      "object": ""
+      "object": "",
+      "valueOnError": "only numbers"
+    },
+    "prefs1": {
+      "type": "OrgPreferenceCheck",
+      "names": ["name"],
+      "valueOnError": "only object"
+    },
+    "prefs2": {
+      "type": "OrgPreferenceCheck",
+      "names": ["name"],
+      "valueOnError": {
+        "name": "only booleans"
+      }
+    },
+    "access": {
+      "type": "AccessCheck",
+      "expression": "foo",
+      "valueOnError": "only boolean"
     }
   }
 }

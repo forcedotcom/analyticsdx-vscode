@@ -37,9 +37,16 @@ describe('readiness-schema.json finds errors in', () => {
       'definition.sobject.error',
       'definition.sobject.sobject',
       'definition.sobject.filters[0].field',
+      'definition.sobject.valueOnError',
       'definition.dataset.dataset',
+      'definition.dataset.valueOnError',
       'definition.appDataset.dataset',
-      'definition.datacloud.object'
+      'definition.appDataset.valueOnError',
+      'definition.datacloud.object',
+      'definition.datacloud.valueOnError',
+      'definition.prefs1.valueOnError',
+      'definition.prefs2.valueOnError.name',
+      'definition.access.valueOnError'
     );
   });
 

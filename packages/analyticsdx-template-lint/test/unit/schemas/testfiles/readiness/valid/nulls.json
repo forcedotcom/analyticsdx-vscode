@@ -16,7 +16,8 @@
     "accountCheck": {
       "type": "SobjectRowCount",
       "sobject": "Account",
-      "filters": null
+      "filters": null,
+      "valueOnError": null
     },
     "filterOp": {
       "type": "SobjectRowCount",
@@ -28,6 +29,37 @@
           "value": null
         }
       ]
+    },
+    "ds": {
+      "type": "AppDatasetRowCount",
+      "dataset": "jfkdlsa",
+      "valueOnError": null
+    },
+    "orgds": {
+      "type": "OrgDatasetRowCount",
+      "dataset": "jfkdsla",
+      "valueOnError": null
+    },
+    "dc": {
+      "type": "DataCloudRowCount",
+      "object": "foo",
+      "valueOnError": null
+    },
+    "apex": {
+      "type": "ApexCallout",
+      "method": "foo",
+      "arguments": {},
+      "valueOnError": null
+    },
+    "prefs": {
+      "type": "OrgPreferenceCheck",
+      "names": ["pref1", "pref2"],
+      "valueOnError": null
+    },
+    "access": {
+      "type": "AccessCheck",
+      "expression": "foo",
+      "valueOnError": null
     }
   }
 }

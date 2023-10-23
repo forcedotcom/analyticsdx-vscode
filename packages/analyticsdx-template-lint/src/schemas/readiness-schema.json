@@ -46,8 +46,9 @@
                   "OrgDatasetRowCount",
                   "AppDatasetRowCount",
                   "DataCloudRowCount",
+                  "ApexCallout",
                   "OrgPreferenceCheck",
-                  "ApexCallout"
+                  "AccessCheck"
                 ]
               },
               {
@@ -58,9 +59,10 @@
               "A check against the number of objects in the org.",
               "A check against the number of rows in a dataset in the org",
               "A check against the number of rows in a dataset that will be created by this template in the app",
-              "A check against the number of Data Cloud objects in the org. Only available in Winter '24 release.",
+              "A check against the number of Data Cloud objects in the org.",
+              "A check using a method on the template's apexCallback class.",
               "",
-              "A check using a method on the template's apexCallback class."
+              ""
             ]
           },
           "successMessage": {
@@ -150,25 +152,29 @@
             "OrgDatasetRowCount",
             "AppDatasetRowCount",
             "DataCloudRowCount",
+            "ApexCallout",
             "OrgPreferenceCheck",
-            "ApexCallout"
+            "AccessCheck"
           ],
           "enumDescriptions": [
             "A check against the number of objects in the org.",
             "A check against the number of rows in a dataset in the org",
             "A check against the number of rows in a dataset that will be created by this template in the app",
-            "A check against the number of Data Cloud objects in the org. Only available in Winter '24 release.",
+            "A check against the number of Data Cloud objects in the org.",
+            "A check using a method on the template's apexCallback class.",
             "",
-            "A check using a method on the template's apexCallback class."
+            ""
           ]
         },
+        "valueOnError": {},
         "filters": { "doNotSuggest": true },
         "sobject": { "doNotSuggest": true },
         "object": { "doNotSuggest": true },
         "dataset": { "doNotSuggest": true },
         "names": { "doNotSuggest": true },
         "method": { "doNotSuggest": true },
-        "arguments": { "doNotSuggest": true }
+        "arguments": { "doNotSuggest": true },
+        "expression": { "doNotSuggest": true }
       },
       "$comment": "Customize the type-specifc fields.",
       "anyOf": [
@@ -185,6 +191,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["integer", "null"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "sobject"]
@@ -202,6 +213,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["integer", "null"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "dataset"]
@@ -219,6 +235,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["integer", "null"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "dataset"]
@@ -236,6 +257,11 @@
               "$ref": "#/definitions/filters",
               "description": "The query filter to use when counting the number of rows.",
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Numeric value to return instead if an error occurs at runtime.",
+              "type": ["integer", "null"],
+              "examples": [-1, 0]
             }
           },
           "required": ["type", "object"]
@@ -248,6 +274,14 @@
               "minItems": 1,
               "items": { "type": "string" },
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Value to return instead if an error occurs at runtime. If non-null, should be a map of name to boolean value for each pref requested.",
+              "type": ["object", "null"],
+              "additionalProperties": {
+                "type": "boolean"
+              },
+              "examples": [{}]
             }
           },
           "required": ["type", "names"]
@@ -266,9 +300,30 @@
               "description": "The values for the method arguments. The values can use ${...} expressions.",
               "additionalProperties": true,
               "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Value to return instead if an error occurs at runtime.",
+              "type": ["array", "boolean", "null", "number", "object", "string"],
+              "examples": [[], {}, 0],
+              "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
             }
           },
           "required": ["type", "method", "arguments"]
+        },
+        {
+          "properties": {
+            "type": { "const": "AccessCheck" },
+            "expression": {
+              "type": "string",
+              "minLength": 1,
+              "doNotSuggest": false
+            },
+            "valueOnError": {
+              "description": "Value to return instead if an error occurs at runtime.",
+              "type": ["boolean", "null"]
+            }
+          },
+          "required": ["type", "expression"]
         },
         {
           "properties": {
@@ -280,7 +335,8 @@
                   "OrgDatasetRowCount",
                   "DataCloudRowCount",
                   "OrgPreferenceCheck",
-                  "ApexCallout"
+                  "ApexCallout",
+                  "AccessCheck"
                 ]
               }
             }
@@ -309,6 +365,14 @@
           "body": {
             "type": "AppDatasetRowCount",
             "dataset": "${0}",
+            "filters": []
+          }
+        },
+        {
+          "label": "New DataCloudRowCount definition",
+          "body": {
+            "type": "DataCloudRowCount",
+            "object": "${0}",
             "filters": []
           }
         },
