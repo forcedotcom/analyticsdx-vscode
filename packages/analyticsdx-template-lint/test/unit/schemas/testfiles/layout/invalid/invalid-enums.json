@@ -2,6 +2,7 @@
   "pages": [
     {
       "title": "Page title",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "center": {
@@ -64,12 +65,17 @@
     },
     {
       "title": "Page title",
+      "type": "Configuration",
       "layout": {
         "type": "badvalue",
         "center": {
           "items": []
         }
       }
+    },
+    {
+      "title": "Invalid type",
+      "type": "invalid"
     }
   ],
   "displayMessages": [

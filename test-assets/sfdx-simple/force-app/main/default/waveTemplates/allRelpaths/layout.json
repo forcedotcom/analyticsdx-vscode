@@ -7,6 +7,7 @@
   "pages": [
     {
       "title": "Page1",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "center": {
@@ -90,6 +91,7 @@
     },
     {
       "title": "Page 2",
+      "type": "Configuration",
       "layout": {
         "type": "TwoColumn",
         // these are here for checking tiles completions in layout.test.ts
@@ -189,6 +191,7 @@
     },
     {
       "title": "Page 3",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "center": {

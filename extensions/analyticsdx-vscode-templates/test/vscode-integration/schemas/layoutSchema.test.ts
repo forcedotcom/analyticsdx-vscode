@@ -56,6 +56,7 @@ describe('layout-schema.json hookup', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -109,6 +110,7 @@ describe('layout-schema.json hookup', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {

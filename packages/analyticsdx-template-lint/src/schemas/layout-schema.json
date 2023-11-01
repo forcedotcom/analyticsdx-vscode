@@ -14,9 +14,16 @@
       "description": "",
       "items": {
         "type": "object",
-        "required": ["title", "layout"],
+        "required": ["type", "title"],
         "additionalProperties": false,
         "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of page.",
+            "enum": ["Configuration", "Validation"],
+            "enumDescriptions": ["A configuration page.", "An org validation page."],
+            "default": "Configuration"
+          },
           "title": {
             "type": "string",
             "description": "Title displayed at top of the page."
@@ -46,121 +53,6 @@
             "$ref": "#/definitions/backgroundImage",
             "description": "Image to display in the background of this page. It should be a horizontal image and it will be fixed at the bottom of the page."
           },
-          "layout": {
-            "type": "object",
-            "description": "The layout specification for the page.",
-            "additionalProperties": false,
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "type": "string",
-                "description": "Layout type",
-                "enum": ["SingleColumn", "TwoColumn"],
-                "enumDescriptions": [
-                  "A page layout with a single panel of items.",
-                  "A page layout with left and right panels of items."
-                ]
-              },
-              "header": {
-                "type": ["null", "object"],
-                "additionalProperties": false,
-                "description": "Header text to display at the top of the page, under the title.",
-                "properties": {
-                  "text": {
-                    "type": ["null", "string"],
-                    "description": "Header text. This can contain {{...}} expressions.",
-                    "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-                  },
-                  "description": {
-                    "type": ["null", "string"],
-                    "description": "Header description text, displayed under the header text. This can contain {{...}} expressions.",
-                    "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-                  }
-                },
-                "defaultSnippets": [
-                  {
-                    "label": "New header",
-                    "body": {
-                      "text": "${1:Header text}",
-                      "description": "${2}"
-                    }
-                  }
-                ]
-              },
-              "center": {
-                "doNotSuggest": true
-              },
-              "right": {
-                "doNotSuggest": true
-              },
-              "left": {
-                "doNotSuggest": true
-              }
-            },
-            "anyOf": [
-              {
-                "properties": {
-                  "type": {
-                    "const": "SingleColumn"
-                  },
-                  "center": {
-                    "$ref": "#/definitions/panel",
-                    "description": "The panel of items for this page.",
-                    "doNotSuggest": false
-                  }
-                },
-                "required": ["type", "center"]
-              },
-              {
-                "properties": {
-                  "type": {
-                    "const": "TwoColumn"
-                  },
-                  "left": {
-                    "$ref": "#/definitions/panel",
-                    "description": "The left side panel of items for this page.",
-                    "doNotSuggest": false
-                  },
-                  "right": {
-                    "$ref": "#/definitions/panel",
-                    "description": "The right side panel of items for this page.",
-                    "doNotSuggest": false
-                  }
-                },
-                "required": ["type", "left", "right"]
-              },
-              {
-                "properties": {
-                  "type": {
-                    "not": { "enum": ["SingleColumn", "TwoColumn"] }
-                  }
-                }
-              }
-            ],
-            "defaultSnippets": [
-              {
-                "label": "New SingleColumn layout",
-                "body": {
-                  "type": "SingleColumn",
-                  "center": {
-                    "items": []
-                  }
-                }
-              },
-              {
-                "label": "New TwoColumn layout",
-                "body": {
-                  "type": "TwoColumn",
-                  "left": {
-                    "items": []
-                  },
-                  "right": {
-                    "items": []
-                  }
-                }
-              }
-            ]
-          },
           "navigation": {
             "$ref": "#/definitions/navigation",
             "description": "Configure the node in the navigation panel for this page."
@@ -168,13 +60,97 @@
           "guidancePanel": {
             "$ref": "#/definitions/guidancePanel",
             "description": "The guidance panel specification for this page."
-          }
+          },
+          "layout": { "doNotSuggest": true },
+          "header": { "doNotSuggest": true },
+          "groups": { "doNotSuggest": true }
         },
+        "oneOf": [
+          {
+            "required": ["type", "layout"],
+            "properties": {
+              "type": {
+                "const": "Configuration"
+              },
+              "groups": {
+                "doNotSuggest": true,
+                "errorMessage": "Property groups is not allowed.",
+                "not": true
+              },
+              "header": {
+                "doNotSuggest": true,
+                "errorMessage": "Property header is not allowed.",
+                "not": true
+              },
+              "layout": {
+                "$ref": "#/definitions/layout",
+                "description": "The layout specification for the page.",
+                "doNotSuggest": false
+              }
+            }
+          },
+          {
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "Validation"
+              },
+              "layout": {
+                "doNotSuggest": true,
+                "errorMessage": "Property layout is not allowed.",
+                "not": true
+              },
+              "header": {
+                "$ref": "#/definitions/header",
+                "doNotSuggest": false
+              },
+              "groups": {
+                "description": "Specify how to group and display org validation results.",
+                "type": ["array", "null"],
+                "doNotSuggest": false,
+                "items": {
+                  "type": "object",
+                  "required": ["text"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "Label to show for this group."
+                    },
+                    "tags": {
+                      "type": ["array", "null"],
+                      "description": "Optional tags for this group, should correspond to templateRequirement tag(s) in the readiness definition file.",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "includeUnmatched": {
+                      "type": ["boolean", "null"],
+                      "description": "Set to true to include any validation results that don't match other groups, should be specified on only one group."
+                    }
+                  },
+                  "defaultSnippets": [
+                    {
+                      "label": "New group",
+                      "body": {
+                        "text": "${0}"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "properties": { "type": { "not": { "enum": ["Configuration", "Validation"] } } }
+          }
+        ],
         "defaultSnippets": [
           {
             "label": "New SingleColumn page",
             "body": {
               "title": "${1:Page title}",
+              "type": "Configuration",
               "layout": {
                 "type": "SingleColumn",
                 "center": {
@@ -187,6 +163,7 @@
             "label": "New TwoColumn page",
             "body": {
               "title": "${1:Page title}",
+              "type": "Configuration",
               "layout": {
                 "type": "TwoColumn",
                 "left": {
@@ -197,6 +174,14 @@
                 }
               }
             }
+          },
+          {
+            "label": "New Validation page",
+            "body": {
+              "title": "${1:Page title}",
+              "type": "Validation",
+              "groups": []
+            }
           }
         ]
       },
@@ -206,6 +191,7 @@
           "body": [
             {
               "title": "${1:Page title}",
+              "type": "Configuration",
               "layout": {
                 "type": "SingleColumn",
                 "center": {
@@ -743,6 +729,124 @@
           "label": "New background image",
           "body": {
             "name": "${1:name}"
+          }
+        }
+      ]
+    },
+    "header": {
+      "type": ["null", "object"],
+      "additionalProperties": false,
+      "description": "Header text to display at the top of the page, under the title.",
+      "properties": {
+        "text": {
+          "type": ["null", "string"],
+          "description": "Header text. This can contain {{...}} expressions.",
+          "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
+        },
+        "description": {
+          "type": ["null", "string"],
+          "description": "Header description text, displayed under the header text. This can contain {{...}} expressions.",
+          "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "New header",
+          "body": {
+            "text": "${1:Header text}",
+            "description": "${2}"
+          }
+        }
+      ]
+    },
+    "layout": {
+      "type": "object",
+      "description": "The layout specification for the page.",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Layout type",
+          "enum": ["SingleColumn", "TwoColumn"],
+          "enumDescriptions": [
+            "A page layout with a single panel of items.",
+            "A page layout with left and right panels of items."
+          ]
+        },
+        "header": {
+          "$ref": "#/definitions/header"
+        },
+        "center": {
+          "doNotSuggest": true
+        },
+        "right": {
+          "doNotSuggest": true
+        },
+        "left": {
+          "doNotSuggest": true
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "SingleColumn"
+            },
+            "center": {
+              "$ref": "#/definitions/panel",
+              "description": "The panel of items for this page.",
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "center"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "TwoColumn"
+            },
+            "left": {
+              "$ref": "#/definitions/panel",
+              "description": "The left side panel of items for this page.",
+              "doNotSuggest": false
+            },
+            "right": {
+              "$ref": "#/definitions/panel",
+              "description": "The right side panel of items for this page.",
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "left", "right"]
+        },
+        {
+          "properties": {
+            "type": {
+              "not": { "enum": ["SingleColumn", "TwoColumn"] }
+            }
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "New SingleColumn layout",
+          "body": {
+            "type": "SingleColumn",
+            "center": {
+              "items": []
+            }
+          }
+        },
+        {
+          "label": "New TwoColumn layout",
+          "body": {
+            "type": "TwoColumn",
+            "left": {
+              "items": []
+            },
+            "right": {
+              "items": []
+            }
           }
         }
       ]

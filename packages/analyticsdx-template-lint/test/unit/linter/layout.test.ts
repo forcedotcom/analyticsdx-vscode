@@ -37,6 +37,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -56,6 +57,7 @@ describe('TemplateLinter layout.json', () => {
           },
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'TwoColumn',
               left: {
@@ -114,6 +116,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -169,6 +172,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -273,6 +277,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {

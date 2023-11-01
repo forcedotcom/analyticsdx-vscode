@@ -1,6 +1,7 @@
 {
   "pages": [
     {
+      "type": "Configuration",
       "backgroundImage": {
         "name": "SentimentAnalysisBackground",
         "namespace": "ns"
@@ -152,6 +153,7 @@
       },
       "condition": "{{Variables.foo}}",
       "title": "Primitive Variables",
+      "type": "Configuration",
       "layout": {
         "type": "TwoColumn",
         "header": {
@@ -235,6 +237,50 @@
           ]
         }
       }
+    },
+    {
+      "title": "Validation Page",
+      "type": "Validation",
+      "backgroundImage": {
+        "name": "name",
+        "namespace": "ns"
+      },
+      "condition": "{{true}}",
+      "guidancePanel": {
+        "title": "help",
+        "backgroundImage": {
+          "name": "name"
+        },
+        "items": [
+          {
+            "type": "Text",
+            "text": "help text"
+          }
+        ]
+      },
+      "header": {
+        "text": "Header text",
+        "description": "header description"
+      },
+      "helpUrl": "https://github.com",
+      "navigation": {
+        "label": "Validation",
+        "parentLabel": "Foo"
+      },
+      "groups": [
+        {
+          "text": "text only"
+        },
+        {
+          "text": "with tags",
+          "tags": ["A", "B"]
+        },
+        {
+          "text": "all the things",
+          "tags": [],
+          "includeUnmatched": true
+        }
+      ]
     }
   ],
   "displayMessages": [

@@ -2,6 +2,7 @@
   "pages": [
     {
       "title": "Bad items",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "center": {
@@ -50,6 +51,7 @@
     },
     {
       "title": "Mismatched single column",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "left": {
@@ -62,6 +64,7 @@
     },
     {
       "title": "Mismatched two column",
+      "type": "Configuration",
       "layout": {
         "type": "TwoColumn",
         "center": {

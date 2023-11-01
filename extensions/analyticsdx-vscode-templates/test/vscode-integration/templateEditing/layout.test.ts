@@ -582,6 +582,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       pages: [
         {
           title: 'Test Title',
+          type: 'Configuration',
           layout: {
             type: 'SingleColumn',
             center: {
@@ -746,6 +747,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       pages: [
         {
           title: 'Test Title',
+          type: 'Configuration',
           layout: {
             type: 'SingleColumn',
             center: {
@@ -864,6 +866,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       pages: [
         {
           title: 'Test Title',
+          type: 'Configuration',
           navigation: {
             label: 'Test Label'
           },
