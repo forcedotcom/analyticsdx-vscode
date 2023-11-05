@@ -241,3 +241,26 @@ export function fuzzySearcher(
     return fuzzer.search(pattern, searchOpts).map(result => result.item);
   };
 }
+
+/** Create a function that will cache the result of the underlying function on the first call, and
+ * return that result from there out.
+ */
+export function caching<A extends any[], R, T>(fn: (this: T, ...arg: A) => R): (this: T, ...arg: A) => R {
+  let result: R;
+  let resultError: unknown | undefined;
+  let _fn: ((this: T, ...args: A) => R) | undefined = fn;
+  return function (this: T, ...args: A) {
+    if (_fn !== undefined) {
+      try {
+        result = _fn.apply(this, args);
+      } catch (error) {
+        resultError = error;
+      }
+      _fn = undefined;
+    }
+    if (resultError) {
+      throw resultError;
+    }
+    return result;
+  };
+}

@@ -185,6 +185,10 @@ export const ERRORS = Object.freeze({
   LAYOUT_INVALID_TILE_NAME: 'lay-5',
   /** Unsupported variable type in layout page */
   LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT: 'lay-6',
+  /** Validation page group tag doesn't match a readiness templateRequirement tag. */
+  LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG: 'lay-7',
+  /** Multiple incldueUnmatched: true groups in a validation page. */
+  LAYOUT_VALIDATION_PAGE_MULTIPLE_INCLUDE_UNMATCHED: 'lay-8',
 
   /** ApexCallback readiness definition but template has no apexCallback */
   READINESS_NO_APEX_CALLBACK: 'read-1',
