@@ -7,7 +7,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { ERRORS } from '../../../src';
-import { getDiagnosticsByPath, getDiagnosticsForPath } from '../../testutils';
+import { getDiagnosticsForPath } from '../../testutils';
 import { StringDocument, stringifyDiagnostics, TestLinter } from './testlinter';
 
 // tslint:disable: no-unused-expression
