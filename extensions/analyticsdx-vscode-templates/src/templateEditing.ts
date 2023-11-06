@@ -390,6 +390,14 @@ export class TemplateDirEditing extends Disposable {
         }
       ),
 
+      vscode.languages.registerCodeActionsProvider(
+        relatedFileSelector,
+        new FuzzyMatchCodeActionProvider(ERRORS.LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG),
+        {
+          providedCodeActionKinds: FuzzyMatchCodeActionProvider.providedCodeActionKinds
+        }
+      ),
+
       // hookup quick fixes for variable names in ui.json's
       vscode.languages.registerCodeActionsProvider(relatedFileSelector, new UiVariableCodeActionProvider(this), {
         providedCodeActionKinds: UiVariableCodeActionProvider.providedCodeActionKinds
