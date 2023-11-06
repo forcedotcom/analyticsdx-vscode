@@ -133,7 +133,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New pages');
     // and go to just after the [ in "pages"
     position = scan.end.translate({ characterDelta: 1 });
-    await verifyCompletionsContain(doc, position, 'New SingleColumn page', 'New TwoColumn page');
+    await verifyCompletionsContain(doc, position, 'New SingleColumn page', 'New TwoColumn page', 'New Validation page');
 
     // go to just before the { in "layout"
     node = findNodeAtLocation(tree!, ['pages', 0, 'layout']);
@@ -1004,5 +1004,19 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     // and the tag should be fixed up
     const layoutJson = jsoncParse(layoutEditor.document.getText());
     expect(layoutJson.pages[0].groups[0].tags[1], 'fixed tag').to.equal('foo');
+  });
+
+  it('code completions on validation page group tags', async () => {
+    const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'layout.json');
+    const [doc] = await openFile(uri, true);
+    await waitForDiagnostics(uri, d => d && d.length >= 1);
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+    const position = findPositionByJsonPath(doc, ['pages', 3, 'groups', 0, 'tags']);
+    expect(position, 'pages[3].groups[0].tags').to.not.be.undefined;
+    const completions = await verifyCompletionsContain(doc, position!.translate(0, 1), '"Tag1"', '"Tag2"');
+    if (completions.length !== 2) {
+      expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
+    }
   });
 });

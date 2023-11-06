@@ -122,7 +122,8 @@
                       "description": "Optional tags for this group, should correspond to templateRequirement tag(s) in the readiness definition file.",
                       "items": {
                         "type": "string"
-                      }
+                      },
+                      "defaultSnippets": [{ "label": "[]", "body": ["${0}"] }]
                     },
                     "includeUnmatched": {
                       "type": ["boolean", "null"],

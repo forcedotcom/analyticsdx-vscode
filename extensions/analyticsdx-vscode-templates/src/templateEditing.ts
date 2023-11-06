@@ -43,6 +43,7 @@ import {
 } from './constants';
 import { ERRORS } from './constants';
 import {
+  LayoutValidationPageTagCompletionItemProviderDelegate,
   LayoutVariableCodeActionProvider,
   LayoutVariableCompletionItemProviderDelegate,
   LayoutVariableDefinitionProvider,
@@ -367,6 +368,8 @@ export class TemplateDirEditing extends Disposable {
         new JsonCompletionItemProvider(
           // hookup code-completion for variables names in page in ui.json's
           new UiVariableCompletionItemProviderDelegate(this),
+          // hoopkup code-completion for validation page group tags in layout.json's
+          new LayoutValidationPageTagCompletionItemProviderDelegate(this),
           // hookup code-completion for variables names in page in layout.json's
           new LayoutVariableCompletionItemProviderDelegate(this),
           // hookup completions for tile names in variable items in layout.json's

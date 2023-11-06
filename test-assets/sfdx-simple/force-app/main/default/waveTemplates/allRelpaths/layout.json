@@ -205,6 +205,16 @@
         },
         "items": []
       }
+    },
+    {
+      "title": "Validation page",
+      "type": "Validation",
+      "groups": [
+        {
+          "text": "group",
+          "tags": []
+        }
+      ]
     }
   ],
   "displayMessages": [

@@ -310,7 +310,7 @@ describe('TemplateLinter layout.json', () => {
     expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT);
   });
 
-  it.only('validates validation page group tags', async () => {
+  it('validates validation page group tags', async () => {
     const dir = 'validationTags';
     const layoutPath = path.join(dir, 'layout.json');
     linter = new TestLinter(
