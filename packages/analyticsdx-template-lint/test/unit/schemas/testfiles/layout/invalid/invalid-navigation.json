@@ -2,6 +2,7 @@
   "pages": [
     {
       "title": "test title",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "center": {

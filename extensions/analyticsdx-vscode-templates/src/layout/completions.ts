@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { matchJsonNodeAtPattern } from '@salesforce/analyticsdx-template-lint';
+import { matchJsonNodeAtPattern, matchJsonNodesAtPattern } from '@salesforce/analyticsdx-template-lint';
 import { Location, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { codeCompletionUsedTelemetryCommand } from '../telemetry';
@@ -15,6 +15,50 @@ import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
 import { getLayoutItemVariableName, isInTilesEnumKey, matchesLayoutItem } from './utils';
+
+/** Get tags from the readiness file's templateRequirements. */
+export class LayoutValidationPageTagCompletionItemProviderDelegate implements JsonCompletionItemProviderDelegate {
+  constructor(private readonly templateEditing: TemplateDirEditing) {}
+
+  public isSupportedDocument(document: vscode.TextDocument): boolean {
+    return (
+      // make sure the template has a readinessDefinition file
+      isValidRelpath(this.templateEditing.readinessDefinitionPath) &&
+      // and that we're in the layoutDefinition file of the template
+      this.templateEditing.isLayoutDefinitionFile(document.uri)
+    );
+  }
+
+  public isSupportedLocation(location: Location): boolean {
+    // Note: we should be checking that it's a validation page (and not a Configuration page, e.g.), but we don't
+    // get the parent node hierarchy in the Location passed in, and it's not that big a deal if the user gets a
+    // code-completion for this path in the layout.json file on a Configuration page since they'll already be getting
+    // errors about the wrong type
+    return !location.isAtPropertyKey && location.matches(['pages', '*', 'groups', '*', 'tags', '*']);
+  }
+
+  public async getItems(range: vscode.Range | undefined, location: Location, document: vscode.TextDocument) {
+    const varUri = vscode.Uri.joinPath(this.templateEditing.dir, this.templateEditing.readinessDefinitionPath!);
+    const doc = await vscode.workspace.openTextDocument(varUri);
+    const tree = parseTree(doc.getText());
+    const items: vscode.CompletionItem[] = [];
+    if (tree?.type === 'object') {
+      const tags = new Set(
+        matchJsonNodesAtPattern(
+          tree,
+          ['templateRequirements', '*', 'tags', '*'],
+          tagNode => typeof tagNode.value === 'string'
+        ).map(tagNode => tagNode.value as string)
+      );
+      tags.forEach(tag => {
+        const item = newCompletionItem(tag, range, vscode.CompletionItemKind.EnumMember);
+        item.command = codeCompletionUsedTelemetryCommand(item.label, 'tag', location.path, document.uri);
+        items.push(item);
+      });
+    }
+    return items;
+  }
+}
 
 /** Get variable names for the variable name in the pages in ui.json. */
 export class LayoutVariableCompletionItemProviderDelegate extends VariableRefCompletionItemProviderDelegate {

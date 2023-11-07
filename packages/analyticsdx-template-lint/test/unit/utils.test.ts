@@ -8,6 +8,7 @@
 import { expect } from 'chai';
 import { JSONPath, Node as JsonNode, ParseError, parseTree, printParseErrorCode } from 'jsonc-parser';
 import {
+  caching,
   fuzzySearcher,
   isValidRelpath,
   isValidVariableName,
@@ -579,6 +580,38 @@ describe('utils', () => {
       pattern += pattern;
       // really just make sure it doesn't throw an error
       expect(fuzz(pattern)).has.members([]);
+    });
+  });
+
+  describe('caching()', () => {
+    it('calls underlying function only once', () => {
+      let count = 0;
+      const fn = caching((arg: string) => {
+        count++;
+        return arg.toLowerCase();
+      });
+      expect(count).to.equal(0);
+      // call it first time, should call underlying function
+      expect(fn('Foo')).to.equal('foo');
+      expect(count).to.equal(1);
+      // call it second time, should use cached value and not call underlying function
+      expect(fn('Bar')).to.equal('foo');
+      expect(count).to.equal(1);
+    });
+
+    it('throws exception on subsequent calls', () => {
+      let count = 0;
+      const fn = caching((arg: string) => {
+        count++;
+        throw new Error('expected');
+      });
+      // first call should call underlying function and throw error
+      // (Note: .to.throw() does a string contains by default when passed a string, so using an exact regex)
+      expect(() => fn('Foo')).to.throw(/^expected$/);
+      expect(count).to.equal(1);
+      // second should not call underlying function, and throw same error
+      expect(() => fn('Foo')).to.throw(/^expected$/);
+      expect(count).to.equal(1);
     });
   });
 });

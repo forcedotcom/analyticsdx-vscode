@@ -2,6 +2,7 @@
   "pages": [
     {
       "title": "Page title",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "center": {
@@ -14,6 +15,7 @@
     },
     {
       "title": "Page title",
+      "type": "Configuration",
       "layout": {
         "type": "TwoColumn",
         "left": {

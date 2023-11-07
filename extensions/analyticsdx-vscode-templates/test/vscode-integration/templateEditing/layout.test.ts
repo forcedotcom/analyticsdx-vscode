@@ -11,7 +11,7 @@ import { findNodeAtLocation, JSONPath, Node as JsonNode, parseTree } from 'jsonc
 import * as vscode from 'vscode';
 import { ERRORS } from '../../../src/constants';
 import { jsonpathFrom, scanLinesUntil, uriDirname, uriStat } from '../../../src/util/vscodeUtils';
-import { waitFor } from '../../testutils';
+import { jsoncParse, waitFor } from '../../testutils';
 import {
   closeAllEditors,
   compareCompletionItems,
@@ -133,7 +133,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New pages');
     // and go to just after the [ in "pages"
     position = scan.end.translate({ characterDelta: 1 });
-    await verifyCompletionsContain(doc, position, 'New SingleColumn page', 'New TwoColumn page');
+    await verifyCompletionsContain(doc, position, 'New SingleColumn page', 'New TwoColumn page', 'New Validation page');
 
     // go to just before the { in "layout"
     node = findNodeAtLocation(tree!, ['pages', 0, 'layout']);
@@ -582,6 +582,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       pages: [
         {
           title: 'Test Title',
+          type: 'Configuration',
           layout: {
             type: 'SingleColumn',
             center: {
@@ -746,6 +747,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       pages: [
         {
           title: 'Test Title',
+          type: 'Configuration',
           layout: {
             type: 'SingleColumn',
             center: {
@@ -864,6 +866,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       pages: [
         {
           title: 'Test Title',
+          type: 'Configuration',
           navigation: {
             label: 'Test Label'
           },
@@ -926,7 +929,94 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     // and the tile keys should have been updated
     const layoutTree = parseTree(layoutEditor.document.getText());
     expect(layoutTree, 'layout.json').to.not.be.undefined;
-    console.log(findNodeAtLocation(layoutTree!, ['pages', 0, 'navigation']));
     expect(findNodeAtLocation(layoutTree!, ['pages', 0, 'navigation']), 'navigation node').to.be.undefined;
+  });
+
+  it('quick fixes on unrecongized validation page group tag', async () => {
+    const [t, [layoutEditor]] = await createTemplateWithRelatedFiles(
+      {
+        field: 'layoutDefinition',
+        path: 'layout.json',
+        initialJson: {
+          pages: [
+            {
+              title: 'validation',
+              type: 'Validation',
+              groups: [{ text: '', tags: ['bar', 'fo'] }]
+            }
+          ]
+        }
+      },
+      {
+        field: 'readinessDefinition',
+        path: 'readiness.json',
+        initialJson: {
+          templateRequirements: [
+            {
+              expression: '{{Variables.foo}}',
+              tags: ['foo']
+            }
+          ]
+        }
+      }
+    );
+    tmpdir = t;
+    // should have 2 diagnostics about the tags
+    const diagnosticFilter = (d: vscode.Diagnostic) => d.code === ERRORS.LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG;
+    let diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 2,
+        'Initial 2 warnings on layout.json'
+      )
+    )
+      .filter(diagnosticFilter)
+      .sort(sortDiagnostics);
+
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0] jsonpath').to.equal('pages[0].groups[0].tags[0]');
+    expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1] jsonpath').to.equal('pages[0].groups[0].tags[1]');
+
+    // the 1st tag warning should not have any quick fixes
+    let actions = await getCodeActions(layoutEditor.document.uri, diagnostics[0].range);
+    if (actions.length !== 0) {
+      expect.fail("Expected no code actions on 'bar', got [" + actions.map(a => a.title).join(', ') + ']');
+    }
+    // the 2nd tag warning should have a quick fix
+    actions = await getCodeActions(layoutEditor.document.uri, diagnostics[1].range);
+    if (actions.length !== 1) {
+      expect.fail("Expected 1 code actions on 'fo', got [" + actions.map(a => a.title).join(', ') + ']');
+    }
+    expect(actions[0].title, 'quick fix action title').to.equal("Switch to 'foo'");
+    expect(actions[0].edit, 'quick fix action edit').to.not.be.undefined;
+    // run the action
+    if (!(await vscode.workspace.applyEdit(actions[0].edit!))) {
+      expect.fail(`Quick fix '${actions[0].title}' failed`);
+    }
+
+    // that should make that diagnostic go away
+    diagnostics = (
+      await waitForDiagnostics(
+        layoutEditor.document.uri,
+        ds => ds && ds.filter(diagnosticFilter).length === 1,
+        'Only 1 warning on layout.json'
+      )
+    ).filter(diagnosticFilter);
+    // and the tag should be fixed up
+    const layoutJson = jsoncParse(layoutEditor.document.getText());
+    expect(layoutJson.pages[0].groups[0].tags[1], 'fixed tag').to.equal('foo');
+  });
+
+  it('code completions on validation page group tags', async () => {
+    const uri = uriFromTestRoot(waveTemplatesUriPath, 'allRelpaths', 'layout.json');
+    const [doc] = await openFile(uri, true);
+    await waitForDiagnostics(uri, d => d && d.length >= 1);
+    await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
+
+    const position = findPositionByJsonPath(doc, ['pages', 3, 'groups', 0, 'tags']);
+    expect(position, 'pages[3].groups[0].tags').to.not.be.undefined;
+    const completions = await verifyCompletionsContain(doc, position!.translate(0, 1), '"Tag1"', '"Tag2"');
+    if (completions.length !== 2) {
+      expect.fail('Expected 2 completions, got: ' + completions.map(i => i.label).join(', '));
+    }
   });
 });

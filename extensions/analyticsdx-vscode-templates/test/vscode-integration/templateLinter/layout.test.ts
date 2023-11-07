@@ -51,6 +51,7 @@ describe('TemplateLinterManager lints layout.json', () => {
       pages: [
         {
           title: 'Page1',
+          type: 'Configuration',
           layout: {
             type: 'TwoColumn',
             left: {
@@ -63,6 +64,7 @@ describe('TemplateLinterManager lints layout.json', () => {
         },
         {
           title: 'Page2',
+          type: 'Configuration',
           layout: {
             type: 'SingleColumn',
             center: {
@@ -204,6 +206,7 @@ describe('TemplateLinterManager lints layout.json', () => {
       pages: [
         {
           title: 'Page1',
+          type: 'Configuration',
           layout: {
             type: 'SingleColumn',
             right: {

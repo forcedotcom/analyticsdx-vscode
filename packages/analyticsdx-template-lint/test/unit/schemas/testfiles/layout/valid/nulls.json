@@ -2,6 +2,7 @@
   "pages": [
     {
       "title": "",
+      "type": "Configuration",
       "backgroundImage": null,
       "condition": null,
       "helpUrl": null,
@@ -15,6 +16,7 @@
     },
     {
       "title": "",
+      "type": "Configuration",
       "layout": {
         "type": "SingleColumn",
         "header": {
@@ -71,6 +73,26 @@
           ]
         }
       }
+    },
+    {
+      "title": "Validation page1",
+      "type": "Validation",
+      "backgroundImage": null,
+      "condition": null,
+      "header": null,
+      "helpUrl": null,
+      "groups": null
+    },
+    {
+      "title": "Validation page2",
+      "type": "Validation",
+      "groups": [
+        {
+          "text": "text",
+          "tags": null,
+          "includeUnmatched": null
+        }
+      ]
     }
   ]
 }

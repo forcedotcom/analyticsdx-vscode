@@ -37,6 +37,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -56,6 +57,7 @@ describe('TemplateLinter layout.json', () => {
           },
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'TwoColumn',
               left: {
@@ -114,6 +116,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -169,6 +172,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -273,6 +277,7 @@ describe('TemplateLinter layout.json', () => {
         pages: [
           {
             title: '',
+            type: 'Configuration',
             layout: {
               type: 'SingleColumn',
               center: {
@@ -291,7 +296,7 @@ describe('TemplateLinter layout.json', () => {
     await linter.lint();
     const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
     if (diagnostics.length !== 2) {
-      expect.fail('Expected 2 unsupported variable errors, got' + stringifyDiagnostics(diagnostics));
+      expect.fail('Expected 2 unsupported variable errors, got ' + stringifyDiagnostics(diagnostics));
     }
 
     let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].navigation');
@@ -303,5 +308,130 @@ describe('TemplateLinter layout.json', () => {
     expect(diagnostic, 'navigation has no effect unless a navigationPanel is defined as part of the layout.').to.not.be
       .undefined;
     expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNNECESSARY_NAVIGATION_OBJECT);
+  });
+
+  it('validates validation page group tags', async () => {
+    const dir = 'validationTags';
+    const layoutPath = path.join(dir, 'layout.json');
+    linter = new TestLinter(
+      dir,
+      {
+        templateType: 'data',
+        readinessDefinition: 'readiness.json',
+        layoutDefinition: 'layout.json'
+      },
+      new StringDocument(path.join(dir, 'readiness.json'), {
+        templateRequirements: [
+          { expression: '{{Variables.foo}}}', tags: ['foo'] },
+          { expression: '{{Variables.bar}}}', tags: ['foo', 'bar'] }
+        ]
+      }),
+      new StringDocument(layoutPath, {
+        pages: [
+          {
+            title: 'valid tags',
+            type: 'Validation',
+            groups: [
+              { text: '' },
+              { text: '', tags: [] },
+              { text: '', tags: ['foo'] },
+              { text: '', tags: ['foo', 'bar'] }
+            ]
+          },
+          {
+            title: 'invalid tags',
+            type: 'Validation',
+            groups: [
+              { text: '', tags: ['', 'fo'] },
+              { text: '', tags: ['baz', 'shouldnotmatchanything'] }
+            ]
+          }
+        ]
+      })
+    );
+
+    await linter.lint();
+    const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
+    if (diagnostics.length !== 4) {
+      expect.fail('Expected 4 invalid tag errors, got ' + stringifyDiagnostics(diagnostics));
+    }
+
+    let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].groups[0].tags[0]');
+    expect(diagnostic, 'group[0].tag[0]').to.not.be.undefined;
+    expect(diagnostic!.code, 'group[0].tag[0] code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG);
+    expect(diagnostic!.args, 'group[0].tag[0] args').to.not.be.undefined;
+    expect(diagnostic!.args!.name, 'group[0].tag[0] args name').to.equal('');
+    expect(diagnostic!.args!.match, 'group[0].tag[0] args match').to.be.undefined;
+
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].groups[0].tags[1]');
+    expect(diagnostic, 'group[0].tag[1]').to.not.be.undefined;
+    expect(diagnostic!.code, 'group[0].tag[1] code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG);
+    expect(diagnostic!.args, 'group[0].tag[1] args').to.not.be.undefined;
+    expect(diagnostic!.args!.name, 'group[0].tag[1] args name').to.equal('fo');
+    expect(diagnostic!.args!.match, 'group[0].tag[1] args match').to.equal('foo');
+
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].groups[1].tags[0]');
+    expect(diagnostic, 'group[1].tag[0]').to.not.be.undefined;
+    expect(diagnostic!.code, 'group[1].tag[1] code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG);
+    expect(diagnostic!.args, 'group[1].tag[0] args').to.not.be.undefined;
+    expect(diagnostic!.args!.name, 'group[1].tag[0] args name').to.equal('baz');
+    expect(diagnostic!.args!.match, 'group[1].tag[0] args match').to.equal('bar');
+
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].groups[1].tags[1]');
+    expect(diagnostic, 'group[1].tag[1]').to.not.be.undefined;
+    expect(diagnostic!.code, 'group[1].tag[1] code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG);
+    expect(diagnostic!.args, 'group[1].tag[1] args').to.not.be.undefined;
+    expect(diagnostic!.args!.name, 'group[1].tag[1] args name').to.equal('shouldnotmatchanything');
+    expect(diagnostic!.args!.match, 'group[1].tag[1] args match').to.be.undefined;
+  });
+
+  it('validates validation page group includeUnmatched', async () => {
+    const dir = 'includeUnmatched';
+    const layoutPath = path.join(dir, 'layout.json');
+    linter = new TestLinter(
+      dir,
+      {
+        templateType: 'data',
+        layoutDefinition: 'layout.json'
+      },
+      new StringDocument(layoutPath, {
+        pages: [
+          {
+            title: 'valid includeUnmatcheds',
+            type: 'Validation',
+            groups: [
+              { text: '', includeUnmatched: true },
+              { text: '', includeUnmatched: false },
+              { text: '', includeUnmatched: null },
+              { text: '' }
+            ]
+          },
+          {
+            title: 'mulitple invaludeUnmatcheds',
+            type: 'Validation',
+            groups: [
+              { text: '', includeUnmatched: true },
+              { text: '', includeUnmatched: false },
+              { text: '', includeUnmatched: true },
+              { text: '' }
+            ]
+          }
+        ]
+      })
+    );
+
+    await linter.lint();
+    const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
+    if (diagnostics.length !== 2) {
+      expect.fail('Expected 2 multiple includeUnmatched errors, got ' + stringifyDiagnostics(diagnostics));
+    }
+
+    let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].groups[0].includeUnmatched');
+    expect(diagnostic, 'group[0]').to.not.be.undefined;
+    expect(diagnostic!.code, 'group[0] code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_MULTIPLE_INCLUDE_UNMATCHED);
+
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].groups[2].includeUnmatched');
+    expect(diagnostic, 'group[2]').to.not.be.undefined;
+    expect(diagnostic!.code, 'group[2] code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_MULTIPLE_INCLUDE_UNMATCHED);
   });
 });

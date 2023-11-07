@@ -8,6 +8,7 @@
 import { findNodeAtLocation, JSONPath, Node as JsonNode, parseTree } from 'jsonc-parser';
 import { ERRORS, LINTER_MAX_EXTERNAL_FILE_SIZE, TEMPLATE_INFO } from './constants';
 import {
+  caching,
   fuzzySearcher,
   isValidRelpath,
   isValidVariableName,
@@ -1132,10 +1133,12 @@ export abstract class TemplateLinter<
   private async lintLayout(templateInfo: JsonNode) {
     const { doc, json: layout } = await this.loadTemplateRelPathJson(templateInfo, ['layoutDefinition']);
     if (doc && layout) {
-      await Promise.all([
+      const promises = Promise.all([
         this.lintLayoutCheckVariables(templateInfo, doc, layout),
-        this.lintLayoutCheckNavigationObjects(doc, layout)
+        this.lintLayoutValidationPages(templateInfo, doc, layout)
       ]);
+      this.lintLayoutCheckNavigationObjects(doc, layout);
+      return promises;
     }
   }
 
@@ -1233,7 +1236,78 @@ export abstract class TemplateLinter<
     }
   }
 
-  private async lintLayoutCheckNavigationObjects(doc: Document, layoutJson: JsonNode): Promise<void> {
+  private async lintLayoutValidationPages(templateInfo: JsonNode, doc: Document, layoutJson: JsonNode) {
+    // function to read all the templateRequirement tags from the readiness file
+    const readinessTags = caching(async () => {
+      const { json: readinessJson } = await this.loadTemplateRelPathJson(templateInfo, ['readinessDefinition']);
+      return new Set(
+        matchJsonNodesAtPattern(
+          readinessJson,
+          ['templateRequirements', '*', 'tags', '*'],
+          tag => typeof tag.value === 'string'
+        ).map(tag => tag.value as string)
+      );
+    });
+    const fuzzyMatcher = caching((tags: Set<string>) => fuzzySearcher(tags));
+
+    // loop through each Validation page
+    const pages = matchJsonNodesAtPattern(
+      layoutJson,
+      ['pages', '*'],
+      page => findJsonPrimitiveAttributeValue(page, 'type')[0] === 'Validation'
+    );
+    for (const page of pages) {
+      const includeUnmatchedNodes = [] as JsonNode[];
+      // go through this page's groups
+      for (const group of matchJsonNodesAtPattern(page, ['groups', '*'])) {
+        // make sure any tags have corresponding entries in the readiness file
+        const tagNodes = matchJsonNodesAtPattern(group, ['tags', '*'], tagNode => typeof tagNode.value === 'string');
+        for (const tagNode of tagNodes) {
+          const tags = await readinessTags();
+          const tag = tagNode.value as string;
+          if (!tags.has(tag)) {
+            const args: Record<string, any> = { name: tag };
+            let mesg = `Tag '${tag}' not found in readiness definition`;
+            const [match] = fuzzyMatcher(tags)(tag);
+            if (match) {
+              mesg += `, did you mean '${match}'?`;
+              args.match = match;
+            }
+            this.addDiagnostic(doc, mesg, ERRORS.LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG, tagNode, { args });
+          }
+        }
+
+        // keep track of any true includeUnmatched's
+        const [includeUnmatched, includeUnmatchedNode] = findJsonPrimitiveAttributeValue(group, 'includeUnmatched');
+        if (includeUnmatched === true) {
+          includeUnmatchedNodes.push(includeUnmatchedNode!);
+        }
+      }
+
+      // warn if there's more than 1 true includeUnmatched in the page
+      if (includeUnmatchedNodes.length > 1) {
+        includeUnmatchedNodes.forEach(includeUnmatchedNode =>
+          this.addDiagnostic(
+            doc,
+            'Multiple groups found with includeUnmatched true',
+            ERRORS.LAYOUT_VALIDATION_PAGE_MULTIPLE_INCLUDE_UNMATCHED,
+            includeUnmatchedNode,
+            {
+              relatedInformation: includeUnmatchedNodes
+                .filter(other => other !== includeUnmatchedNode)
+                .map(other => ({
+                  doc,
+                  mesg: 'Other includeUnmatched',
+                  node: other
+                }))
+            }
+          )
+        );
+      }
+    }
+  }
+
+  private lintLayoutCheckNavigationObjects(doc: Document, layoutJson: JsonNode) {
     // Check to see if there is a navigationPanel object
     const navigationPanelNode = matchJsonNodeAtPattern(layoutJson, ['navigationPanel']);
     if (!navigationPanelNode) {

@@ -10,7 +10,7 @@
   "properties": {
     "values": {
       "description": "Default values for variables when computing readiness. Any values passed into the readiness check call will override these.",
-      "type": ["null", "object"],
+      "type": ["object", "null"],
       "additionalProperties": false,
       "patternProperties": {
         "^[a-zA-Z_][a-zA-Z0-9_]*$": {}
@@ -19,7 +19,7 @@
     },
     "templateRequirements": {
       "description": "Expressions used to determine if the current org meets the requirements for this template. The template is considered ready if all these requirements are met.",
-      "type": ["null", "array"],
+      "type": ["array", "null"],
       "minItems": 0,
       "items": {
         "type": "object",
@@ -34,7 +34,8 @@
               "${Readiness.sobjectCount > Variables.minimumCount}",
               "${Readiness.datasetRowCount >= Constants.minNumRows}",
               "${Readiness.apexResult.name == 'requiredName'}"
-            ]
+            ],
+            "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
           },
           "type": {
             "description": "Optional definition type of the requirement. This can be used to badge or group readiness results.",
@@ -66,23 +67,25 @@
             ]
           },
           "successMessage": {
-            "type": ["null", "string"],
+            "type": ["string", "null"],
             "description": "Optional message to return when the expression evaluates to true. This can access variable values as Variables.[name], constants from templateToApp rules files as Constants.[name], and computed readiness definition values as Readiness.[name].",
             "examples": [
               "Succesfully found ${Readiness.sobjectCount} ${Variables.sobject.objectName} objects.",
               "Dataset ${App.Datasets.Opptys.Name} has at least ${Constants.rowCount} rows"
-            ]
+            ],
+            "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
           },
           "failMessage": {
-            "type": ["null", "string"],
+            "type": ["string", "null"],
             "description": "Optional message to return when the expression evaluates to false. This can access variable values as Variables.[name], constants from templateToApp rules files as Constants.[name], and computed readiness definition values as Readiness.[name].",
             "examples": [
               "Too many ${Variables.sobject.objectName} objects, found ${Readiness.sobjectCount}",
               "${App.Datasets.Opptys.Name} only has ${Readiness.rowCount} rows, expected ${Constants.minRowCount}"
-            ]
+            ],
+            "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
           },
           "image": {
-            "type": ["null", "object"],
+            "type": ["object", "null"],
             "description": "Optional image that can be used when displaying the readiness results.",
             "additionalProperties": false,
             "required": ["name"],
@@ -108,12 +111,12 @@
           },
           "tags": {
             "description": "Optional tags to associate with this requirement, which can be used to badge or group readiness results.",
-            "type": ["null", "array"],
+            "type": ["array", "null"],
             "minItems": 0,
             "items": {
               "type": "string"
             },
-            "defaultSnippets": [{ "label": "[]", "body": [] }]
+            "defaultSnippets": [{ "label": "[]", "body": ["${0}"] }]
           }
         },
         "defaultSnippets": [

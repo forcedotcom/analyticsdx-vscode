@@ -2,7 +2,10 @@
   "error": "This should trigger a warning",
   "pages": [
     {
+      "type": "Configuration",
       "error": "This should trigger a warning",
+      "groups": [{ "text": "groups should be invalid in Configuration page" }],
+      "header": { "text": "top-level header should be invalid in Configuration page" },
       "backgroundImage": {
         "error": "This should trigger a warning",
         "name": "SentimentAnalysisBackground"
@@ -97,6 +100,27 @@
           }
         ]
       }
+    },
+    {
+      "title": "Validation page",
+      "type": "Validation",
+      "error": "This should trigger a warning",
+      // layout shouldn't be allowed in a validation page
+      "layout": null,
+      "header": {
+        "error": "This should trigger a warning",
+        "text": "top-level header should be invalid in Configuration page"
+      },
+      "backgroundImage": {
+        "error": "This should trigger a warning",
+        "name": "SentimentAnalysisBackground"
+      },
+      "groups": [
+        {
+          "error": "This should trigger a warning",
+          "text": ""
+        }
+      ]
     }
   ],
   "displayMessages": [

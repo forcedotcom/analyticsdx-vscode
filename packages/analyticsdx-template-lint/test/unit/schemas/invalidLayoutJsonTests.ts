@@ -28,6 +28,7 @@ describe('layout-schema.json finds errors in', () => {
       'pages[0].layout.center.items[2].items[2].name',
       'pages[0].layout.center.items[3].variant',
       'pages[1].layout.type',
+      'pages[2].type',
       'displayMessages[0].location',
       'pages[0].guidancePanel.items[0].type',
       'pages[0].guidancePanel.items[0].variant',
@@ -44,6 +45,8 @@ describe('layout-schema.json finds errors in', () => {
       false,
       'error',
       'pages[0].error',
+      'pages[0].groups',
+      'pages[0].header',
       'pages[0].backgroundImage.error',
       'pages[0].layout.error',
       'pages[0].layout.header.error',
@@ -63,6 +66,11 @@ describe('layout-schema.json finds errors in', () => {
       'pages[0].guidancePanel.items[1].image.error',
       'pages[0].guidancePanel.items[1].error',
       'pages[0].guidancePanel.items[2].error',
+      'pages[1].error',
+      'pages[1].layout',
+      'pages[1].header.error',
+      'pages[1].backgroundImage.error',
+      'pages[1].groups[0].error',
       'appDetails.error'
     );
   });

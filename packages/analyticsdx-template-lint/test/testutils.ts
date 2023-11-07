@@ -95,7 +95,8 @@ function newVscodeAjv(options?: AjvOptions): Ajv {
     'deprecationMessage',
     'doNotSuggest',
     'enumDescriptions',
-    'patternErrorMessage'
+    'patternErrorMessage',
+    'errorMessage'
   ]);
   return ajv;
 }
