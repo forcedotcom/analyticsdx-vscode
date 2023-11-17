@@ -1,6 +1,5 @@
 {
   "version": "0.10.0",
-  "preview": true,
   "publisher": "salesforce",
   "name": "analyticsdx-vscode",
   "displayName": "Salesforce Analytics Extension Pack",

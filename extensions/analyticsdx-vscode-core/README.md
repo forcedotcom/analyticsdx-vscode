@@ -1,10 +1,5 @@
 # Analytics CLI Integration for Visual Studio Code
 
-**This extension is in preview. Preview programs are subject to change, and we cannot guarantee acceptance. The feature
-isn't generally available unless or until Salesforce announces its general availability in documentation or in press
-releases or public statements. We cannot guarantee general availability within any particular time frame or at all.
-Make your purchase decisions only on the basis of generally available products and features.**
-
 This extension enables Visual Studio Code to use the Analytics Plugin for the Salesforce CLI to interact with your
 orgs.
 

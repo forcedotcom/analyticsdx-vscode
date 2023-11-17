@@ -1,10 +1,5 @@
 # Analytics Application Template Editing Support for Visual Studio Code
 
-**This extension is in preview. Preview programs are subject to change, and we cannot guarantee acceptance. The feature
-isn't generally available unless or until Salesforce announces its general availability in documentation or in press
-releases or public statements. We cannot guarantee general availability within any particular time frame or at all.
-Make your purchase decisions only on the basis of generally available products and features.**
-
 This extension provides editing features for Salesforce analytics application template source files, including
 validation, hover text, code-completion suggestions, quick fixes, and code navigation.
 

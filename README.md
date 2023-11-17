@@ -14,7 +14,7 @@ Currently, this repository contains source for the following extensions:
 
 - **[analyticsdx-vscode](extensions/analyticsdx-vscode/README.md)**  
   [A top-level extension pack](https://marketplace.visualstudio.com/items?itemName=salesforce.analyticsdx-vscode) that
-  automatically installs the following extensions for you.  
+  automatically installs the extensions below for you.
   ![Installs](https://img.shields.io/visual-studio-marketplace/i/salesforce.analyticsdx-vscode) ![Downloads](https://img.shields.io/visual-studio-marketplace/d/salesforce.analyticsdx-vscode)
 
 - **[analyticsdx-vscode-core](extensions/analyticsdx-vscode-core/README.md)**  
@@ -28,16 +28,6 @@ Currently, this repository contains source for the following extensions:
   editing features for Salesforce analytics application template source files, including validation, hover text,
   code-completion suggestions, quick fixes, and code navigation.  
   ![Installs](https://img.shields.io/visual-studio-marketplace/i/salesforce.analyticsdx-vscode-templates) ![Downloads](https://img.shields.io/visual-studio-marketplace/d/salesforce.analyticsdx-vscode-templates)
-
-## Be an Efficient Salesforce Developer with VS Code
-
-Dreamforce 2019 session on the preview features of the analytics extensions:
-
-[Asset Version Management - Taking Control of Einstein Analytics App Development](https://www.youtube.com/watch?v=G0zLdF2JIBU&t=878)
-
-Dreamforce 2018 session on how to use Visual Studio Code and Salesforce Extensions for VS Code:
-
-[Be An Efficient Salesforce Developer with VS Code](https://www.youtube.com/watch?v=hw9LBvjo4PQ)
 
 ## Getting Started
 
