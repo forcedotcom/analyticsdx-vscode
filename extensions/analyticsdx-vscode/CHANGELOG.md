@@ -1,3 +1,25 @@
+# 1.0.0
+
+## Added
+
+- Added layout file support for:
+  - Org validation layout page
+  - Guidance panel
+  - Navigation panel
+  - Checkbox tiles variables
+  - Field groupings
+- Added `format` and `scale` to `NumberType` variables.
+- Added `valueOnError` to readiness definitions.
+- Added `dataTransforms`, `conversionMetadata` and `dataModelObjects` to template-info.json (pilot in Winter '24).
+- Added `onFailure` to template-info.json.
+- Added `DataCloudRowCount` readiness definition type.
+
+## Fixed
+
+- Warn when using null value and not a `Equals` nor `NotEquals` operator in filters in readiness files.
+- Fixed wrong warning on an invalid `defaultStatus` in template-info.json.
+- Fixed wrong warning about `data` templates using `autoinstallDefinition`.
+
 # 0.10.0
 
 ## Added
