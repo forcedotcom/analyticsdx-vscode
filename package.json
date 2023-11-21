@@ -6,10 +6,10 @@
     "url": "git+https://github.com/forcedotcom/analyticsdx-vscode.git"
   },
   "engines": {
-    "node": ">=16.14.2"
+    "node": ">=18.15.0"
   },
   "dependencies": {
-    "node": "^16.14.2",
+    "node": "^18.15.0",
     "npm": "^6"
   },
   "devDependencies": {

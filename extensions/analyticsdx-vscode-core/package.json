@@ -19,7 +19,7 @@
   },
   "license": "BSD-3-Clause",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.82.0"
   },
   "categories": [
     "Other"
@@ -37,11 +37,11 @@
     "@types/chai": "4.3.4",
     "@types/glob": "7.2.0",
     "@types/mocha": "10.0.1",
-    "@types/node": "16.18.14",
+    "@types/node": "18.11.9",
     "@types/semver": "7.5.0",
     "@types/sinon": "10.0.13",
     "@types/tmp": "0.2.2",
-    "@types/vscode": "1.74.0",
+    "@types/vscode": "1.82.0",
     "@types/which": "2.0.2",
     "chai": "4.3.7",
     "cross-env": "7.0.3",

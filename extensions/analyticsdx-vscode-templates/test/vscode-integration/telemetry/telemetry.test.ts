@@ -15,17 +15,17 @@ import { EXTENSION_NAME } from '../../../src/constants';
 import { TelemetryService } from '../../../src/telemetry/telemetry';
 
 class MockExtensionContext implements vscode.ExtensionContext {
-  public secrets!: vscode.SecretStorage;
-  public extensionUri!: vscode.Uri;
-  public environmentVariableCollection!: vscode.EnvironmentVariableCollection;
-  public storageUri: vscode.Uri | undefined;
-  public globalStorageUri!: vscode.Uri;
-  public logUri!: vscode.Uri;
-  public extension!: vscode.Extension<any>;
-  public subscriptions: Array<{ dispose(): any }> = [];
-  public workspaceState!: vscode.Memento;
-  public globalState!: vscode.Memento & { setKeysForSync(keys: readonly string[]): void };
-  public extensionPath: string = 'extensionPath';
+  public secrets!: vscode.ExtensionContext['secrets'];
+  public extensionUri!: vscode.ExtensionContext['extensionUri'];
+  public environmentVariableCollection!: vscode.ExtensionContext['environmentVariableCollection'];
+  public storageUri: vscode.ExtensionContext['storageUri'];
+  public globalStorageUri!: vscode.ExtensionContext['globalStorageUri'];
+  public logUri!: vscode.ExtensionContext['logUri'];
+  public extension!: vscode.ExtensionContext['extension'];
+  public subscriptions = [];
+  public workspaceState!: vscode.ExtensionContext['workspaceState'];
+  public globalState!: vscode.ExtensionContext['globalState'];
+  public extensionPath = 'extensionPath';
   public asAbsolutePath(relativePath: string): string {
     return relativePath;
   }
