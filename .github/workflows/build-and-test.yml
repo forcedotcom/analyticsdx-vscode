@@ -16,9 +16,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Build
@@ -35,9 +35,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Build
@@ -58,9 +58,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Build
@@ -73,16 +73,11 @@ jobs:
         run: |
           sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
           DISPLAY=:10 npm run test:vsix-integration
-      - name: Package extensions
-        # upload-artifact doesn't support globs, so put them in a single folder
-        run: |
-          mkdir dist-extensions
-          find . -name '*.vsix' -type f -exec mv {} dist-extensions \;
       - name: Upload extensions
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: extensions
-          path: dist-extensions
+          path: extensions/*/*.vsix
 
   build-insiders:
     runs-on: ubuntu-latest
@@ -90,9 +85,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Build
@@ -111,9 +106,9 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Build
