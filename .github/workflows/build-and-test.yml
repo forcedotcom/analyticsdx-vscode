@@ -73,11 +73,17 @@ jobs:
         run: |
           sudo /usr/bin/Xvfb :10 -ac -screen 0 1024x768x24 -audit 4 2>&1 &
           DISPLAY=:10 npm run test:vsix-integration
+      - name: Package extensions
+        # upload-artifact maintains folder structure on globs, but I want the zip to just have the .vsix's
+        # at the root to make it easier to use
+        run: |
+          mkdir dist-extensions
+          find . -name '*.vsix' -type f -exec mv {} dist-extensions \;
       - name: Upload extensions
         uses: actions/upload-artifact@v3
         with:
           name: extensions
-          path: extensions/*/*.vsix
+          path: dist-extensions
 
   build-insiders:
     runs-on: ubuntu-latest
