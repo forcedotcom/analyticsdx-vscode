@@ -77,16 +77,7 @@
   ],
   "activationEvents": [
     "workspaceContains:sfdx-project.json",
-    "onCommand:analyticsdx.app.create.blank",
-    "onCommand:analyticsdx.app.delete",
-    "onCommand:analyticsdx.dashboard.lwc.create",
-    "onCommand:analyticsdx.studio.open",
-    "onCommand:analyticsdx.studio.open.app",
-    "onCommand:analyticsdx.telemetry.send",
-    "onCommand:analyticsdx.template.create",
-    "onCommand:analyticsdx.template.delete",
-    "onCommand:analyticsdx.template.udpate",
-    "onCommand:analyticsdx.template.updateFromApp"
+    "onCommand:analyticsdx.telemetry.send"
   ],
   "main": "./out/src",
   "contributes": {
