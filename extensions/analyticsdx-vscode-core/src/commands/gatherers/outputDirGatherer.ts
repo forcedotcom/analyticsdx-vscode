@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as glob from 'glob';
+import { globSync } from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { nls } from '../../messages';
@@ -59,7 +59,7 @@ export class OutputDirGatherer implements ParametersGatherer<OutputDirType> {
     const packages = packageDirs.length > 1 ? `{${packageDirs.join(',')}}` : packageDirs[0];
     // glob patterns have to use / (https://github.com/isaacs/node-glob#windows)
     const pattern = path.join(rootPath, packages, '**', path.sep).replace(/\\/g, '/');
-    return new glob.GlobSync(pattern).found.map(value => {
+    return globSync(pattern).map(value => {
       const relativePath = path.relative(rootPath, path.join(value, path.sep));
       return path.join(relativePath, this.typeDirRequired && !relativePath.endsWith(this.typeDir) ? this.typeDir : '');
     });

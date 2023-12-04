@@ -5,7 +5,7 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as glob from 'glob';
+import { globSync } from 'glob';
 import * as paths from 'path';
 
 // tslint:disable:no-var-requires
@@ -86,47 +86,40 @@ function run(testsRoot: any, clb: any): any {
     coverageRunner.setupCoverage();
   }
 
-  // Glob test files
-  glob('**/**.test.js', { cwd: testsRoot }, (error, files): any => {
-    if (error) {
-      console.error('An error occured: ' + error);
-      return clb(error);
-    }
-    try {
-      // Fill into Mocha
-      files.forEach(
-        (f): Mocha => {
-          return mocha.addFile(paths.join(testsRoot, f));
-        }
-      );
-      // Run the tests
-      let failureCount = 0;
+  try {
+    // Glob test files
+    const files = globSync('**/**.test.js', { cwd: testsRoot });
+    // Fill into Mocha
+    files.forEach((f): Mocha => {
+      return mocha.addFile(paths.join(testsRoot, f));
+    });
+    // Run the tests
+    let failureCount = 0;
 
-      mocha
-        .run((failures: any) => {
-          process.on('exit', () => {
-            console.log(`Existing test process, code should be ${failureCount}`);
-            process.exit(failures); // exit with non-zero status if there were failures
-          });
-        })
-        .on('fail', (test: any, err: any): void => {
-          const testName =
-            (test.parent && test.parent.fullTitle ? test.parent.fullTitle() + ' ' : '') + (test.title || test);
-          console.log(`Failure in test '${testName}': ${err}`);
-          failureCount++;
-        })
-        .on('end', (): void => {
-          console.log(`Tests ended with ${failureCount} failure(s)`);
-          clb(undefined, failureCount);
-          if (coverageRunner) {
-            coverageRunner.reportCoverage();
-          }
+    mocha
+      .run((failures: any) => {
+        process.on('exit', () => {
+          console.log(`Existing test process, code should be ${failureCount}`);
+          process.exit(failures); // exit with non-zero status if there were failures
         });
-    } catch (error) {
-      console.error('An error occured: ', error);
-      return clb(error);
-    }
-  });
+      })
+      .on('fail', (test: any, err: any): void => {
+        const testName =
+          (test.parent && test.parent.fullTitle ? test.parent.fullTitle() + ' ' : '') + (test.title || test);
+        console.log(`Failure in test '${testName}': ${err}`);
+        failureCount++;
+      })
+      .on('end', (): void => {
+        console.log(`Tests ended with ${failureCount} failure(s)`);
+        clb(undefined, failureCount);
+        if (coverageRunner) {
+          coverageRunner.reportCoverage();
+        }
+      });
+  } catch (error) {
+    console.error('An error occured: ', error);
+    return clb(error);
+  }
 }
 exports.run = run;
 
@@ -169,7 +162,7 @@ class CoverageRunner {
     });
     const sourceRoot = paths.join(self.testsRoot, self.options.relativeSourcePath);
     // Glob source files
-    const srcFiles = glob.sync('**/**.js', {
+    const srcFiles = globSync('**/**.js', {
       cwd: sourceRoot,
       ignore: self.options.ignorePatterns
     });
