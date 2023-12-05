@@ -30,7 +30,7 @@
     "glob": "10.3.10",
     "semver": "7.5.4",
     "tmp": "0.2.1",
-    "which": "3.0.0"
+    "which": "4.0.0"
   },
   "devDependencies": {
     "@salesforce/analyticsdx-test-utils-vscode": "1.0.0",
