@@ -6,7 +6,7 @@
   "description": "Provides a linting api for Salesforce/TableauCRM analytics templates",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "fuse.js": "6.6.2",
+    "fuse.js": "7.0.0",
     "jsonc-parser": "3.2.0"
   },
   "devDependencies": {

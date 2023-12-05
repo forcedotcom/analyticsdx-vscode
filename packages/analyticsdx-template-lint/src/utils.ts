@@ -6,7 +6,7 @@
  */
 
 import * as fs from 'fs';
-import Fuse from 'fuse.js';
+import Fuse, { IFuseOptions } from 'fuse.js';
 import { JSONPath, Node as JsonNode } from 'jsonc-parser';
 
 const jsonIdRegex = /^[A-Za-z][A-Za-z0-9_]*$/;
@@ -190,7 +190,7 @@ export function isValidVariableName(name: string): boolean {
 }
 
 const noFuzzyMatch = () => [];
-const fuzzOptions: Fuse.IFuseOptions<string> = {
+const fuzzOptions: IFuseOptions<string> = {
   isCaseSensitive: false,
   shouldSort: true
 };
