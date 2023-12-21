@@ -50,7 +50,8 @@
                   "label": "tile label",
                   "description": "tile description",
                   "badge": "tile badge",
-                  "iconName": "utility:food_and_drink"
+                  "iconName": "utility:food_and_drink",
+                  "visibility": "Visible"
                 }
               }
             },
@@ -86,7 +87,8 @@
                       "badge": "badge",
                       "description": "description",
                       "iconName": "utilty:settings",
-                      "label": "label"
+                      "label": "label",
+                      "visibility": "{{Variables.stringVariable == 'Yes' ? 'Visible' : 'Hidden'}}"
                     }
                   }
                 },

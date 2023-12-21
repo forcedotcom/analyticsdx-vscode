@@ -42,7 +42,8 @@
                   "badge": null,
                   "description": null,
                   "iconName": null,
-                  "label": null
+                  "label": null,
+                  "visibility": null
                 }
               }
             },
@@ -63,7 +64,8 @@
                       "badge": null,
                       "description": null,
                       "iconName": null,
-                      "label": null
+                      "label": null,
+                      "visibility": null
                     }
                   }
                 }

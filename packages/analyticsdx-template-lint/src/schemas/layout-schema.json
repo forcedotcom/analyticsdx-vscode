@@ -534,7 +534,7 @@
       ]
     },
     "visibility": {
-      "description": "Controls if this item is visible. Value must be 'Disabled' (valid only for Variable items), 'Hidden', 'Visible', or a {{...}} expression against variables that evaluates to one of those or true (Visible) or false (Hidden).",
+      "description": "Controls if this item is visible. Value must be 'Disabled' (valid only for Variable items and tiles), 'Hidden', 'Visible', or a {{...}} expression against variables that evaluates to one of those or true (Visible) or false (Hidden).",
       "oneOf": [
         {
           "type": "string",
@@ -553,12 +553,15 @@
           "type": "string",
           "default": "Visible",
           "enum": ["Disabled", "Hidden", "Visible"],
-          "enumDescriptions": ["The variable shows as disabled", "The item is hidden.", "The item is visible."]
+          "enumDescriptions": ["This item is disabled", "The item is hidden.", "The item is visible."]
         },
         {
           "type": "string",
           "$comment": "json-schema does not support case-insensitive enums, so this simulates it, using a lower-case 1st char to avoid a double schema match.",
           "pattern": "^(d[Ii][Ss][Aa][Bb][Ll][Ee][Dd]|h[Ii][Dd][Dd][Ee][Nn]|v[Ii][Ss][Ii][Bb][Ll][Ee])$"
+        },
+        {
+          "type": "null"
         }
       ]
     },
@@ -627,7 +630,8 @@
                 "type": ["string", "null"],
                 "description": "Text to display as badge in the tile. This can contain {{...}} expressions. This can contain {{...}} expressions.",
                 "defaultSnippets": [{ "label": "\"\"", "body": "${0}" }]
-              }
+              },
+              "visibility": { "$ref": "#/definitions/visibility" }
             },
             "defaultSnippets": [{ "label": "New tile", "body": { "label": "${0}" } }]
           },
