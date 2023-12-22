@@ -1282,6 +1282,17 @@ export abstract class TemplateLinter<
         if (includeUnmatched === true) {
           includeUnmatchedNodes.push(includeUnmatchedNode!);
         }
+
+        // each group needs at least one tag or includeUnmatched, otherwise it won't ever match anything from
+        // the validation call
+        if (tagNodes.length <= 0 && includeUnmatched !== true) {
+          this.addDiagnostic(
+            doc,
+            'No tags nor includeUnmatched true in group',
+            ERRORS.LAYOUT_VALIDATION_PAGE_EMPTY_GROUP,
+            group
+          );
+        }
       }
 
       // warn if there's more than 1 true includeUnmatched in the page

@@ -189,6 +189,8 @@ export const ERRORS = Object.freeze({
   LAYOUT_VALIDATION_PAGE_UNKNOWN_GROUP_TAG: 'lay-7',
   /** Multiple incldueUnmatched: true groups in a validation page. */
   LAYOUT_VALIDATION_PAGE_MULTIPLE_INCLUDE_UNMATCHED: 'lay-8',
+  /** Validate page group that has no tags and no includeUnmatched true */
+  LAYOUT_VALIDATION_PAGE_EMPTY_GROUP: 'lay-9',
 
   /** ApexCallback readiness definition but template has no apexCallback */
   READINESS_NO_APEX_CALLBACK: 'read-1',

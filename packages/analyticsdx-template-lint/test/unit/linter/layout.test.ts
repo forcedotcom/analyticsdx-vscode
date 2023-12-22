@@ -332,8 +332,7 @@ describe('TemplateLinter layout.json', () => {
             title: 'valid tags',
             type: 'Validation',
             groups: [
-              { text: '' },
-              { text: '', tags: [] },
+              { text: '', tags: [], includeUnmatched: true },
               { text: '', tags: ['foo'] },
               { text: '', tags: ['foo', 'bar'] }
             ]
@@ -392,8 +391,15 @@ describe('TemplateLinter layout.json', () => {
       dir,
       {
         templateType: 'data',
-        layoutDefinition: 'layout.json'
+        layoutDefinition: 'layout.json',
+        readinessDefinition: 'readiness.json'
       },
+      new StringDocument(path.join(dir, 'readiness.json'), {
+        templateRequirements: [
+          { expression: '{{Variables.foo}}}', tags: ['foo'] },
+          { expression: '{{Variables.bar}}}', tags: ['foo', 'bar', 'baz'] }
+        ]
+      }),
       new StringDocument(layoutPath, {
         pages: [
           {
@@ -401,9 +407,9 @@ describe('TemplateLinter layout.json', () => {
             type: 'Validation',
             groups: [
               { text: '', includeUnmatched: true },
-              { text: '', includeUnmatched: false },
-              { text: '', includeUnmatched: null },
-              { text: '' }
+              { text: '', tags: ['foo'], includeUnmatched: false },
+              { text: '', tags: ['bar'], includeUnmatched: null },
+              { text: '', tags: ['baz'] }
             ]
           },
           {
@@ -411,9 +417,9 @@ describe('TemplateLinter layout.json', () => {
             type: 'Validation',
             groups: [
               { text: '', includeUnmatched: true },
-              { text: '', includeUnmatched: false },
+              { text: '', tags: ['foo'], includeUnmatched: false },
               { text: '', includeUnmatched: true },
-              { text: '' }
+              { text: '', tags: ['bar'] }
             ]
           }
         ]
@@ -433,5 +439,43 @@ describe('TemplateLinter layout.json', () => {
     diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].groups[2].includeUnmatched');
     expect(diagnostic, 'group[2]').to.not.be.undefined;
     expect(diagnostic!.code, 'group[2] code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_MULTIPLE_INCLUDE_UNMATCHED);
+  });
+
+  it('validates empty validation group', async () => {
+    const dir = 'emptyValidationGroup';
+    const layoutPath = path.join(dir, 'layout.json');
+    linter = new TestLinter(
+      dir,
+      {
+        templateType: 'data',
+        layoutDefinition: 'layout.json',
+        readinessDefinition: 'readiness.json'
+      },
+      new StringDocument(path.join(dir, 'readiness.json'), {
+        templateRequirements: [{ expression: '{{Variables.foo}}}', tags: ['foo'] }]
+      }),
+      new StringDocument(layoutPath, {
+        pages: [
+          {
+            title: 'title',
+            type: 'Validation',
+            groups: [
+              { text: 'has includeUnmatched', includeUnmatched: true },
+              { text: 'has tags', tags: ['foo'] },
+              { text: 'invalid' }
+            ]
+          }
+        ]
+      })
+    );
+
+    await linter.lint();
+    const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
+    if (diagnostics.length !== 1) {
+      expect.fail('Expected 1 empty group error, got ' + stringifyDiagnostics(diagnostics));
+    }
+
+    expect(diagnostics[0].jsonpath, 'jsonpath').to.equal('pages[0].groups[2]');
+    expect(diagnostics[0].code, 'code').to.equal(ERRORS.LAYOUT_VALIDATION_PAGE_EMPTY_GROUP);
   });
 });
