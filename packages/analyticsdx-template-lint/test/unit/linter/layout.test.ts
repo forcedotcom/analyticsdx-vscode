@@ -70,6 +70,15 @@ describe('TemplateLinter layout.json', () => {
                 ]
               }
             }
+          },
+          {
+            title: '',
+            type: 'Configuration',
+            layout: {
+              type: 'Component',
+              module: 'a/b',
+              variables: [{ name: 'foo' }, { name: 'bar', visibility: 'Hidden' }]
+            }
           }
         ]
       })
@@ -77,8 +86,10 @@ describe('TemplateLinter layout.json', () => {
 
     await linter.lint();
     const diagnostics = getDiagnosticsForPath(linter.diagnostics, layoutPath) || [];
-    if (diagnostics.length !== 3) {
-      expect.fail('Expected 3 unknown variable errors, got' + stringifyDiagnostics(diagnostics));
+    if (diagnostics.length !== 4) {
+      expect.fail(
+        `Expected 4 unknown variable errors, got ${diagnostics.length}: ` + stringifyDiagnostics(diagnostics)
+      );
     }
 
     let diagnostic = diagnostics.find(d => d.jsonpath === 'pages[0].layout.center.items[1].name');
@@ -93,6 +104,11 @@ describe('TemplateLinter layout.json', () => {
 
     diagnostic = diagnostics.find(d => d.jsonpath === 'pages[1].layout.left.items[0].name');
     expect(diagnostic, 'bar variable error').to.not.be.undefined;
+    expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+    expect(diagnostic!.args).to.deep.equal({ name: 'bar', match: 'groupBar' });
+
+    diagnostic = diagnostics.find(d => d.jsonpath === 'pages[2].layout.variables[1].name');
+    expect(diagnostic, 'lwc bar variable error').to.not.be.undefined;
     expect(diagnostic!.code).to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
     expect(diagnostic!.args).to.deep.equal({ name: 'bar', match: 'groupBar' });
   });

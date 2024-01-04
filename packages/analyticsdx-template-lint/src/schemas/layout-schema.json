@@ -177,6 +177,19 @@
             }
           },
           {
+            "label": "New Component page",
+            "body": {
+              "title": "${1:Page title}",
+              "type": "Configuration",
+              "layout": {
+                "type": "Component",
+                "module": "${2}",
+                "properties": {},
+                "variables": []
+              }
+            }
+          },
+          {
             "label": "New Validation page",
             "body": {
               "title": "${1:Page title}",
@@ -773,24 +786,22 @@
         "type": {
           "type": "string",
           "description": "Layout type",
-          "enum": ["SingleColumn", "TwoColumn"],
+          "enum": ["SingleColumn", "TwoColumn", "Component"],
           "enumDescriptions": [
             "A page layout with a single panel of items.",
-            "A page layout with left and right panels of items."
+            "A page layout with left and right panels of items.",
+            "A page layout using a custom Lightning Web Component for display."
           ]
         },
         "header": {
           "$ref": "#/definitions/header"
         },
-        "center": {
-          "doNotSuggest": true
-        },
-        "right": {
-          "doNotSuggest": true
-        },
-        "left": {
-          "doNotSuggest": true
-        }
+        "center": { "doNotSuggest": true },
+        "right": { "doNotSuggest": true },
+        "left": { "doNotSuggest": true },
+        "module": { "doNotSuggest": true },
+        "properties": { "doNotSuggest": true },
+        "variables": { "doNotSuggest": true }
       },
       "anyOf": [
         {
@@ -827,7 +838,56 @@
         {
           "properties": {
             "type": {
-              "not": { "enum": ["SingleColumn", "TwoColumn"] }
+              "const": "Component"
+            },
+            "module": {
+              "type": "string",
+              "description": "The component module name.",
+              "pattern": "^.+/[^/]+$",
+              "patternErrorMessage": "Must be in the format of \"namespace/componentName\".",
+              "doNotSuggest": false
+            },
+            "properties": {
+              "type": ["object", "null"],
+              "description": "Properties to set on the component. Each of these should correspond to an @api decorated property on the component. The values can include {{...}} expressions.",
+              "patternProperties": {
+                "^[^\\s]+$": {}
+              },
+              "additionalProperties": false,
+              "doNotSuggest": false,
+              "defaultSnippets": [{ "label": "{}", "body": {} }]
+            },
+            "variables": {
+              "type": ["array", "null"],
+              "description": "The variables to pass into this component. Only these variables will be available to the component, in the variables, variableValues, and variableVisibilities properties. Additionally, the variablevalueschanged event should only include updates to these variables.",
+              "items": {
+                "type": ["object"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "description": "Variable name. Must match name of variable defined in variableDefinition file.",
+                    "type": "string",
+                    "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                  },
+                  "visibility": {
+                    "$ref": "#/definitions/visibility",
+                    "description": "Controls if this variable is visible. Value must be 'Disabled', 'Hidden', 'Visible', or a {{...}} expression against variables that evaluates to one of those or true (Visible) or false (Hidden). This will be sent into the variableVisibilities property on the component."
+                  }
+                },
+                "required": ["name"],
+                "defaultSnippets": [
+                  { "label": "New Variable", "body": { "name": "${1}", "visibility": "${2:Visible}" } }
+                ]
+              },
+              "doNotSuggest": false
+            }
+          },
+          "required": ["type", "module"]
+        },
+        {
+          "properties": {
+            "type": {
+              "not": { "enum": ["SingleColumn", "TwoColumn", "Component"] }
             }
           }
         }
@@ -852,6 +912,15 @@
             "right": {
               "items": []
             }
+          }
+        },
+        {
+          "label": "New Component layout",
+          "body": {
+            "type": "Component",
+            "module": "${0}",
+            "properties": {},
+            "variables": []
           }
         }
       ]

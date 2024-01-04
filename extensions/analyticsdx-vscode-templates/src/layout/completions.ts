@@ -14,7 +14,12 @@ import { JsonCompletionItemProviderDelegate, newCompletionItem } from '../util/c
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
-import { getLayoutItemVariableName, isInTilesEnumKey, matchesLayoutItem } from './utils';
+import {
+  getLayoutItemVariableName,
+  isInComponentLayoutVariableName,
+  isInTilesEnumKey,
+  matchesLayoutItem
+} from './utils';
 
 /** Get tags from the readiness file's templateRequirements. */
 export class LayoutValidationPageTagCompletionItemProviderDelegate implements JsonCompletionItemProviderDelegate {
@@ -77,7 +82,9 @@ export class LayoutVariableCompletionItemProviderDelegate extends VariableRefCom
 
   public override isSupportedLocation(location: Location, context: vscode.CompletionContext): boolean {
     // make sure that it's in a variable name value
-    return !location.isAtPropertyKey && matchesLayoutItem(location, 'name');
+    return (
+      !location.isAtPropertyKey && (isInComponentLayoutVariableName(location) || matchesLayoutItem(location, 'name'))
+    );
   }
 }
 

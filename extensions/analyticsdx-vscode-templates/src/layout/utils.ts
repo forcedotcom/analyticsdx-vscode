@@ -27,6 +27,11 @@ export function matchesLayoutItem(location: Location, attrName?: string) {
   return paths.some(path => location.matches(attrName ? path.concat(attrName) : (path as JSONPath)));
 }
 
+/** Tell if the specified json location is in a `Component` layout's variable's name field. */
+export function isInComponentLayoutVariableName(location: Location) {
+  return location.matches(['pages', '*', 'layout', 'variables', '*', 'name']);
+}
+
 export function isInTilesEnumKey(location: Location) {
   return (
     location.isAtPropertyKey &&

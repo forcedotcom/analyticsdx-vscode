@@ -77,6 +77,19 @@
       }
     },
     {
+      "title": "LWC",
+      "type": "Configuration",
+      "backgroundImage": null,
+      "condition": null,
+      "helpUrl": null,
+      "layout": {
+        "type": "Component",
+        "module": "foo/bar",
+        "properties": null,
+        "variables": null
+      }
+    },
+    {
       "title": "Validation page1",
       "type": "Validation",
       "backgroundImage": null,

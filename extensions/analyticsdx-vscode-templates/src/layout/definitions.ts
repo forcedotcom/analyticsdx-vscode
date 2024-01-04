@@ -14,7 +14,12 @@ import { matchJsonNodeAtPattern } from '../util/jsoncUtils';
 import { isValidRelpath } from '../util/utils';
 import { rangeForNode } from '../util/vscodeUtils';
 import { VariableRefDefinitionProvider } from '../variables';
-import { getLayoutItemVariableName, isInTilesEnumKey, matchesLayoutItem } from './utils';
+import {
+  getLayoutItemVariableName,
+  isInComponentLayoutVariableName,
+  isInTilesEnumKey,
+  matchesLayoutItem
+} from './utils';
 
 /** Handle CMD+Click from a variable name in layout.json to the variable in variables.json. */
 export class LayoutVariableDefinitionProvider extends VariableRefDefinitionProvider {
@@ -37,7 +42,7 @@ export class LayoutVariableDefinitionProvider extends VariableRefDefinitionProvi
       location.previousNode?.type === 'string' &&
       location.previousNode.value &&
       // and that it's in a variable name field
-      matchesLayoutItem(location, 'name')
+      (isInComponentLayoutVariableName(location) || matchesLayoutItem(location, 'name'))
     );
   }
 }

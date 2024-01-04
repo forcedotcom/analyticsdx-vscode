@@ -133,7 +133,14 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     await verifyCompletionsContain(doc, position, 'New pages');
     // and go to just after the [ in "pages"
     position = scan.end.translate({ characterDelta: 1 });
-    await verifyCompletionsContain(doc, position, 'New SingleColumn page', 'New TwoColumn page', 'New Validation page');
+    await verifyCompletionsContain(
+      doc,
+      position,
+      'New Component page',
+      'New SingleColumn page',
+      'New TwoColumn page',
+      'New Validation page'
+    );
 
     // go to just before the { in "layout"
     node = findNodeAtLocation(tree!, ['pages', 0, 'layout']);
@@ -143,7 +150,13 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       expect.fail("Expected to find '{' after '\"layout\":'");
     }
     position = scan.end.translate({ characterDelta: -1 });
-    await verifyCompletionsContain(doc, position, 'New SingleColumn layout', 'New TwoColumn layout');
+    await verifyCompletionsContain(
+      doc,
+      position,
+      'New Component layout',
+      'New SingleColumn layout',
+      'New TwoColumn layout'
+    );
 
     // go to just after the [ in "items"
     node = findNodeAtLocation(tree!, ['pages', 0, 'layout', 'center', 'items']);
@@ -373,6 +386,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       ['pages', 0, 'layout', 'center', 'items', 4, 'items', 0, 'name'],
       'DateTimeTypeGroupBoxVar'
     );
+    await testHover(doc, uri, tree!, ['pages', 1, 'layout', 'variables', 0, 'name'], 'StringTypeVar');
   });
 
   it('go to definition support for variable names', async () => {
@@ -382,38 +396,24 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     await waitForDiagnostics(uri, d => d && d.length >= 4);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
 
-    const position = findPositionByJsonPath(doc, ['pages', 0, 'layout', 'center', 'items', 0, 'name']);
-    expect(position, 'pages[0].layout.center.items[0].name').to.not.be.undefined;
-
-    const locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
-    if (locations.length !== 1) {
-      expect.fail('Expected 1 location, got:\n' + JSON.stringify(locations, undefined, 2));
-    }
-    expect(locations[0].uri.fsPath, 'location path').to.equal(
-      vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
-    );
-
-    // Go to definition for variable defined in groupbox
-    const groupBoxVarPosition = findPositionByJsonPath(doc, [
-      'pages',
-      0,
-      'layout',
-      'center',
-      'items',
-      4,
-      'items',
-      0,
-      'name'
-    ]);
-    expect(groupBoxVarPosition, 'pages[0].layout.center.items[4].items[0].name').to.not.be.undefined;
-
-    const groupBoxVarlocations = await getDefinitionLocations(uri, groupBoxVarPosition!.translate(undefined, 1));
-    if (groupBoxVarlocations.length !== 1) {
-      expect.fail('Expected 1 location, got:\n' + JSON.stringify(groupBoxVarlocations, undefined, 2));
-    }
-    expect(groupBoxVarlocations[0].uri.fsPath, 'location path').to.equal(
-      vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
-    );
+    const verifyDefinition = async (...jsonpath: JSONPath) => {
+      const position = findPositionByJsonPath(doc, jsonpath);
+      const jsonpathStr = jsonPathToString(jsonpath);
+      expect(position, jsonpathStr).to.not.be.undefined;
+      let locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
+      if (locations.length !== 1) {
+        expect.fail(`${jsonpathStr}: expected 1 location, got:\n` + JSON.stringify(locations, undefined, 2));
+      }
+      expect(locations[0].uri.fsPath, `${jsonpathStr} location path`).to.equal(
+        vscode.Uri.joinPath(uriDirname(uri), 'variables.json').fsPath
+      );
+    };
+    // check for a top-level variable item
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 0, 'name');
+    // check for a variable defined in groupbox
+    await verifyDefinition('pages', 0, 'layout', 'center', 'items', 4, 'items', 0, 'name');
+    // check for a variable in an lwc Component page
+    await verifyDefinition('pages', 1, 'layout', 'variables', 0, 'name');
   });
 
   it('go to definition support for variable tiles keys', async () => {
@@ -455,126 +455,69 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
     await waitForDiagnostics(uri, d => d && d.length >= 4);
     await waitForTemplateEditorManagerHas(await getTemplateEditorManager(), uriDirname(uri), true);
 
-    const position = findPositionByJsonPath(doc, ['pages', 0, 'layout', 'center', 'items', 0, 'name']);
-    expect(position, 'pages[0].layout.center.items[0].name').to.not.be.undefined;
-    const completions = (
-      await verifyCompletionsContain(
-        doc,
-        position!,
-        '"DatasetAnyFieldTypeVar"',
-        '"DateTimeTypeGroupBoxVar"',
-        '"DateTimeTypeVar"',
-        '"ObjectTypeGroupBoxVar"',
-        '"ObjectTypeVar"',
-        '"StringArrayVar"',
-        '"StringTypeVar"'
-      )
-    ).sort(compareCompletionItems);
-    if (completions.length !== 7) {
-      expect.fail('Expected 7 completions, got: ' + completions.map(i => i.label).join(', '));
-    }
-    // check some more stuff on the completion items
-    [
-      {
-        detail: '(DatasetAnyFieldType) A dataset any field variable',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(DateTimeType) A datetime variable for groupbox',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(DateTimeType) A datetime variable',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(ObjectType) An object variable for groupbox',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(ObjectType) An object variable',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(StringType[])',
-        docs: undefined
-      },
-      {
-        detail: '(StringType) A string variable',
-        docs: 'String variable description'
+    const verifyCompletions = async (...jsonpath: JSONPath) => {
+      const position = findPositionByJsonPath(doc, jsonpath);
+      const jsonpathStr = jsonPathToString(jsonpath);
+      expect(position, jsonpathStr).to.not.be.undefined;
+      const completions = (
+        await verifyCompletionsContain(
+          doc,
+          position!,
+          '"DatasetAnyFieldTypeVar"',
+          '"DateTimeTypeGroupBoxVar"',
+          '"DateTimeTypeVar"',
+          '"ObjectTypeGroupBoxVar"',
+          '"ObjectTypeVar"',
+          '"StringArrayVar"',
+          '"StringTypeVar"'
+        )
+      ).sort(compareCompletionItems);
+      if (completions.length !== 7) {
+        expect.fail(`${jsonpathStr}: exepcted 7 completions, got: ` + completions.map(i => i.label).join(', '));
       }
-    ].forEach(({ detail, docs }, i) => {
-      const item = completions[i];
-      expect(item.kind, `${item.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
-      expect(item.detail, `${item.label} details`).to.equal(detail);
-      expect(item.documentation, `${item.label} documentation`).to.equal(docs);
-    });
-
-    // Check for variable code completitons inside groupBox
-    const groupBoxPosition = findPositionByJsonPath(doc, [
-      'pages',
-      0,
-      'layout',
-      'center',
-      'items',
-      4,
-      'items',
-      0,
-      'name'
-    ]);
-    expect(groupBoxPosition, 'pages[0].layout.center.items[4].items[0].name').to.not.be.undefined;
-    const groupBoxCompletions = (
-      await verifyCompletionsContain(
-        doc,
-        groupBoxPosition!,
-        '"DatasetAnyFieldTypeVar"',
-        '"DateTimeTypeGroupBoxVar"',
-        '"DateTimeTypeVar"',
-        '"ObjectTypeGroupBoxVar"',
-        '"ObjectTypeVar"',
-        '"StringArrayVar"',
-        '"StringTypeVar"'
-      )
-    ).sort(compareCompletionItems);
-    if (groupBoxCompletions.length !== 7) {
-      expect.fail('Expected 7 completions, got: ' + groupBoxCompletions.map(i => i.label).join(', '));
-    }
-    // check some more stuff on the completion items
-    [
-      {
-        detail: '(DatasetAnyFieldType) A dataset any field variable',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(DateTimeType) A datetime variable for groupbox',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(DateTimeType) A datetime variable',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(ObjectType) An object variable for groupbox',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(ObjectType) An object variable',
-        docs: "This can't be put in a non-vfpage page"
-      },
-      {
-        detail: '(StringType[])',
-        docs: undefined
-      },
-      {
-        detail: '(StringType) A string variable',
-        docs: 'String variable description'
-      }
-    ].forEach(({ detail, docs }, i) => {
-      const item = groupBoxCompletions[i];
-      expect(item.kind, `${item.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
-      expect(item.detail, `${item.label} details`).to.equal(detail);
-      expect(item.documentation, `${item.label} documentation`).to.equal(docs);
-    });
+      // check some more stuff on the completion items
+      [
+        {
+          detail: '(DatasetAnyFieldType) A dataset any field variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(DateTimeType) A datetime variable for groupbox',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(DateTimeType) A datetime variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(ObjectType) An object variable for groupbox',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(ObjectType) An object variable',
+          docs: "This can't be put in a non-vfpage page"
+        },
+        {
+          detail: '(StringType[])',
+          docs: undefined
+        },
+        {
+          detail: '(StringType) A string variable',
+          docs: 'String variable description'
+        }
+      ].forEach(({ detail, docs }, i) => {
+        const item = completions[i];
+        expect(item.kind, `${jsonpathStr}: ${item.label} kind`).to.equal(vscode.CompletionItemKind.Variable);
+        expect(item.detail, `${jsonpathStr}: ${item.label} details`).to.equal(detail);
+        expect(item.documentation, `${jsonpathStr}: ${item.label} documentation`).to.equal(docs);
+      });
+    };
+    // top-level variable item
+    await verifyCompletions('pages', 0, 'layout', 'center', 'items', 0, 'name');
+    // inside groupBox
+    await verifyCompletions('pages', 0, 'layout', 'center', 'items', 4, 'items', 0, 'name');
+    // in lwc page variable
+    await verifyCompletions('pages', 1, 'layout', 'variables', 0, 'name');
   });
 
   it('quick fixes on bad variable names', async () => {

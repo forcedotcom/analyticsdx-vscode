@@ -241,6 +241,68 @@
       }
     },
     {
+      "title": "LWC With everything",
+      "type": "Configuration",
+      "backgroundImage": {
+        "name": "name",
+        "namespace": "ns"
+      },
+      "condition": "{{true}}",
+      "helpUrl": "https://www.salesforce.com",
+      "navigation": {
+        "label": "label"
+      },
+      "guidancePanel": {
+        "title": "title",
+        "backgroundImage": {
+          "name": "name"
+        },
+        "items": [
+          {
+            "type": "Text",
+            "text": "text"
+          }
+        ]
+      },
+      "layout": {
+        "type": "Component",
+        "module": "a/b",
+        "properties": {
+          "stringProp": "Some string {{Variables.foo}}",
+          "numberProp": 42.0,
+          "booleanProp": true,
+          "nullProp": null,
+          "objectProp": {
+            "a": "b",
+            "c": -1,
+            "d": [1, false, {}]
+          },
+          "arrayProp": [1, true, [], {}]
+        },
+        "variables": [
+          {
+            "name": "someVar",
+            "visibility": "Visible"
+          },
+          {
+            "name": "someOtherVar",
+            "visibility": "{{Variables.booleanVariable ? 'Visible' : 'Disabled'}}"
+          },
+          {
+            "name": "anotherVar"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Minimal LWC",
+      "type": "Configuration",
+      "layout": {
+        "type": "Component",
+        "module": "e/f"
+      }
+    },
+    {
       "title": "Validation Page",
       "type": "Validation",
       "backgroundImage": {
