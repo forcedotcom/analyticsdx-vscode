@@ -71,6 +71,15 @@ describe('TemplateLinterManager lints layout.json', () => {
               items: [{ type: 'Variable', name: 'var2' }]
             }
           }
+        },
+        {
+          title: 'LWC Page',
+          type: 'Configuration',
+          layout: {
+            type: 'Component',
+            module: 'a/b',
+            variables: [{ name: 'var1' }, { name: 'var2' }]
+          }
         }
       ]
     };
@@ -97,14 +106,15 @@ describe('TemplateLinterManager lints layout.json', () => {
     let diagnostics = (
       await waitForDiagnostics(layoutEditor.document.uri, undefined, 'Initial variable warnings')
     ).sort(sortDiagnostics);
-    if (diagnostics.length !== 2) {
-      expect.fail('Expected 2 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
+    if (diagnostics.length !== 3) {
+      expect.fail('Expected 3 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
     }
     expect(diagnostics[0], 'diagnostics[0]').to.be.not.undefined;
     expect(diagnostics[0].message, 'diagnostics[0].message').to.equal(
       "Cannot find variable 'badvar', did you mean 'var1'?"
     );
     expect(diagnostics[0].code, 'diagnostics[0].message').to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[0].layout.left.items[0].name');
     expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name').to.equal('badvar');
     expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match').to.equal('var1');
 
@@ -113,8 +123,18 @@ describe('TemplateLinterManager lints layout.json', () => {
       "Cannot find variable 'var2', did you mean 'var1'?"
     );
     expect(diagnostics[1].code, 'diagnostics[1].message').to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+    expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal('pages[1].layout.center.items[0].name');
     expect(argsFrom(diagnostics[1])?.name, 'diagnostics[1].args.name').to.equal('var2');
     expect(argsFrom(diagnostics[1])?.match, 'diagnostics[1].args.name').to.equal('var1');
+
+    expect(diagnostics[2], 'diagnostics[2]').to.be.not.undefined;
+    expect(diagnostics[2].message, 'diagnostics[2].message').to.equal(
+      "Cannot find variable 'var2', did you mean 'var1'?"
+    );
+    expect(diagnostics[2].code, 'diagnostics[2].message').to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+    expect(jsonpathFrom(diagnostics[2]), 'diagnostics[2].jsonpath').to.equal('pages[2].layout.variables[1].name');
+    expect(argsFrom(diagnostics[2])?.name, 'diagnostics[2].args.name').to.equal('var2');
+    expect(argsFrom(diagnostics[2])?.match, 'diagnostics[2].args.name').to.equal('var1');
 
     // now, change the 'badvar' ref to 'var1' in layout.json
     layoutJson.pages[0].layout.left!.items[0].name = 'var1';
@@ -123,21 +143,28 @@ describe('TemplateLinterManager lints layout.json', () => {
     diagnostics = (
       await waitForDiagnostics(
         layoutEditor.document.uri,
-        d => d && d.length === 1,
+        d => d && d.length === 2,
         'Variable warnings after editing layout.json'
       )
     ).sort(sortDiagnostics);
-    // we should still have the warning about var2
-    if (diagnostics.length !== 1) {
-      expect.fail('Expected 1 diagnostics, got:\n' + JSON.stringify(diagnostics, undefined, 2));
-    }
+    // we should still have the warnings about var2
     expect(diagnostics[0], 'diagnostics[0]').to.be.not.undefined;
     expect(diagnostics[0].message, 'diagnostics[0].message').to.equal(
       "Cannot find variable 'var2', did you mean 'var1'?"
     );
     expect(diagnostics[0].code, 'diagnostics[0].message').to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+    expect(jsonpathFrom(diagnostics[0]), 'diagnostics[0].jsonpath').to.equal('pages[1].layout.center.items[0].name');
     expect(argsFrom(diagnostics[0])?.name, 'diagnostics[0].args.name').to.equal('var2');
     expect(argsFrom(diagnostics[0])?.match, 'diagnostics[0].args.match').to.equal('var1');
+
+    expect(diagnostics[1], 'diagnostics[1]').to.be.not.undefined;
+    expect(diagnostics[1].message, 'diagnostics[1].message').to.equal(
+      "Cannot find variable 'var2', did you mean 'var1'?"
+    );
+    expect(diagnostics[1].code, 'diagnostics[1].message').to.equal(ERRORS.LAYOUT_PAGE_UNKNOWN_VARIABLE);
+    expect(jsonpathFrom(diagnostics[1]), 'diagnostics[1].jsonpath').to.equal('pages[2].layout.variables[1].name');
+    expect(argsFrom(diagnostics[1])?.name, 'diagnostics[1].args.name').to.equal('var2');
+    expect(argsFrom(diagnostics[1])?.match, 'diagnostics[1].args.name').to.equal('var1');
 
     // now, add the 'var2' variable to variables.json
     variablesJson.var2 = {
