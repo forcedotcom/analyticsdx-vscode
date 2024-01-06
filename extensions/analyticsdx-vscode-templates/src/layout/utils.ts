@@ -7,7 +7,7 @@
 
 import { JSONPath, Location, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { matchJsonNodeAtPattern } from '../util/jsoncUtils';
+import { locationMatches, matchJsonNodeAtPattern } from '../util/jsoncUtils';
 
 const paths: Array<Readonly<JSONPath>> = [
   ['pages', '*', 'layout', 'center', 'items', '*'],
@@ -21,21 +21,23 @@ const paths: Array<Readonly<JSONPath>> = [
 /** Tell if the specified json location is in a layout item
  * @param location the location
  * @param attrName the name of an item attribute to also check.
+ * @param exact true (default) to exactly match the item (or item attribute) path, false to just be at or under.
  */
-export function matchesLayoutItem(location: Location, attrName?: string) {
+export function matchesLayoutItem(location: Location, attrName?: string, exact = true) {
   // TODO: make this more specific to the layout type (e.g. only 'center' if SingleColumn)
-  return paths.some(path => location.matches(attrName ? path.concat(attrName) : (path as JSONPath)));
+  return paths.some(path => locationMatches(location, attrName ? path.concat(attrName) : (path as JSONPath), exact));
 }
 
 /** Tell if the specified json location is in a `Component` layout's variable's name field. */
 export function isInComponentLayoutVariableName(location: Location) {
-  return location.matches(['pages', '*', 'layout', 'variables', '*', 'name']);
+  return locationMatches(location, ['pages', '*', 'layout', 'variables', '*', 'name']);
 }
 
 export function isInTilesEnumKey(location: Location) {
   return (
     location.isAtPropertyKey &&
-    matchesLayoutItem(location, 'tiles') &&
+    // do non-exact match on the location to handle the jsonpath when in a key
+    matchesLayoutItem(location, 'tiles', false) &&
     // when it's directly in the keys of 'tiles', then the path will be like [..., 'tiles', ''] or
     // [..., 'tiles', 'enumValue'], so only trigger then (to avoid triggering when down the tree in the
     // tile def objects). also, check the path length to avoid triggering when a tile enumValue is

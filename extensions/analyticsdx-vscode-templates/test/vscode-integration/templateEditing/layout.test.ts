@@ -400,7 +400,7 @@ describe('TemplateEditorManager configures layoutDefinition', () => {
       const position = findPositionByJsonPath(doc, jsonpath);
       const jsonpathStr = jsonPathToString(jsonpath);
       expect(position, jsonpathStr).to.not.be.undefined;
-      let locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
+      const locations = await getDefinitionLocations(uri, position!.translate(undefined, 1));
       if (locations.length !== 1) {
         expect.fail(`${jsonpathStr}: expected 1 location, got:\n` + JSON.stringify(locations, undefined, 2));
       }

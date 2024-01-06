@@ -8,6 +8,7 @@
 import { Location, Node as JsonNode } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
+import { locationMatches } from '../util/jsoncUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
 
@@ -27,10 +28,9 @@ export class ReadinessVariableCompletionItemProviderDelegate extends VariableRef
   public isSupportedLocation(location: Location) {
     return (
       location.isAtPropertyKey &&
-      location.matches(['values', '*']) &&
       // this makes sure the completion only show in prop names directly under "values" (and not in prop names in object
       // values under "values")
-      location.path.length === 2
+      locationMatches(location, ['values', '*'])
     );
   }
 

@@ -8,6 +8,7 @@
 import { matchJsonNodesAtPattern } from '@salesforce/analyticsdx-template-lint';
 import { Location, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
+import { locationMatches } from '../util/jsoncUtils';
 import { rangeForNode } from '../util/vscodeUtils';
 import { JsonAttributeDefinitionProvider } from './../util/definitions';
 
@@ -28,7 +29,7 @@ export class DMODatasetDefinitionProvider extends JsonAttributeDefinitionProvide
       !location.isAtPropertyKey &&
       location.previousNode?.type === 'string' &&
       location.previousNode.value &&
-      location.matches(['dataModelObjects', '*', 'dataset'])
+      locationMatches(location, ['dataModelObjects', '*', 'dataset'])
     );
   }
 }

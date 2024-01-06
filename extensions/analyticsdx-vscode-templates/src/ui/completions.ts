@@ -8,6 +8,7 @@
 import { Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
+import { locationMatches } from '../util/jsoncUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
 
@@ -29,7 +30,7 @@ export class UiVariableCompletionItemProviderDelegate extends VariableRefComplet
   public isSupportedLocation(location: Location, context: vscode.CompletionContext): boolean {
     return (
       // make that it's in a variable name value
-      !location.isAtPropertyKey && location.matches(['pages', '*', 'variables', '*', 'name'])
+      !location.isAtPropertyKey && locationMatches(location, ['pages', '*', 'variables', '*', 'name'])
     );
   }
 }

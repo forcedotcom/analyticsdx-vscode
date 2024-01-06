@@ -8,6 +8,7 @@
 import { Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
+import { locationMatches } from '../util/jsoncUtils';
 import { VariableRefHoverProvider } from '../variables';
 
 /** Get hover text for a variable from the name in a page in a ui.json file. */
@@ -24,7 +25,7 @@ export class UiVariableHoverProvider extends VariableRefHoverProvider {
     return (
       !location.isAtPropertyKey &&
       location.previousNode?.type === 'string' &&
-      location.matches(['pages', '*', 'variables', '*', 'name'])
+      locationMatches(location, ['pages', '*', 'variables', '*', 'name'])
     );
   }
 }

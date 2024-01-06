@@ -10,11 +10,12 @@ import { Location, parseTree } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { codeCompletionUsedTelemetryCommand } from '../telemetry';
 import { JsonCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
+import { locationMatches } from '../util/jsoncUtils';
 
 /** Provide completion items for a dataModelObject dataset field, from the datasetFiles' names. */
 export class DMODatasetCompletionItemProviderDelegate implements JsonCompletionItemProviderDelegate {
   public isSupportedLocation(location: Location) {
-    return !location.isAtPropertyKey && location.matches(['dataModelObjects', '*', 'dataset']);
+    return !location.isAtPropertyKey && locationMatches(location, ['dataModelObjects', '*', 'dataset']);
   }
 
   public getItems(range: vscode.Range | undefined, location: Location, document: vscode.TextDocument) {

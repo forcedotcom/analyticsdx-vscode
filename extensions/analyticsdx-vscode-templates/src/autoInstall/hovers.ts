@@ -8,6 +8,7 @@
 import { Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
+import { locationMatches } from '../util/jsoncUtils';
 import { VariableRefHoverProvider } from '../variables';
 
 /** Get hover text for a variable name in the appConfiguration.values of an auto-install.json. */
@@ -24,7 +25,7 @@ export class AutoInstallVariableHoverProvider extends VariableRefHoverProvider {
     return (
       location.isAtPropertyKey &&
       location.previousNode?.type === 'property' &&
-      location.matches(['configuration', 'appConfiguration', 'values', '*'])
+      locationMatches(location, ['configuration', 'appConfiguration', 'values', '*'])
     );
   }
 }

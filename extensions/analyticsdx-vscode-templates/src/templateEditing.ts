@@ -75,7 +75,7 @@ import {
 import { JsonCompletionItemProvider, newRelativeFilepathDelegate } from './util/completions';
 import { JsonAttributeRelFilePathDefinitionProvider } from './util/definitions';
 import { Disposable } from './util/disposable';
-import { matchJsonNodesAtPattern } from './util/jsoncUtils';
+import { locationMatches, matchJsonNodesAtPattern } from './util/jsoncUtils';
 import { Logger, PrefixingOutputChannel } from './util/logger';
 import { findTemplateInfoFileFor } from './util/templateUtils';
 import { isValidRelpath } from './util/utils';
@@ -276,22 +276,26 @@ export class TemplateDirEditing extends Disposable {
     const fileCompleter = new JsonCompletionItemProvider(
       // locations that support *.json fies:
       newRelativeFilepathDelegate({
-        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.jsonRelFilePathLocationPatterns.some(l.matches),
+        isSupportedLocation: l =>
+          !l.isAtPropertyKey && TEMPLATE_INFO.jsonRelFilePathLocationPatterns.some(p => locationMatches(l, p)),
         filter: templateJsonFileFilter
       }),
       // attributes that should have html paths
       newRelativeFilepathDelegate({
-        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.htmlRelFilePathLocationPatterns.some(l.matches),
+        isSupportedLocation: l =>
+          !l.isAtPropertyKey && TEMPLATE_INFO.htmlRelFilePathLocationPatterns.some(p => locationMatches(l, p)),
         filter: htmlFileFilter
       }),
       // attribute that should point to images
       newRelativeFilepathDelegate({
-        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.imageRelFilePathLocationPatterns.some(l.matches),
+        isSupportedLocation: l =>
+          !l.isAtPropertyKey && TEMPLATE_INFO.imageRelFilePathLocationPatterns.some(p => locationMatches(l, p)),
         filter: imageFileFilter
       }),
       // the file in externalFiles should be a .csv
       newRelativeFilepathDelegate({
-        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(l.matches),
+        isSupportedLocation: l =>
+          !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(p => locationMatches(l, p)),
         filter: csvFileFilter
       }),
       // dataModeObjects' dataset field

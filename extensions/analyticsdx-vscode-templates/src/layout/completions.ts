@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { codeCompletionUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
+import { locationMatches } from '../util/jsoncUtils';
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
@@ -39,7 +40,7 @@ export class LayoutValidationPageTagCompletionItemProviderDelegate implements Js
     // get the parent node hierarchy in the Location passed in, and it's not that big a deal if the user gets a
     // code-completion for this path in the layout.json file on a Configuration page since they'll already be getting
     // errors about the wrong type
-    return !location.isAtPropertyKey && location.matches(['pages', '*', 'groups', '*', 'tags', '*']);
+    return !location.isAtPropertyKey && locationMatches(location, ['pages', '*', 'groups', '*', 'tags', '*']);
   }
 
   public async getItems(range: vscode.Range | undefined, location: Location, document: vscode.TextDocument) {
