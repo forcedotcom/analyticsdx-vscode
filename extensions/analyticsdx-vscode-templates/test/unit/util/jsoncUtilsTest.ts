@@ -6,10 +6,12 @@
  */
 
 import { expect } from 'chai';
-import { JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser';
+import { getLocation, JSONPath, Node as JsonNode, ParseError, parseTree } from 'jsonc-parser';
 import {
   findPropertyNodeFor,
   jsonStringifyWithOptions,
+  locationMatches,
+  matchJsonNodeAtPattern,
   matchJsonNodesAtPattern,
   pathPartsAreEquals
 } from '../../../src/util/jsoncUtils';
@@ -29,6 +31,39 @@ describe('jsoncUtils', () => {
     }
     return jsonNode;
   }
+
+  describe('locationMatches()', () => {
+    const obj = {
+      layout: {
+        variables: [{ name: 'foo' }, { name: { name: 'bar' } }]
+      }
+    };
+    const json = JSON.stringify(obj, undefined, 2);
+    const tree = parseOrThrow(obj);
+
+    it('finds non-exact match', () => {
+      const node = matchJsonNodeAtPattern(tree, ['layout', 'variables', 1, 'name', 'name']);
+      expect(node, 'json node').to.be.not.undefined;
+
+      const location = getLocation(json, node!.offset);
+      // both the pattern to the node and to the parent node should match in the non-exact use case
+      expect(locationMatches(location, ['layout', 'variables', '*', 'name', 'name'], false), 'exact path').to.equal(
+        true
+      );
+      expect(locationMatches(location, ['layout', 'variables', '*', 'name'], false), 'parent path').to.equal(true);
+    });
+
+    it('finds exact match', () => {
+      const node = matchJsonNodeAtPattern(tree, ['layout', 'variables', 1, 'name', 'name']);
+      expect(node, 'json node').to.be.not.undefined;
+
+      const location = getLocation(json, node!.offset);
+      // both the pattern to the node and to the parent node should match in the non-exact use case
+      expect(locationMatches(location, ['layout', 'variables', '*', 'name', 'name']), 'exact path').to.equal(true);
+      // but this should not match in the exact use case
+      expect(locationMatches(location, ['layout', 'variables', '*', 'name']), 'parent path').to.equal(false);
+    });
+  });
 
   describe('findPropertyNodeFor()', () => {
     const object = parseOrThrow({

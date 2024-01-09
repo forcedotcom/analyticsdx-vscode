@@ -5,13 +5,26 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { FormattingOptions, getNodePath, JSONPath, Node as JsonNode } from 'jsonc-parser';
+import { FormattingOptions, getNodePath, JSONPath, Location, Node as JsonNode } from 'jsonc-parser';
 
 export {
   jsonPathToString,
   matchJsonNodeAtPattern,
   matchJsonNodesAtPattern
 } from '@salesforce/analyticsdx-template-lint';
+
+/**
+ * Matches the location's path against a pattern consisting of strings (for properties) and numbers (for array indices).
+ * '*' will match a single segment of any property name or index.
+ * '**' will match a sequence of segments of any property name or index, or no segment.
+ * @param location the location.
+ * @param jsonpath the path pattern to match against.
+ * @param exact true (default) to exactly match the jsonpath length as well (doesn't work with '**'), or false
+ *              to check that the location starts with the jsonpath.
+ */
+export function locationMatches(location: Location, jsonpath: JSONPath, exact = true) {
+  return location.matches(jsonpath) && (!exact || location.path.length === jsonpath.length);
+}
 
 /** Find the ancestor 'property' json node at or above the specified node for the specified property.
  * This does not support wildcard paths.

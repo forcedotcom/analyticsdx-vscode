@@ -8,6 +8,7 @@
 import { getLocation, JSONPath, Location } from 'jsonc-parser';
 import { posix as path } from 'path';
 import * as vscode from 'vscode';
+import { locationMatches } from './jsoncUtils';
 import { isValidRelpath } from './utils';
 
 /** Base class for providing definition support on fields in a json file. */
@@ -76,7 +77,7 @@ export class JsonAttributeRelFilePathDefinitionProvider extends JsonAttributeDef
       location.previousNode &&
       location.previousNode.type === 'string' &&
       location.previousNode.value &&
-      this.patterns.some(location.matches)
+      this.patterns.some(p => locationMatches(location, p))
     );
   }
 }

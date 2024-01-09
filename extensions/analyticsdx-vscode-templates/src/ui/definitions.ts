@@ -8,6 +8,7 @@
 import { Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
+import { locationMatches } from '../util/jsoncUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefDefinitionProvider } from '../variables';
 
@@ -32,7 +33,7 @@ export class UiVariableDefinitionProvider extends VariableRefDefinitionProvider 
       location.previousNode?.type === 'string' &&
       location.previousNode.value &&
       // and that it's in a variable name field
-      location.matches(['pages', '*', 'variables', '*', 'name'])
+      locationMatches(location, ['pages', '*', 'variables', '*', 'name'])
     );
   }
 }

@@ -8,6 +8,7 @@
 import { Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
+import { locationMatches } from '../util/jsoncUtils';
 import { VariableRefHoverProvider } from '../variables';
 
 /** Get hover text for a variable name in the values of a readiness.json. */
@@ -21,6 +22,10 @@ export class ReadinessVariableHoverProvider extends VariableRefHoverProvider {
   }
 
   protected isSupportedLocation(location: Location) {
-    return location.isAtPropertyKey && location.previousNode?.type === 'property' && location.matches(['values', '*']);
+    return (
+      location.isAtPropertyKey &&
+      location.previousNode?.type === 'property' &&
+      locationMatches(location, ['values', '*'])
+    );
   }
 }

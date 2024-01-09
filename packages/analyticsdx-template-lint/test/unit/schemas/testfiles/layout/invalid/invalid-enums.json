@@ -36,8 +36,18 @@
             },
             {
               "type": "Variable",
-              "name": "tiles",
+              "name": "foo",
               "variant": "badValue"
+            },
+            {
+              "type": "Variable",
+              "name": "tiles",
+              "variant": "CheckboxTiles",
+              "tiles": {
+                "foo": {
+                  "visibility": "badvalue"
+                }
+              }
             }
           ]
         }

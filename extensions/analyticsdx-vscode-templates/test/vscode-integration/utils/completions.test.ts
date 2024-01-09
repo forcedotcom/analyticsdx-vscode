@@ -14,6 +14,7 @@ import {
   newCompletionItem,
   newRelativeFilepathDelegate
 } from '../../../src/util/completions';
+import { locationMatches } from '../../../src/util/jsoncUtils';
 import { closeAllEditors, findPositionByJsonPath, openTemplateInfo } from '../vscodeTestUtils';
 
 const INVOKE_COMPLETION_CONTEXT: vscode.CompletionContext = {
@@ -44,7 +45,8 @@ describe('JsonCompletionItemProvider', () => {
     const provider = new JsonCompletionItemProvider(
       // locations that support *.csv fies:
       newRelativeFilepathDelegate({
-        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(l.matches),
+        isSupportedLocation: l =>
+          !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(p => locationMatches(l, p)),
         filter: csvFileFilter
       })
     );
@@ -97,7 +99,8 @@ describe('JsonCompletionItemProvider', () => {
     // make a provider with a filter that will match no files
     const provider = new JsonCompletionItemProvider(
       newRelativeFilepathDelegate({
-        isSupportedLocation: l => !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(l.matches),
+        isSupportedLocation: l =>
+          !l.isAtPropertyKey && TEMPLATE_INFO.csvRelFilePathLocationPatterns.some(p => locationMatches(l, p)),
         filter: () => false
       })
     );

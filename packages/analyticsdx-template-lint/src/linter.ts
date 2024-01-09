@@ -60,33 +60,30 @@ function lengthJsonArrayAttributeValue(tree: JsonNode, ...pattern: JSONPath): [n
   return [nodes ? nodes.length : -1, node];
 }
 
-/** Find all of the panel items contained in the specified layoutDefinition file's pages' layouts.
+/** Find all the names for all the variables referenced in the pages' layouts and the
+ * JsonNodes for the 'name' attribute.
  */
-function findAllItemsForLayoutDefinition(layoutJson: JsonNode): JsonNode[] {
+function findAllVariableNamesForLayoutDefinition(layoutJson: JsonNode): Array<{ name: string; nameNode: JsonNode }> {
   return matchJsonNodesAtPattern(layoutJson, ['pages', '*', 'layout']).flatMap(layout => {
     const [type] = findJsonPrimitiveAttributeValue(layout, 'type');
     if (type === 'SingleColumn') {
-      return matchJsonNodesAtPattern(layout, ['center', 'items', '*']);
+      return matchJsonNodesAtPattern(layout, ['center', 'items', '*']).flatMap(findAllVariableItemsForLayoutItem);
     } else if (type === 'TwoColumn') {
-      return matchJsonNodesAtPattern(layout, ['left', 'items', '*']).concat(
-        matchJsonNodesAtPattern(layout, ['right', 'items', '*'])
-      );
+      return matchJsonNodesAtPattern(layout, ['left', 'items', '*'])
+        .concat(matchJsonNodesAtPattern(layout, ['right', 'items', '*']))
+        .flatMap(findAllVariableItemsForLayoutItem);
+    } else if (type === 'Component') {
+      return matchJsonNodesAtPattern(
+        layout,
+        ['variables', '*', 'name'],
+        nameNode => typeof nameNode.value === 'string' && nameNode.value
+      ).map(nameNode => ({ name: nameNode.value, nameNode }));
     }
     return [];
   });
 }
 
-/** Find all the names for all the variable items in the pages' layouts and the
- * JsonNodes for the 'name' attribute.
- */
-function findAllVariableNamesForLayoutDefinition(layoutJson: JsonNode): Array<{ name: string; nameNode: JsonNode }> {
-  return findAllItemsForLayoutDefinition(layoutJson).reduce((items, item) => {
-    const variableItems = findAllVariableItemsForLayoutItem(item);
-    items.push(...variableItems);
-    return items;
-  }, [] as Array<{ name: string; nameNode: JsonNode }>);
-}
-
+/** Find the `name` node and value for all the Variable layout items at or under the passed in layout item. */
 function findAllVariableItemsForLayoutItem(item: JsonNode): Array<{ name: string; nameNode: JsonNode }> {
   const type = findJsonPrimitiveAttributeValue(item, 'type')[0];
   if (type === 'Variable') {
@@ -95,8 +92,8 @@ function findAllVariableItemsForLayoutItem(item: JsonNode): Array<{ name: string
       return [{ name, nameNode }];
     }
   } else if (type === 'GroupBox') {
-    const [nodes, node] = findJsonArrayAttributeValue(item, 'items');
-    const childrenVariableItems = nodes?.flatMap(n => findAllVariableItemsForLayoutItem(n));
+    const [nodes] = findJsonArrayAttributeValue(item, 'items');
+    const childrenVariableItems = nodes?.flatMap(findAllVariableItemsForLayoutItem);
     return childrenVariableItems ? childrenVariableItems : [];
   }
   return [];
@@ -1281,6 +1278,17 @@ export abstract class TemplateLinter<
         const [includeUnmatched, includeUnmatchedNode] = findJsonPrimitiveAttributeValue(group, 'includeUnmatched');
         if (includeUnmatched === true) {
           includeUnmatchedNodes.push(includeUnmatchedNode!);
+        }
+
+        // each group needs at least one tag or includeUnmatched, otherwise it won't ever match anything from
+        // the validation call
+        if (tagNodes.length <= 0 && includeUnmatched !== true) {
+          this.addDiagnostic(
+            doc,
+            'No tags nor includeUnmatched true in group',
+            ERRORS.LAYOUT_VALIDATION_PAGE_EMPTY_GROUP,
+            group
+          );
         }
       }
 

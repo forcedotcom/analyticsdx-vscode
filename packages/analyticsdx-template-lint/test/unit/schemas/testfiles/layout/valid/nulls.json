@@ -42,7 +42,8 @@
                   "badge": null,
                   "description": null,
                   "iconName": null,
-                  "label": null
+                  "label": null,
+                  "visibility": null
                 }
               }
             },
@@ -63,7 +64,8 @@
                       "badge": null,
                       "description": null,
                       "iconName": null,
-                      "label": null
+                      "label": null,
+                      "visibility": null
                     }
                   }
                 }
@@ -72,6 +74,19 @@
             }
           ]
         }
+      }
+    },
+    {
+      "title": "LWC",
+      "type": "Configuration",
+      "backgroundImage": null,
+      "condition": null,
+      "helpUrl": null,
+      "layout": {
+        "type": "Component",
+        "module": "foo/bar",
+        "properties": null,
+        "variables": null
       }
     },
     {

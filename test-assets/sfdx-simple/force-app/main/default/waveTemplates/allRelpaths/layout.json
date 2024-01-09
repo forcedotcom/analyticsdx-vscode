@@ -212,7 +212,8 @@
       "groups": [
         {
           "text": "group",
-          "tags": []
+          "tags": ["Tag1"],
+          "includeUnmatched": true
         }
       ]
     }

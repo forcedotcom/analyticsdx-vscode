@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { codeCompletionUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
+import { locationMatches } from '../util/jsoncUtils';
 import { isValidVariableName } from '../util/templateUtils';
 
 export const NEW_VARIABLE_SNIPPETS = Object.freeze([
@@ -31,7 +32,7 @@ export class NewVariableCompletionItemProviderDelegate implements JsonCompletion
   public isSupportedLocation(location: Location) {
     return (
       // make sure it's in the empty part of the variables.json {}
-      location.isAtPropertyKey && location.matches(['*']) && location.path.length === 1
+      location.isAtPropertyKey && locationMatches(location, ['*'])
     );
   }
 

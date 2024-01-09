@@ -11,10 +11,16 @@ import * as vscode from 'vscode';
 import { codeCompletionUsedTelemetryCommand } from '../telemetry';
 import { TemplateDirEditing } from '../templateEditing';
 import { JsonCompletionItemProviderDelegate, newCompletionItem } from '../util/completions';
+import { locationMatches } from '../util/jsoncUtils';
 import { isValidVariableName } from '../util/templateUtils';
 import { isValidRelpath } from '../util/utils';
 import { VariableRefCompletionItemProviderDelegate } from '../variables';
-import { getLayoutItemVariableName, isInTilesEnumKey, matchesLayoutItem } from './utils';
+import {
+  getLayoutItemVariableName,
+  isInComponentLayoutVariableName,
+  isInTilesEnumKey,
+  matchesLayoutItem
+} from './utils';
 
 /** Get tags from the readiness file's templateRequirements. */
 export class LayoutValidationPageTagCompletionItemProviderDelegate implements JsonCompletionItemProviderDelegate {
@@ -34,7 +40,7 @@ export class LayoutValidationPageTagCompletionItemProviderDelegate implements Js
     // get the parent node hierarchy in the Location passed in, and it's not that big a deal if the user gets a
     // code-completion for this path in the layout.json file on a Configuration page since they'll already be getting
     // errors about the wrong type
-    return !location.isAtPropertyKey && location.matches(['pages', '*', 'groups', '*', 'tags', '*']);
+    return !location.isAtPropertyKey && locationMatches(location, ['pages', '*', 'groups', '*', 'tags', '*']);
   }
 
   public async getItems(range: vscode.Range | undefined, location: Location, document: vscode.TextDocument) {
@@ -77,7 +83,9 @@ export class LayoutVariableCompletionItemProviderDelegate extends VariableRefCom
 
   public override isSupportedLocation(location: Location, context: vscode.CompletionContext): boolean {
     // make sure that it's in a variable name value
-    return !location.isAtPropertyKey && matchesLayoutItem(location, 'name');
+    return (
+      !location.isAtPropertyKey && (isInComponentLayoutVariableName(location) || matchesLayoutItem(location, 'name'))
+    );
   }
 }
 

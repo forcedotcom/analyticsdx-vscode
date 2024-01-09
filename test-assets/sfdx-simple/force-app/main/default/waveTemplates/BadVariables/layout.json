@@ -25,6 +25,16 @@
           ]
         }
       }
+    },
+    {
+      "title": "LWC page (for testing the hover/completions/goto works",
+      "type": "Configuration",
+      "layout": {
+        "type": "Component",
+        "module": "a/b",
+        "properties": {},
+        "variables": [{ "name": "StringTypeVar" }]
+      }
     }
   ]
 }

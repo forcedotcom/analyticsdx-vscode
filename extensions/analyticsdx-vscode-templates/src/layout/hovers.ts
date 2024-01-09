@@ -9,7 +9,7 @@ import { Location } from 'jsonc-parser';
 import * as vscode from 'vscode';
 import { TemplateDirEditing } from '../templateEditing';
 import { VariableRefHoverProvider } from '../variables';
-import { matchesLayoutItem } from './utils';
+import { isInComponentLayoutVariableName, matchesLayoutItem } from './utils';
 
 /** Get hover text for a variable from the name in a page in a layout.json file. */
 export class LayoutVariableHoverProvider extends VariableRefHoverProvider {
@@ -22,6 +22,10 @@ export class LayoutVariableHoverProvider extends VariableRefHoverProvider {
   }
 
   protected override isSupportedLocation(location: Location) {
-    return !location.isAtPropertyKey && location.previousNode?.type === 'string' && matchesLayoutItem(location, 'name');
+    return (
+      !location.isAtPropertyKey &&
+      location.previousNode?.type === 'string' &&
+      (isInComponentLayoutVariableName(location) || matchesLayoutItem(location, 'name'))
+    );
   }
 }

@@ -27,6 +27,7 @@ describe('layout-schema.json finds errors in', () => {
       'pages[0].layout.center.items[2].items[2].visibility',
       'pages[0].layout.center.items[2].items[2].name',
       'pages[0].layout.center.items[3].variant',
+      'pages[0].layout.center.items[4].tiles.foo.visibility',
       'pages[1].layout.type',
       'pages[2].type',
       'displayMessages[0].location',
