@@ -1,3 +1,18 @@
+# 1.1.0
+
+## Added
+
+- Added `initialValue` to variables in variables files (for Spring '24).
+- Added `datasetFileTemplate` to rules' `appliesTo`.
+- Added `visibility` to tiles in layout file (for Spring '24).
+- Warn on empty validation page groups within layout file.
+- Added `Component` configuration page layout type (for Spring '24).
+
+## Fixed
+
+- Fixed some editing operations in json files to be more exact in terms of location in the file.
+- Updated dependencies' versions, requires vscode 1.82+.
+
 # 1.0.0
 
 ## Added
@@ -63,7 +78,7 @@
 ## Fixed
 
 - **SFDX: Open Analytics Data Manager** opens new Data Manager.
-- Updated dependencies versions, requires vscode 1.67+.
+- Updated dependencies' versions, requires vscode 1.67+.
 
 # 0.8.2
 
