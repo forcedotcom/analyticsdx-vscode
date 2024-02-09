@@ -9,7 +9,8 @@
       "type": "BooleanType",
       "enums": [true, false]
     },
-    "defaultValue": "default value"
+    "defaultValue": true,
+    "initialValue": null
   },
   "string": {
     "label": "String Variable",
@@ -22,7 +23,8 @@
       "enums": ["one", "two", "three", "default value"],
       "enumsLabels": ["One", null, "Three"]
     },
-    "defaultValue": "default value"
+    "defaultValue": "default value",
+    "initialValue": "initial value"
   },
   "number": {
     "label": "Number Variable",
@@ -35,7 +37,8 @@
       "max": 3,
       "format": "Percent",
       "scale": 3
-    }
+    },
+    "initialValue": 42
   },
   "sobject": {
     "label": "Sobject Variable",
@@ -44,6 +47,9 @@
     },
     "defaultValue": {
       "sobjectName": "Case"
+    },
+    "initialValue": {
+      "sobjectName": "Account"
     }
   },
   "sobjectbase64field": {
@@ -291,7 +297,9 @@
         "max": 10,
         "min": 1
       }
-    }
+    },
+    "defaultValue": ["leadz"],
+    "initialValue": ["camps", "Foo"]
   },
   "booleanarray": {
     "variableType": {
