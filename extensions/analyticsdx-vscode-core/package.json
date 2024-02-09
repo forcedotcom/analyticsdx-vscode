@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "aiKey": "ec3632a4-df47-47a4-98dc-8134cacbaf7e",
   "publisher": "salesforce",
   "name": "analyticsdx-vscode-core",
@@ -33,7 +33,7 @@
     "which": "4.0.0"
   },
   "devDependencies": {
-    "@salesforce/analyticsdx-test-utils-vscode": "1.0.0",
+    "@salesforce/analyticsdx-test-utils-vscode": "1.1.0",
     "@types/chai": "4.3.11",
     "@types/glob": "8.1.0",
     "@types/mocha": "10.0.6",

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "aiKey": "ec3632a4-df47-47a4-98dc-8134cacbaf7e",
   "publisher": "salesforce",
   "name": "analyticsdx-vscode-templates",
@@ -25,7 +25,7 @@
     "Other"
   ],
   "dependencies": {
-    "@salesforce/analyticsdx-template-lint": "1.0.0",
+    "@salesforce/analyticsdx-template-lint": "1.1.0",
     "@salesforce/salesforcedx-utils-vscode": "file:../../lib/salesforcedx-utils-vscode.tgz",
     "jsonc-parser": "3.2.0",
     "lodash.isequal": "4.5.0",
@@ -34,7 +34,7 @@
     "vscode-languageclient": "8.1.0"
   },
   "devDependencies": {
-    "@salesforce/analyticsdx-test-utils-vscode": "1.0.0",
+    "@salesforce/analyticsdx-test-utils-vscode": "1.1.0",
     "@types/chai": "4.3.11",
     "@types/lodash.isequal": "4.5.8",
     "@types/mocha": "10.0.6",
