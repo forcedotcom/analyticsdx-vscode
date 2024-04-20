@@ -135,49 +135,49 @@
         },
         {
           "command": "analyticsdx.app.create",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.app.delete",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.dashboard.lwc.create",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.studio.open",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.studio.open.app",
-          "when": "!isWeb && sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.studio.open.dataManager",
-          "when": "!isWeb && sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.template.create",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.template.delete",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.template.update",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         },
         {
           "command": "analyticsdx.template.updateFromApp",
-          "when": "sfdx:project_opened"
+          "when": "sf:project_opened"
         }
       ],
       "explorer/context": [
         {
           "command": "analyticsdx.dashboard.lwc.create",
-          "when": "explorerResourceIsFolder && resourceFilename == lwc && sfdx:project_opened"
+          "when": "explorerResourceIsFolder && resourceFilename == lwc && sf:project_opened"
         }
       ]
     },
