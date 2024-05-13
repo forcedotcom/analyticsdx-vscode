@@ -31,7 +31,7 @@ const pluginName = '@salesforce/analytics';
 
 // The minumum version of the @salesforce/analytics plugins our extensions require for everything to work right,
 // and that we want folks to be at.
-const minAdxPluginVersion = '1.0.22';
+const minAdxPluginVersion = '1.4.15';
 
 export async function isSfdxInstalled(): Promise<boolean> {
   try {
