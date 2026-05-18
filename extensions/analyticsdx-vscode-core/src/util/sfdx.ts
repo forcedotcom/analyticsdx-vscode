@@ -10,7 +10,7 @@ import { JsonArray, JsonMap } from '@salesforce/ts-types';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
-import * as which from 'which';
+import which from 'which';
 import {
   BaseSfdxCommandletExecutor,
   CliCommandExecutor,

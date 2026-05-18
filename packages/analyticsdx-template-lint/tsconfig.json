@@ -8,6 +8,8 @@
     // need this for fuse.js to work right
     "esModuleInterop": true,
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "types": ["mocha", "node"],
     "noImplicitAny": true,
     "rootDir": ".",
     "outDir": "out",

@@ -90,8 +90,8 @@ function run(testsRoot: any, clb: any): any {
     // Glob test files
     const files = globSync('**/**.test.js', { cwd: testsRoot });
     // Fill into Mocha
-    files.forEach((f): Mocha => {
-      return mocha.addFile(paths.join(testsRoot, f));
+    files.forEach(f => {
+      mocha.addFile(paths.join(testsRoot, f));
     });
     // Run the tests
     let failureCount = 0;

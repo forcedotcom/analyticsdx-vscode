@@ -130,7 +130,7 @@ export class TemplateLinterManager extends Disposable {
     vscode.languages.createDiagnosticCollection('analyticsdx-templates')
   );
 
-  private timer: NodeJS.Timer | undefined;
+  private timer: ReturnType<typeof setTimeout> | undefined;
   private _isLinting = false;
   private templateInfoQueue = new Set<vscode.TextDocument>();
 

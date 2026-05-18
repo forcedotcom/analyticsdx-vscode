@@ -22,6 +22,7 @@ class MockExtensionContext implements vscode.ExtensionContext {
   public globalStorageUri!: vscode.ExtensionContext['globalStorageUri'];
   public logUri!: vscode.ExtensionContext['logUri'];
   public extension!: vscode.ExtensionContext['extension'];
+  public languageModelAccessInformation!: vscode.ExtensionContext['languageModelAccessInformation'];
   public subscriptions = [];
   public workspaceState!: vscode.ExtensionContext['workspaceState'];
   public globalState!: vscode.ExtensionContext['globalState'];

@@ -6,6 +6,8 @@
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "types": ["mocha", "node"],
     "noImplicitAny": true,
     "rootDir": ".",
     "outDir": "out",
