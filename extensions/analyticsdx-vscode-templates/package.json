@@ -51,7 +51,7 @@
     "readdirp": "3.6.0",
     "shx": "0.3.4",
     "sinon": "17.0.1",
-    "tmp": "0.2.1",
+    "tmp": "0.2.4",
     "typescript": "5.2.2"
   },
   "scripts": {
