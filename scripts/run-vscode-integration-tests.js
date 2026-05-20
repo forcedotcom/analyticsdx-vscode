@@ -52,6 +52,10 @@ if (fs.existsSync(userDaFile)) {
       '--disable-extensions',
       // turn off workspace trust for tests (so it doesn't show the big dialog on startup)
       '--disable-workspace-trust',
+      // disable telemetry to prevent the marketplace salesforcedx-vscode-core extension from
+      // trying to spawn 'sf' for telemetry user id (which fails with ENOENT in CI)
+      '--telemetry-level',
+      'off',
       '--sync',
       'off'
     ]
