@@ -122,7 +122,7 @@ export function generateJsonSchemaValidFilesTestSuite(
   return (
     readdirp
       .promise(dir, { type: 'files' })
-      .then(entries => {
+      .then((entries: readdirp.EntryInfo[]) => {
         // make a testsuite that just fails if we didn't find any test files
         if (entries.length <= 0) {
           return describe(schemaName + ' validation test', () => {
@@ -137,7 +137,7 @@ export function generateJsonSchemaValidFilesTestSuite(
             const validator = ajv.compile(schema);
             const readFile = promisify(fs.readFile);
 
-            entries.forEach(entry => {
+            entries.forEach((entry: readdirp.EntryInfo) => {
               it(path.join(testFilesDir, entry.path), async () => {
                 const json = await readFile(entry.fullPath, { encoding: 'utf-8' }).then(jsoncParse);
                 const result = validator(json);
@@ -151,7 +151,7 @@ export function generateJsonSchemaValidFilesTestSuite(
         }
       })
       // make a testsuite that fails if we get an error find test files
-      .catch(error => {
+      .catch((error: unknown) => {
         return Promise.resolve(
           describe(schemaName + ' validation test', () => {
             it('error loading test files', () => {

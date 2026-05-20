@@ -492,7 +492,10 @@ export async function getCodeActions(uri: vscode.Uri, range: vscode.Range): Prom
   if (!result) {
     expect.fail('Expected vscode.CodeAction[], got undefined');
   }
-  return result!;
+  // Filter out built-in VS Code AI/Copilot actions (e.g. "Fix", "Explain", "Modify") that are
+  // injected by VS Code 1.120+ on diagnostics, keeping only our extension's quick fix actions.
+  const builtinActionTitles = new Set(['Fix', 'Explain', 'Modify']);
+  return result!.filter(a => !builtinActionTitles.has(a.title));
 }
 
 export async function getHovers(uri: vscode.Uri, range: vscode.Position): Promise<vscode.Hover[]> {

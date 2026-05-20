@@ -6,28 +6,28 @@
     "url": "git+https://github.com/forcedotcom/analyticsdx-vscode.git"
   },
   "engines": {
-    "node": ">=18.15.0"
+    "node": ">=22.22.1"
   },
   "dependencies": {
-    "node": "^18.15.0",
-    "npm": "^6"
+    "node": "^22.22.1",
+    "npm": "^10"
   },
   "devDependencies": {
     "@salesforce/dev-config": "1.5.0",
     "@types/lerna-alias": "3.0.4",
-    "@types/shelljs": "0.8.11",
-    "@vscode/test-electron": "2.3.8",
-    "eslint": "6.7.2",
-    "eslint-config-prettier": "2.9.0",
+    "@types/shelljs": "0.10.0",
+    "@vscode/test-electron": "2.5.2",
+    "eslint": "8.57.1",
+    "eslint-config-prettier": "9.1.2",
     "lerna": "4.0.0",
     "lerna-alias": "3.0.2",
     "nlf": "2.1.1",
-    "prettier": "2.6.2",
-    "shelljs": "0.8.5",
-    "shx": "0.3.4",
+    "prettier": "3.8.3",
+    "shelljs": "0.10.0",
+    "shx": "0.4.0",
     "tslint": "6.1.3",
     "tslint-no-focused-test": "0.5.0",
-    "typescript": "5.2.2",
+    "typescript": "6.0.3",
     "vsce": "1.103.1"
   },
   "scripts": {
@@ -44,7 +44,7 @@
     "test:vscode-insiders-integration": "lerna exec --concurrency 1 --stream --bail=false -- npm run test:vscode-insiders-integration --if-present",
     "test:vsix-integration": "npm run build-all-vsixs && npm run bootstrap && npm run compile && lerna exec --concurrency 1 --stream --bail=false -- npm run test:vsix-integration --if-present",
     "watch": "lerna run --parallel watch",
-    "eslint-check": "eslint --print-config .eslintrc.json | eslint-config-prettier-check",
+    "eslint-check": "npx eslint-config-prettier .eslintrc.json",
     "reformat": "node scripts/reformat-with-prettier.js",
     "vscode:package": "lerna exec --scope @salesforce/analyticsdx-template-lint -- npm prune --production && lerna run vscode:package --concurrency 1 && node scripts/reformat-with-prettier",
     "vscode:sha256": "lerna run vscode:sha256 --concurrency 1",

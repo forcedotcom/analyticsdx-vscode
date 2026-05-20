@@ -82,6 +82,7 @@ jspm_packages/
 
 # SalesforceDX
 .sfdx/
+.sf/
 
 # Node lock files (actually causes issues with the symlinking that lerna does, so ignore)
 package-lock.json
@@ -92,5 +93,10 @@ package-lock.json
 # vim swap files
 *.swp
 
+# Claude user-specific things
+.agents/
+.claude/settings.local.json
+
 # output from 'npm run license-report'
 analyticsdx-vscode-license-report.csv
+

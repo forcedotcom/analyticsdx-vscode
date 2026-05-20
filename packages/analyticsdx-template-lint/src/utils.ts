@@ -225,6 +225,10 @@ export function fuzzySearcher(
   const searchOpts = { limit };
   let fuzzer: Fuse<string> | undefined;
   return (pattern: string) => {
+    // empty patterns should never match anything
+    if (!pattern) {
+      return noFuzzyMatch();
+    }
     // lazily, make a copy of the array since we have to index into it later and it could change outside of this
     // generated method
     if (!list) {

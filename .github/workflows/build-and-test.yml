@@ -6,7 +6,7 @@ on:
       - develop
 
 env:
-  NODE_VERSION: '18.15.0'
+  NODE_VERSION: '22.22.1'
 
 jobs:
   # We really only need to run lint on one job so we'll do it here
@@ -21,6 +21,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Create sf CLI stub
+        # The marketplace salesforcedx-vscode-core extension tries to spawn 'sf' during activation.
+        # Provide a stub so it doesn't crash with ENOENT in CI where sf is not installed.
+        run: sudo sh -c 'printf "#!/bin/sh\nexit 1\n" > /usr/local/bin/sf && chmod +x /usr/local/bin/sf'
       - name: Build
         run: |
           npm install
@@ -40,6 +44,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Create sf CLI stub
+        run: sudo sh -c 'printf "#!/bin/sh\nexit 1\n" > /usr/local/bin/sf && chmod +x /usr/local/bin/sf'
       - name: Build
         run: |
           npm install
@@ -63,6 +69,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Create sf CLI stub
+        run: sudo sh -c 'printf "#!/bin/sh\nexit 1\n" > /usr/local/bin/sf && chmod +x /usr/local/bin/sf'
       - name: Build
         # do --ignore-scripts so it skips the bootstrap in the extensions/, since test:vsix-integration runs
         # a git clean and a bootstrap to build the vsix's
@@ -96,6 +104,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Create sf CLI stub
+        run: sudo sh -c 'printf "#!/bin/sh\nexit 1\n" > /usr/local/bin/sf && chmod +x /usr/local/bin/sf'
       - name: Build
         run: |
           npm install
@@ -117,6 +127,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Create sf CLI stub
+        # Windows equivalent: create a minimal sf.cmd that exits with code 1
+        run: |
+          echo @exit /b 1 > C:\Windows\sf.cmd
       - name: Build
         run: |
           npm install

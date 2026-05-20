@@ -10,8 +10,7 @@
   "search.exclude": {
     "**/out": true
   },
-  "typescript.tsdk": "./node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "editor.rulers": [120],

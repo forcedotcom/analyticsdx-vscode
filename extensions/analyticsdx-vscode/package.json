@@ -18,10 +18,10 @@
   },
   "license": "BSD-3-Clause",
   "engines": {
-    "vscode": "^1.82.0"
+    "vscode": "^1.120.0"
   },
   "devDependencies": {
-    "shx": "0.3.4"
+    "shx": "0.4.0"
   },
   "scripts": {
     "clean": "shx rm -f analyticsdx-vscode-*.vsix",
