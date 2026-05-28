@@ -29,7 +29,7 @@
     "@salesforce/templates": "66.7.13",
     "glob": "13.0.6",
     "semver": "7.8.0",
-    "tmp": "0.2.5",
+    "tmp": "0.2.6",
     "which": "6.0.1"
   },
   "devDependencies": {
